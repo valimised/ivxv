@@ -1,0 +1,35 @@
+ivxv (0.9) xenial; urgency=medium
+
+  * Release candidate for first official release
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Thu, 31 Aug 2017 15:56:06 +0300
+
+ivxv (0.5) xenial; urgency=medium
+
+  * Test release for RIA public pilot
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Tue, 01 Aug 2017 18:22:06 +0300
+
+ivxv (0.4) xenial; urgency=medium
+
+  * Test release for RIA private pilot
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Sat, 24 Jun 2017 20:44:32 +0300
+
+ivxv (0.3-ria) xenial; urgency=medium
+
+  * Test release for RIA to test high availability installation
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Mon, 08 May 2017 18:39:34 +0300
+
+ivxv (0.2-ria) xenial; urgency=medium
+
+  * Test release for RIA to test single instance installation
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Mon, 27 Mar 2017 08:04:40 +0300
+
+ivxv (0.1-1) xenial; urgency=medium
+
+  * Initial release
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Tue, 22 Nov 2016 09:24:25 +0200

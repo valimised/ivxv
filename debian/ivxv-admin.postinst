@@ -1,0 +1,150 @@
+#!/bin/sh
+# postinst script for ivxv-admin
+#
+# see: dh_installdeb(1)
+
+set -e
+
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#          <new-version>
+#        * <postinst> `abort-remove'
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see https://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
+
+
+case "$1" in
+    configure)
+        # generate ssh key
+        SSH_KEY_FILE=~ivxv-admin/.ssh/id_rsa
+        SSH_PUBKEY_FILE=${SSH_KEY_FILE}.pub
+        if [ ! -e ${SSH_KEY_FILE} ]; then
+            echo "# Generating SSH key for user 'ivxv-admin'"
+            rm -f "${SSH_PUBKEY_FILE}"
+            su -c "ssh-keygen -N '' -f ${SSH_KEY_FILE}" ivxv-admin
+        fi
+        # mark ssh key with comment "ivxv-admin-account"
+        if ! grep --quiet ivxv-admin-account "${SSH_PUBKEY_FILE}"; then
+            sed --in-place --regexp-extended \
+                --expression='s/ [^ ]+$/ ivxv-admin-account/' \
+                "${SSH_PUBKEY_FILE}"
+        fi
+
+        # CREATE DATA DIRECTORIES
+        ivxv-create-data-dirs
+
+        DIR='/var/lib/ivxv/admin-ui-permissions'
+        chown --changes --recursive ivxv-admin:www-data ${DIR}
+        chmod --changes 2770 ${DIR}
+
+        DIR='/var/lib/ivxv/upload'
+        chown --changes www-data:ivxv ${DIR}
+        chmod --changes g+s ${DIR}
+        chmod --changes 2770 ${DIR}
+
+        DIR='/var/lib/ivxv/ballot-box'
+        chown --changes www-data:ivxv ${DIR}
+        chmod --changes 2770 ${DIR}
+
+        for DIR in '/var/lib/ivxv/db' '/var/lib/ivxv/commands'
+        do
+            chown --changes ivxv-admin:ivxv ${DIR}
+            chmod --changes 2770 ${DIR}
+        done
+
+        DIR='/var/lib/ivxv/admin-ui-data'
+        chown --changes ivxv-admin:www-data ${DIR}
+        chmod --changes g+s ${DIR}
+
+        DIR='/var/lib/ivxv/db'
+        if [ ! -e ${DIR}/ivxv-management.db ]; then
+            echo 'Management service database is not initialized'
+            su -c 'env LC_ALL=et_EE.UTF-8 ivxv-db-reset --force' ivxv-admin
+        fi
+
+        # FIXME temporary hack to provide access to ivxv data for www-data account
+        usermod --groups ivxv www-data
+
+        # CONFIGURE APACHE
+        APACHE_RESTART="reload"
+
+        # remove Apache default site config
+        if [ -L /etc/apache2/sites-enabled/000-default.conf ]; then
+            echo "# Disabling Apache default site"
+            a2dissite --quiet 000-default
+            APACHE_RESTART="restart"
+        fi
+
+        # install IVXV collector admin UI site config
+        if [ ! -L /etc/apache2/sites-enabled/ivxv-admin-ui.conf ]; then
+            echo "# Enabling Apache site for IVXV collector management service UI"
+            a2ensite --quiet ivxv-admin-ui
+            APACHE_RESTART="restart"
+        fi
+
+        # enable required modules for Apache
+        APACHE_MODULES_TO_ENABLE="expires rewrite ssl wsgi"
+        for MODULE in ${APACHE_MODULES_TO_ENABLE}; do
+            if [ ! -L /etc/apache2/mods-enabled/${MODULE}.load ]; then
+                a2enmod ${MODULE}
+            fi
+        done
+
+        # Default SSL certificate for Apache web server
+        CRT_SUBJ="/CN=ivxv-admin-ui/O=IVXV kogumisteenuse haldusteenus/L=Somewhere/C=EE"
+        CRT_FILE="/etc/ssl/certs/ivxv-admin-default.crt"
+        CSR_FILE="/etc/ssl/certs/ivxv-admin-default.csr"
+        RSA_KEY_FILE="/etc/ssl/private/ivxv-admin-default.key"
+        if [ ! -f ${RSA_KEY_FILE} ]; then
+            echo "# Generating RSA-key for Apache web server default certificate"
+            openssl genrsa -out ${RSA_KEY_FILE} 2048
+        fi
+        chmod 0640 ${RSA_KEY_FILE}
+        chown root:root ${RSA_KEY_FILE}
+        if [ ! -f ${CSR_FILE} ]; then
+            echo "# Generating certificate request for Apache web server default certificate"
+            openssl req -new -subj "${CRT_SUBJ}" -key ${RSA_KEY_FILE} -out ${CSR_FILE}
+        fi
+        if [ ! -f ${CRT_FILE} ]; then
+            echo "# Generating certificate for Apache web server"
+            openssl x509 -req -days 365 -in ${CSR_FILE} -signkey ${RSA_KEY_FILE} -out ${CRT_FILE}
+        fi
+        DH_PARAMS_FILE="/etc/ssl/dhparams.pem"
+        if [ ! -f "${DH_PARAMS_FILE}" ]; then
+            echo "# Generating strong Diffie-Hellman group file"
+            openssl dhparam 2048 > ${DH_PARAMS_FILE}.tmp
+            mv ${DH_PARAMS_FILE}.tmp ${DH_PARAMS_FILE}
+        fi
+
+        # (re)starting Apache server
+        echo "# Starting Apache web server"
+        systemctl status apache2 > /dev/null || APACHE_RESTART="start"
+        systemctl ${APACHE_RESTART} apache2
+
+        # CONFIGURE RSYSLOG
+        echo "# Restarting rsyslog log server"
+        systemctl restart rsyslog
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+# dh_installdeb will replace this with shell code automatically
+# generated by other debhelper scripts.
+
+#DEBHELPER#
+
+exit 0
+
+# vim:sts=4 sw=4 et:

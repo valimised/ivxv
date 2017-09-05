@@ -1,0 +1,25 @@
+/*
+ * To be included inside the 'buildscript' block of the master build script as
+ * 'apply from: ... to: buildscript'
+ *
+ * Initializes the build script plugin repositories and dependencies.
+ */
+
+def external = file('../external').absolutePath
+
+repositories {
+    // The location of the 'ivypot' plugin for offline case
+    ivy {
+        url file("${external}").toURI()
+    }
+    // The location of the 'ivypot' plugin for bootstrapping (initial download)
+    if (!System.getenv('RESTRICTED')) {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+}
+
+dependencies {
+    classpath 'org.ysb33r.gradle:ivypot:0.4'
+}

@@ -1,0 +1,29 @@
+{
+  "data": {
+    "age_group_0-24": 0,
+    "age_group_25-29": 0,
+    "age_group_30-34": 0,
+    "age_group_35-39": 0,
+    "age_group_40-44": 0,
+    "age_group_45-49": 0,
+    "age_group_50-54": 0,
+    "age_group_55-59": 0,
+    "age_group_60plus": 0,
+    "authentication-methods": [ [ "UNKNOWN", 0 ] ],
+    "operating-systems": [ [ "UNKNOWN", 0 ] ],
+    "revoters-2-times": 0,
+    "revoters-3-times": 0,
+    "revoters-more-than-3-times": 0,
+    "revotes-from-changed-ip": 0,
+    "revotes-parallel": 0,
+    "revotes-with-different-card": 0,
+    "top-10-revoters": [ [ "UNKNOWN", 0 ] ],
+    "total-checkers": 0,
+    "total-voters": 0,
+    "total-votes-checked": 0,
+    "total-votes-collected": 0,
+    "voters-by-country": [ [ "UNKNOWN", 0 ] ],
+    "voters-females": 0,
+    "voters-males": 0
+  }
+}

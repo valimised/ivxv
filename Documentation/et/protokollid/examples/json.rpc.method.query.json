@@ -1,0 +1,10 @@
+{
+    "id": 0.0,
+    "method": "RPC.Method",
+    "params": [
+        {
+            "MethodParam": "value",
+            "SessionID": "ec3a0cab353d552952289f2c7ad52e27"
+        }
+    ]
+}

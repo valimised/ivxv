@@ -1,0 +1,15 @@
+buildscript {
+    ext.base = '../'
+    apply from: "${base}/common/java/common-buildscript.gradle", to: buildscript
+}
+
+apply from: "${base}/common/java/common-build.gradle"
+apply plugin: 'application'
+
+dependencies {
+    compile project(":common")
+
+    testCompile project (path: ":common", configuration: 'tests')
+}
+
+mainClassName = "ee.ivxv.processor.Processor"

@@ -1,0 +1,12 @@
+decrypt:
+  identifier: TESTCONF
+  protocol:
+    recover:
+      threshold: 2
+      parties: 3
+  anonballotbox: bb-4.json
+  anonballotbox_checksum: bb-4.json.sha256sum.bdoc
+  candidates: TESTCONF.choices.bdoc
+  districts: TESTCONF.districts.bdoc
+  provable: true
+  out: decout

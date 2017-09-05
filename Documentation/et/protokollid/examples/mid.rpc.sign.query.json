@@ -1,0 +1,13 @@
+{
+    "id": 0.0,
+    "method": "RPC.Sign",
+    "params": [
+        {
+            "Hash": "9IBrA05ylt2StdjxKkSTYMW/rQXY3Vub4upzShdfEzo=",
+            "IDCode": "11412090004",
+            "OS": "Operating System,2,0",
+            "PhoneNo": "+37200000766",
+            "SessionID": "057229fdfa2df7d3c7f4ced81b02760b"
+        }
+    ]
+}

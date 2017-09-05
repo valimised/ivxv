@@ -1,0 +1,21 @@
+[Unit]
+Description=IVXV @service@ service
+
+# All collector services bind to an explicitly configured address, so we
+# require the network to be online. IP_FREEBIND is not a good option in Go 1.7.
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=notify
+EnvironmentFile=-/etc/default/ivxv
+ExecStart=/usr/bin/ivxv-@service@ $EXTRAOPTS -instance %i
+KillMode=mixed
+Restart=on-failure
+# Do not automatically restart if the service failed with:
+#	Usage (64), DataErr(65), NoInput (66), CantCreate (73), or Config (78).
+RestartPreventExitStatus=64 65 66 73 78
+TimeoutStopSec=90s
+
+[Install]
+WantedBy=default.target

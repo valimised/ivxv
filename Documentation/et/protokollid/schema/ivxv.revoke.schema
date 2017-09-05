@@ -1,0 +1,24 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+
+    "definitions": {
+        "rev_entry": {
+            "type": "string",
+            "pattern": "^[0-9]+.[0-9]+$"
+        }
+    },
+
+    "type": "object",
+    "properties": {
+        "election": {"type": "string"},
+        "type": {"enum": ["revoke", "restore"]},
+        "persons": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/rev_entry"
+            }
+        }
+    },
+    "required": ["election", "persons", "type"],
+    "additionalProperties": false
+}

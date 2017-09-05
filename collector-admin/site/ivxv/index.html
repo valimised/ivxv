@@ -1,0 +1,440 @@
+<!--
+IVXV Internet voting framework
+
+Collector management service - Web interface - Index (overview) page
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Üldseisund – IVXV Kogumisteenuse haldusteenus</title>
+    <!-- Bootstrap Core CSS -->
+    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MetisMenu CSS -->
+    <link href="../vendor/metisMenu/metisMenu.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
+    <!-- Custom Fonts -->
+    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+    <div id="wrapper">
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">Kogumisteenuse haldusteenus</a>
+            </div>
+            <!-- /.navbar-header -->
+            <ul class="nav navbar-top-links navbar-right">
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                    <i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
+                </a>
+                    <ul class="dropdown-menu dropdown-user" style="padding: 10px;">
+                        <li><i class="fa fa-user fa-fw"></i> Kasutaja andmed</li>
+                        <li>CN:&nbsp;<span id="user-cn"></span></li>
+                        <li>Isikukood:&nbsp;<span id="user-idcode"></span></li>
+                        <li>Roll:&nbsp;<span id="user-role-description"></span></li>
+                    </ul>
+                    <!-- /.dropdown-user -->
+                </li>
+                <!-- /.dropdown -->
+            </ul>
+            <!-- /.navbar-top-links -->
+            <div class="navbar-default sidebar" role="navigation">
+                <div class="sidebar-nav navbar-collapse">
+                    <ul class="nav" id="side-menu">
+                        <li>
+                            <a href="index.html"><i class="fa fa-dashboard fa-fw"></i> Üldseisund</a>
+                        </li>
+                        <li>
+                            <a href="lists.html"><i class="fa fa-list fa-fw"></i> Nimekirjad</a>
+                        </li>
+                        <li>
+                            <a href="stats.html"><i class="fa fa-bar-chart-o fa-fw"></i> Statistika</a>
+                        </li>
+                        <li>
+                            <a href="users.html"><i class="fa fa-user fa-fw"></i> Kasutajad</a>
+                        </li>
+                        <li>
+                            <a href="services.html"><i class="fa fa-sitemap fa-fw"></i> Teenused</a>
+                        </li>
+                        <li>
+                            <a href="ballot-box.html"><i class="fa fa-download fa-fw"></i> E-urn</a>
+                        </li>
+                        <li>
+                            <a href="log.html"><i class="fa fa-file-text fa-fw"></i> Logiraamat</a>
+                        </li>
+                        <li>
+                            <a href="about.html"><i class="fa fa-info-circle fa-fw"></i> Programmi andmed</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.sidebar-collapse -->
+            </div>
+            <!-- /.navbar-static-side -->
+        </nav>
+        <div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header">Kogumisteenuse üldseisund</h1>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <p id="loadstatus">Andmete laadimise seisund</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Error message panel -->
+            <div id="common-error-msg" class="row" style="display: none;">
+                <div class="col-lg-12">
+                    <div class="panel panel-red">
+                        <div class="panel-body">
+                            <p>Veateade</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div id="electionid" style="display: none" class="col-lg-3 col-md-6">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <div>Valimiste identifikaator:</div>
+                                    <div id="voting-id" class="fa-2x">&nbsp;</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div id="collector-status-panel" class="panel">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <div>Kogumisteenuse seisund:</div>
+                                    <div id="collector-status" class="fa-2x"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <div>Käimasolev hääletusetapp:</div>
+                                    <div id="voting-stage" class="fa-2x">&nbsp;</div>
+                                </div>
+                            </div>
+                        </div>
+                        <ul class="list-group">
+                            <li class="list-group-item">Algus: <span id="voting-stage-start">-</span></li>
+                            <li class="list-group-item">Lõpp: <span id="voting-stage-end">-</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div id="voters-list-update-available" class="panel panel-yellow" style="display: none">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 fa-2x">
+                                    <div>Valijanimekirjade uuendus on saadaval!</div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="lists.html">
+                            <div class="panel-footer">
+                                <span class="pull-left">Vaata lähemalt</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- /.row -->
+            <div class="row">
+                <div class="col-lg-6 col-md-12">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            Haldusteenusesse laaditud seadistuste versioonid:
+                        </div>
+                        <ul class="list-group">
+                            <li id="trust" class="list-group-item"><strong>Usaldusjuure seadistused:</strong> <span id="config-trust">-</span></li>
+                            <li id="tech" class="list-group-item"><strong>Tehnilised seadistused:</strong> <span id="config-tech">-</span></li>
+                            <li id="election" class="list-group-item"><strong>Valimiste seadistused:</strong> <span id="config-election">-</span></li>
+                        </ul>
+                    </div>
+                    <!-- /.panel -->
+                </div>
+                <!-- /.col-lg-6 -->
+                <div class="col-lg-6 col-md-12">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            Valimisnimekirjade seisundid ja versioonid:
+                        </div>
+                        <ul class="list-group">
+                            <li id="choiceslist" class="list-group-item"><strong>Valikute nimekiri:</strong> <span id="list-choices">-</span></li>
+                            <li id="choicesliststatus" class="list-group-item"><strong>Valikute nimekirja seisund:</strong> <span id="list-choices-status">-</span></li>
+                            <li id="voterslist" class="list-group-item"><strong>Valijate nimekirjad:</strong> haldusteenusesse laaditud <span id="list-voters-loaded">-</span>, rakendamise ootel <span id="list-voters-pending">-</span></li>
+                            <div id="list-list"></div>
+                        </ul>
+                    </div>
+                    <!-- /.panel -->
+                </div>
+                <!-- /.col-lg-6 -->
+            </div>
+            <!-- /.row -->
+            <div class="row">
+                <div id="service_summary" style="display: none" class="col-lg-6">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            Teenuste kokkuvõte seisundi järgi
+                        </div>
+                        <div class="panel-body">
+                            Paigaldamata: <span id="not_installed"></span>
+                            <br/> Paigaldatud: <span id="installed"></span>
+                            <br/> Seadistatud: <span id="configured"></span>
+                            <br/> Osaline tõrge: <span id="p_failure"></span>
+                            <br/> Tõrge: <span id="failure"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="panel-group">
+                        <div id="packagepanel" class="panel panel-danger">
+                            <div class="panel-heading">
+                                Kogumisteenuse tarkvarapakid:
+                                <span id="debs-exist-count">–</span> olemas,
+                                <span id="debs-missing-count">–</span> puudu
+                            </div>
+                            <!-- /.panel-heading -->
+                            <div id="missing-debs-list" class="panel-group" style="margin-bottom:0px;"></div>
+                            <!-- /.table-responsive -->
+                        </div>
+                        <!-- /.panel -->
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">
+                                Kasutajate arv: <span id="user-count"></span>
+                            </div>
+                            <!-- /.panel-heading -->
+                        </div>
+                        <!-- /.table-responsive -->
+                    </div>
+                    <!-- /.panel -->
+                </div>
+            </div>
+            <!-- /.col-lg-6 -->
+        </div>
+        <!-- /.row -->
+    </div>
+    <!-- /#page-wrapper -->
+    </div>
+    <!-- /#wrapper -->
+    <!-- jQuery -->
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <!-- Bootstrap Core JavaScript -->
+    <script src="../vendor/bootstrap/js/bootstrap.min.js"></script>
+    <!-- Metis Menu Plugin JavaScript -->
+    <script src="../vendor/metisMenu/metisMenu.min.js"></script>
+    <!-- Custom Theme JavaScript -->
+    <script src="../dist/js/sb-admin-2.js"></script>
+    <!-- IVXV JavaScript -->
+    <script src="../js/ivxv.js"></script>
+    <!-- Page-Level Scripts -->
+    <script>
+    $(document).ready(function() {
+        getContextData();
+    });
+
+    function loadPageData() {
+        loadStatus();
+    }
+
+    function loadStatus() {
+        var states = {
+            'NOT INSTALLED': ['Paigaldamata', 'warning', 0],
+            'INSTALLED': ['Paigaldatud', '', 0],
+            'CONFIGURED': ['Seadistatud', 'success', 0],
+            'PARTIAL FAILURE': ['Osaline tõrge', 'danger', 0],
+            'FAILURE': ['Tõrge', 'danger', 0]
+        };
+        var phases = {
+            'PREPARING': 'Ettevalmistamine',
+            'WAITING FOR SERVICE START': 'Teenuse käivitamise ootamine',
+            'WAITING FOR ELECTION START': 'Valimise alguse ootamine',
+            'ELECTION': 'Häälte kogumine',
+            'WAITING FOR SERVICE STOP': 'Teenuse seiskamise ootamine',
+            'FINISHED': 'Lõpetatud'
+        };
+        var loadDate = new Date();
+        loadDate.setTime(Date.now());
+
+        $.getJSON('data/status.json', function(status) {
+                hideErrorMessage();
+
+                if (status['election']['election-id']) {
+                    $('#electionid').show();
+                }
+
+                $('#collector-status').html(status['collector']['status'] in states ? states[status['collector']['status']][0] : 'Tundmatu');
+                $('#collector-status-panel')
+                    .removeClass('panel-danger')
+                    .removeClass('panel-warning')
+                    .removeClass('panel-success')
+                    .addClass(status['collector']['status'] in states ? 'panel-' + states[status['collector']['status']][1] : 'panel-danger');
+
+                $('#voting-id').text(status['election']['election-id']);
+                $('#voting-stage').text(status['election']['phase'] in phases ? phases[status['election']['phase']] : 'Tundmatu1');
+                $('#voting-stage-start').text(status['election']['phase-start']);
+                $('#voting-stage-end').text(status['election']['phase-end']);
+
+                $('#trust').addClass('list-group-item-warning').removeClass('list-group-item-success');
+                if (status['config']['trust']) {
+                    $('#config-trust').text(status['config']['trust']);
+                    $('#trust').removeClass('list-group-item-warning').addClass('list-group-item-success');
+                }
+                $('#tech').addClass('list-group-item-warning').removeClass('list-group-item-success');
+                if (status['config']['technical']) {
+                    $('#config-tech').text(status['config']['technical']);
+                    $('#tech').removeClass('list-group-item-warning').addClass('list-group-item-success');
+                }
+                $('#election').addClass('list-group-item-warning').removeClass('list-group-item-success');
+                if (status['config']['election']) {
+                    $('#config-election').text(status['config']['election']);
+                    $('#election').removeClass('list-group-item-warning').addClass('list-group-item-success');
+                }
+
+                $('#list-choices').text(status['list']['choices'] ? status['list']['choices'] : '-');
+                $('#list-voters-loaded').text(status['list']['voters-list-loaded']);
+                $('#list-voters-pending').text(status['list']['voters-list-pending']);
+                if (!status['list']['choices']) {
+                    $('#list-choices-status').text('Laadimata');
+                    $('#choiceslist').addClass('list-group-item-danger').removeClass('list-group-item-success')
+                        .removeClass('list-group-item-warning');
+                    $('#choicesliststatus').addClass('list-group-item-danger').removeClass('list-group-item-success')
+                        .removeClass('list-group-item-warning');
+                } else if (status['list']['choices'] && !status['list']['choices-loaded']) {
+                    $('#list-choices-status').text('Laaditud haldusteenusesse');
+                    $('#choiceslist').addClass('list-group-item-warning').removeClass('list-group-item-success')
+                        .removeClass('list-group-item-danger');
+                    $('#choicesliststatus').addClass('list-group-item-warning').removeClass('list-group-item-success')
+                        .removeClass('list-group-item-danger');
+                } else if (status['list']['choices'] === status['list']['choices-loaded']) {
+                    $('#list-choices-status').text('Rakendatud kogumisteenusele');
+                    $('#choiceslist').addClass('list-group-item-success').removeClass('list-group-item-danger')
+                        .removeClass('list-group-item-warning');
+                    $('#choicesliststatus').addClass('list-group-item-success').removeClass('list-group-item-danger')
+                        .removeClass('list-group-item-warning');
+                }
+
+                if (status['list']['voters-list-loaded'] === 0) {
+                    $('#voterslist').addClass('list-group-item-danger').removeClass('list-group-item-success');
+                } else if (status['list']['voters-list-loaded'] !== 0 && status['list']['voters-list-pending'] === 0) {
+                    $('#voterslist').addClass('list-group-item-success').removeClass('list-group-item-danger');
+
+                    $('#list-list').empty();
+                    for (var i = 0; i < status['list']['voters-list-loaded']; i++) {
+                        var iStr = i < 10 ? '0' + (i + 1) : (i + 1);
+                        var listStatus = status['list']['voters' + iStr] === status['list']['voters' + iStr + '-loaded'] ? 'LAADITUD' : 'OOTEL';
+                        $('#list-list').append(
+                            '<li class="list-group-item list-group-item-success" style="padding-left:25px">' +
+                            (i + 1) + '. ' + listStatus + ': ' + status['list']['voters' + iStr] +
+                            '</li>'
+                        );
+                    }
+                } else {
+                    $('#voterslist').addClass('list-group-item-warning').removeClass('list-group-item-danger')
+                        .removeClass('list-group-item-success');
+                }
+
+                $('#debs-exist-count').text(status['storage']['debs_exists'].length);
+                if (status['storage']['debs_missing'].length === 0) {
+                    $('#packagepanel').removeClass('panel-danger').addClass('panel-success')
+                } else {
+                    $('#packagepanel').removeClass('panel-success').addClass('panel-danger')
+                }
+                $('#debs-missing-count').text(status['storage']['debs_missing'].length);
+
+                var usercount = 0;
+                if (status['user']) {
+                    usercount = Object.keys(status['user']).length;
+                }
+                $('#user-count').text(usercount);
+
+                $('#missing-debs-list').empty();
+                for (var i = 0; i < status['storage']['debs_missing'].length; i++) {
+                    $('#missing-debs-list').append(
+                        '<div class="panel panel-danger">' +
+                        '<div class="panel-heading">' +
+                        status['storage']['debs_missing'][i] +
+                        '</div>' +
+                        '</div>'
+                    );
+                }
+
+                var serviceexists = false;
+                $.each(status['service'], function(serviceName, service) {
+                    if (service['state'] in states) {
+                        states[service['state']][2]++;
+                        serviceexists = true;
+                    }
+                });
+                if (serviceexists) {
+                    $('#service_summary').show();
+                    $('#not_installed').html(states['NOT INSTALLED'][2]);
+                    $('#configured').html(states['CONFIGURED'][2]);
+                    $('#installed').html(states['INSTALLED'][2]);
+                    $('#failure').html(states['FAILURE'][2]);
+                    $('#p_failure').html(states['PARTIAL FAILURE'][2]);
+                }
+
+                var genDate = new Date();
+                genDate.setTime(Date.parse(status['meta']['time_generated']));
+                $('#loadstatus')
+                    .removeClass('text-danger')
+                    .addClass('text-info')
+                    .html('Andmete laadimise aeg: ' + formatTime(loadDate, 0) + '<br />' +
+                        'Andmete genereerimise aeg: ' + formatTime(genDate, 3));
+            })
+            .fail(function() {
+                $('#loadstatus')
+                    .removeClass('text-info')
+                    .addClass('text-danger')
+                    .html('Viga andmete laadimisel: ' + formatTime(loadDate, 0));
+                showErrorMessage('Viga seisundi laadimisel', true);
+            });
+        setTimeout(loadStatus, 5000);
+    }
+    </script>
+</body>
+
+</html>
+<!--
+vim:sts=4 sw=4 et:
+-->

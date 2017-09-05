@@ -1,0 +1,4 @@
+#!/usr/bin/dh-exec
+usr/bin/verification => usr/bin/ivxv-verification
+
+usr/lib/systemd/user/ivxv-verification@.service

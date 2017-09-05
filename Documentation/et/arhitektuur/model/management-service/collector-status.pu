@@ -1,0 +1,54 @@
+@startuml
+
+Title Kogumisteenuse olek
+
+skinparam state {
+  BackgroundColor<<OK>> LightGreen
+  BackgroundColor<<Error>> LightCoral
+}
+
+state Paigaldamata
+Paigaldamata : - Haldusteenus on paigaldatud,
+Paigaldamata : - Alamteenused on paigaldamata.
+
+state Paigaldatud <<OK>>
+Paigaldatud : Kõik alamteenused on paigaldatud
+Paigaldatud : ja tehniliselt seadistatud.
+Paigaldatud : Valimiste seadistust pole rakendatud.
+
+state Seadistatud <<OK>>
+Seadistatud : Kogumisteenusele on rakendatud
+Seadistatud : valimiste seaditused ja sellega
+Seadistatud : on võimalik hääletust läbi viia
+Seadistatud : ja e-urni väljastada.
+
+state Tõrge <<Error>>
+Tõrge : Üks või mitu alamteenust ei tööta,
+Tõrge : kogumisteenuse oluline sõlm
+Tõrge : pole töökorras.
+
+state "Osaline tõrge" as OsalineTõrge
+OsalineTõrge : Üks või mitu dubleeritud
+OsalineTõrge : alamteenust ei tööta,
+OsalineTõrge : kogumisteenus töötab.
+
+
+[*] --> Paigaldamata
+
+Paigaldamata --> Paigaldatud : Teenuste \n paigaldamine
+
+Paigaldatud --> Seadistatud : Valimiste \n seadistuse \n rakendamine \n teenustele
+
+Seadistatud --> OsalineTõrge : Teenuse \n tõrkeoleku \n tuvastamine
+Seadistatud --> [*]
+
+OsalineTõrge --> Seadistatud : Kõikide \n teenuste \n korrasoleku \n tuvastamine
+OsalineTõrge --> Tõrge
+OsalineTõrge --> [*]
+
+Tõrge --> OsalineTõrge
+Tõrge --> [*]
+
+@enduml
+
+# vim:set sts=2 sw=2 et:

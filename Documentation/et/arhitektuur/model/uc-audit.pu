@@ -1,0 +1,12 @@
+
+@startuml
+
+title "Auditirakendus - offline"
+
+usecase (Kogumisteenuse auditimaterjali import)
+usecase (Lugemisteenuse auditimaterjali import)
+usecase (Miksimisteenuse auditimaterjali import)
+usecase (Ajatembeldusteenuse auditimaterjali import)
+usecase (Auditi läbiviimine)
+
+@enduml

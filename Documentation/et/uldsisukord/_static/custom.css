@@ -1,0 +1,28 @@
+/*
+ * IVXV Internet voting framework
+ *
+ * Sphinx stylesheet for HTML documentation
+ */
+
+@import url("alabaster.css");
+
+.figure {
+  background-color: rgba(128, 128, 128, 0.1);
+  border: thin dotted gray;
+}
+
+.caption {
+  border-bottom: thin solid gray;
+}
+
+/* Highlight target section */
+
+.section:target {
+  background-color: rgba(200, 200, 150, 0.1);
+  padding-left: 10px;
+  border: thin dashed gray;
+}
+
+/*
+ * vim:sts=2 sw=2 et foldmethod=syntax:
+ */

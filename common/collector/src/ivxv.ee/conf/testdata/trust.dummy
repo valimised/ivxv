@@ -1,0 +1,22 @@
+signatures:
+  - signer: |
+      -----BEGIN CERTIFICATE-----
+      MIIBijCCATCgAwIBAgIJAJldSxM2hh55MAoGCCqGSM49BAMCMB8xHTAbBgNVBAMM
+      FENvbmZpZ3VyYXRpb24gU2lnbmVyMCAXDTE3MDExOTE0MDYxN1oYDzIxMTYxMjI2
+      MTQwNjE3WjAfMR0wGwYDVQQDDBRDb25maWd1cmF0aW9uIFNpZ25lcjBZMBMGByqG
+      SM49AgEGCCqGSM49AwEHA0IABLMo1qGUQNBKYoYHjZ9iEl8kfaCiqATqV7JKqdWc
+      dKXs/RJC/0Mi8HQGOOxxenvpErRnNPnxQvrOyejIp1mq7bijUzBRMB0GA1UdDgQW
+      BBRDNaElGLEWCMQqE/TGCOrfr+MwRDAfBgNVHSMEGDAWgBRDNaElGLEWCMQqE/TG
+      COrfr+MwRDAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0gAMEUCIAvrkzDr
+      29i4BRrqDJ7QXvLo9KFlm4a80/ME7uv3/CMqAiEAhbuBnbkyOqKzKZ5ceJefZSU2
+      YsQ3obk0n54TF/Xmibc=
+      -----END CERTIFICATE-----
+data:
+  trust.yaml: |
+
+    container:
+      dummy:
+        trusted:
+          - Configuration Signer
+
+# vim: set ft=yaml sw=2:

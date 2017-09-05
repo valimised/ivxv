@@ -1,0 +1,3 @@
+mixer:
+  protinfo: mixnet/ProtocolInformation.xml
+  proofdir: mixnet/

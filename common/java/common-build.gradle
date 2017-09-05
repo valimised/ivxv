@@ -1,0 +1,80 @@
+/*
+ * To be included by the master build scripts.
+ * Requires property 'base' to appoint to the repository root.
+ *
+ * Sets common properties, sets repositories and defines the task for
+ * downloading dependencies.
+ */
+
+apply plugin: 'java'
+apply plugin: 'org.ysb33r.ivypot'
+
+group 'ee.ivxv'
+version '0.9'
+sourceCompatibility = 1.8
+
+ext.external = "${base}/common/external"
+
+test {
+    testLogging {
+        events "PASSED", "STARTED", "FAILED", "SKIPPED"
+    }
+}
+
+// Skip subproject tests if build was invoked by the root Makefile
+subprojects {
+    tasks.withType(Test) {
+        if (System.env.ROOT_BUILD) {
+            enabled = false
+        }
+    }
+}
+
+allprojects {
+    plugins.withType(ApplicationPlugin) {
+        startScripts {
+            doLast {
+                // Set the windows command prompt to support UTF-8 output
+                windowsScript.text = "@echo off\r\nchcp 65001 >NUL 2>&1\r\nset JAVA_OPTS=-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8\r\n@echo on\r\n" + windowsScript.text
+            }
+        }
+    }
+}
+
+repositories {
+    ivy {
+        url file(external).toURI()
+    }
+}
+
+syncRemoteRepositories {
+    repoRoot file(external).absolutePath
+    repositories {
+        jcenter()
+        // The 'ivypot' plugin
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    includeBuildScriptDependencies = true
+}
+
+task jarall(type: Jar) {
+  manifest.from jar.manifest
+  classifier = 'all'
+  from {
+    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+  } {
+    exclude "META-INF/DEPENDENCIES"
+    exclude "META-INF/*.SF"
+    exclude "META-INF/*.DSA"
+    exclude "META-INF/*.RSA"
+    exclude "log*.xml"
+    exclude "log*.properties"
+  }
+  with jar
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}

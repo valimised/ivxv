@@ -1,0 +1,16 @@
+
+@startuml
+
+  :Omanik: as Omanik <<Human>>
+  actor Hääletaja <<Human>>
+  actor Töötleja <<Human>>
+  actor Andmeaudiitor <<Human>>
+  actor Klienditugi <<Human>>
+  actor Kogumisteenus <<Server>>
+  actor Registreerimisteenus <<Server>>
+  actor Autentimisteenus <<Server>>
+  actor Allkirjateenus <<Server>>
+
+
+
+@enduml

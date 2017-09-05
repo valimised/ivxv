@@ -1,0 +1,4 @@
+export:
+  ballotbox: TESTCONF.votes.zip
+  ballotbox_checksum: TESTCONF.votes.zip.sha256sum.bdoc
+  out: out-export

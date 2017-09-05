@@ -1,0 +1,13 @@
+{
+    "error": null,
+    "id": 0.0,
+    "result": {
+        "Qualification": {
+            "ocsp": "MIIG7QoBAKCCBuYwggbiBgkrBgEFBQcwAQEEggbTMIIGzzCCASGhgY...",
+            "tspreg": "MIIE0QYJKoZIhvcNAQcCoIIEwjCCBL4CAQMxDzANBglghkgBZQMEA..."
+        },
+        "SessionID": "057229fdfa2df7d3c7f4ced81b02760b",
+        "TestVote": true,
+        "VoteID": "dWf/HUQVqXili7BeX2JAZQ=="
+    }
+}

@@ -1,0 +1,47 @@
+@startuml
+
+Title Korralduste täitmine haldusteenuses
+
+Actor "Kasutaja (Brauser)" as Brauser
+participant "Veebiserver \n (Apache)" as WSGI
+participant "Deemon \n (HTTP)" as Deemon_HTTP
+participant "Halduse \n teek" as Util
+Database "Failisüsteem" as FS
+participant Teenus
+
+Brauser -> WSGI : Korralduse \n üleslaadimine
+Activate Brauser
+Activate WSGI
+
+WSGI -> FS : Korralduse salvestamine
+
+alt Korraldus on valiidne
+
+  WSGI -> Deemon_HTTP : Korralduse \n rakendamise \n päring
+
+  Activate Deemon_HTTP
+  Deemon_HTTP -> Util : Korralduse \n rakendamise päring
+
+  Activate Util
+  Util <- FS : Korralduse lugemine
+  Util -> Util : Korralduse valideerimine
+  alt Vahetu rakendamine
+    Util -> Teenus : Korralduse rakendamine
+  else E-urni väljastamine
+    Teenus -> Util : E-urni laadimine
+  end
+  Util -> Deemon_HTTP : Korralduse \n rakendamise vastus
+  Deactivate Util
+
+  Deemon_HTTP -> WSGI : Vastuse \n edastamine
+  Deactivate Deemon_HTTP
+end
+
+WSGI -> Brauser : Vastuse \n edastamine
+
+Deactivate WSGI
+Deactivate Brauser
+
+@enduml
+
+# vim:set sts=2 sw=2 et:

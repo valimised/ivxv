@@ -1,0 +1,82 @@
+Source: ivxv
+Section: misc
+Priority: optional
+Maintainer: IVXV Developer <info@ivotingcentre.ee>
+# Dependencies for admin-ui: dh-python, python3-all, python3-setuptools
+# Dependencies for services: dh-exec, golang-go
+Build-Depends: debhelper (>= 9), dh-exec, dh-python, dh-systemd, golang-go (>= 2:1.7~) | golang-1.7-go, python3-all, python3-debian, python3-setuptools
+Standards-Version: 3.9.8
+
+Package: ivxv-common
+Architecture: all
+Depends: ${misc:Depends}, adduser, openssh-server, openssl, rsyslog, rsyslog-relp, sudo, tzdata
+Recommends: locales | locales-all
+Description: IVXV alamteenuste ühispakk
+ Elektroonilise hääletamise infosüsteem IVXV
+ .
+ Käesolev pakk sisaldab kogumisteenuse alamteenuste ühisosa
+
+Package: ivxv-admin
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}, apache2, ivxv-common, language-pack-et, libapache2-mod-wsgi-py3, python3-gdbm, python3-pkg-resources
+Description: IVXV kogumisteenuse haldusteenus
+ Elektroonilise hääletamise infosüsteem IVXV
+ .
+ Käesolev pakk sisaldab kogumisteenuse haldusteenust
+
+Package: ivxv-proxy
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, haproxy, ivxv-common, libpam-systemd
+Description: IVXV vahendusteenus
+ Elektroonilise hääletamise infosüsteem IVXV
+ .
+ Käesolev pakk sisaldab kogumisteenuse vahendusteenust
+
+Package: ivxv-choices
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, ivxv-common, libpam-systemd
+Description: IVXV nimekirjateenus
+ Elektroonilise hääletamise infosüsteem IVXV
+ .
+ Käesolev pakk sisaldab kogumisteenuse nimekirjateenust
+
+Package: ivxv-verification
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, ivxv-common, libpam-systemd
+Description: IVXV kontrolliteenus
+ Elektroonilise hääletamise infosüsteem IVXV
+ .
+ Käesolev pakk sisaldab kogumisteenuse kontrolliteenust
+
+Package: ivxv-voting
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, ivxv-common, libpam-systemd
+Description: IVXV hääletamisteenus
+ Elektroonilise hääletamise infosüsteem IVXV
+ .
+ Käesolev pakk sisaldab kogumisteenuse hääletamisteenust
+
+Package: ivxv-storage
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, etcd (>= 3.1~), ivxv-common, libpam-systemd
+Description: IVXV talletamisteenus
+ Elektroonilise hääletamise infosüsteem IVXV
+ .
+ Käesolev pakk sisaldab kogumisteenuse talletamisteenust
+
+Package: ivxv-dds
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, ivxv-common, libpam-systemd
+Description: IVXV mobiil-ID tugiteenus
+ Elektroonilise hääletamise infosüsteem IVXV
+ .
+ Käesolev pakk sisaldab kogumisteenuse mobiil-ID tugiteenust
+
+Package: ivxv-log
+Architecture: all
+Depends: ${misc:Depends}, ivxv-common
+Conflicts: ivxv-admin, ivxv-choices, ivxv-dds, ivxv-proxy, ivxv-storage, ivxv-verification, ivxv-voting
+Description: IVXV logikogumisteenus
+ Elektroonilise hääletamise infosüsteem IVXV
+ .
+ Käesolev pakk sisaldab kogumisteenuse logikogumisteenust

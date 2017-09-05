@@ -1,0 +1,15 @@
+check:
+  ballotbox: TESTCONF.votes.zip
+  ballotbox_checksum: TESTCONF.votes.zip.sha256sum.bdoc
+  districts: TESTCONF.districts.bdoc
+  registrationlist: TESTCONF.registration.zip
+  registrationlist_checksum: TESTCONF.registration.zip.sha256sum.bdoc
+  tskey: TESTCONF.ts.key
+  vlkey: TESTCONF.voterfile.pub.key
+  voterlists:
+    - path: TESTCONF.voters_1
+      signature: TESTCONF.voters_1.signature
+    - path: TESTCONF.voters_2
+      signature: TESTCONF.voters_2.signature
+  election_start: 2017-05-01T12:00:00+03:00
+  out: out-1

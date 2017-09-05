@@ -1,0 +1,7 @@
+{
+	"test": true,
+	"cyclo": 25,
+	"linelength": 120,
+	"deadline": "5m",
+	"enablegc": true
+}

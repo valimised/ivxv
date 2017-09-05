@@ -1,0 +1,60 @@
+@startuml
+
+Title Kogumisteenuse haldusteenuse komponendid
+
+skinparam component {
+  backgroundColor<<Väline>> LightSalmon
+}
+
+[Kasutaja veebisirvija] as Kasutaja
+
+frame IVXV {
+  [Statistikaserver]
+  interface "HTTP" as StatistikaHTTP
+  [Statistikaserver] -down- StatistikaHTTP
+
+  frame Kogumisteenus {
+    node "Haldusteenus" {
+      [Utiliidid]
+      [Veebiserver \n (Apache)] as Veebiserver
+      interface HTTPS
+      Veebiserver -u- HTTPS
+      [Kasutaja] -> HTTPS
+
+      [Haldusdeemon]
+      interface "HTTP" as HaldusdeemonHTTP
+      HaldusdeemonHTTP -- [Haldusdeemon]
+      [Agentdeemon]
+      database "Andmekataloog" {
+        [Haldusteenuse \n andmefailid] as Andmefailid
+      }
+    }
+
+    [Mikroteenus]
+    interface "SSH" as TeenusSSH
+    [Mikroteenus] -l- TeenusSSH
+  }
+}
+
+/' Välised allikad '/
+StatistikaHTTP -> [Agentdeemon]
+
+/' Haldusteenus '/
+[Agentdeemon] --> [Andmefailid] : Kogutud \n andmete \n kirjutamine
+[Haldusdeemon] --> [Andmefailid] : 1. Kasutaja \n lisamine ja \n muutmine \n 2. e-urni \n salvestamine
+
+[Andmefailid] --> [Veebiserver] : Genereeritud \n andmete \n lugemine
+
+[Veebiserver] --> [Andmefailid] : Korralduste \n laadimine
+[Veebiserver] --> HaldusdeemonHTTP : Korralduste \n rakendamine
+
+[Andmefailid] --> [Veebiserver] : E-urni \n laadimine
+
+/' Teenusserverid '/
+TeenusSSH --> [Haldusdeemon] : E-urni \n laadimine \n talletusteenusest
+[Utiliidid] --> TeenusSSH : 1. Teenuse paigaldus \n 2. Teenuse seadistamine \n 3. Nimekirja rakendamine
+[Agentdeemon] --> TeenusSSH : Teenuse seire
+
+@enduml
+
+# vim:set sts=2 sw=2 et:

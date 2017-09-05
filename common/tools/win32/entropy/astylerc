@@ -1,0 +1,21 @@
+style=stroustrup
+indent=spaces=4
+attach-namespaces
+attach-classes
+attach-inlines
+attach-extern-c
+#attach-closing-while
+indent-cases
+break-blocks
+pad-oper
+pad-comma
+pad-header
+delete-empty-lines
+align-pointer=type
+#break-closing-braces (-y)
+-y
+break-one-line-headers
+#add-braces (-j)
+-j
+convert-tabs
+lineend=linux

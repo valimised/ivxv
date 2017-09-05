@@ -1,0 +1,2 @@
+#!/usr/bin/dh-exec
+etc/ivxv/rsyslog-logcollector.conf => etc/rsyslog.d/ivxv-logcollector.conf

@@ -1,0 +1,6 @@
+util:
+  listreaders: true
+  testkey:
+    out: initout
+    threshold: 2
+    parties: 3

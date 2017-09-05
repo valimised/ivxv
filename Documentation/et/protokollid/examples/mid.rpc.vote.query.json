@@ -1,0 +1,15 @@
+{
+    "id": 0.0,
+    "method": "RPC.Vote",
+    "params": [
+        {
+            "AuthMethod": "ticket",
+            "AuthToken": "G1RTZqBSBKrzqReuKYrmFUFXWFPvaxhJjdiZi6zqAnaK3OvrT...",
+            "Choices": "0919.1",
+            "SessionID": "057229fdfa2df7d3c7f4ced81b02760b",
+            "OS": "Operating System,2,0",
+            "Type": "bdoc",
+            "Vote": "UEsDBAoAAAAAAAAAAACKIflFHwAAAB8AAAAIAAAAbWltZXR5cGVhcHB..."
+        }
+    ]
+}

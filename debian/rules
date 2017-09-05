@@ -1,0 +1,81 @@
+#!/usr/bin/make -f
+
+# See debhelper(7) (uncomment to enable)
+# output every command that modifies files on the build system.
+#export DH_VERBOSE = 1
+
+# disable testing of python module (module does not have unit tests)
+export PYBUILD_DISABLE = test
+
+%:
+	dh $@ --with systemd --with python3
+
+override_dh_auto_clean:
+	# Do not clean Java applications.
+	$(MAKE) clean-go clean-doc clean-systemd
+
+	# Clean ivxv-admin.
+	# FIXME: The python build files should not live in the root directory,
+	#        but be hidden behind the Makefile facade like Go, Java, and
+	#        documentation are.
+	dh_auto_clean --package ivxv-admin --buildsystem pybuild
+
+override_dh_auto_build:
+	# Update version strings in subcomponents
+	$(MAKE) version
+
+	# Do not build Java applications nor documentation for Debian.
+	$(MAKE) go
+
+	# Build ivxv-admin.
+	# FIXME: The python build files should not live in the root directory,
+	#        but be hidden behind the Makefile facade like Go, Java, and
+	#        documentation are.
+	dh_auto_build --package ivxv-admin --buildsystem pybuild
+
+override_dh_auto_test:
+	# This target contains workarounds for DEB_BUILD_OPTIONS=nocheck bug
+	# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=568897
+
+	# Do not test Java applications.
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	$(MAKE) test-go GOTESTFLAGS=-short
+endif
+
+	# Test ivxv-admin.
+	# FIXME: The python build files should not live in the root directory,
+	#        but be hidden behind the Makefile facade like Go, Java, and
+	#        documentation are.
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	dh_auto_test --package ivxv-admin --buildsystem pybuild
+endif
+
+override_dh_auto_install:
+	dh_auto_install --no-package ivxv-admin
+
+	# Install ivxv-admin.
+	# FIXME: The python build files should not live in the root directory,
+	#        but be hidden behind the Makefile facade like Go, Java, and
+	#        documentation are.
+	dh_auto_install --package ivxv-admin --buildsystem pybuild --destdir debian/ivxv-admin/
+	install -d debian/ivxv-admin/etc/ssl/certs
+	cat collector-admin/sk-certs/*.crt > debian/ivxv-admin/etc/ssl/certs/sk-juur.crt
+
+	# install schematics module for ivxv-admin
+	( cd common/external/schematics && \
+		python3 setup.py install --single-version-externally-managed \
+			--root=../../../debian/ivxv-admin )
+
+override_dh_systemd_enable:
+	dh_systemd_enable
+
+	# In addition, install and enable ivxv-admin-httpd service
+	dh_systemd_enable --package ivxv-admin --name ivxv-admin-httpd ivxv-admin-httpd.service
+
+# Silently skip dh_installinit to avoid redundant code in postinst/postrm
+# scripts as packages do not use obsolete init system.
+override_dh_installinit:
+
+# libdigidocpp in common/external contains .orig which must be kept.
+override_dh_clean:
+	dh_clean -X common/external/libdigidocpp/etc/schema

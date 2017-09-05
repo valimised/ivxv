@@ -1,0 +1,72 @@
+@startuml
+
+/'
+ '
+ '  BEAUTIFICATION
+ '
+ '/
+
+skinparam interface {
+    backgroundColor<<IVXV>> Gold
+    backgroundColor<<Väline>> LightSalmon
+    backgroundColor<<VVK>> DarkGoldenRod
+    backgroundColor<<Määratlemata>> Black
+}
+
+skinparam actor {
+    backgroundColor<<IVXV>> Gold
+    backgroundColor<<Väline>> LightSalmon
+    backgroundColor<<VVK>> DarkGoldenRod
+    backgroundColor<<Määratlemata>> Black
+}
+
+skinparam component {
+    backgroundColor<<IVXV>> Gold
+    backgroundColor<<VVK>> DarkGoldenRod
+    backgroundColor<<Väline>> LightSalmon
+    backgroundColor<<Määratlemata>> Black
+}
+
+
+actor "Osapool" <<VVK>> as a_owner
+
+
+/'
+ '
+ '  EXTERNAL SERVICES
+ '
+ '/
+
+
+package "Rakendus" {
+
+    interface "Liides" <<IVXV>> as liides_1
+    interface "Määratlemata liides" <<Määratlemata>> as liides_3
+    [Komponent] <<IVXV>> as komponent_1
+
+    komponent_1 - liides_1
+    komponent_1 -up- liides_3
+}
+
+a_owner --> liides_3
+
+package "Teenus" {
+
+    interface "Liides" <<IVXV>> as liides_2
+    [IVXV komponent] <<IVXV>> as komponent_2
+    [Väline komponent] <<Väline>> as komponent_3
+
+    komponent_2 --> komponent_3
+    komponent_2 - liides_2
+
+    database "Andmebaas" as andmebaas {
+    }
+
+    komponent_2 --> andmebaas
+
+}
+
+liides_1 --> liides_2
+
+
+@enduml

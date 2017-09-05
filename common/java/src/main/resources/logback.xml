@@ -1,0 +1,41 @@
+<configuration>
+
+  <!-- Stop output INFO at start -->
+  <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>log/log-%d.log</fileNamePattern>
+    </rollingPolicy>
+    <!--
+    <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+      <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+        <jsonFormatter class="ee.ivxv.common.util.log.LogJsonFormatter">
+          <prettyPrint>true</prettyPrint>
+        </jsonFormatter>
+        <timestampFormat>yyyy-MM-dd HH:mm:ss.SSS</timestampFormat>
+      </layout>
+    </encoder>
+    -->
+    <encoder>
+      <pattern>%d [%thread] %-5level %mdc %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="PERFORMANCE" class="ch.qos.logback.core.FileAppender">
+    <file>log/performance.log</file>
+    <encoder>
+      <pattern>%d [%thread] %-5level %mdc %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="ee.ivxv.common.util.log.PerformanceLog" level="DEBUG">
+    <appender-ref ref="PERFORMANCE" />
+  </logger>
+
+  <logger name="ee.ivxv" level="DEBUG"/>
+
+  <root level="WARN">
+    <appender-ref ref="FILE" />
+  </root>
+</configuration>

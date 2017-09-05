@@ -1,0 +1,8 @@
+{
+	"id": 1,
+	"method": "RPC.VoterChoices",
+	"params": [{
+		"authmethod": "dummy",
+		"authtoken":  "MEUxLTArBgNVBAMMJMOFTFQtREVMRVTDiCxDw5hOVFJPTElOQSw0ODkwODIwOTk5ODEUMBIGA1UEBRMLNDg5MDgyMDk5OTg="
+	}]
+}

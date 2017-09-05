@@ -1,0 +1,55 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+
+    "definitions": {
+        "onlinevoters": {
+            "type": "object",
+            "patternProperties": {
+                "^[0-9]+$": {
+                    "type": "array",
+                    "items": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "number"
+                        }
+                    ],
+                    "additionalItems": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "stations": {
+            "type": "object",
+            "patternProperties": {
+                "^[0-9]+.[0-9]+$": {
+                    "$ref": "#/definitions/onlinevoters"
+                }
+            },
+            "additionalProperties": false,
+            "minProperties": 1
+        },
+        "districts": {
+            "type": "object",
+            "patternProperties": {
+                "^[0-9]+.[0-9]+$": {
+                    "$ref": "#/definitions/stations"
+                }
+            },
+            "additionalProperties": false,
+            "minProperties": 1
+        }
+    },
+
+    "type": "object",
+    "properties": {
+        "election": {"type": "string"},
+        "onlinevoters": {
+            "$ref": "#/definitions/districts"
+        }
+    },
+    "required": ["election", "onlinevoters"],
+    "additionalProperties": false
+}
+

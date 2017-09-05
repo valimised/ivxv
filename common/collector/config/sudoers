@@ -1,0 +1,6 @@
+# IVXV Internet voting framework
+
+# /etc/sudoers.d/ivxv
+
+# allow ivxv-admin user to execute ivxv-admin-helper srcipt
+ivxv-admin      ALL = (ALL)NOPASSWD: /usr/bin/ivxv-admin-helper

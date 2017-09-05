@@ -1,0 +1,10 @@
+[Unit]
+Description=IVXV Management Service Daemon
+
+[Service]
+ExecStart=/usr/bin/ivxv-admin-httpd
+User=ivxv-admin
+Group=ivxv
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=IVXV Management Service Agent Daemon
+
+[Service]
+ExecStart=/usr/bin/ivxv-agent-daemon
+User=ivxv-admin
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target

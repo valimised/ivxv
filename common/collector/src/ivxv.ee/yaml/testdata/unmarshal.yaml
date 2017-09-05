@@ -1,0 +1,36 @@
+# Scalars
+string: hello, world!
+int:    -123
+bool:   true
+
+# Sequences
+slice:
+  - first
+  - second
+  - third
+array:
+  - fourth
+  - fifth
+  - sixth
+
+# Mappings
+map:
+  key:   value
+  hello: world!
+struct:
+  foo: bar
+  baz: qux
+
+# Interface
+introspection:
+  scalar: hello, world!
+  sequence:
+    - first
+    - second
+
+# Nested
+nested:
+  - key:   value
+    hello: world!
+  - key:   foobar
+    hello: maailm!

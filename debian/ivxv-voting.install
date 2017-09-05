@@ -1,0 +1,6 @@
+#!/usr/bin/dh-exec
+usr/bin/voting    => usr/bin/ivxv-voting
+usr/bin/voteexp   => usr/bin/ivxv-voteexp
+usr/bin/voteunion => usr/bin/ivxv-voteunion
+
+usr/lib/systemd/user/ivxv-voting@.service

@@ -1,0 +1,40 @@
+{{/* vim: set ft=gotexttmpl: */ -}}
+global
+	log /dev/log local0{{if (not .Debug)}} info{{end}}
+	chroot /var/lib/haproxy
+	stats socket {{.Socket}} mode 660 level admin
+	stats timeout 30s
+	user haproxy
+	group haproxy
+	daemon
+
+defaults
+	log	global
+	option	dontlognull
+        timeout connect 5000
+        timeout client  50000
+        timeout server  50000
+
+frontend {{replace .Service.ID "@" "-" -1}}
+	bind {{.Service.Address}}
+
+	# Reject all connections unless election/on is up.
+	tcp-request content reject unless { srv_is_up(election/on) }
+
+	# Only accept TLS ClientHello messages.
+	tcp-request inspect-delay 1000
+	tcp-request content accept if { req.ssl_hello_type 1 }
+{{range .Backends}}
+	use_backend {{.Name}} if { req.ssl_sni {{.Name}}.ivxv.invalid }
+{{- end}}
+
+backend election
+	# Dummy server used as boolean to enable frontend. We need this so we
+	# can start the frontend in a disabled state.
+	server on 127.0.0.1 disabled
+{{range .Backends}}
+backend {{.Name}}
+	{{- range .Servers}}
+	server {{replace .ID "@" "-" -1}} {{.Address}} check inter 1m send-proxy-v2
+	{{- end}}
+{{end -}}

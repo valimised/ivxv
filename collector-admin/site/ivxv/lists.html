@@ -1,0 +1,366 @@
+<!--
+IVXV Internet voting framework
+
+Collector management service - Web interface - Voting lists management page
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Valimiste nimekirjad – IVXV Kogumisteenuse haldusteenus</title>
+    <!-- Bootstrap Core CSS -->
+    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MetisMenu CSS -->
+    <link href="../vendor/metisMenu/metisMenu.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="../vendor/datatables-plugins/dataTables.bootstrap.css" rel="stylesheet">
+    <!-- DataTables Responsive CSS -->
+    <link href="../vendor/datatables-responsive/dataTables.responsive.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
+    <!-- Custom Fonts -->
+    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+    <div id="wrapper">
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">Kogumisteenuse haldusteenus</a>
+            </div>
+            <!-- /.navbar-header -->
+            <ul class="nav navbar-top-links navbar-right">
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                    <i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
+                </a>
+                    <ul class="dropdown-menu dropdown-user" style="padding: 10px;">
+                        <li><i class="fa fa-user fa-fw"></i> Kasutaja andmed</li>
+                        <li>CN:&nbsp;<span id="user-cn"></span></li>
+                        <li>Isikukood:&nbsp;<span id="user-idcode"></span></li>
+                        <li>Roll:&nbsp;<span id="user-role-description"></span></li>
+                    </ul>
+                    <!-- /.dropdown-user -->
+                </li>
+                <!-- /.dropdown -->
+            </ul>
+            <!-- /.navbar-top-links -->
+            <div class="navbar-default sidebar" role="navigation">
+                <div class="sidebar-nav navbar-collapse">
+                    <ul class="nav" id="side-menu">
+                        <li>
+                            <a href="index.html"><i class="fa fa-dashboard fa-fw"></i> Üldseisund</a>
+                        </li>
+                        <li>
+                            <a href="lists.html"><i class="fa fa-list fa-fw"></i> Nimekirjad</a>
+                        </li>
+                        <li>
+                            <a href="stats.html"><i class="fa fa-bar-chart-o fa-fw"></i> Statistika</a>
+                        </li>
+                        <li>
+                            <a href="users.html"><i class="fa fa-user fa-fw"></i> Kasutajad</a>
+                        </li>
+                        <li>
+                            <a href="services.html"><i class="fa fa-sitemap fa-fw"></i> Teenused</a>
+                        </li>
+                        <li>
+                            <a href="ballot-box.html"><i class="fa fa-download fa-fw"></i> E-urn</a>
+                        </li>
+                        <li>
+                            <a href="log.html"><i class="fa fa-file-text fa-fw"></i> Logiraamat</a>
+                        </li>
+                        <li>
+                            <a href="about.html"><i class="fa fa-info-circle fa-fw"></i> Programmi andmed</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.sidebar-collapse -->
+            </div>
+            <!-- /.navbar-static-side -->
+        </nav>
+        <div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header">Nimekirjad</h1>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <p id="loadstatus">Andmete laadimise seisund</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Error message panel -->
+            <div id="common-error-msg" class="row" style="display: none;">
+                <div class="col-lg-12">
+                    <div class="panel panel-red">
+                        <div class="panel-body">
+                            <p>Veateade</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->
+            <div class="row">
+                <div class="col-lg-7">
+                    <div id="panel-choices-list" class="panel">
+                        <div class="panel-heading">
+                            Valikute nimekiri
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div id="panel-choices-list-not-loaded" class="col-lg-12" style="display: none">
+                                    <div class="alert alert-danger">
+                                        Valikute nimekiri on laadimata
+                                    </div>
+                                </div>
+                                <div id="panel-choices-list-data" class="col-lg-12">
+                                    <ul class="list-group">
+                                        <li class="list-group-item"><strong>Valikute nimekiri:</strong> <span id="list-choices">-</span></li>
+                                        <li class="list-group-item"><strong>Valikute nimekirja seisund:</strong> <span id="list-choices-status">-</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div id="panel-voters-list" class="panel">
+                        <div class="panel-heading">
+                            Valijate nimekiri
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div id="panel-voters-list-data" class="col-lg-12">
+                                    <ul class="list-group">
+                                        <li class="list-group-item"><strong>Valijate nimekirjad:</strong> haldusteenusesse laaditud <span id="list-voters-loaded">-</span>, rakendamise ootel <span id="list-voters-pending">-</span></li>
+                                        <div id="list-list"></div>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                            Nimekirjade rakendamine
+                        </h4>
+                        </div>
+                        <div class="panel-body">
+                            <div id="upload-message" class="alert alert-danger" style="display: none">
+                                Faili üleslaadimise veateade
+                            </div>
+                            <form id="config-upload-form" action="/ivxv/cgi/upload-config" method="post" enctype="multipart/form-data">
+                                <div class="form-group">
+                                    <div class="form-group">
+                                        <label>Nimekiri</label>
+                                        <input type="file" name="upload" />
+                                    </div>
+                                </div>
+                                <div class="dropdown" id="drop">
+                                    Nimekirja tüüp:
+                                    <br />
+                                    <select>
+                                        <option id="choicesoption" value="choices">Valikute nimekiri</option>
+                                        <option value="voters">Valijate nimekiri</option>
+                                    </select>
+                                </div>
+                                <button id="file-upload-submit" class="btn btn-primary">Rakenda seadistused</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /#page-wrapper -->
+    </div>
+    <!-- /#wrapper -->
+    <!-- jQuery -->
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <!-- Bootstrap Core JavaScript -->
+    <script src="../vendor/bootstrap/js/bootstrap.min.js"></script>
+    <!-- Metis Menu Plugin JavaScript -->
+    <script src="../vendor/metisMenu/metisMenu.min.js"></script>
+    <!-- DataTables JavaScript -->
+    <script src="../vendor/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="../vendor/datatables-plugins/dataTables.bootstrap.min.js"></script>
+    <script src="../vendor/datatables-responsive/dataTables.responsive.js"></script>
+    <!-- Custom Theme JavaScript -->
+    <script src="../dist/js/sb-admin-2.js"></script>
+    <!-- IVXV JavaScript -->
+    <script src="../js/ivxv.js"></script>
+    <!-- Page-Level Scripts -->
+    <script>
+    $(document).ready(function() {
+        getContextData();
+        reset_upload_form();
+        // set handler for file uploads
+        $('input[type=file]').on('change', prepareUpload);
+        $('#config-upload-form').on('submit', uploadFiles);
+    });
+
+    function loadPageData() {
+        var loadDate = new Date();
+        loadDate.setTime(Date.now());
+
+        $.getJSON('data/status.json', function(status) {
+                hideErrorMessage();
+
+                $('#list-voters-loaded').text(status['list']['voters-list-loaded']);
+                $('#list-voters-pending').text(status['list']['voters-list-pending']);
+                $('#list-choices').text(status['list']['choices'] ? status['list']['choices'] : '-');
+
+                if (!status['list']['choices']) {
+                    $('#list-choices-status').text('Laadimata');
+                    $('#panel-choices-list').attr('class', 'panel panel-red');
+                } else if (status['list']['choices'] && !status['list']['choices-loaded']) {
+                    $('#list-choices-status').text('Laaditud haldusteenusesse');
+                    $('#panel-choices-list').attr('class', 'panel panel-warning');
+                } else if (status['list']['choices'] === status['list']['choices-loaded']) {
+                    $('#list-choices-status').text('Rakendatud kogumisteenusele');
+                    $('#panel-choices-list').attr('class', 'panel panel-success');
+                    $('#choicesoption').hide();
+                    $('#drop').find('option[value="voters"]').prop('selected', true)
+                }
+
+                if (status['list']['voters-list-loaded'] === 0) {
+                    $('#panel-voters-list').attr('class', 'panel panel-red');
+                } else if (status['list']['voters-list-loaded'] !== 0 && status['list']['voters-list-pending'] === 0) {
+                    $('#panel-voters-list').attr('class', 'panel panel-success');
+
+                    $('#list-list').empty();
+                    for (var i = 0; i < status['list']['voters-list-loaded']; i++) {
+                        var iStr = i < 10 ? '0' + (i + 1) : (i + 1);
+                        var listStatus = status['list']['voters' + iStr] === status['list']['voters' + iStr + '-loaded'] ? 'LAADITUD' : 'OOTEL';
+                        $('#list-list').append(
+                            '<li class="list-group-item" style="padding-left:25px">' +
+                            (i + 1) + '. ' + listStatus + ': ' + status['list']['voters' + iStr] +
+                            '</li>'
+                        );
+                    }
+                } else {
+                    $('#panel-voters-list').attr('class', 'panel panel-warning');
+                }
+
+                var genDate = new Date();
+                genDate.setTime(Date.parse(status['meta']['time_generated']));
+                $('#loadstatus')
+                    .removeClass('text-danger')
+                    .addClass('text-info')
+                    .html('Andmete laadimise aeg: ' + formatTime(loadDate, 0) + '<br />' +
+                        'Andmete genereerimise aeg: ' + formatTime(genDate, 3));
+            })
+            .fail(function() {
+                $('#loadstatus')
+                    .removeClass('text-info')
+                    .addClass('text-danger')
+                    .html('Viga andmete laadimisel: ' + formatTime(loadDate, 0));
+                showErrorMessage('Viga seisundi laadimisel', true);
+            });
+        setTimeout(loadPageData, 10000);
+    }
+
+    // Reset upload form
+    function reset_upload_form() {
+        $('input[type=file]').val(null);
+        $('#file-upload-submit').attr('disabled', '');
+    }
+
+    // Variable to store uploaded files
+    var files;
+
+    // Grab the files and set them to our variable
+    function prepareUpload(event) {
+        files = event.target.files;
+        $('#file-upload-submit').attr('disabled', null);
+        $('#upload-message').hide();
+    }
+
+    // Catch the form submit and upload the files
+    function uploadFiles(event) {
+        $('#upload-message').hide()
+            .removeClass('alert-danger')
+            .removeClass('alert-danger')
+            .removeClass('alert-success');
+
+        event.stopPropagation(); // Stop stuff happening
+        event.preventDefault(); // Totally stop stuff happening
+        // Create a formdata object and add the files
+        var data = new FormData();
+        data.append('upload', files[0]);
+        data.append('type', $("#drop").find(":selected").val());
+
+        var form = $('#config-upload-form');
+        $.ajax({
+            url: form.attr('action'),
+            type: form.attr('method'),
+            data: data,
+            cache: false,
+            dataType: 'json',
+            processData: false, // Don't process the files
+            contentType: false, // Set content type to false as jQuery will tell the server its a query string request
+            success: function(data, textStatus, jqXHR) {
+                if (data.error === undefined) {
+                    // Success so call function to process the form
+                    console.log(jqXHR.responseJSON.message);
+                    if (jqXHR.responseJSON.message !== undefined) {
+                        $('#upload-message').html(jqXHR.responseJSON.message)
+                            .addClass('alert-success');
+                    } else {
+                        $('#upload-message').html(data)
+                            .addClass('alert-danger');
+                    }
+                    reset_upload_form();
+                } else {
+                    // Handle errors here
+                    console.log('ERRORS: ' + data.error);
+                    $('#upload-message').html('Tundmatu viga')
+                        .addClass('alert-danger');
+                }
+                $('#upload-message').show();
+                loadPageData();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                // Handle errors here
+                if (jqXHR.responseJSON === undefined) {
+                    console.log(jqXHR);
+                    $('#upload-message').html((jqXHR.responseText));
+                } else {
+                    console.log(jqXHR.responseJSON.message);
+                    $('#upload-message').html(jqXHR.responseJSON.message)
+                }
+                $('#upload-message').addClass('alert-danger').show();
+            }
+        });
+    }
+    </script>
+</body>
+
+</html>
+<!--
+vim:sts=4 sw=4 et:
+-->

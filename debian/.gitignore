@@ -1,0 +1,17 @@
+*-stamp
+*.debhelper
+*.log
+*.substvars
+files
+
+# package dirs
+tmp
+ivxv-admin
+ivxv-choices
+ivxv-common
+ivxv-dds
+ivxv-log
+ivxv-proxy
+ivxv-storage
+ivxv-verification
+ivxv-voting

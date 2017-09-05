@@ -1,0 +1,44 @@
+@startuml
+
+Title Kogumisteenuse alamteenuse olekudiagramm
+
+skinparam state {
+  BackgroundColor<<OK>> LightGreen
+  BackgroundColor<<Invalid>> LightCoral
+}
+
+state Paigaldamata
+state Paigaldatud
+state Seadistatud <<OK>>
+state Tõrge <<Invalid>>
+
+Paigaldamata: Teenus kirjeldatud tehnilistes seadistustes,
+Paigaldamata: kuid teenuse tarkvara on paigaldamata või
+Paigaldamata: pole teenusele tehnilisi seadistusi rakendatud.
+
+Paigaldatud : Teenuse tarkvara on paigaldatud ja teenusele
+Paigaldatud : rakendatud seadistuste seisund on:
+Paigaldatud : - usaldusjuure seadistused on rakendatud;
+Paigaldatud : - tehnilised seadistused on rakendatud;
+Paigaldatud : - valimiste seadistused on rakendamata.
+
+Seadistatud : Teenus on töökorras
+
+Tõrge : Teenus pole töökorras
+
+[*] --> Paigaldamata
+
+Paigaldamata --> Paigaldatud : Haldusteenus paigaldab \n teenuse tarkvara ning \n rakendab usaldusjuure ja \n tehnilised seadistused
+
+Paigaldatud --> Seadistatud : Haldusteenus rakendab \n teenusele \n valimiste seadistused
+
+Seadistatud --> Tõrge : Haldusteenusel \n kaob ühendus \n teenusega
+
+Tõrge --> Seadistatud : Seadistatud \n teenuse \n tõrge \n kõrvaldatakse
+Tõrge --> [*] : Hääletusperiood \n lõppeb
+
+Seadistatud --> [*] : Hääletusperiood \n lõppeb
+
+@enduml
+
+# vim:set sts=2 sw=2 et:

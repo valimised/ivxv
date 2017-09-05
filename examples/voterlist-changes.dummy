@@ -1,0 +1,29 @@
+signatures:
+  - signer: |
+      -----BEGIN CERTIFICATE-----
+      MIIBijCCATCgAwIBAgIJAJldSxM2hh55MAoGCCqGSM49BAMCMB8xHTAbBgNVBAMM
+      FENvbmZpZ3VyYXRpb24gU2lnbmVyMCAXDTE3MDExOTE0MDYxN1oYDzIxMTYxMjI2
+      MTQwNjE3WjAfMR0wGwYDVQQDDBRDb25maWd1cmF0aW9uIFNpZ25lcjBZMBMGByqG
+      SM49AgEGCCqGSM49AwEHA0IABLMo1qGUQNBKYoYHjZ9iEl8kfaCiqATqV7JKqdWc
+      dKXs/RJC/0Mi8HQGOOxxenvpErRnNPnxQvrOyejIp1mq7bijUzBRMB0GA1UdDgQW
+      BBRDNaElGLEWCMQqE/TGCOrfr+MwRDAfBgNVHSMEGDAWgBRDNaElGLEWCMQqE/TG
+      COrfr+MwRDAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0gAMEUCIAvrkzDr
+      29i4BRrqDJ7QXvLo9KFlm4a80/ME7uv3/CMqAiEAhbuBnbkyOqKzKZ5ceJefZSU2
+      YsQ3obk0n54TF/Xmibc=
+      -----END CERTIFICATE-----
+data:
+  voterlist-changes: |
+    1
+    test election
+    muudatused
+    48908209998	CØNTROLINA ÅLT-DELETÈ	kustutamine	100	1	100	1		
+    48908209998	CØNTROLINA ÅLT-DELETÈ	lisamine	200	2	200	2		
+
+  voterlist-changes.signature: |
+    base64(hTfOB9KjhNgw3q+LlOXcRXNO0i/RYQRL/3BEsnvc78Rc+K/SSyRil+Qv7vc6YKl/RNXom
+    HiXr4S18pjJjY4gFIimw2EtLmOnXrRwtk94UZ1Ww8+twoMFC2cAwAV9zr7Vt/ea6RCdk0N9/9tBG
+    3YjN/761UT77uzswCm98QJXk8iBI++Z6/K1ZeNeMFsDuUAiD8iNmgRSY2Ep0fbWW2t+NE/pENZu1
+    kxUtT8kN+CKplMzNwANMVQlbL8jcz8XxVf2adkR42moVMV22s6L41yXUJUJCtijax8yrr66z1NIj
+    thgEAiPfiRWIWl9LrpqpxraMqHGJI/3dkGZ183bCfUwtA==)
+
+# vim: set ft=yaml sw=2:

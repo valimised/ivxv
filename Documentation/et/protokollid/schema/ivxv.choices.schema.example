@@ -1,0 +1,27 @@
+{
+  "choices": {
+    "164.1": {
+      "Nimi Valimisliit": {
+        "164.126": "Nimi Kandidaat", 
+        "164.127": "Nimi Kandidaat"
+      }
+    }, 
+    "296.1": {
+      "Nimi Erakond": {
+        "296.198": "Nimi Kandidaat", 
+        "296.199": "Nimi Kandidaat", 
+        "296.200": "Nimi Kandidaat"
+      }, 
+      "Nimi Valimisliit": {
+        "296.115": "Nimi Kandidaat", 
+        "296.116": "Nimi Kandidaat", 
+        "296.117": "Nimi Kandidaat"
+      }, 
+      "Üksikkandidaadid": {
+        "296.101": "Nimi Kandidaat", 
+        "296.102": "Nimi Kandidaat"
+      }
+    }
+  }, 
+  "election": "TESTKOV"
+}

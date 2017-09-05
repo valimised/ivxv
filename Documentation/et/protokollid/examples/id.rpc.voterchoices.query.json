@@ -1,0 +1,10 @@
+{
+    "id": 0.0,
+    "method": "RPC.VoterChoices",
+    "params": [
+        {
+            "AuthMethod": "tls",
+            "OS": "Operating System,2,0"
+        }
+    ]
+}

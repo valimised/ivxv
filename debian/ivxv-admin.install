@@ -1,0 +1,30 @@
+#!/usr/bin/dh-exec
+
+# config file for admin utils
+collector-admin/ivxv-collector-admin.conf etc/ivxv/
+
+# IVXV admin interface
+collector-admin/site/index.html      var/www/collector-admin/
+collector-admin/site/ivxv            var/www/collector-admin/
+# WSGI application
+collector-admin/site/ivxv-admin.wsgi var/www/collector-admin/
+# IVXV admin JavaScript
+collector-admin/site/js              var/www/collector-admin/
+
+# Apache config file
+collector-admin/config/ivxv-admin-ui.conf etc/apache2/sites-available/
+# Rsyslog config file
+collector-admin/config/rsyslog.conf => etc/rsyslog.d/90-ivxv-admin.conf
+# SK certificates for Apache
+collector-admin/sk-certs/KLASS3-SK_2010_EECCRCA_SHA384.pem.crt etc/ssl/certs/
+
+# "SB Admin 2" theme
+common/external/startbootstrap-sb-admin-2/dist   var/www/collector-admin/
+common/external/startbootstrap-sb-admin-2/js     var/www/collector-admin/
+common/external/startbootstrap-sb-admin-2/vendor var/www/collector-admin/
+
+# BDOC verifier binary
+usr/bin/verifier  => usr/bin/ivxv-container-verifier
+
+# Management Service Agent Daemon service
+debian/ivxv-admin-agent.service lib/systemd/system/

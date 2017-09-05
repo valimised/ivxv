@@ -1,0 +1,48 @@
+@startuml
+
+Title Koguja teenusekomponendi olekumuutus haldusserveris
+
+partition Paigaldamine {
+  :UUS;
+
+    while (Kas teenuse konto alt õnnestub teenuse olekut küsida?) is (ei)
+      if (Kas teenusmasina juurkonto alt \n õnnestub teenuspaki olekut küsida?) then (jah)
+        :Paigalda teenuse pakk;
+        :Loo ligipääs teenuse kontole;
+      else (ei)
+        :Määra uus olek VIGANE;
+        stop
+      endif
+    endwhile (jah)
+
+    while (Kas teenusmasina juurkontole õnnestub ligi pääseda?) is (jah)
+      :eemalda ligipääs teenusmasina juurkontole;
+    endwhile (ei)
+}
+
+partition Seadistamine {
+  :PAIGALDATUD;
+    while (Kas teenusele on rakendatud värskeimad seadistused?) is (ei)
+      :Laadi seadistused teenusmasinasse;
+      :Rakenda seadistused teenusele;
+    endwhile (jah)
+}
+
+partition Käitamine {
+  :SEADISTATUD;
+    while (Kas teenuse oleku küsimine õnnestub) is (jah)
+      :Laadi haldusteenusesse teenuse viimased andmed;
+      :Oota;
+      if (Kui haldur keelab teenuse?) then (jah)
+        :Määra uus olek KEELATUD;
+        stop
+      else (ei)
+      endif
+    endwhile (ei)
+}
+
+:VIGANE;
+
+@enduml
+
+# vim:set sts=2 sw=2 et:

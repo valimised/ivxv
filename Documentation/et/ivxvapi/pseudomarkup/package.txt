@@ -1,0 +1,123 @@
+{{ "" }}
+{{ "" }}
+{{- with .PDoc -}}
+    {{- if $.IsMain -}}
+{{ "" }}
+SUBTITLE:Command documentation
+{{ "" }}
+{{comment_text .Doc "COMMENT:" "COMMENT:\t"}}
+    {{- else -}}
+TITLE:{{.Name}}
+IMPORT:{{.ImportPath}}
+CONTENTS:1
+SUBTITLE:Overview
+{{comment_text .Doc "COMMENT:" "COMMENT:\t"}}
+EXAMPLE:{{example_text $ "" ""}}
+SUBTITLE:Index
+CONTENTS:
+        {{- with .Consts }}
+CONSTANTS:
+            {{- range . -}}
+                {{- $decl := node $ .Decl -}}
+{{""}}
+{{comment_text $decl "DECL:\t" "DECL:\t\t"}}
+{{comment_text .Doc "COMMENT:" "COMMENT:\t"}}
+            {{- end -}}
+        {{- end -}}
+
+        {{- with .Vars }}
+VARIABLES:
+            {{- range . -}}
+                {{- $decl := node $ .Decl -}}
+{{""}}
+{{comment_text $decl "DECL:\t" "DECL:\t\t"}}
+{{comment_text .Doc "COMMENT:" "COMMENT:\t"}}
+            {{- end -}}
+        {{- end -}}
+
+        {{- with .Funcs -}}{{/* Functions */}}
+            {{- range . -}}
+                {{- $decl := node $ .Decl -}}
+{{""}}
+FUNC:{{.Name}}
+{{comment_text $decl "DECL:\t" "DECL:\t\t"}}
+{{comment_text .Doc "COMMENT:" "COMMENT:\t"}}
+EXAMPLE:{{example_text $ .Name ""}}
+            {{- end -}}
+        {{- end -}}
+
+        {{- with .Types -}}{{/* Types */}}
+            {{- range . -}}
+                {{- $tname := .Name -}}
+                {{- $decl := node $ .Decl -}}
+{{ "" }}
+TYPE:{{.Name}}
+{{comment_text $decl "DECL:\t" "DECL:\t\t"}}
+{{comment_text .Doc "COMMENT:" "COMMENT:\t"}}
+                {{- if .Consts -}}
+                    {{- range .Consts -}}
+                        {{- $decl := node $ .Decl -}}
+{{comment_text $decl "DECL:\t" "DECL:\t\t"}}
+{{comment_text .Doc "COMMENT:" "COMMENT:\t"}}
+                    {{- end -}}
+                {{- end -}}
+
+                {{- if .Vars -}}
+                    {{- range .Vars -}}
+                        {{- $decl := node $ .Decl -}}
+{{ "" }}
+{{ "" }}
+{{comment_text $decl "DECL:\t" "DECL:\t\t"}}
+{{comment_text .Doc "COMMENT:" "COMMENT:\t"}}
+                        {{- range $name := .Names -}}
+                            {{- example_text $ $name "" -}}
+                        {{- end -}}
+                    {{- end -}}
+                {{- end -}}
+
+                {{- if .Funcs -}}
+                    {{- range .Funcs -}}
+{{ "" }}
+TYPEFUNC:{{node $ .Decl}}
+{{ "" }}
+{{comment_text .Doc "COMMENT:" "COMMENT:\t"}}
+EXAMPLE:{{example_text $ .Name ""}}
+                    {{- end -}}
+                {{- end -}}
+
+                {{- if .Methods -}}
+                    {{- range .Methods -}}
+                        {{- $name := printf "%s_%s" $tname .Name -}}
+{{ "" }}
+TYPEMETHOD:{{node $ .Decl | urlquery}}
+{{ "" }}
+{{comment_text .Doc "COMMENT:" "COMMENT:\t"}}
+EXAMPLE:{{example_text $ $name ""}}
+                    {{- end -}}
+                {{- end -}}
+            {{- end -}}
+        {{- end -}}
+    {{- end -}}
+
+    {{- with $.Notes -}}
+        {{- range $marker, $content := . -}}
+            {{- $marker -}}S
+
+            {{- range $content -}}
+{{comment_text .Body "COMMENT:" "COMMENT:\t"}}
+            {{- end -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+
+
+{{- with .Dirs -}}
+{{ "" }}
+SUBTITLE:Subdirectories
+    {{- range .List -}}
+        {{- repeat `. ` .Depth -}}
+{{ "" }}
+DIR:{{.Name}}
+    {{- end -}}
+{{- end -}}
+{{ "" }}

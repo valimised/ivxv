@@ -1,0 +1,6 @@
+#!/usr/bin/dh-exec
+usr/bin/proxy => usr/bin/ivxv-proxy
+
+usr/share/ivxv/haproxy.cfg.tmpl
+usr/share/ivxv/haproxy-rsyslog.conf
+usr/lib/systemd/user/ivxv-proxy@.service

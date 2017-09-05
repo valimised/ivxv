@@ -1,0 +1,12 @@
+*.swp
+*.pyc
+gen_types.go
+gen_types_test.go
+gen_import.go
+gen_import_dev.go
+__pycache__
+
+# ivxv-admin
+/build
+/.pybuild
+/collector-admin/IVXVCollectorAdminDaemon.egg-info

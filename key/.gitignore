@@ -1,0 +1,9 @@
+.classpath
+.gradle/
+.idea/
+.project
+build/
+/log/
+bin/
+.settings/
+dummy_cards/

@@ -1,0 +1,26 @@
+
+@startuml
+
+title "Töötleja"
+
+usecase (Töötleja usaldusjuurte laadimine)
+usecase (Töötleja seadistuse import)
+usecase (Allkirjastatud häälte import)
+usecase (Ajamärgendite import)
+usecase (Kontrollimine - ver, ATO)
+usecase (Korduvate häälte tühistamine)
+usecase (E-hääletanute nimekiri jaoskondade kaupa)
+usecase (Tühistusavalduste import)
+usecase (Tühistamise ennistusavalduste import)
+usecase (Anonümiseerimine)
+usecase (Anonüümsete häälte eksport)
+usecase (Lugemisele läinud E-hääletanute nimekiri jaoskondade kaupa)
+usecase (Tegevuslogi)
+usecase (Tulemuslogi)
+usecase (Hääle olekulogi)
+
+usecase (Korrektse korduvhääle tühistamise tõestamine)
+usecase (Korrektse hääle tühistamise tõestamine p-hääle tõttu)
+usecase (Miksimissisendi autentsuse tõestamine)
+
+@enduml
