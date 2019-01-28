@@ -18,7 +18,6 @@ import ee.ivxv.common.service.bbox.impl.BboxHelperImpl;
 import ee.ivxv.common.service.console.Progress;
 import ee.ivxv.common.util.I18nConsole;
 import ee.ivxv.common.util.ToolHelper;
-import ee.ivxv.common.util.Util;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -34,6 +33,9 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Tool for verifying the correctness of decryptions.
+ */
 public class DecryptTool implements Tool.Runner<DecryptArgs> {
     private final Logger log = LoggerFactory.getLogger(DecryptTool.class);
 
@@ -51,8 +53,7 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
     public boolean run(DecryptArgs args) throws Exception {
         console.println();
         console.println(Msg.m_pub_loading, args.pubPath.value());
-        String keyString = new String(Files.readAllBytes(args.pubPath.value()), Util.CHARSET);
-        ElGamalPublicKey pub = new ElGamalPublicKey(Util.decodePublicKey(keyString));
+        ElGamalPublicKey pub = new ElGamalPublicKey(args.pubPath.value());
         console.println(Msg.m_pub_loaded);
 
         Proof proofs = tool.readJsonProofs(args.inputPath.value());

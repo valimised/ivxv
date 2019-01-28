@@ -17,7 +17,7 @@ ivxv-cmd-load
 
    Load command to IVXV Collector Management Service.
 
-   Usage: ivxv-cmd-load [--validate-only] <type> FILE
+   Usage: ivxv-cmd-load [--autoapply] [--show-version] <type> FILE
 
    Options:
        <type>              Command type. Possible values are:
@@ -25,6 +25,8 @@ ivxv-cmd-load
                            - technical: collector technical config
                            - trust: trust root config
                            - choices: choices list
+                           - districts: districts list
                            - voters: voters list
                            - user: user account and role(s)
-       --validate-only     Validate only.
+       --autoapply         Apply command file automatically (by Agent Daemon).
+       --show-version      Output config file version and exit.

@@ -51,6 +51,11 @@ type Election struct {
 		ServiceStop   string // The time when to stop serving requests.
 	}
 
+	Voting struct {
+		RateLimitStart   uint64 // After how many votes do we rate limit submissions? 0 means immediately.
+		RateLimitMinutes uint64 // How many minutes between submission when limiting? 0 disables rate limiting.
+	}
+
 	Verification struct {
 		Count   uint64 // How many times a vote can be verified? 0 means unlimited.
 		Minutes uint64 // How much time is given to verify a vote? 0 means unlimited.
@@ -62,6 +67,18 @@ type Election struct {
 	// valid signed container can vote, and the specified choices list will
 	// be presented to all users.
 	IgnoreVoterList string
+
+	VoterList struct {
+		Key string // PEM-encoding of the public key used to verify voter list signatures.
+	}
+
+	// Composited configuration structures defined in other packages.
+	Auth          auth.Conf
+	Identity      identity.Type
+	Age           age.Conf
+	Vote          container.Conf
+	DDS           dds.Conf
+	Qualification q11n.Conf
 }
 
 // ServiceStartTime parses c.Period.ServiceStart and returns the result.
@@ -88,24 +105,14 @@ func (e Election) ServiceStopTime() (time.Time, error) {
 type Technical struct {
 	Debug bool // Should debug logging be enabled?
 
-	VoterList struct {
-		Key string // PEM-encoding of the public key used to verify voter list signatures.
-	}
-
 	Network []struct {
 		ID       string   // Network segment identifier.
 		Services Services // Configured services in this segment.
 	}
 
 	// Composited configuration structures defined in other packages.
-	Auth          auth.Conf
-	Identity      identity.Type
-	Age           age.Conf
-	Vote          container.Conf
-	Storage       storage.Conf
-	DDS           dds.Conf
-	Qualification q11n.Conf
-	Filter        server.FilterConf
+	Filter  server.FilterConf
+	Storage storage.Conf
 }
 
 // Services is a block of configured services for each service type.
@@ -156,6 +163,13 @@ func (t Technical) Service(id string) (network string, service *Service) {
 // be included in the configuration, e.g., secret keys.
 func Sensitive(id string) string {
 	return filepath.Join("/var/lib/ivxv/service", id)
+}
+
+// TLS returns the path to the TLS-certificate and corresponding private key
+// given the service directory.
+func TLS(sensitive string) (cert, key string) {
+	return filepath.Join(sensitive, "tls.pem"),
+		filepath.Join(sensitive, "tls.key")
 }
 
 // New opens and parses configuration files. All files must be signature
@@ -210,6 +224,8 @@ func New(ctx context.Context, trust, election, technical string) (c *C, code int
 
 func (c *C) trust(ctx context.Context, path string) (code int, err error) {
 	// First open trust without verifying signatures.
+	//
+	// nolint: gosec, Allow path from variable, assume correct and safe.
 	fp, err := os.Open(path)
 	if err != nil {
 		return exit.NoInput, OpenTrustFileError{Err: err}
@@ -293,15 +309,16 @@ func (c *C) parse(ctx context.Context, path, key string, v interface{}) (
 	return
 }
 
-// unmarshal unmarshals configuration with the given key from an opened
-// container into v.
+// unmarshal searches a container for the an entry with the given key or that
+// ends in ".<key>" and unmarshals its contents within into v.
 func unmarshal(key string, data map[string][]byte, v interface{}) (err error) {
-	y, ok := data[key]
-	if !ok {
-		return MissingContainerKeyError{Key: key}
+	for name, content := range data {
+		if name == key || strings.HasSuffix(name, "."+key) {
+			if err = yaml.Unmarshal(bytes.NewReader(content), data, v); err != nil {
+				return UnmarhsalConfError{Err: err}
+			}
+			return nil
+		}
 	}
-	if err = yaml.Unmarshal(bytes.NewReader(y), data, v); err != nil {
-		return UmarhsalConfError{Err: err}
-	}
-	return
+	return MissingContainerKeyError{Key: key}
 }

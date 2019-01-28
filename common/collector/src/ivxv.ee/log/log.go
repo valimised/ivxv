@@ -143,7 +143,7 @@ type Sensitive []byte
 func Debug(ctx context.Context, entry Entry) {
 	l := fromctx(ctx)
 	if atomic.LoadUint32(&l.debug) == 1 {
-		l.w.Debug(format(ctx, entry)) // nolint: errcheck, gas, ignore logging errors.
+		l.w.Debug(format(ctx, entry)) // nolint: errcheck, gosec, ignore logging errors.
 	}
 }
 
@@ -223,7 +223,7 @@ func Debug(ctx context.Context, entry Entry) {
 // logged instead, containing the time, connection ID, session ID, entry ID,
 // and the error that occurred. The unencoded entry will not be included.
 func Log(ctx context.Context, entry Entry) {
-	fromctx(ctx).w.Info(format(ctx, entry)) // nolint: errcheck, gas, ignore logging errors.
+	fromctx(ctx).w.Info(format(ctx, entry)) // nolint: errcheck, gosec, ignore logging errors.
 }
 
 // Error logs an error entry. By default, the entry is logged with severity
@@ -240,7 +240,7 @@ func Error(ctx context.Context, entry ErrorEntry) {
 	if errors.CausedBy(entry, new(alert)) != nil {
 		f = l.w.Alert
 	}
-	f(format(ctx, entry)) // nolint: errcheck, gas, ignore logging errors.
+	f(format(ctx, entry)) // nolint: errcheck, gosec, ignore logging errors.
 }
 
 type alert struct {
@@ -465,7 +465,7 @@ func (e *encoder) encodeString(s string) (err error) {
 // of using encoding/json, because a type alias of []byte with a MarshalJSON
 // method could override this behavior.
 //
-// nolint: errcheck, gas, writing to bytes.Buffer always returns nil and
+// nolint: errcheck, gosec, writing to bytes.Buffer always returns nil and
 // base64.Encoder only returns errors when writing to the underlying stream
 // fails.
 func (e *encoder) encodeBase64(data []byte) (err error) {
@@ -478,8 +478,6 @@ func (e *encoder) encodeBase64(data []byte) (err error) {
 }
 
 // encodeArray encodes an array or slice into a JSON array with encoded values.
-//
-// nolint: gas, writing to bytes.Buffer always returns nil.
 func (e *encoder) encodeArray(v reflect.Value) (err error) {
 	e.WriteByte('[')
 	for i := 0; i < v.Len(); i++ {
@@ -496,8 +494,6 @@ func (e *encoder) encodeArray(v reflect.Value) (err error) {
 
 // encodeMap encodes a map with string keys into a JSON object with encoded
 // names and values.
-//
-// nolint: gas, writing to bytes.Buffer always returns nil.
 func (e *encoder) encodeMap(v reflect.Value) (err error) {
 	// Allow only string keys. encoding/json package also allows numbers
 	// and encoding.TextMarshalers, but we have no need for that.
@@ -527,8 +523,6 @@ func (e *encoder) encodeMap(v reflect.Value) (err error) {
 }
 
 // encodeStruct encodes a struct into a JSON object with encoded values.
-//
-// nolint: gas, writing to bytes.Buffer always returns nil.
 func (e *encoder) encodeStruct(v reflect.Value) (err error) {
 	e.WriteByte('{')
 	for i := 0; i < v.NumField(); i++ {
@@ -549,8 +543,6 @@ func (e *encoder) encodeStruct(v reflect.Value) (err error) {
 
 // encodeNested encodes a nested log entry into a JSON object as described in
 // Log.
-//
-// nolint: gas, writing to bytes.Buffer always returns nil.
 func (e *encoder) encodeNested(n Entry) (err error) {
 	e.WriteString(`{"ID":`)
 	if err = e.Encode(n.EntryID()); err != nil {

@@ -412,5 +412,3 @@ sõnumi hashAlgorithmist::
 Signature.signingAlgorithm.parameters puudub või on NULL.
 
 Signature.signature on OCTET STRING, mis sisaldab RSA signatuuri sõnumil.
-
-.. vim: sts=3 sw=3 et:

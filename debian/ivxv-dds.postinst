@@ -24,17 +24,19 @@ case "$1" in
         # add user account
         if ! getent passwd ivxv-dds > /dev/null; then
             echo "# Adding user 'ivxv-dds'"
-            adduser --quiet --shell=/bin/bash --system --ingroup ivxv ivxv-dds
+            adduser --quiet --home /var/lib/ivxv/user/ivxv-dds \
+                --shell /bin/bash --system --ingroup ivxv ivxv-dds
         fi
 
         # prepare ssh directory for user account
         test -d ~ivxv-dds/.ssh ||
 	    mkdir --parents ~ivxv-dds/.ssh
 	chmod 700 ~ivxv-dds/.ssh
+	chown ivxv-dds:ivxv ~ivxv-dds/.ssh
 	test -e ~ivxv-dds/.ssh/authorized_keys ||
 	    touch ~ivxv-dds/.ssh/authorized_keys
 	chmod 600 ~ivxv-dds/.ssh/authorized_keys
-	chown -R ivxv-dds:ivxv ~ivxv-dds/.ssh
+	chown ivxv-dds:ivxv ~ivxv-dds/.ssh/authorized_keys
 
         # enable user to automatically start service
         loginctl enable-linger ivxv-dds
@@ -60,5 +62,3 @@ fi
 #DEBHELPER#
 
 exit 0
-
-# vim:sts=4 sw=4 et:

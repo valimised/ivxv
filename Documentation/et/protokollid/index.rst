@@ -20,9 +20,8 @@ IVXV protokollid
    04-seadistus
    05-ehaal
    06-talletamine
+   06a-regteenus
    07-kontrollimine
    08-haaletamine
    09-tootlemine
    11-audit
-
-.. vim: sts=3 sw=3 et:

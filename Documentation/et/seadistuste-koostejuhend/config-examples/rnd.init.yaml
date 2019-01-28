@@ -1,0 +1,10 @@
+init:
+
+  [...]
+
+  required_randomness: 128
+  random_source:
+  - random_source_type: system
+  - random_source_type: user
+    random_source_path: server.exe
+

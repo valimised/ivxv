@@ -16,7 +16,3 @@ IVXV registreerimisteenus
    :numbered:
 
    regteenus
-   viited
-
-
-.. vim: sts=3 sw=3 et:

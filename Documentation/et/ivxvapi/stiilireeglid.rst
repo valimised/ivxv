@@ -18,5 +18,3 @@ trepitakse nelja tühikuga, mitte kahega nagu reeglites kirjas.
 Pythoni puhul järgitakse `PEP 8 stiilireegleid
 <https://www.python.org/dev/peps/pep-0008/>`_ ja `PEP 257
 dokumentatsioonisõnede tavasid <https://www.python.org/dev/peps/pep-0257/>`_.
-
-.. vim: sts=3 sw=3 et:

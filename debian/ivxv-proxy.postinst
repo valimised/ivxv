@@ -21,7 +21,7 @@ set -e
 ensure_dir() {
         test -d "$1" || mkdir --parents "$1"
         chmod $2 "$1"
-        chown -R $3 "$1"
+        chown $3 "$1"
 }
 
 ensure_file() {
@@ -69,7 +69,7 @@ case "$1" in
             dpkg-divert --add "${HAPROXY_CONF}"
             ln --symbolic --force /usr/share/ivxv/haproxy-rsyslog.conf "${HAPROXY_CONF}"
             echo "# Restarting rsyslog"
-            systemctl restart rsyslog
+            deb-systemd-invoke restart rsyslog
         fi
     ;;
 
@@ -93,5 +93,3 @@ fi
 #DEBHELPER#
 
 exit 0
-
-# vim:sts=4 sw=4 et:

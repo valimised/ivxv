@@ -83,6 +83,14 @@ public class BlockingQueueConsole implements Console {
     }
 
     @Override
+    public Progress startInfiniteProgress(String format, long total) {
+        ProgressImpl progress =
+                new InfiniteProgressImpl(total, () -> queue.add(PROGRESS_FINISHED_MSG));
+        psRef.set(new PbFormatter(progress, format));
+        return progress;
+    }
+
+    @Override
     public void shutdown() {
         queue.add(Util.EOT);
         executor.shutdown();
@@ -158,7 +166,8 @@ public class BlockingQueueConsole implements Console {
         }
 
         private String formatProgress() {
-            String result = "\r" + format;
+            // For infinite progress overwrite the end of the line by spaces and move to the start
+            String result = "\b\b\b\b    \r" + format;
             int percent = progress.getTotal() == 0 ? 100
                     : (int) ((progress.getValue() * 100) / progress.getTotal());
 

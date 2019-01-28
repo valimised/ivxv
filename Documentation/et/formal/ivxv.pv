@@ -1,0 +1,335 @@
+(* In the model, use the following phases:
+  Phase 0 : generation of keys; registration of voters
+  Phase 1 : voting
+  Phase 2 : mixing
+  Phase 3 : tallying
+  Phase 4 : auditing
+*)
+
+(*
+set ignoreTypes = false.
+set verboseRules = true.
+set verboseClauses = explained.
+set redundancyElim = best.*)
+
+(*
+set reconstructTrace = false.
+set reconstructDerivation = false.
+set displayDerivation = false.
+*)
+set traceBacktracking = false.
+
+free net : channel.
+
+free chan_KG2collector : channel [private].
+free chan_KG2VA : channel [private].
+free chan_KG2verify : channel [private].
+free chan_KG2RA : channel [private].
+free chan_collector2RA : channel [private].
+free chan_RA2collector : channel [private].
+
+free cbGeneratorSK : channel [private]. (* Channel to contact the code book generator *)
+free collectorSK : channel [private]. (* Channel to contact collector (write-only) *)
+free collectorFromVerifierSK : channel [private]. (* Channel to contact collector from the verifier (write-only) *)
+
+type skey4sign.
+type pkey4sign.
+type skey4enc.
+type pkey4enc.
+type voterid.
+type votetype.
+type authtoken.
+type bbidx.
+type nonce.
+type voteset.
+
+free choices: voteset [private].
+
+fun votersVote(voterid) : votetype.
+
+fun voteToBitstring(votetype) : bitstring [data, typeConverter].
+fun pkToBitstring(pkey4sign) : bitstring [data, typeConverter].
+
+table voterPKs(voterid, pkey4sign, bitstring).
+
+fun pk_sign(skey4sign) : pkey4sign.
+fun pk_enc(skey4enc) : pkey4enc.
+
+fun sign(skey4sign, nonce, bitstring) : bitstring.
+reduc forall sk : skey4sign, u : nonce, m : bitstring; verify(pk_sign(sk), m, sign(sk, u, m)) = true.
+fun signDet(skey4sign, bitstring) : bitstring.
+reduc forall sk : skey4sign, m : bitstring; verifyDet(pk_sign(sk), m, signDet(sk, m)) = true.
+
+fun penc(pkey4enc, nonce, bitstring) : bitstring.
+reduc forall sk : skey4enc, u : nonce, m : bitstring; pdec(sk, penc(pk_enc(sk), u, m)) = m.
+reduc forall pk : pkey4enc, u : nonce, v : votetype; bruteforce(pk, u, penc(pk, u, voteToBitstring(v))) = v.
+
+fun hash(bitstring) : bitstring.
+
+fun enterpin(authtoken) : skey4sign.
+
+fun extractvote(bitstring) : votetype [private].
+fun extractauthtoken(pkey4sign) : authtoken [private].
+equation forall idcard : authtoken; extractauthtoken(pk_sign(enterpin(idcard))) = idcard.
+equation forall pk : pkey4enc, u : nonce, v : votetype; extractvote(penc(pk, u, voteToBitstring(v))) = v.
+
+event voterIsAdversarial(voterid).
+event voterIsEligible(voterid).
+event voterHasChoices(voterid, voteset).
+event happyVoter(voterid, votetype, authtoken).
+table evt_happyVoter(voterid, votetype, authtoken).
+event addToBallots_before(pkey4sign).
+event addToBallots_after(pkey4sign).
+event vssStoredVote(voterid, votetype, authtoken).
+event mixnetHandled(bitstring).
+event voteIsInSet_voter(votetype, voteset).
+event voteIsInSet_verifier(votetype, voteset).
+
+event raRegisteredVote(bbidx, bitstring, bitstring, bitstring).
+event voterVerifiedVote(bbidx, bitstring, bitstring, bitstring).
+
+event reachable.
+
+let initializer =
+  new priv_CA: skey4sign;
+  let pub_CA = pk_sign(priv_CA) in
+  new priv_RA: skey4sign;
+  let pub_RA = pk_sign(priv_RA) in
+  new priv_collector : skey4sign;
+  let pub_collector = pk_sign(priv_collector) in
+  new priv_tally : skey4enc;
+  let pub_tally = pk_enc(priv_tally) in
+  out(net, (pub_collector, pub_CA, pub_tally, pub_RA));
+  ( ! out(chan_KG2collector, (priv_collector, pub_collector, pub_CA, pub_RA)); 0 ) |
+  ( ! out(chan_KG2VA, (pub_CA, pub_tally, pub_RA, pub_collector)); 0 ) |
+  ( ! out(chan_KG2verify, (pub_tally, pub_collector, pub_RA)); 0 ) |
+  ( ! out(chan_KG2RA, (priv_RA, pub_collector)); 0) |
+  (
+    new id : voterid;
+    new idcard : authtoken;
+    let pub = pk_sign(enterpin(idcard)) in
+    let s4 = signDet(priv_CA, (id, pub)) in
+    insert voterPKs(id, pub, s4); (* This creates the database DB *)
+    out(chan_KG2collector, (id, idcard));
+    0
+  ) |
+  ( ! (* This replaces VoteKeygen *)
+    in(cbGeneratorSK, (id : voterid, backChannel : channel));
+    new idcard : authtoken;
+    event voterIsEligible(id);
+    let pub = pk_sign(enterpin(idcard)) in
+    let s4 = signDet(priv_CA, (id, pub)) in
+    insert voterPKs(id, pub, s4); (* This creates the database DB *)
+    out(backChannel, idcard)
+  ).
+
+(*
+let cbGeneratorForAdv =
+  ! (
+    in(net, backChannel : channel);
+    new id : voterid;
+    event voterIsAdversarial(id);
+    out(net, id);
+    out(cbGeneratorSK, (id, backChannel))
+    ).
+*)
+
+let voter(id: voterid, voter2app1: channel, voter2app2: channel, app2voter1: channel, app2voter2: channel, voter2ver1: channel, ver2voter1: channel) =
+  !
+  new bc : channel;
+  out(cbGeneratorSK, (id, bc));
+  in(bc, idcard: authtoken);
+  phase 1;
+  out(voter2app1, (id, idcard));
+  in(app2voter1, electionChoices: voteset);
+  let i_vote = votersVote(id) in
+  event voteIsInSet_voter(i_vote, electionChoices);
+  out(voter2app2, i_vote);
+  in(app2voter2, (seq: bbidx, u: nonce));
+
+  out(voter2ver1, (seq, u, id));
+  in(ver2voter1, foundVote: votetype);
+  if foundVote = i_vote then
+  event happyVoter(id, i_vote, idcard);
+  event reachable;
+  insert evt_happyVoter(id, i_vote, idcard);
+  0.
+
+let votingApp(voter2app1: channel, voter2app2: channel, app2voter1: channel, app2voter2: channel) =
+  in(chan_KG2VA, (pub_CA : pkey4sign, pub_tally: pkey4enc, pub_RA: pkey4sign, pub_collector: pkey4sign));
+  !
+  phase 1;
+  in(voter2app1, (vID: voterid, idcard: authtoken));
+  let voter_priv = enterpin(idcard) in
+  out(app2voter1, choices);
+  in(voter2app2, myVote: votetype);
+
+  new u : nonce;
+  let ballot_cv = penc(pub_tally, u, voteToBitstring(myVote)) in
+  let votehash = hash(ballot_cv) in
+  let signed_ballot = signDet(voter_priv, votehash) in
+
+  new va2collector: channel;
+  new collector2va: channel;
+  out(collectorSK, (va2collector, collector2va));
+  out(va2collector, (ballot_cv, signed_ballot, vID));
+
+  in(collector2va, (seq: bbidx, s3: bitstring, ra_sig: bitstring));
+  let votehashra = hash((ballot_cv, signed_ballot)) in
+  if verifyDet(pub_collector, (seq, votehashra), s3) then
+  if verifyDet(pub_RA, s3, ra_sig) then
+  out(app2voter2, (seq, u));
+  0.
+
+let verificationApp(voter2ver1 : channel, ver2voter1 : channel) =
+  in(chan_KG2verify, (pub_tally : pkey4enc, pub_collector: pkey4sign, pub_RA: pkey4sign));
+  !
+  phase 1;
+  in(voter2ver1, (seq: bbidx, u: nonce, vID1: voterid));
+  new ver2collector : channel;
+  new collector2ver : channel;
+  out(collectorFromVerifierSK, (ver2collector, collector2ver));
+  out(ver2collector, seq);
+  in(collector2ver, (vID2: voterid, ballot_cv: bitstring, signed_ballot: bitstring, s3: bitstring, ra_sig: bitstring));
+  if vID1 = vID2 then
+  get voterPKs(=vID1, voter_pub, dummy) in
+  let votehash = hash(ballot_cv) in
+  if verifyDet(voter_pub, votehash, signed_ballot) then
+  let votehashra = hash((ballot_cv, signed_ballot)) in
+  if verifyDet(pub_collector, (seq, votehashra), s3) then
+  if verifyDet(pub_RA, s3, ra_sig) then
+  let foundvote = bruteforce(pub_tally, u, ballot_cv) in
+  event voteIsInSet_verifier(foundvote, choices);
+  event voterVerifiedVote(seq, votehash, s3, ra_sig);
+  out(ver2voter1, foundvote);
+  0.
+
+let voterAppVerifier(id : voterid) =
+  new voter2app1 : channel;
+  new voter2app2 : channel;
+  new app2voter1 : channel;
+  new app2voter2 : channel;
+  new voter2ver1 : channel;
+  new ver2voter1 : channel;
+  (
+    voter(id, voter2app1, voter2app2, app2voter1, app2voter2, voter2ver1, ver2voter1) |
+    votingApp(voter2app1, voter2app2, app2voter1, app2voter2) |
+    verificationApp(voter2ver1, ver2voter1)
+  ).
+
+let voterAppVerifier_nonParam =
+  new id : voterid;
+  voterAppVerifier(id).
+
+table ballots_fake(bbidx, bitstring, bitstring, pkey4sign, voterid, bitstring, bitstring).
+table ballots_real(bbidx, bitstring, bitstring, pkey4sign, voterid, bitstring, bitstring).
+
+let voteCollector =
+  in(chan_KG2collector, (priv_collector : skey4sign, pub_collector : pkey4sign, pub_CA : pkey4sign, pub_RA: pkey4sign));
+  in(chan_KG2collector, (cid: voterid, ccard: authtoken));
+  phase 1;
+  ( ! (* Routine StoreBallot *)
+    in(collectorSK, (va2collector : channel, collector2va : channel));
+    in(va2collector, (ballot_cv: bitstring, signed_ballot: bitstring, vID: voterid));
+    get voterPKs(=vID, voter_pub, dummy) in
+    let votehash = hash(ballot_cv) in
+    if verifyDet(voter_pub, votehash, signed_ballot) then
+    new seq: bbidx;
+    (* TimeMark not modelled *)
+    let votehashra = hash((ballot_cv, signed_ballot)) in
+    let s3 = signDet(priv_collector, (seq, votehashra)) in
+    out(chan_collector2RA, (seq, votehashra, s3));
+    in(chan_RA2collector, ra_sig: bitstring);
+
+    let dummy1 = signDet(enterpin(ccard), votehash) in
+
+    if verifyDet(pub_RA, s3, ra_sig) then
+    insert ballots_fake(seq, ballot_cv, signed_ballot, voter_pub, vID, s3, ra_sig);
+    insert ballots_real(seq, ballot_cv, dummy1, pk_sign(enterpin(ccard)), cid, s3, ra_sig);
+    event vssStoredVote(vID, extractvote(ballot_cv), extractauthtoken(voter_pub));
+    out(collector2va, (seq, s3, ra_sig));
+    0
+  ) | ( ! (* Routine RetrieveBallot *)
+    in(collectorFromVerifierSK, (ver2collector: channel, collector2ver: channel));
+    in(ver2collector, seq: bbidx);
+    get ballots_fake(=seq, ballot_cv, signed_ballot, dummy6, vID, s3, ra_sig) in
+    out(collector2ver, (vID, ballot_cv, signed_ballot, s3, ra_sig));
+    0
+  ).
+
+
+table RAmap(bbidx, bitstring, bitstring). (* idx, message, signature *)
+
+let RA =
+  (* Routine ReceiveKeys *)
+  in(chan_KG2RA, (priv_RA: skey4sign, pub_collector: pkey4sign));
+  phase 1;
+  ( ! (* Routine LinkRequest *)
+    in(chan_collector2RA, (seq: bbidx, votehash: bitstring, s3: bitstring));
+    if verifyDet(pub_collector, (seq, votehash), s3) then
+    insert RAmap(seq, votehash, s3);
+    let ra_sig = signDet(priv_RA, s3) in
+    event raRegisteredVote(seq, votehash, s3, ra_sig);
+    out(chan_RA2collector, ra_sig);
+    0
+  ).
+
+(* For turning private channels to write-only channels *)
+let writeOnChannel(ch : channel) =
+  !( in(net, x : bitstring); out(ch, x) ) |
+  (phase 1; !( in(net, x : bitstring); out(ch, x) )) |
+  (phase 2; !( in(net, x : bitstring); out(ch, x) )) |
+  (phase 3; !( in(net, x : bitstring); out(ch, x) )) |
+  (phase 4; !( in(net, x : bitstring); out(ch, x) )).
+
+
+let happyness = !
+  phase 4;
+  get ballots_real(seq, ballot_cv, signed_ballot, dummy6, vID, s3, ra_sig) in
+  let votehashra = hash((ballot_cv, signed_ballot)) in
+  get RAmap(=seq, =votehashra, =s3) in
+  get voterPKs(=vID, vpub, dummy2) in
+  if verifyDet(vpub, hash(ballot_cv), signed_ballot) then
+      (*
+      verify collector and ra also
+      *)
+(*  event reachable;*)
+
+(*  get evt_happyVoter(vID, elID, i_vote, p) in
+  get evt_auditCiphsConversionOne(pub, c, =vID, =elID) in
+  get evt_auditCiphsConversionTwo(=pub, =c, =vID, =elID) in
+  get evt_auditMixer(=c, cprim, =elID) in
+  get evt_auditDecryption(=cprim, j_vote, =elID) in
+  get evt_auditPBBSignature((=c, dummy_s4 : bitstring, dummy_s5 : bitstring)) in
+  get evt_auditBallotIntegrity(=c) in
+  get evt_auditBallotSignatures(=c) in
+  get evt_auditEligibilityCorrectness(=c, =pub, =vID, =elID) in
+  event auditAndVerificationPassed(vID, elID, i_vote, pub, c, cprim, j_vote);*)
+  0.
+
+
+let idPkReader = ! (get voterPKs(x: voterid, y: pkey4sign, z: bitstring) in out(net, (x,y,z)) ).
+
+let cbGeneratorForAdv =
+  ! (
+    in(net, backChannel: channel);
+    new id : voterid;
+    event voterIsAdversarial(id);
+    out(net, id);
+    out(cbGeneratorSK, (id, backChannel))
+    ).
+
+(*
+We check the following integrity properties:
+1. If the voter is happy, and the auditing also succeeds for that vote-casting from that voter, then the vote that voter planned to cast is equal to the vote from tallying results
+2. If the voter is happy, then the vote it cast has been stored in the "ballots" table.
+*)
+
+query event(reachable).
+
+(*query vID: voterid, i_vote: votetype, idcard: authtoken; event(happyVoter(vID, i_vote, idcard)) ==> event(vssStoredVote(vID, i_vote, idcard)).*)
+(*query seq: bbidx, votehash: bitstring, s3: bitstring, ra_sig: bitstring; event(voterVerifiedVote(seq, votehash, s3, ra_sig)) ==> event(raRegisteredVote(seq, votehash, s3, ra_sig)).*)
+
+process
+  initializer | cbGeneratorForAdv | (!voterAppVerifier_nonParam) | voteCollector | RA | writeOnChannel(collectorSK) | writeOnChannel(collectorFromVerifierSK)  | idPkReader | happyness
+

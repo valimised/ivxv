@@ -128,38 +128,24 @@ func (m *M) GetWithPrefix(ctx context.Context, prefix string) (
 	return c, errc
 }
 
-// CASAndGet implements the storage.PutGetter interface.
-func (m *M) CASAndGet(ctx context.Context, cas string, old, new []byte, keys ...string) (
-	map[string][]byte, error) {
+// CAS implements the storage.PutGetter interface.
+func (m *M) CAS(ctx context.Context, cas string, old, new []byte) error {
 
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
-	// Compare the old value.
 	value, ok := m.db[cas]
 	if !ok {
-		return nil, storage.NotExistError{Key: cas, Err: CASMissingCASKeyError{}}
+		return storage.NotExistError{Key: cas, Err: CASMissingCASKeyError{}}
 	}
 	if value != string(old) {
-		return nil, storage.UnexpectedValueError{
+		return storage.UnexpectedValueError{
 			Key: cas,
 			Err: CASValueMismatchError{
 				Have:     value,
 				Expected: string(old),
 			}}
 	}
-
-	// Get the requested values.
-	ret := make(map[string][]byte)
-	for _, key := range keys {
-		value, ok = m.db[key]
-		if !ok {
-			return nil, storage.NotExistError{Key: key, Err: CASMissingKeyError{}}
-		}
-		ret[key] = []byte(value)
-	}
-
-	// Set the compared value.
 	m.db[cas] = string(new)
-	return ret, nil
+	return nil
 }

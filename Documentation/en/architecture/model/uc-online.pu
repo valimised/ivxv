@@ -1,0 +1,71 @@
+
+@startuml
+
+title "Hääletamisfaas hostingus"
+
+usecase (*) as UC0
+
+note left of UC0
+* Ainult talletamiskomponent ja ajatembeldus säilitavad olekut
+* Muud komponendid on stateless - loadbalancing on võimalik
+* Talletamiskomponendi veakindlus - HadoopFSi või byzantine?
+* On-line komponentide väliste liideste definitsioon ja valideerimine
+* Nõue TLSi kasutamiseks ja 443 pordiga piirdumiskes
+* HTTP ei ole hädavajalik kuid võib aidata
+endnote
+
+package "Support" {
+    usecase (Varundamine hääletamisperioodi peatamata)
+    usecase (Taastamine puhtale süsteemile)
+    usecase (Logimine monitooringusüsteemi)
+    usecase (Süsteemi seisundi kaugvaatlus)
+    usecase (Süsteemi seisundi vaatlus käsurealt) as UC1.5
+    note left of UC1.5
+    * pseudograafika asemel git laadne käsustik
+    * võimalusel süsteemsete lahenduste kasutamine iseleiutamise asemel
+    endnote
+}
+
+package "Hääletamisperioodi eelne" {
+    usecase (Proovihääletamine ühenduste testimiseks)
+    usecase (Hääletamisperioodi kaugkäivitamine)
+}
+
+package "Hääletamisperiood" {
+    usecase (Valijate nimekirja perioodiline uuendamine)
+    usecase (Häälte talletamine) as UC2.2
+    usecase (Kontrollpäringutele vastamine)
+    usecase (Vaheaudit)
+    usecase (Serverite ühtsuse kontroll)
+    usecase (Hääletamisperioodi järkjärguline kaugpeatamine)
+
+    note left of UC2.2
+    * isikute autentimine
+    * valimisõigus(t)e tuvastamine
+    * valikute väljastamine
+    * häälte vastu võtmine ja talletamine
+    * kontrollidentifikaatorite väljastamine
+    endnote
+
+}
+
+' osa vähemalt häältest eesti pinnal vähemalt 1 kord päevas, võib ka logiandmed
+' eesti pinnal olev backup peab olema loetav
+
+package "Hääletamisperioodi järgne" {
+    usecase (E-hääletanute nimekirja koostamine valimisjaoskondade kaupa)
+    usecase (Häälte eksport kogumisteenusest)
+    usecase (Auditimaterjali eksport kogumisteenusest)
+'    usecase (Auditimaterjali eksport ajatempliteenusest)
+    usecase (Logi eksport kogumisteenusest)
+}
+
+
+package "Valija tegevused" {
+    usecase (Valijarakenduse paigaldamine autentsest allikast)
+    usecase (Kontrollrakenduse paigaldamine autentsest allikast)
+    usecase (E-hääletamine)
+    usecase (E-hääle kontrollimine)
+}
+
+@enduml

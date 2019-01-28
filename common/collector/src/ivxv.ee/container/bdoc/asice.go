@@ -2,24 +2,26 @@ package bdoc
 
 import (
 	"archive/zip"
+	"bytes"
 	"encoding/binary"
-	"encoding/xml"
 	"io"
 	"regexp"
 	"strings"
+
+	"ivxv.ee/safereader"
 )
 
 // metainf is the name of the folder containing meta information.
 const metainf = "META-INF/"
 
 // signatureRE is used to match names of signature files.
-var signatureRE = regexp.MustCompile(`^` + metainf + `[^/]*signatures[^/]*.xml$`)
+var signatureRE = regexp.MustCompile(`^` + metainf + `[^/]*signatures[^/]*\.xml$`)
 
 // asiceFile is a file read from an ASiC-E container.
 type asiceFile struct {
 	name     string
 	mimetype string // Only used for non-signatures.
-	data     []byte
+	data     *bytes.Buffer
 }
 
 // signature returns true if the file is a signature.
@@ -27,17 +29,28 @@ func (f asiceFile) signature() bool {
 	return signatureRE.MatchString(f.name)
 }
 
+// close releases any resources held by asiceFile.
+func (f *asiceFile) close() {
+	release(f.data)
+	f.data = nil
+}
+
 // openASiCE opens an ASiC-E XAdES container and decompresses all the files in
 // it. It checks that "mimetype" and "META-INF/manifest.xml" comply with all
 // requirements, so these will not be returned.
 //
+// zipLimit is the maximum allowed length of the Zip archive and fileLimit is
+// the maximum allowed decompressed length of a file in the archive.
+//
 // If readSigs is false, then signature files will be skipped: used if only the
 // container contents are requested.
 //
-// The data of all returned files should be recovered to o.filesr after use.
-func (o *Opener) openASiCE(r io.Reader, readSigs bool) (files map[string]*asiceFile, err error) {
+// All returned asiceFiles should be closed after use.
+func openASiCE(r io.Reader, zipLimit, fileLimit int64, readSigs bool) (
+	files map[string]*asiceFile, err error) {
+
 	// Convert the stream to io.ReaderAt needed for zip.NewReader.
-	rat, size, err := toReaderAt(r, o.zipsr)
+	rat, size, err := toReaderAt(r, zipLimit)
 	if err != nil {
 		return nil, ToReaderAtError{Err: err}
 	}
@@ -56,18 +69,21 @@ func (o *Opener) openASiCE(r io.Reader, readSigs bool) (files map[string]*asiceF
 
 	// Check the files and decompress data.
 	files = make(map[string]*asiceFile)
-	defer func() {
-		// Recover all data on error.
+	// Pass files as explicit argument so that it gets evaluated now and we
+	// can later safely return nil. Do not do the same for err, because we
+	// want to know its value on return, not now.
+	defer func(files map[string]*asiceFile) {
+		// Close all files on error.
 		if err != nil {
 			for _, file := range files {
-				o.filesr.Recover(file.data)
+				file.close()
 			}
 		}
-	}()
+	}(files)
 
 	seen := make(map[string]struct{})
 	var manifest *asiceFile
-	var hasSignature bool
+	var signatures int
 	for i, file := range rzip.File {
 		// XXX: Upper limit on number of files allowed in ZIP? Or is
 		// the size limit enforced on the entire archive good enough?
@@ -96,13 +112,13 @@ func (o *Opener) openASiCE(r io.Reader, readSigs bool) (files map[string]*asiceF
 		case file.Name == metainf+"manifest.xml":
 			// manifest.xml is not returned, so decompress here and
 			// defer the recover.
-			if manifest, err = o.decompress(file); err != nil {
+			if manifest, err = decompress(file, fileLimit); err != nil {
 				return nil, DecompressManifestError{Err: err}
 			}
-			defer o.filesr.Recover(manifest.data)
+			defer manifest.close()
 			continue
 		case signatureRE.MatchString(file.Name):
-			hasSignature = true
+			signatures++
 			if !readSigs {
 				continue // Skip signatures if not requested.
 			}
@@ -115,7 +131,7 @@ func (o *Opener) openASiCE(r io.Reader, readSigs bool) (files map[string]*asiceF
 		}
 
 		var asice *asiceFile
-		if asice, err = o.decompress(file); err != nil {
+		if asice, err = decompress(file, fileLimit); err != nil {
 			return nil, DecompressFileError{
 				FileName: file.Name,
 				Err:      err,
@@ -124,19 +140,26 @@ func (o *Opener) openASiCE(r io.Reader, readSigs bool) (files map[string]*asiceF
 		files[file.Name] = asice
 	}
 
-	// Both the manifest and at least one signature must be present. If
-	// they are, then we can be certain that "mimetype" is too, because we
-	// require it to be the first file.
+	// The manifest, at least one signature, and at least one data file
+	// must be present. If they are, then we can be certain that "mimetype"
+	// is too, because we require it to be the first file.
 	if manifest == nil {
 		return nil, MissingManifestError{}
 	}
-	if !hasSignature {
+	if signatures == 0 {
 		return nil, NoSignaturesError{}
+	}
+	datafiles := len(files)
+	if readSigs {
+		datafiles -= signatures
+	}
+	if datafiles == 0 {
+		return nil, NoDataFilesError{}
 	}
 
 	// Check that the manifest has references for all non-signature files,
 	// and only those files, and retrieve their MIME types from it.
-	if err = readManifest(manifest.data, files); err != nil {
+	if err = readManifest(manifest.data.Bytes(), files); err != nil {
 		return nil, ManifestError{Err: err}
 	}
 	return files, nil
@@ -155,8 +178,8 @@ const (
 // of the ASiC specification and that it specifies the ASiC-E MIME type.
 func asiceMagic(rat io.ReaderAt) error {
 	buf := make([]byte, 30+len(magic)+len(mimetype))
-	if _, err := rat.ReadAt(buf, 0); err != nil {
-		return ReadMagicFileHeaderError{Err: err}
+	if n, err := rat.ReadAt(buf, 0); err != nil {
+		return ReadMagicFileHeaderError{Header: buf[:n], Err: err}
 	}
 	le := binary.LittleEndian
 
@@ -222,23 +245,25 @@ func asiceMagicCentral(file *zip.File) error {
 
 // decompress decompresses the ZIP file into an asiceFile. Note that mimetype
 // is not set for these files.
-func (o *Opener) decompress(file *zip.File) (*asiceFile, error) {
+func decompress(file *zip.File, limit int64) (*asiceFile, error) {
 	fd, err := file.Open()
 	if err != nil {
 		return nil, OpenZIPFileError{Err: err}
 	}
 	defer fd.Close() // nolint: errcheck, ignore close failure of read-only file.
 
-	asice := &asiceFile{name: file.Name}
-	if asice.data, err = o.filesr.Read(fd); err != nil {
+	asice := &asiceFile{name: file.Name, data: buffer()}
+	size, err := asice.data.ReadFrom(safereader.New(fd, limit))
+	if err != nil {
+		asice.close()
 		return nil, ReadZIPFileError{Err: err}
 	}
 
-	if file.UncompressedSize64 != uint64(len(asice.data)) {
-		o.filesr.Recover(asice.data)
+	if file.UncompressedSize64 != uint64(size) {
+		asice.close()
 		return nil, UncompressedZIPFileSizeError{
 			Declared: file.UncompressedSize64,
-			Actual:   len(asice.data),
+			Actual:   size,
 		}
 	}
 	return asice, nil
@@ -248,17 +273,17 @@ func (o *Opener) decompress(file *zip.File) (*asiceFile, error) {
 // Applications (OpenDocument) v1.0 (page 687 of
 // https://docs.oasis-open.org/office/v1.0/OpenDocument-v1.0-os.pdf).
 type manifest struct {
-	XMLName     xml.Name    `xml:"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0 manifest"`
-	FileEntries []fileEntry `xml:"file-entry"`
+	XMLElement  c14n `xmlx:"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0 manifest"`
+	FileEntries []fileEntry
 }
 
 // Specified in section 17.7.3 of the Open Document Format for Office
 // Applications (OpenDocument) v1.0 (page 687 of
 // https://docs.oasis-open.org/office/v1.0/OpenDocument-v1.0-os.pdf).
 type fileEntry struct {
-	XMLName   xml.Name `xml:"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0 file-entry"`
-	FullPath  string   `xml:"full-path,attr"`  // FIXME: check attr namespace
-	MediaType string   `xml:"media-type,attr"` // FIXME: check attr namespace
+	XMLElement c14n   `xmlx:"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0 file-entry"`
+	FullPath   string `xmlx:"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0 full-path,attr"`
+	MediaType  string `xmlx:"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0 media-type,attr"`
 }
 
 // readManifest parses the OpenDocument manifest and fills the MIME types for
@@ -269,9 +294,8 @@ type fileEntry struct {
 // Although BDOC 2.1.2:2014 references OpenDocument v1.2, the official
 // implementations actually only produce v1.0, so we only support that.
 func readManifest(data []byte, files map[string]*asiceFile) error {
-	// FIXME: non-strict XML parsing.
 	var m manifest
-	if err := xml.Unmarshal(data, &m); err != nil {
+	if err := parseXML(data, &m); err != nil {
 		return ManifestXMLError{Data: data, Err: err}
 	}
 
@@ -304,8 +328,6 @@ func readManifest(data []byte, files map[string]*asiceFile) error {
 
 	for _, file := range files {
 		if !file.signature() && len(file.mimetype) == 0 {
-			// False negative if the entry is present but has no
-			// MIME type, but we are fine with this.
 			return MissingManifestEntryError{Path: file.name}
 		}
 	}

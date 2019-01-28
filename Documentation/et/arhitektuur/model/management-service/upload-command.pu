@@ -43,5 +43,3 @@ Deactivate WSGI
 Deactivate Brauser
 
 @enduml
-
-# vim:set sts=2 sw=2 et:

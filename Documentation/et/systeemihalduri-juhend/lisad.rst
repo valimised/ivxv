@@ -25,13 +25,18 @@ Andmehoidla utiliidid
 .. include:: utiliitide-abiteave/ivxv-db-dump.inc
 
 
-Teenuses seisundi utiliidid
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Teenuse seisundi utiliidid
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: utiliitide-abiteave/ivxv-status.inc
 
-Teenuse oleku kuvamisel näidatakse seadistamata teenuse juures ka vihjet
-järgmise sammu kohta, mida teenuse seadistamiseks tarvis teha on.
+.. include:: utiliitide-abiteave/ivxv-service.inc
+
+
+Sündmuste logi utiliidid
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: utiliitide-abiteave/ivxv-eventlog-dump.inc
 
 
 Kasutajate halduse utiliidid
@@ -46,6 +51,10 @@ Seadistusutiliidid
 .. include:: utiliitide-abiteave/ivxv-collector-init.inc
 
 .. include:: utiliitide-abiteave/ivxv-cmd-load.inc
+
+.. include:: utiliitide-abiteave/ivxv-cmd-remove.inc
+
+.. include:: utiliitide-abiteave/ivxv-config-validate.inc
 
 .. include:: utiliitide-abiteave/ivxv-config-apply.inc
 
@@ -89,15 +98,21 @@ Näiteks valikute nimekiri rakendatakse vaid ühele (juhuslikult valitud)
 nimekirjateenusele, mis kannab nimekirja talletusteenusesse. Talletusteenuse
 kaudu on nimekiri kättesaadav kõigile teistele nimekirjateenustele.
 
-.. include:: utiliitide-abiteave/ivxv-secret-import.inc
+.. include:: utiliitide-abiteave/ivxv-secret-load.inc
 
 .. include:: utiliitide-abiteave/ivxv-logmonitor-copy-log.inc
+
+.. include:: utiliitide-abiteave/ivxv-update-packages.inc
+
+.. include:: utiliitide-abiteave/ivxv-backup-crontab.inc
 
 
 Andmete eksportimise ja varundamise utiliidid
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. include:: utiliitide-abiteave/ivxv-votes-export.inc
+.. include:: utiliitide-abiteave/ivxv-consolidate-votes.inc
+
+.. include:: utiliitide-abiteave/ivxv-backup.inc
 
 
 Deemonid
@@ -116,6 +131,8 @@ Sisemised utiliidid
 
 .. include:: utiliitide-abiteave/ivxv-admin-helper.inc
 
+.. include:: utiliitide-abiteave/ivxv-admin-sudo.inc
+
 
 Seadistusfailid
 ---------------
@@ -133,6 +150,8 @@ Logikogumisteenuse seadistusfail
 
 Lisaseadistused
 ---------------
+
+.. _configure-ssh-idcard-auth:
 
 SSH kasutajate autentimine ID-kaardi abil
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -209,7 +228,9 @@ hoitakse andmeid, mis on pärit välistest süsteemidest ja on haldusteenusesse
 üle kantud faili kujul. Andmebaasis hoitakse andmeid, mis on genereeritud
 haldusteenuse töö käigus.
 
-Failisüsteemis hoitavad haldusteenuse andmed:
+
+Failisüsteemis hoitavad andmed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *  :file:`/etc/ivxv/` -- kogumisteenusele rakendatud ja hetkel kehtivad
    seadistus- ja nimekirjafailid;
@@ -233,17 +254,26 @@ Failisüsteemis hoitavad haldusteenuse andmed:
 *  :file:`/var/lib/ivxv/commands/<command-type>-<timestamp>.bdoc` --
    digitaalselt allkirjastatud korraldus BDOC vormingus.
 
+*  :file:`/var/lib/ivxv/commands/<command-type>-<timestamp>.json` --
+   korralduse olekufail JSON-vormingus.
+
 *  :file:`/var/lib/ivxv/db/` -- haldusteenuse andmebaasi kataloog;
 
 *  :file:`/var/lib/ivxv/db/ivxv-management.db` -- haldusteenuse andmebaasi
    fail;
 
+*  :file:`/var/lib/ivxv/ivxv-management-events.log` -- haldusteenuse sündmuste
+   logi;
+
 *  :file:`/var/lib/ivxv/upload/` -- kogumisteenusesse veebiliidese kaudu
    laaditud failid;
 
-Andmebaasis hoitavad haldusteenuse andmed (andmeväli - kirjeldus):
+Andmebaasis hoitavad andmed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* ``collector/status`` -- kogumisteenuse olek;
+Andmevälja nimi ja kirjeldus:
+
+* ``collector/state`` -- kogumisteenuse olek;
 
 * ``config/election`` -- kogumisteenuses rakendatud valimiste seadistusele
   digiallkirja andnud volitatud kasutaja andmed kujul ``<CN> <timestamp>``;
@@ -264,10 +294,16 @@ Andmebaasis hoitavad haldusteenuse andmed (andmeväli - kirjeldus):
 
 * ``election/servicestop`` -- kogumisteenuse seiskamise aeg;
 
+* ``host/<hostname>/state`` -- teenushosti seisund;
+
 * ``list/choices`` -- haldusteenusesse laaditud valikute nimekirjale
   digiallkirja andnud volitatud kasutaja andmed kujul ``<CN> <timestamp>``;
 
 * ``list/choices-loaded`` -- nimekirjateenustesse laaditud valikute
+  nimekirjale digiallkirja andnud volitatud kasutaja andmed kujul ``<CN>
+  <timestamp>``;
+
+* ``list/districts`` -- nimekirjateenustesse laaditud ringkondade
   nimekirjale digiallkirja andnud volitatud kasutaja andmed kujul ``<CN>
   <timestamp>``;
 
@@ -278,6 +314,11 @@ Andmebaasis hoitavad haldusteenuse andmed (andmeväli - kirjeldus):
 * ``list/voters<list-number>-loaded`` -- nimekirjateenustesse laaditud
   valijate nimekirjale digiallkirja andnud volitatud kasutaja andmed kujul
   ``<CN> <timestamp>``;
+
+* ``logmonitor/address`` -- seireteenuse aadress või võrgunimi;
+
+* ``logmonitor/last-data`` -- viimase seireteenusest statistikafaili hankimise
+  aeg;
 
 * ``user/<idcode>`` -- haldusteenuse kasutaja nimi ja rollid kujul
   ``<surname,name> <role>[,<role>]``;
@@ -290,11 +331,34 @@ Andmebaasis hoitavad haldusteenuse andmed (andmeväli - kirjeldus):
 * ``service/<service-id>/election-conf-version`` -- Teenusele rakendatud
   valimiste seadistuse versioon;
 
+* ``service/<service-id>/network`` -- Teenusele alamvõrgu nimi;
+
 * ``service/<service-id>/state`` -- Teenuse olek;
+
+* ``service/<service-id>/ping-errors`` -- Teenuse elusoleku kontrollimise
+  järjestikuste vigade arv;
 
 * ``service/<service-id>/last-data`` -- Teenuse viimase oleku hankimise aeg;
 
 * ``service/<service-id>/ip-address`` -- Teenuse IP-aadress;
+
+* ``service/<service-id>/bg_info`` -- Teenuse taustainfo stringina (näiteks
+  elusoleku kontrolli käigus genereeritud veateade);
+
+* ``service/<service-id>/backup-times`` -- Varundusteenuse automaatvarunduse
+  kellaajad;
+
+* ``service/<service-id>/dds-token-key`` -- Mobiil-ID tugiteenuse
+  identsustõendi võtmefaili kontrollsumma (SHA256);
+
+* ``service/<service-id>/tls-cert`` -- Teenuse TLS-sertifikaadi faili
+  kontrollsumma (SHA256);
+
+* ``service/<service-id>/tls-key`` -- Teenuse TLS-sertifikaadi võtmefaili
+  kontrollsumma (SHA256);
+
+* ``service/<service-id>/tspreg-key`` -- Hääletamisteensue ajatempliteenuse
+  signeerimisvõtme faili kontrollsumma (SHA256);
 
 Kasutatud tähised:
 
@@ -312,11 +376,11 @@ Kasutatud tähised:
   valimiste seadistus on ``election`` ja kogumisteenuse tehniline
   seadistus on ``tech``;
 
+* ``<hostname>`` teenushosti nimi;
+
 * ``<list-number>`` valimisnimekirja kahekohaline järjekorranumber, esimene nimekiri
   kannab numbrit 01.
 
 * ``<service-id>`` teenuse identifikaator kogumisteenuse seadistustest;
 
 * ``<timestamp>`` on ajatempel ISO-8601 vormingus.
-
-.. vim: sts=3 sw=3 et:

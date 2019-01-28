@@ -58,6 +58,8 @@ func newreg(reg bool) func(yaml.Node, string) (q11n.Qualifier, error) {
 		}
 
 		if reg {
+			// nolint: gosec, Allow sensitive directory location
+			// from variable, assume correct and safe.
 			pem, err := ioutil.ReadFile(filepath.Join(sensitive, "tspreg.key"))
 			if err != nil {
 				return nil, ReadPrivateKeyError{Err: err}

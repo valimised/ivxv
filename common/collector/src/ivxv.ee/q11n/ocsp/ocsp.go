@@ -25,8 +25,8 @@ import (
 	"ivxv.ee/q11n"
 	"ivxv.ee/yaml"
 
-	// SHA1 is used for the ocsptm DigestInfo.
-	_ "crypto/sha1"
+	// SHA256 is used for the ocsptm DigestInfo.
+	_ "crypto/sha256"
 )
 
 func init() {
@@ -74,7 +74,7 @@ func (c *client) Qualify(ctx context.Context, container container.Container) ([]
 		if err != nil {
 			return nil, SignatureValueError{ID: sigs[0].ID, Err: err}
 		}
-		nonce = cryptoutil.DigestInfo(crypto.SHA1, value)
+		nonce = cryptoutil.DigestInfo(crypto.SHA256, value)
 	}
 
 	status, err := c.ocsp.Check(ctx, cert, issuer, nonce)

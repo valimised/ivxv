@@ -1,6 +1,7 @@
 groupgen:
   paramtype: mod
   length: 2048
+  init_template: key.init.template.yaml
   random_source:
   - random_source_type: file
     random_source_path: randomness_file

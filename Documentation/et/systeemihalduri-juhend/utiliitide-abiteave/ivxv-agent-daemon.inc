@@ -17,4 +17,8 @@ ivxv-agent-daemon
 
    IVXV Collector Management Service agent daemon.
 
-   Usage: ivxv-agent-daemon
+   Usage: ivxv-agent-daemon [--get-stats]
+
+   Options:
+       --get-stats     Copy statistics from Log Monitor to
+                       Management Service without daemonizing.

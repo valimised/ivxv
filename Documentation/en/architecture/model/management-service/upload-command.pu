@@ -1,0 +1,45 @@
+@startuml
+
+Title Applying commands in the administration service
+
+Actor "User (Browser)" as Brauser
+participant "Web server \n (Apache)" as WSGI
+participant "Daemon \n (HTTP)" as Deemon_HTTP
+participant "Administration \n library" as Util
+Database "File system" as FS
+participant Service
+
+Brauser -> WSGI : Uploading the \n command
+Activate Brauser
+Activate WSGI
+
+WSGI -> FS : Saving the command
+
+alt Command is valid
+
+  WSGI -> Deemon_HTTP : Command \n application \n request
+
+  Activate Deemon_HTTP
+  Deemon_HTTP -> Util : Command \n application request
+
+  Activate Util
+  Util <- FS : Reading the command
+  Util -> Util : Validating the command
+  alt Direct application
+    Util -> Service : Command application
+  else Issuing the ballot box
+    Service -> Util : Loading the ballot box
+  end
+  Util -> Deemon_HTTP : Command application \n response
+  Deactivate Util
+
+  Deemon_HTTP -> WSGI : Forwarding the \n response
+  Deactivate Deemon_HTTP
+end
+
+WSGI -> Brauser : Forwarding the \n response
+
+Deactivate WSGI
+Deactivate Brauser
+
+@enduml

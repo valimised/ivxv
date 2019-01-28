@@ -1,0 +1,75 @@
+@startuml
+
+left to right direction
+
+[Kogumisteenus] as collector
+
+
+package "Keskkonnateenused" {
+    [Registreerimisteenus] as tsa
+    [Autentimisteenus] as auth
+    [Allkirjateenus] as sign
+}
+
+[Nimekirjad] as voterlist
+[Varundamine] as backup
+
+
+actor Omanik as owner
+actor Töötleja as offline
+
+actor Klienditeenindaja as helpdesk
+
+actor Hääletaja as voter
+
+actor :Kogumisteenuse admin: as admin
+actor :Kogumisteenuse kaugadmin: as radmin
+
+
+interface "Valimise defineerimine" as i_define
+interface "Ümbrikute väljastamine" as i_export
+interface "Hääletamine" as i_vote
+interface "Kontrollimine" as i_verify
+interface "Valikute nimekiri" as i_cls
+interface "Käsurida" as i_localadmin
+interface "Kaughaldus" as i_remoteadmin
+interface "Monitooring" as i_monitor
+interface "Helpdesk" as i_helpdesk
+
+interface "Varundamine" as i_backup
+interface "Nimekirjade uuendused" as i_voterlist
+
+collector -down- i_cls
+collector -down- i_vote
+collector -down- i_verify
+voter -up-> i_vote
+voter -up-> i_verify
+voter -up-> i_cls
+
+
+collector -up- i_localadmin
+collector -up- i_helpdesk
+collector -up- i_monitor
+collector -up- i_remoteadmin
+
+admin -down-> i_localadmin
+helpdesk -down-> i_helpdesk
+radmin -down-> i_monitor
+radmin -left-> i_remoteadmin
+
+
+collector -right- i_define
+collector -right- i_export
+owner -left-> i_define
+offline -left-> i_export
+owner -up-> i_remoteadmin
+
+
+voterlist -right- i_voterlist
+backup -right- i_backup
+
+
+collector .left.> i_backup
+collector .left.> i_voterlist
+
+@enduml

@@ -100,7 +100,7 @@ func TestCheck(t *testing.T) {
 			pems = append(pems, string(pem))
 		}
 
-		client, err := New(&Conf{URL: url, Responders: pems})
+		client, err := New(&Conf{URL: url, Responders: pems, Retry: 2})
 		if err != nil {
 			t.Fatal("failed to create client:", err)
 		}

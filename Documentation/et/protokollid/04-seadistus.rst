@@ -4,16 +4,19 @@
 Valimise definitsioon
 ================================================================================
 
-Valimise korraldaja defineerib valimise. Eesti riiklikel valimistel jagunevad
-kõik hääleõiguslikud isikud ühte või mitmesse valimisringkonda. Konkreetsesse
-ringkonda kuuluval valijal on võimalik hääletamisel valida ainult selle
-ringkonna kandidaatide vahel.
+Valimise defineerib valimise korraldaja. Eesti riiklikel valimistel jagunevad
+kõik hääleõiguslikud isikud ühte või mitmesse valimisringkonda. Valijal on
+võimalik hääletamisel valida ainult selle ringkonna kandidaatide vahel, kuhu ta
+kuulub.
 
 Valimise defineerimiseks tuleb määratleda vähemalt
 
-#. valimise unikaalne identifikaator ning küsimuste unikaalsed identifikaatorid,
-#. täielik loend valimisringkondadest ja -jaoskondadest,
-#. hääleõiguslike isikute nimekiri ja jagunemine valimisringkondadesse,
+#. valimise unikaalne identifikaator ning küsimuste unikaalsed identifikaatorid;
+
+#. täielik loend valimisringkondadest ja -jaoskondadest;
+
+#. hääleõiguslike isikute nimekiri ja jagunemine valimisringkondadesse;
+
 #. kandidaatide nimekiri ja jagunemine valimisringkondadesse.
 
 Valimise ja küsimuste identifikaatorid
@@ -53,21 +56,21 @@ valimisringkonnas. Ringkondade abil antakse valijatele hääletamise valikud:
 Eesti riiklikel valimistel eristatakse Kohalike Omavalitsuste Volikogude (KOV)
 valimisi, Riigikogu valimisi, Euroopa Parlamendi valimisi ning rahvahääletusi.
 
-KOV korraldatakse valimised vastavalt seadusele „Kohaliku omavalitsuse volikogu
-valimise seadus“ [KOVVS]. Valimine toimub kohaliku omavalitsuse tasandil, igal
+KOV korraldatakse valimised vastavalt seadusele "Kohaliku omavalitsuse volikogu
+valimise seadus" [KOVVS]. Valimine toimub kohaliku omavalitsuse tasandil, igal
 omavalitsusel on oma hääletamistulemus. Valimisringkonnad moodustatakse
 omavalitsuse tasemel vastavalt seaduses kirjeldatud reeglitele.
 
-Riigikogu valimised korraldatakse vastavalt seadusele „Riigikogu valimise seadus“
+Riigikogu valimised korraldatakse vastavalt seadusele "Riigikogu valimise seadus"
 [RKVS]. Valimine toimub riigi tasandil, hääletamistulemus on kõigile kohalikele
 omavalitsustele ühine. Riik jaguneb 12 valimisringkonnaks.
 
-Europarlamendi valimised korraldatakse vastavalt seadusele „Euroopa Parlamendi
-valimise seadus“ [EPVS]. Valimine toimub riigi tasandil, hääletamistulemus on
+Europarlamendi valimised korraldatakse vastavalt seadusele "Euroopa Parlamendi
+valimise seadus" [EPVS]. Valimine toimub riigi tasandil, hääletamistulemus on
 kõigile kohalikele omavalitsustele ühine. Terve riik on üks suur
 valimisringkond.
 
-Rahvahääletused korraldatakse vastavalt seadusele „Rahvahääletuse seadus“ [RHS].
+Rahvahääletused korraldatakse vastavalt seadusele "Rahvahääletuse seadus" [RHS].
 Valimine toimub riigi tasandil, hääletamistulemus on kõigile kohalikele
 omavalitsustele ühine. Terve riik on üks suur valimisringkond.
 
@@ -88,7 +91,10 @@ hääletamise protokollistikus valimisringkondade, ja -jaoskondade kirjeldamisel
 ning valijate ja valikute ringkonnakuuluvuse näitamisel `Eesti haldus- ja
 asustusjaotuse klassifikaatorit EHAK <http://ads.maaamet.ee/>`_
 
-* Tallinna linna Pirita linnaosa EHAK kood on 0596.
+Näiteks:
+
+* Tallinna linna Pirita linnaosa EHAK kood on 0596;
+
 * Aegviidu valla EHAK kood on 0112.
 
 Riigi tasemel toimuvatel valimistel pannakse ringkonna EHAK koodiks
@@ -117,7 +123,7 @@ number on 0 ning vastav EHAK kood on samuti 0.
    station-legacy = ehak-station TAB no-station TAB district-legacy
 
 
-Ringkondade nimekirja JSON vorming on defineeritud järgnevalt. Objekti
+Ringkondade nimekirja JSON-vorming on defineeritud järgnevalt. Objekti
 :token:`region_dict` elemente indekseeritakse elemendiga tüüpi
 :token:`ehak-code`. Objekti :token:`district_dict` elemente indekseeritakse
 elemendiga tüüpi :token:`district`. Massiivi :token:`stations` elemendid on
@@ -132,9 +138,9 @@ Näide:
 .. literalinclude:: schema/ivxv.districts.schema.example
    :language: json
 
-Ringkondade nimekiri saadakse Valimiste Infosüsteemist ning JSON vormingus faili
-vahendatakse elektroonilise hääletamise süsteemile BDOC vormingus
-digitaalallkirjastatud failina.
+Ringkondade nimekiri saadakse Valimiste Infosüsteemist ning JSON-vormingus faili
+vahendatakse elektroonilise hääletamise süsteemile BDOC-vormingus
+digitaalallkirjastatud faili koosseisus.
 
 
 Valijate nimekiri
@@ -142,8 +148,7 @@ Valijate nimekiri
 
 Valijate nimekiri sisaldab valijate nimesid, isikukoode, valimisjaoskonda ning
 rea numbrit valimisjaoskonna valijate nimekirjas, milles valija hääletab.
-Valijate nimekiri laaditakse süsteemi digitaalselt allkirjastamata dokumendina,
-mille vorming on järgmine
+Valijate nimekirja vorming on järgmine:
 
 .. code-block:: bnf
 
@@ -153,7 +158,7 @@ mille vorming on järgmine
     line-no = "" | 1*11DIGIT
     reason = "" | "tokend" | "jaoskonna vahetus" | "muu"
 
-    voter = voter-personalcode TAB voter-name TAB action TAB district-legacy TAB line-no TAB reason LF
+    voter = voter-personalcode TAB voter-name TAB action TAB station-legacy TAB line-no TAB reason LF
 
 
     version-no = "1"
@@ -172,43 +177,47 @@ konkreetses muudatusnimekirjas esinemiseks.
 
 Andmete sisu on järgmine.
 
-#. Tüüp "algne" tähistab seda esialgset suurt nimekirja, mis laetakse süsteemi
-   enne e-hääletamise algust ja "muudatused" hilisemaid kumulatiivseid uuendusi.
+#. Tüüp (``list-type``) "``algne``" tähistab esialgset suurt nimekirja, mis
+   laaditakse süsteemi enne e-hääletamise algust ja "``muudatused``" hilisemaid
+   kumulatiivseid uuendusi.
 
-#. Tegevus "lisamine" tähendab uue valija lisamist nimetatud valimisjaoskonda ja
-   "kustutamine" eemaldamist. Kui valija liigub ühest jaoskonnast teise, siis
-   kantakse valijate nimekirja muudatuste hulka üks kustutamise kirje, millega
-   valija oma eelmisest valimisjaoskonnast kustutatakse ja üks lisamise kirje,
-   millega valija uues valimisjaoskonnas valijate nimekirja kantakse. Algses
-   nimekirjas on kõik kirjed "lisamine" tüüpi.
+#. Tegevus (``action``) "``lisamine``" tähendab uue valija lisamist nimetatud
+   valimisjaoskonda ja "``kustutamine``" eemaldamist. Kui valija liigub ühest
+   jaoskonnast teise, siis kantakse valijate nimekirja muudatuste hulka üks
+   kustutamise kirje, millega valija oma eelmisest valimisjaoskonnast
+   kustutatakse ja üks lisamise kirje, millega valija uues valimisjaoskonnas
+   valijate nimekirja kantakse. Algses nimekirjas on kõik kirjed "lisamine"
+   tüüpi.
 
-#. Jaoskond identifitseerib jaoskonna, ringkonna ja omavalitsuse, kus valija
-   hääletab.
+#. Jaoskond (``station-legacy``) identifitseerib jaoskonna ja ringkonna (ning
+   nende kaudu ka omavalitsuse), kus valija hääletab.
 
-#. Rea-number inimese rea number valimisjaoskonna nimekirjas. Täidetud ainult
-   algse nimekirja puhul, muudatuste korral on see väli tühi.
+#. Reanumber (``line-no``) on valija rea number valimisjaoskonna nimekirjas.
+   Täidetud ainult algse nimekirja puhul, muudatuste korral on see väli tühi.
 
-#. Põhjus kasutatakse kustutamiskirjete juures märkimaks kustutamise põhjust.
-   Lisamiskirjete korral peab põhjus tühi olema. Kui põhjuseks on `tokend`
-   tähendab see, et muudatuse rakendumisest alates ei tohi vastava isikukoodiga
-   valija enam hääletada. Kui põhjuseks on `jaoskonna vahetus` tähendab see, et
-   valija kustutatakse ühest jaoskonnast, kuna ta lisatakse teise jaoskonda.
+#. Põhjust (``reason``) kasutatakse kustutamiskirjete juures märkimaks
+   kustutamise põhjust.  Lisamiskirjete korral peab põhjus tühi olema.  Põhjus
+   ``tokend`` tähendab, et muudatuse rakendumisest alates ei tohi vastava
+   isikukoodiga valija enam hääletada. Põhjus ``jaoskonna vahetus`` tähendab,
+   et valija kustutatakse ühest jaoskonnast, kuna ta lisatakse teise jaoskonda.
    Sellisel juhul peab kaasnema kustutamiskirjega ka lisamiskirje (seda
    kontrollitakse). Kui kasutaja eemaldatakse nimekirjast mingil muul põhjusel
-   (surm, mujale (piirkonda, mis ei osale valimistel) elama kolimine), siis peab
-   põhjuseks olema `muu` või võib põhjus tühi olema. Väli on informatiivne.
+   (surm, mujale (piirkonda, mis ei osale valimistel) elama kolimine), peab
+   põhjuseks olema ``muu`` või võib põhjus ka tühi olla.  Väli on
+   informatiivne.
 
 
 Valijate nimekirja signatuur
 ----------------------------
 
-Valijate nimekiri saadakse SMIT poolt hallatavast Rahvastikuregistrist.
+
+Valijate nimekiri saadakse SMIT-i poolt hallatavast Rahvastikuregistrist.
 Pärandvormingus tekstifailile kaasatakse allkirjafail, mille moodustab
-Rahvastikuregister võttes algsest valijate nimekirjast SHA256 räsi ning
-allkirjastades selle räsi 2048 bitise RSA võtmega. Rahvastikuregistri poolt
+Rahvastikuregister, arvutades algsest valijate nimekirjast SHA256-räsi ning
+allkirjastades selle räsi 2048 bitise RSA-võtmega. Rahvastikuregistri poolt
 genereeritud avalik võti tehakse kättesaadavaks elektroonilise hääletamise
 infosüsteemile ning selle võtme alusel kontrollitakse valijate nimekirjade
-terviklust. Skeem on kasutusel aasta 2015 Riigikogu valimistest.
+terviklust. Skeem on kasutusel alates 2015. aasta Riigikogu valimistest.
 
 ..
    Võtme genereerimine:
@@ -223,25 +232,26 @@ terviklust. Skeem on kasutusel aasta 2015 Riigikogu valimistest.
 Rakendatud nimekirja versioon
 -----------------------------
 
-Rakendatud valijate nimekiri mingis ajahetkes sõltub algnimekirjast ja milliseid
-muudatusi ning millises järjekorras on rakendatud. Selle seisu ühtlaseks
-tuvastamiseks tuleb arvutada nimekirja versioon.
+Rakendatud valijate nimekiri mingis ajahetkes sõltub algnimekirjast, sellele
+rakendatud muudatustest ja muudatuste rakendamise järjekorrast. Selle seisu
+ühtlaseks tuvastamiseks tuleb arvutada nimekirja versioon.
 
-NB! See versioon ei ole seotud nimekirja failis sisalduva versiooninumbriga, mis
-määrab nimekirja formaadi versiooni.
+.. attention::
 
-Versiooni arvutamine on järgmine::
+   Nimekirja versioon ei ole seotud nimekirja failis sisalduva
+   versiooninumbriga, mis määrab nimekirja formaadi versiooni.
+
+Versiooni arvutamine toimub järgmiselt::
 
     v_0 = ""
     v_n = base64(sha256(v_{n-1} | base64(sha256(nk_n))))
 
-kus ``nk_n`` on ``n``-is laetud nimekiri (lugemine algab ühest ehk algnimekiri
-on ``nk_1``), ``v_n`` on valijate nimekirja versioon pärast selle laadimist,
-``""`` on tühi sõne ja ``|`` on sõnede sidurdamine operatsioon.
+kus ``nk_n`` on ``n``-is laaditud nimekiri (lugemine algab ühest ehk
+algnimekiri on ``nk_1``), ``v_n`` on valijate nimekirja versioon pärast selle
+laadimist, ``""`` on tühi sõne ja ``|`` on sõnede sidurdamine operatsioon.
 
 Rakendatud nimekirja versiooni üle peavad arvet kogumisteenus ja
-töötlemisrakendus, mis garanteerivad, et konkreetne hääl läheks arvesse õiges
-ringkonnas.
+töötlemisrakendus, mis tagavad, et iga hääl läheks arvesse õiges ringkonnas.
 
 Valikute nimekiri
 ================================================================================
@@ -251,16 +261,16 @@ vastusevariantide (rahvahääletusel) kohta. Valimiste korral on lisaks kandidaa
 andmetele nimekirjas ka tema valimisnimekirja nimi.
 
 Valijale elektroonilise hääletamise käigus nähtavaid valimiste vahelisi
-süsteemseid erinevusi on kolm:
+süsteemseid erinevusi on kaks:
 
 #. Rahvahääletusel ei valita erakondadesse kuuluvate kandidaatide vahel vaid
-   vastatakse „JAH“/“EI“ konkreetsetele küsimustele.
+   vastatakse "JAH"/"EI" konkreetsetele küsimustele;
 
 #. Riigikogu, KOV ja Euroopa Parlamendi valimistel antakse hääl ühele
    kandidaadile, kes võib, aga ei pruugi kuuluda suuremasse erakonda/nimekirja.
 
 Protokollistik kodeerib valija võimalikud valikud ringkonnas kuni 11-kohalise
-arvväärtusena, mis valikute nimekirjas kodeeritakse koos ringkonna EHAK koodiga.
+arvväärtusena, mis valikute nimekirjas kodeeritakse koos ringkonna EHAK-koodiga.
 Valijale tohivad kättesaadavad olla ainult tema ringkonnakohased valikud.
 Valijarakendus peab seda omadust tagama ning hääletamistulemust arvutav rakendus
 kontrollima.
@@ -271,7 +281,7 @@ kontrollima.
     district-choice = ehak-district '.' choice-no
 
 
-Valikute nimekirja JSON vorming on defineeritud järgnevalt. Objekti
+Valikute nimekirja JSON-vorming on defineeritud järgnevalt: Objekti
 :token:`district_dict` elemente indekseeritakse elemendiga tüüpi
 :token:`district`.
 Objekti :token:`list-choices` elemente indekseeritakse elemendiga tüüpi
@@ -285,6 +295,3 @@ Näide:
 
 .. literalinclude:: schema/ivxv.choices.schema.example
    :language: json
-
-
-.. vim: sts=3 sw=3 et:

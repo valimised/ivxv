@@ -20,6 +20,7 @@ import (
 	"encoding/asn1"
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -27,7 +28,7 @@ import (
 
 	"ivxv.ee/command"
 	"ivxv.ee/command/exit"
-	"ivxv.ee/conf"
+	"ivxv.ee/command/status"
 	"ivxv.ee/conf/version"
 	"ivxv.ee/cryptoutil"
 	"ivxv.ee/errors"
@@ -48,6 +49,12 @@ for the signature must be the list key with a ".signature" suffix. E.g.,
 The voter list container must have an extension corresponding to the container
 type it is, e.g., voterlist.bdoc.`
 
+var (
+	qp = flag.Bool("q", false, "quiet, do not show progress")
+
+	progress *status.Line
+)
+
 func main() {
 	// Call voterimpmain in a separate function so that it can set up
 	// defers and have them trigger before returning with a non-zero exit
@@ -60,7 +67,10 @@ func voterimpmain() (code int) {
 	defer func() {
 		code = c.Cleanup(code)
 	}()
-	path := c.Args[0]
+
+	if !*qp {
+		progress = status.New()
+	}
 
 	// Only check the version if it was the specific check requested.
 	if c.Until == command.CheckVersion {
@@ -86,6 +96,7 @@ func voterimpmain() (code int) {
 	if c.Until < command.CheckInput {
 		return exit.OK
 	}
+	path := c.Args[0]
 
 	// Open the voter list container file.
 	cnt, err := c.Conf.Container.OpenFile(path)
@@ -114,7 +125,7 @@ func voterimpmain() (code int) {
 	}
 
 	// Get the version string of the container.
-	version, err := version.Container(cnt)
+	cversion, err := version.Container(cnt)
 	if err != nil {
 		return c.Error(exit.DataErr, ContainerVersionError{Container: path, Err: err},
 			"failed to format container version string:", err)
@@ -142,15 +153,45 @@ func voterimpmain() (code int) {
 	list, sig := data[keys[0]], data[keys[1]]
 
 	// Check the signature.
-	if err = verifyRSA(c.Conf.Technical.VoterList.Key, list, sig); err != nil {
+	if err = verifyRSA(c.Conf.Election.VoterList.Key, list, sig); err != nil {
 		return c.Error(exit.DataErr, VerifySignatureError{Err: err},
-			"voter list signature failed to verify:", err)
+			"failed to verify voter list signature:", err)
 	}
 
-	// Import a new version of the voter list.
-	if err := voterimp(c.Ctx, c.Until, c.Conf, c.Storage, version, list); err != nil {
-		return c.Error(exit.Unavailable, ImportVotersError{Err: err},
-			"failed to import voter list:", err)
+	// Get the current voter list version.
+	oldver, err := c.Storage.GetVotersListVersion(c.Ctx)
+	switch {
+	case err == nil:
+		log.Log(c.Ctx, CurrentVoterListVersion{Version: oldver})
+	case errors.CausedBy(err, new(storage.NotExistError)) != nil:
+		oldver = "" // Do not rely on storage returning zero value on error.
+	default:
+		return c.Error(exit.Unavailable, CheckListVersionError{Err: err},
+			"failed to check current list version:", err)
+	}
+
+	// Parse the voter list and preprocess into a map of changes.
+	voters, err := preprocess(c.Ctx, list, oldver, c.Conf.Election.Identifier, c.Storage)
+	if err != nil {
+		return c.Error(exit.DataErr, PreprocessVotersError{Err: err},
+			"failed to preprocess voter list:", err)
+	}
+
+	// Store the new list.
+	if c.Until >= command.Execute {
+		newver := listver(oldver, list)
+		log.Log(c.Ctx, ImportingVoters{Version: newver, Count: len(voters)})
+		progress.Static(fmt.Sprintf("Importing %d voters:", len(voters)))
+		addprogress := progress.Percent(uint64(len(voters)), true)
+		progress.Redraw()
+		defer progress.Keep()
+
+		if err := c.Storage.PutVoters(c.Ctx, cversion, voters,
+			oldver, newver, addprogress); err != nil {
+
+			return c.Error(exit.Unavailable, PutVotersError{Err: err},
+				"failed to import voter list:", err)
+		}
 	}
 	return exit.OK
 }
@@ -196,244 +237,228 @@ const (
 	sep   = '\t'
 )
 
-// voterimp parses the list and uploads the changes to the storage service.
-func voterimp(ctx context.Context, until int, c *conf.C, s *storage.Client,
-	version string, list []byte) error {
+// linefunc is the type of functions used to process voter lines. Given a
+// voter, action and choices, it reports any problems or if there were none,
+// adds an entry for voter into voters. previousErrors indicates if there were
+// previous lines with errors for this voter. version is the currently applied
+// voter list version.
+type linefunc func(ctx context.Context, voter, action, choices string, voters map[string][]byte,
+	previousErrors bool, version string, s *storage.Client) []error
+
+// preprocess parses the list and preprocesses the changes for storage.
+func preprocess(ctx context.Context, list []byte, version, election string, s *storage.Client) (
+	voters map[string][]byte, err error) {
 
 	b := bytes.NewBuffer(list)
 
 	// First line is the format version number, which must be 1.
-	if fver, err := b.ReadString(delim); err != nil {
-		return ReadFileVersionError{Err: err}
-	} else if fver != "1"+string(delim) {
-		return FileVersionError{Version: fver}
+	fver, err := b.ReadString(delim)
+	if err != nil {
+		return nil, ReadFileVersionError{Err: err}
+	}
+	if fver != "1"+string(delim) {
+		return nil, FileVersionError{Version: fver}
 	}
 
 	// Next is the election identifier. Must match the one in the election
 	// configuration.
-	if elid, err := b.ReadString(delim); err != nil {
-		return ReadElectionIDError{Err: err}
-	} else if elid != c.Election.Identifier+string(delim) {
-		return ElectionIDMismatchError{Conf: c.Election.Identifier, List: elid}
+	elid, err := b.ReadString(delim)
+	if err != nil {
+		return nil, ReadElectionIDError{Err: err}
+	}
+	if elid != election+string(delim) {
+		return nil, ElectionIDMismatchError{Conf: election, List: elid}
 	}
 
 	// Next is the list type: either initial or changes.
 	t, err := b.ReadString(delim)
 	if err != nil {
-		return ReadTypeError{Err: err}
+		return nil, ReadTypeError{Err: err}
 	}
 	t = t[:len(t)-1] // Trim the delimiter.
 
+	var lf linefunc
 	switch t {
 	case "algne":
-		return initial(ctx, until, s, version, list, b)
+		if len(version) > 0 {
+			return nil, VoterListExistsError{Version: version}
+		}
+		lf = initial
 	case "muudatused":
-		return changes(ctx, until, s, version, list, b)
+		if len(version) == 0 {
+			return nil, NoExistingVoterListError{}
+		}
+		lf = changes
 	default:
-		return UnsupportedTypeError{Type: t}
-	}
-}
-
-func initial(ctx context.Context, until int, s *storage.Client,
-	cversion string, list []byte, b *bytes.Buffer) error {
-
-	// Check if the context is canceled before contacting storage.
-	select {
-	case <-ctx.Done():
-		return ImportInitialPreprocessingCanceled{Err: ctx.Err()}
-	default:
+		return nil, UnsupportedListTypeError{Type: t}
 	}
 
-	// Fail fast: check if a list is already loaded.
-	oldver, err := s.GetVotersListVersion(ctx)
-	switch {
-	case err == nil:
-		return InitialVoterListExistsError{Version: oldver}
-	case errors.CausedBy(err, new(storage.NotExistError)) != nil:
-	default:
-		return InitialCheckVoterListExistingError{Err: err}
-	}
+	// Finally, loop over all list entries, calling lf for each. Report
+	// progress of this process.
+	log.Log(ctx, PreprocessingVoterList{Type: t})
+	progress.Static("Preprocessing voter list:")
+	addcount := progress.Count(0, false) // Do not redraw every time.
+	const countstep = 10000              // Redraw after each countstep.
+	progress.Redraw()
+	defer progress.Keep()
 
-	// Preprocess the initial list.
-	log.Log(ctx, PreprocessingInitialList{})
-	progress := PreprocessingInitial{Voter: "", Choices: "", Index: 0}
+	voters = make(map[string][]byte)
+	withErrors := make(map[string]struct{}) // Voters with previous errors.
+	var errcount int
 
-	voters := make(map[string]string)
 	line := 3 // Voter entries start after the third line.
-	for {
+loop:
+	for ; ; stepadd(ctx, addcount, 1, countstep) {
+		// Check if preprocessing was cancelled.
+		select {
+		case <-ctx.Done():
+			return nil, PreprocessVoterListCanceled{Err: ctx.Err()}
+		default:
+		}
+
 		// Read the next line.
 		line++
-		voter, action, choices, err := next(ctx, b)
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return err
+		voter, action, choices, err := next(b)
+		switch {
+		case err == nil:
+		case err == io.EOF:
+			break loop
+		case errors.CausedBy(err, new(FieldCountError)) != nil:
+			report(ctx, VoterEntryFormatError{Line: line, Err: err})
+			errcount++
+			continue loop
+		default:
+			report(ctx, ReadVoterEntryError{Line: line, Err: err})
+			errcount++
+			break loop
 		}
 
-		// If debugging is enabled, then report progress.
-		progress.Voter = voter
-		progress.Choices = choices
-		progress.Index = progress.Index.(int) + 1
-		log.Debug(ctx, progress)
+		// Call lf for the line.
+		_, previous := withErrors[voter]
+		errs := lf(ctx, voter, action, choices, voters, previous, version, s)
+		if len(errs) > 0 {
+			withErrors[voter] = struct{}{}
+		}
+		for _, err = range errs {
+			report(ctx, PreprocessVoterEntryError{Line: line, Err: err})
+			errcount++
+		}
+	}
+	// Report final count if not already done by stepadd.
+	if addcount(0)%countstep > 0 {
+		stepadd(ctx, addcount, 0, 0)
+	}
+	if errcount > 0 {
+		return nil, PreprocessVoterListError{ErrorCount: errcount}
+	}
+	return voters, nil
+}
 
-		// Ensure that we are adding a new non-empty voter with
-		// non-empty choices.
-		if action != "lisamine" {
-			return InitialNonAddActionError{Line: line, Action: action}
-		}
-		if len(voter) == 0 {
-			return InitialEmptyVoterError{Line: line}
-		}
-		if len(choices) == 0 {
-			return InitialEmptyChoicesError{Line: line, Voter: voter}
-		}
+func initial(ctx context.Context, voter, action, choices string, voters map[string][]byte,
+	previousErrors bool, version string, s *storage.Client) (errs []error) {
+
+	// Skip duplicate checking if there are relevant errors. We want to
+	// check duplicates even if the voter had previous errors, so use a
+	// flag separate from previousErrors.
+	var skip bool
+
+	if len(voter) == 0 {
+		errs = append(errs, InitialEmptyVoterError{})
+		skip = true
+	}
+	if action != "lisamine" {
+		errs = append(errs, InitialNonAddActionError{Action: action})
+		skip = true
+	}
+	if len(choices) == 0 {
+		errs = append(errs, InitialEmptyChoicesError{})
+		// Do not set skip: detect duplicate voter regardless of faulty
+		// choices. It is OK to add empty choices since we will error
+		// anyway and the map values are not used.
+	}
+	if !skip {
 		if _, ok := voters[voter]; ok {
-			return InitialAddDuplicateVoterError{Line: line, Voter: voter}
+			errs = append(errs, InitialAddDuplicateVoterError{Voter: voter})
 		}
-		voters[voter] = choices
+		voters[voter] = []byte(choices)
 	}
-
-	// Calculate initial list version.
-	v := listver("", list)
-
-	// Check if the context is canceled before the actual import.
-	select {
-	case <-ctx.Done():
-		return ImportInitialCanceled{Err: ctx.Err()}
-	default:
-	}
-
-	// Store the initial voters.
-	if until >= command.Execute {
-		log.Log(ctx, ImportingInitialVoters{Version: v, Count: len(voters)})
-		if err := s.PutVoters(ctx, cversion, voters, "", v); err != nil {
-			return InitialPutVotersError{Err: err}
-		}
-	}
-	return nil
+	return
 }
 
-func changes(ctx context.Context, until int, s *storage.Client,
-	cversion string, list []byte, b *bytes.Buffer) error {
+func changes(ctx context.Context, voter, action, choices string, voters map[string][]byte,
+	previousErrors bool, version string, s *storage.Client) (errs []error) {
 
-	// Check if the context is canceled before contacting storage.
-	select {
-	case <-ctx.Done():
-		return ImportChangesPreprocessingCanceled{Err: ctx.Err()}
-	default:
+	if len(voter) == 0 {
+		errs = append(errs, ChangesEmptyVoterError{})
+		previousErrors = true
+	} else if previousErrors {
+		errs = append(errs, ChangesVoterWithPreviousErrorsError{Voter: voter})
 	}
 
-	// Get the current voter list version.
-	oldver, err := s.GetVotersListVersion(ctx)
-	if err != nil {
-		return ChangesGetVoterListVersionError{Err: err}
+	if len(choices) == 0 {
+		errs = append(errs, ChangesEmptyChoicesError{})
+		previousErrors = true
 	}
-	log.Log(ctx, CurrentVoterListVersion{Version: oldver})
 
-	// Preprocess changes to the voter list.
-	log.Log(ctx, PreprocessingChanges{})
-	progress := PreprocessingChange{Action: "", Voter: "", Choices: "", Index: 0}
-
-	voters := make(map[string]string)
-	line := 3 // Voter entries start after the third line.
-	for {
-		// Read the next line.
-		line++
-		voter, action, choices, err := next(ctx, b)
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return err
-		}
-
-		// If debugging is enabled, then report progress.
-		progress.Action = action
-		progress.Voter = voter
-		progress.Choices = choices
-		progress.Index = progress.Index.(int) + 1
-		log.Debug(ctx, progress)
-
-		// Get the current choices for the voter. Check the in-memory
-		// map first and only then storage.
-		oldchoices, ok := voters[voter]
-		if !ok {
-			oldchoices, err = s.GetVoter(ctx, oldver, voter)
+	// Only perform consistency checks if there are no previous errors.
+	var oldchoices []byte
+	if !previousErrors {
+		// Get the current choices for the voter. Check the
+		// in-memory map first and only then storage.
+		var ok bool
+		if oldchoices, ok = voters[voter]; !ok {
+			oldchoicesstr, err := s.GetVoter(ctx, version, voter)
 			switch {
 			case err == nil:
+				oldchoices = []byte(oldchoicesstr)
 			case errors.CausedBy(err, new(storage.NotExistError)) != nil:
-				oldchoices = ""
 			default:
-				return GetOldVoterError{Line: line, Err: err}
+				errs = append(errs, GetOldVoterError{Voter: voter, Err: err})
+				previousErrors = true
 			}
 		}
+	}
 
-		switch action {
-		case "lisamine":
-			// Ensure that we are adding a new non-empty voter with
-			// non-empty choices or...
-			if len(voter) == 0 {
-				return ChangesEmptyVoterError{Line: line}
-			}
-			if len(choices) == 0 {
-				return ChangesEmptyChoicesError{Line: line, Voter: voter}
-			}
+	switch action {
+	case "lisamine":
+		if !previousErrors {
 			if len(oldchoices) > 0 {
-				return ChangesAddExistingVoterError{Line: line, Voter: voter}
+				errs = append(errs, ChangesAddDuplicateVoterError{Voter: voter})
 			}
-			voters[voter] = choices
+			voters[voter] = []byte(choices)
+		}
 
-		case "kustutamine":
-			// ...removing an existing voter with the specified choices.
+	case "kustutamine":
+		if !previousErrors {
 			if len(oldchoices) == 0 {
-				return ChangesRemoveNotExistingVoterError{Line: line, Voter: voter}
-			}
-			if oldchoices != choices {
-				return ChangesRemoveVoterChoicesMismatchError{
-					Line:     line,
+				errs = append(errs, ChangesRemoveNotExistingVoterError{Voter: voter})
+			} else if string(oldchoices) != choices {
+				errs = append(errs, ChangesRemoveVoterChoicesMismatchError{
 					Voter:    voter,
 					Choices:  choices,
-					Expected: oldchoices,
-				}
+					Expected: string(oldchoices),
+				})
 			}
-			voters[voter] = "" // Empty string to distinguish from unchanged voters.
-
-		default:
-			return ChangesUnsupportedActionError{Line: line, Action: action}
+			voters[voter] = nil // nil to distinguish from unchanged voters.
 		}
-	}
 
-	// Calculate new list version.
-	newver := listver(oldver, list)
-
-	// Check if the context is canceled before the actual import.
-	select {
-	case <-ctx.Done():
-		return ImportChangesCanceled{Err: ctx.Err()}
 	default:
+		errs = append(errs, ChangesUnsupportedActionError{Action: action})
 	}
+	return
+}
 
-	// Store the changed list.
-	if until >= command.Execute {
-		log.Log(ctx, ImportingChangedVoters{Version: newver, Count: len(voters)})
-		if err := s.PutVoters(ctx, cversion, voters, oldver, newver); err != nil {
-			return ChangesPutVotersError{Err: err}
-		}
+// stepadd calls add with count and, if step is zero or the new total modulo
+// step is zero, logs and redraws progress.
+func stepadd(ctx context.Context, add status.Add, count, step uint64) {
+	if new := add(count); step == 0 || new%step == 0 {
+		log.Log(ctx, PreprocessProgress{Count: new})
+		progress.Redraw()
 	}
-	return nil
 }
 
 // next reads and parses the next voter line from b.
-func next(ctx context.Context, b *bytes.Buffer) (voter, action, choices string, err error) {
-	// Check if we should give the next line or cancel.
-	select {
-	case <-ctx.Done():
-		err = PreprocessVoterListCanceled{Err: ctx.Err()}
-		return
-	default:
-	}
-
+func next(b *bytes.Buffer) (voter, action, choices string, err error) {
 	line, err := b.ReadString(delim)
 	if err != nil {
 		if err != io.EOF || len(line) > 0 {
@@ -463,6 +488,14 @@ func next(ctx context.Context, b *bytes.Buffer) (voter, action, choices string, 
 	}
 
 	return fields[0], fields[2], fmt.Sprint(fields[5], ".", fields[6]), nil
+}
+
+// report reports an error to both the log and standard output.
+func report(ctx context.Context, entry log.ErrorEntry) {
+	log.Error(ctx, entry)
+	progress.Hide()
+	defer progress.Show()
+	fmt.Fprintln(os.Stderr, "error:", entry)
 }
 
 // listever calculates a list version number based on the previous one and data.

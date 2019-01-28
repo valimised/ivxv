@@ -1,0 +1,14 @@
+{
+    "id": 0.0,
+    "method": "RPC.Vote",
+    "params": [
+        {
+            "AuthMethod": "tls",
+            "Choices": "0140.1",
+            "SessionID": "ec3a0cab353d552952289f2c7ad52e27",
+            "OS": "Operating System,2,0",
+            "Type": "bdoc",
+            "Vote": "UEsDBAoABgAAAAIAAAAbWltZXR5cGVhcHBsaWNhdGlv\nbi92bmQuZX..."
+        }
+    ]
+}

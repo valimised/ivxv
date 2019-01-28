@@ -1,0 +1,6 @@
+# Go produces static binaries, this is a feature not a bug.
+ivxv-backup: statically-linked-binary usr/bin/ivxv-voteunion
+
+# We do not provide manpages, since these packages are not meant for
+# distribution.
+ivxv-backup: binary-without-manpage

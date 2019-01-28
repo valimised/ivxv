@@ -1,5 +1,6 @@
 package ee.ivxv.common.service.bbox.impl;
 
+import ee.ivxv.common.crypto.hash.HashType;
 import ee.ivxv.common.model.Ballot;
 import ee.ivxv.common.model.Voter;
 import ee.ivxv.common.service.bbox.BboxHelper.VoterProvider;
@@ -7,17 +8,18 @@ import ee.ivxv.common.service.bbox.Ref;
 import ee.ivxv.common.service.bbox.Result;
 import ee.ivxv.common.service.bbox.impl.verify.OcspVerifier;
 import ee.ivxv.common.service.bbox.impl.verify.TsVerifier;
-import ee.ivxv.common.service.container.ContainerReader;
 import ee.ivxv.common.service.container.Container;
+import ee.ivxv.common.service.container.ContainerReader;
 import ee.ivxv.common.service.container.InvalidContainerException;
+import ee.ivxv.common.service.container.Signature;
+import ee.ivxv.common.service.container.Subject;
+import ee.ivxv.common.util.ByteArrayWrapper;
 import ee.ivxv.common.util.Util;
-import java.math.BigInteger;
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.apache.xml.security.c14n.Canonicalizer;
 import org.bouncycastle.asn1.cms.ContentInfo;
-import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.tsp.TimeStampRequest;
 import org.bouncycastle.tsp.TimeStampToken;
 
@@ -29,11 +31,13 @@ import org.bouncycastle.tsp.TimeStampToken;
  * @param <U>
  */
 abstract class TspProfile<T extends TspRespRecord<?>, U extends TspReqRecord<?>>
-        implements Profile<T, U, KeyableValue<BigInteger>, KeyableValue<BigInteger>> {
+        implements Profile<T, U, KeyableValue<?>, KeyableValue<?>> {
 
     private static final String EXT_BALLOT = ".ballot";
     // The canonicalization algorithm: http://www.w3.org/2006/12/xml-c14n11
     private static final String TS_C14N_ALG = Canonicalizer.ALGO_ID_C14N11_OMIT_COMMENTS;
+    private static final HashType TS_HASH = HashType.SHA256;
+    private static final String SN_PNOEE_PREFIX = "PNOEE-"; // TODO Make country code configurable.
 
     final ContainerReader container;
     final OcspVerifier ocspVerifier;
@@ -51,13 +55,13 @@ abstract class TspProfile<T extends TspRespRecord<?>, U extends TspReqRecord<?>>
         return voter;
     }
 
-    Ballot createBallot(FileName<Ref.BbRef> name, Container c, Instant time, String version,
-            Voter voter) throws ResultException {
-        // Check that ballot has the signature of the voter
-        if (!c.getSignatures().stream().anyMatch(s -> s.getSigner() != null
-                && name.ref.voter.equals(s.getSigner().getSerialNumber()))) {
-            throw new ResultException(Result.MISSING_VOTER_SIGNATURE);
-        }
+    Ballot createBallot(FileName<Ref.BbRef> name, Container c, String version, Voter voter)
+            throws ResultException {
+        // Find the voter's signature.
+        Signature signature = c.getSignatures().stream() //
+                .filter(s -> s.getSigner() != null
+                        && name.ref.voter.equals(getVoterIdentifier(s.getSigner())))
+                .findFirst().orElseThrow(() -> new ResultException(Result.MISSING_VOTER_SIGNATURE));
 
         Map<String, byte[]> votes = new LinkedHashMap<>();
 
@@ -71,24 +75,60 @@ abstract class TspProfile<T extends TspRespRecord<?>, U extends TspReqRecord<?>>
             votes.put(voteId, Util.toBytes(f.getStream()));
         });
 
-        return new Ballot(name.ref.ballot, time, version, voter, votes);
+        return new Ballot(name.ref.ballot, signature.getSigningTime(), version, voter, votes);
+    }
+
+    private String getVoterIdentifier(Subject s) {
+        String serial = s.getSerialNumber();
+        if (serial.startsWith(SN_PNOEE_PREFIX)) {
+            return serial.substring(SN_PNOEE_PREFIX.length());
+        }
+        return serial;
+    }
+
+    void checkSignatureProfiles(Container c, Signature.Profile profile) {
+        c.getSignatures().stream().filter(s -> s.getProfile() != profile).findAny()
+                .ifPresent(invalid -> {
+                    throw new ResultException(Result.INVALID_SIGNATURE_PROFILE,
+                            invalid.getProfile());
+                });
     }
 
     @Override
-    public KeyableValue<BigInteger> getResponse(T record) throws Exception {
-        TimeStampToken response = record.getRegResponse();
-        return new KeyableValue<>(response.getTimeStampInfo().getNonce());
+    public KeyableValue<?> getResponse(T record) {
+        return new KeyableValue<>(getResponseKey(record).get());
     }
 
     @Override
-    public KeyableValue<BigInteger> getRequest(U record) throws Exception {
+    public KeyableValue<?> getRequest(U record) {
         TimeStampRequest request = record.getRegRequest();
-        return new KeyableValue<>(request.getNonce());
+        byte[] bytes = request.getMessageImprintDigest();
+        return new KeyableValue<>(createRegKey(bytes));
     }
 
     @Override
-    public Result checkRegistration(KeyableValue<BigInteger> response,
-            KeyableValue<BigInteger> request) {
+    public Optional<Object> getResponseKey(T record) {
+        if (record.hasRegResponse()) {
+            TimeStampToken response = record.getRegResponse();
+            byte[] bytes = response.getTimeStampInfo().getMessageImprintDigest();
+            return Optional.of(createRegKey(bytes));
+        }
+        byte[] c = getContainer(record);
+        if (c == null) {
+            return Optional.empty();
+        }
+        byte[] bytes = TS_HASH.getFunction().digest(container.getTimestampData(c, TS_C14N_ALG));
+        return Optional.of(createRegKey(bytes));
+    }
+
+    abstract byte[] getContainer(T record);
+
+    private Object createRegKey(byte[] bytes) {
+        return new ByteArrayWrapper(bytes);
+    }
+
+    @Override
+    public Result checkRegistration(KeyableValue<?> response, KeyableValue<?> request) {
         return response.value.equals(request.value) ? Result.OK : Result.REG_RESP_REQ_UNMATCH;
     }
 
@@ -107,6 +147,11 @@ abstract class TspProfile<T extends TspRespRecord<?>, U extends TspReqRecord<?>>
 
         TmProfile(ContainerReader container, OcspVerifier ocspVerifier) {
             super(container, ocspVerifier);
+        }
+
+        @Override
+        byte[] getContainer(TspRespRecord<TmType> record) {
+            return record.get(TmType.bdoc);
         }
 
         @Override
@@ -137,17 +182,18 @@ abstract class TspProfile<T extends TspRespRecord<?>, U extends TspReqRecord<?>>
             FileName<Ref.BbRef> bdocName = name.forType(TmType.bdoc);
             Container c = container.open(combineBallotContainer(record), bdocName.path);
 
-            BasicOCSPResp basicResp = ocspVerifier.verify(record.get(TmType.ocsptm));
+            checkSignatureProfiles(c, Signature.Profile.BDOC_TM);
 
-            tsv.verify(record.getRegResponse());
-
-            // TO-DO Verify OCSP nonce!
+            // TODO: Verify OCSP nonce! Are we sure that digidoc4j did not do this already? If so,
+            // it should probably happen inside ocspVerifier similarly to tsv.verify.
+            // BasicOCSPResp basicResp = ocspVerifier.verify(record.get(TmType.ocsptm));
             // Extension ext = basicResp.getExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce);
             // ext.getExtnValue();
 
-            Instant time = basicResp.getProducedAt().toInstant();
+            // XXX: TM has no timestamp, so how can we use it to check for registration?
+            tsv.verify(record.getRegResponse());
 
-            return createBallot(bdocName, c, time, version, voter);
+            return createBallot(bdocName, c, version, voter);
         }
     }
 
@@ -164,6 +210,11 @@ abstract class TspProfile<T extends TspRespRecord<?>, U extends TspReqRecord<?>>
 
         TsProfile(ContainerReader container, OcspVerifier ocspVerifier) {
             super(container, ocspVerifier);
+        }
+
+        @Override
+        byte[] getContainer(TspRespRecord<TsType> record) {
+            return record.get(TsType.bdoc);
         }
 
         @Override
@@ -194,15 +245,12 @@ abstract class TspProfile<T extends TspRespRecord<?>, U extends TspReqRecord<?>>
             FileName<Ref.BbRef> bdocName = name.forType(TsType.bdoc);
             Container c = container.open(combineBallotContainer(record), bdocName.path);
 
-            ocspVerifier.verify(record.get(TsType.ocsp));
+            checkSignatureProfiles(c, Signature.Profile.BDOC_TS);
 
-            TimeStampToken tst = tsv.verify(record.getRegResponse());
+            tsv.verify(record.getRegResponse());
 
-            Instant time = tst.getTimeStampInfo().getGenTime().toInstant();
-
-            return createBallot(bdocName, c, time, version, voter);
+            return createBallot(bdocName, c, version, voter);
         }
-
     }
 
     enum TmType {
@@ -228,7 +276,11 @@ class TspRespRecord<T extends Enum<T>> extends Record<T> {
         this.respKey = respKey;
     }
 
-    TimeStampToken getRegResponse() throws Exception {
+    boolean hasRegResponse() {
+        return get(respKey) != null;
+    }
+
+    TimeStampToken getRegResponse() {
         try {
             return new TimeStampToken(ContentInfo.getInstance(get(respKey)));
         } catch (Exception e) {
@@ -248,7 +300,7 @@ class TspReqRecord<T extends Enum<T>> extends Record<T> {
         this.reqKey = reqKey;
     }
 
-    TimeStampRequest getRegRequest() throws Exception {
+    TimeStampRequest getRegRequest() {
         try {
             return new TimeStampRequest(get(reqKey));
         } catch (Exception e) {
@@ -260,21 +312,21 @@ class TspReqRecord<T extends Enum<T>> extends Record<T> {
 
 
 class KeyableValue<T> implements Keyable {
-    final T value;
     final Object key;
+    final T value;
 
     /**
-     * Constructs instance with the given {@code key} as both key and value.
+     * Constructs instance with the given {@code value} as both key and value.
      * 
-     * @param key
+     * @param value
      */
-    KeyableValue(T key) {
-        this(key, key);
+    KeyableValue(T value) {
+        this(value, value);
     }
 
-    KeyableValue(T value, Object key) {
-        this.value = value;
+    private KeyableValue(Object key, T value) {
         this.key = key;
+        this.value = value;
     }
 
     @Override

@@ -151,7 +151,7 @@ func (p *parser) literal(depth int) (s Scalar, next lexeme) {
 			lf++
 		}
 		for n := next.line - pline - lf; n > 0; n-- {
-			_ = p.buf.WriteByte('\n')
+			p.buf.WriteByte('\n')
 		}
 
 		// If this is the first lexeme on the line, then reset written.
@@ -161,11 +161,11 @@ func (p *parser) literal(depth int) (s Scalar, next lexeme) {
 
 		// Recreate leading spaces.
 		for n := next.column - written - depth; n > 0; n-- {
-			_ = p.buf.WriteByte(' ')
+			p.buf.WriteByte(' ')
 			written++
 		}
 
-		_, _ = p.buf.WriteString(next.content)
+		p.buf.WriteString(next.content)
 		written += utf8.RuneCountInString(next.content)
 		pline = next.line
 	}
@@ -238,7 +238,7 @@ func (p *parser) scalarOrMapping(depth int, l lexeme) (node Node, next lexeme) {
 	}
 
 	p.buf.Reset()
-	_, _ = p.buf.WriteString(strings.TrimSpace(l.content))
+	p.buf.WriteString(strings.TrimSpace(l.content))
 
 	for ok {
 		// If next is shallower than depth, then the block ended.
@@ -252,8 +252,8 @@ func (p *parser) scalarOrMapping(depth int, l lexeme) (node Node, next lexeme) {
 			p.error(next.line, next.column, UnexpectedMappingError{})
 		}
 
-		_ = p.buf.WriteByte(' ')
-		_, _ = p.buf.WriteString(strings.TrimSpace(next.content))
+		p.buf.WriteByte(' ')
+		p.buf.WriteString(strings.TrimSpace(next.content))
 
 		next, ok = <-p.c
 	}

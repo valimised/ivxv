@@ -76,7 +76,3 @@ Mõiste *liides* tähistab selgelt spetsifitseeritud kokkupuutepunkti süsteemi 
 Mõiste *rakendus* tähistab tarkvaralist komponenti, mida käivitatakse konkreetsel ajahetkel ühel riistvaralisel komponendil ühe kasutaja poolt. Rakendus võib oma ülesande täitmiseks suhelda servrisüsteemiga.
 
 Mõiste *teenus* tähistab süsteemivälist komponenti, millega süsteem oma ülesannete täitmiseks konkreetsete liideste kaudu andmeid vahetab.
-
-
-
-.. vim: sts=3 sw=3 et:

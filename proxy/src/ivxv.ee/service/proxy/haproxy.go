@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"html/template"
-	"io"
 	"io/ioutil"
 	"net"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -22,7 +23,6 @@ import (
 
 type data struct {
 	Debug    bool
-	Socket   string
 	Service  *conf.Service
 	Backends []*backend
 }
@@ -34,10 +34,14 @@ type backend struct {
 
 // generate creates a HAProxy configuration based on the technical configuration
 // and a template.
-func generate(c *conf.Technical, network string, service *conf.Service, tmpl, socket string) (
+func generate(c *conf.Technical, network string, service *conf.Service, tmpl string) (
 	cfg []byte, code int, err error) {
 
 	t, err := template.New(filepath.Base(tmpl)).Funcs(template.FuncMap{
+		"port": func(addr string) (port string, err error) {
+			_, port, err = net.SplitHostPort(addr)
+			return
+		},
 		"replace": strings.Replace,
 	}).ParseFiles(tmpl)
 	if err != nil {
@@ -46,7 +50,6 @@ func generate(c *conf.Technical, network string, service *conf.Service, tmpl, so
 
 	d := data{
 		Debug:   c.Debug,
-		Socket:  socket,
 		Service: service,
 	}
 	services := c.Services(network)
@@ -73,8 +76,7 @@ func generate(c *conf.Technical, network string, service *conf.Service, tmpl, so
 
 // check calls the HAProxy binary to verify that cfg is valid.
 func check(ctx context.Context, cfg []byte) (code int, err error) {
-	// nolint: gas, this is a false-positive from gas, which has not
-	// whitelisted the ctx argument for exec.CommandContext.
+	// nolint: gosec, This subprocess launch has been verified as correct.
 	cmd := exec.CommandContext(ctx, "/usr/sbin/haproxy", "-c", "--", "/dev/stdin")
 	cmd.Stdin = bytes.NewReader(cfg)
 	if out, err := cmd.CombinedOutput(); err != nil {
@@ -87,25 +89,22 @@ func check(ctx context.Context, cfg []byte) (code int, err error) {
 	return
 }
 
-// readPIDFile opens pidfile and reads a PID per line.
-func readPIDFile(pidfile string) (pids []int, code int, err error) {
-	pidsb, err := ioutil.ReadFile(pidfile)
+// readPIDFile opens pidfile and reads the PID of the master process.
+func readPIDFile(pidfile string) (pid int, code int, err error) {
+	// nolint: gosec, Trust pidfile location from command-line.
+	pidb, err := ioutil.ReadFile(pidfile)
 	if err != nil {
-		return nil, exit.NoInput, ReadPIDFileError{Path: pidfile, Err: err}
+		return 0, exit.NoInput, ReadPIDFileError{Path: pidfile, Err: err}
 	}
-	split := bytes.Split(pidsb, []byte{'\n'})
-	for _, pidb := range split {
-		if len(pidb) == 0 {
-			continue // Skip empty lines.
-		}
-		pid, err := strconv.Atoi(string(pidb))
-		if err != nil {
-			return nil, exit.DataErr,
-				ParsePIDFilePIDError{PID: string(pidb), Err: err}
-		}
-		pids = append(pids, pid)
+	eol := bytes.IndexByte(pidb, '\n')
+	if eol < 0 {
+		eol = len(pidb)
 	}
-	return
+	pid, err = strconv.Atoi(string(pidb[:eol]))
+	if err != nil {
+		return 0, exit.DataErr, ParsePIDFilePIDError{PIDFile: string(pidb), Err: err}
+	}
+	return pid, exit.OK, nil
 }
 
 // Since we do not have enough permissions to reload HAProxy we have to
@@ -113,19 +112,27 @@ func readPIDFile(pidfile string) (pids []int, code int, err error) {
 // are running under and send USR1 to them. This will cause them to gracefully
 // close and HAProxy to stop. The service manager will pick up on this and
 // restart HAProxy, now with the new configuration.
-func restart(ctx context.Context, pids []int) error {
+func restart(ctx context.Context, proc string, pid int) error {
+	cpids, err := childPIDs(proc, pid)
+	if err != nil {
+		return ChildPIDsError{ParentPID: pid, Err: err}
+	}
+	if len(cpids) == 0 {
+		return NoChildPIDsError{ParentPID: pid}
+	}
+
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	// Start a goroutine per PID. Create a buffered channel to hold all the
-	// results without blocking.
-	c := make(chan error, len(pids))
-	for _, pid := range pids {
+	// Start a goroutine per child PID. Create a buffered channel to hold
+	// all the results without blocking.
+	c := make(chan error, len(cpids))
+	for _, pid := range cpids {
 		go func(pid int) { c <- stopPID(ctx, pid) }(pid)
 	}
 
 	// Read up to as many results as goroutines were started.
-	for range pids {
+	for range cpids {
 		if err := <-c; err != nil {
 			return StopPIDError{Err: err}
 		}
@@ -138,7 +145,7 @@ func stopPID(ctx context.Context, pid int) error {
 		return SignalPIDError{PID: pid, Err: err}
 	}
 
-	// Call check on the PID until it no longer succeeds. There is a chance
+	// Signal the PID with 0 until it no longer succeeds. There is a chance
 	// that between two signals, the old process stops and a new process
 	// starts under the same user with the same PID, but this is negligible
 	// enough that we ignore it.
@@ -149,7 +156,7 @@ func stopPID(ctx context.Context, pid int) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-sleep.C:
-			if err := (*hapid)(&pid).check(context.Background()); err != nil {
+			if err := syscall.Kill(pid, syscall.Signal(0)); err != nil {
 				log.Log(ctx, HAProxyStopped{PID: pid})
 				return nil
 			}
@@ -158,23 +165,45 @@ func stopPID(ctx context.Context, pid int) error {
 	}
 }
 
-// socket writes command to the socket at path and returns the response.
-func socket(path string, command string) (resp string, err error) {
-	c, err := net.Dial("unix", path)
-	if err != nil {
-		return "", DialHAProxySocketError{Path: path, Err: err}
-	}
-	// nolint: errcheck, ignore close failures, because we either have a
-	// higher-priority error or already got a successful response.
-	defer c.Close()
+// childPIDs scans through proc looking for processes whose parent PID is pid.
+func childPIDs(proc string, pid int) ([]int, error) {
+	ppid := regexp.MustCompile("\nPPid:\t" + strconv.Itoa(pid) + "\n")
 
-	if _, err = io.WriteString(c, command+"\n"); err != nil {
-		return "", WriteHAProxySocketError{Err: err}
-	}
-
-	rb, err := ioutil.ReadAll(c)
+	// nolint: gosec, Trust proc filesystem location from command-line.
+	dir, err := os.Open(proc)
 	if err != nil {
-		return "", ReadHAProxySocketError{Err: err}
+		return nil, OpenProcError{Proc: proc, Err: err}
 	}
-	return string(rb), nil
+	defer dir.Close() // nolint: errcheck, ignore close failure of read-only dir.
+
+	names, err := dir.Readdirnames(-1)
+	if err != nil {
+		return nil, ReadProcError{Proc: proc, Err: err}
+	}
+	var cpids []int
+	for _, name := range names {
+		cpid, err := strconv.Atoi(name)
+		if err != nil {
+			continue // Skip non-integer directory names.
+		}
+		// nolint: gosec, Trust proc filesystem location from command-line.
+		status, err := ioutil.ReadFile(filepath.Join(proc, name, "status"))
+		if err != nil {
+			// Skip processes where we cannot read status (probably
+			// exited after Readdirnames).
+			continue
+		}
+		if ppid.Match(status) {
+			cpids = append(cpids, cpid)
+		}
+	}
+	return cpids, nil
+}
+
+// checkPID checks proc if the process PID still exists.
+func checkPID(proc string, pid int) error {
+	if _, err := os.Stat(filepath.Join(proc, strconv.Itoa(pid), "status")); err != nil {
+		return StatProcStatusError{PID: pid, Err: err}
+	}
+	return nil
 }

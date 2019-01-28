@@ -5,33 +5,33 @@
 .. SEE FAIL ON GENEREERITUD AUTOMAATTESTI POOLT:
 .. * steps/test_util/report.py
 
-..  Feature: Kogumisteenuse paigaldamine kõrgkäideldava konfiguratsiooniga
+..  Feature: Kogumisteenuse käivitamine kõrgkäideldava konfiguratsiooniga
              features/collector-ha-setup.feature:6
    Scenario: Kogumisteenuse haldusteenuse paigaldus
-             features/collector-ha-setup.feature:470
+             features/collector-ha-setup.feature:336
        Step: Haldur paigaldab haldusteenuse
-             features/collector-ha-setup.feature:475
+             features/collector-ha-setup.feature:342
 
 .. code-block:: text
 
-   root@admin # apt-get install --yes --quiet adduser openssh-server openssl rsyslog rsyslog-relp sudo tzdata locales init-system-helpers python3-bottle python3-dateutil python3-debian python3-docopt python3-jinja2 python3-openssl python3-yaml python3:any apache2 language-pack-et libapache2-mod-wsgi-py3 python3-gdbm python3-pkg-resources
+   root@admin # apt-get install --yes --quiet adduser openssh-server openssl rsyslog rsyslog-relp sudo tzdata locales libc6 python3-bottle python3-dateutil python3-debian python3-docopt python3-jinja2 python3-openssl python3-yaml python3:any apache2 cron language-pack-et libapache2-mod-wsgi-py3 python3-gdbm python3-pkg-resources rsync
    Reading package lists...
    Building dependency tree...
    Reading state information...
-   adduser is already the newest version (3.113+nmu3ubuntu4).
-   rsyslog is already the newest version (8.16.0-1ubuntu3).
-   init-system-helpers is already the newest version (1.29ubuntu4).
-   language-pack-et is already the newest version (1:16.04+20160627).
-   locales is already the newest version (2.23-0ubuntu9).
+   adduser is already the newest version (3.116ubuntu1).
+   cron is already the newest version (3.0pl1-128.1ubuntu1).
+   libc6 is already the newest version (2.27-3ubuntu1).
+   locales is already the newest version (2.27-3ubuntu1).
    locales on määratud käsitsi paigaldatuks.
-   openssh-server is already the newest version (1:7.2p2-4ubuntu2.2).
+   python3-dateutil is already the newest version (2.6.1-1).
+   python3-debian is already the newest version (0.1.32).
    ...
-   Paki python3-debian (0.1.27ubuntu2) paikasättimine ...
-   Paki python3-docopt (0.6.2-1build1) paikasättimine ...
-   Paki python3-markupsafe (0.23-2build2) paikasättimine ...
-   Paki python3-jinja2 (2.8-1) paikasättimine ...
-   Paki python3-openssl (0.15.1-2build1) paikasättimine ...
-   Paki python3-yaml (3.11-3build1) paikasättimine ...
-   Paki dh-python (2.20151103ubuntu1.1) paikasättimine ...
-   Processing triggers for libc-bin (2.23-0ubuntu9) ...
-   Processing triggers for systemd (229-4ubuntu19) ...
+   apache2 is already the newest version (2.4.29-1ubuntu4.5).
+   language-pack-et is already the newest version (1:18.04+20180712).
+   openssh-server is already the newest version (1:7.6p1-4ubuntu0.1).
+   openssl is already the newest version (1.1.0g-2ubuntu4.3).
+   python3 is already the newest version (3.6.7-1~18.04).
+   python3 on määratud käsitsi paigaldatuks.
+   python3-gdbm is already the newest version (3.6.7-1~18.04).
+   tzdata is already the newest version (2018i-0ubuntu0.18.04).
+   0 uuendatud, 0 värskelt paigaldatud, 0 eemaldada ja 15 uuendamata.

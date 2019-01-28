@@ -12,19 +12,19 @@ Kogumisteenuse üldseisundi vaates kuvatakse järgnevaid andmeid:
 
 #. Valimiste identifikaator;
 
-#. Käimasolev hääletusetapp;
+#. Kogumisteenuse seisund;
 
-#. Kogumisteenuse olek;
+#. Käimasolev hääletusetapp;
 
 #. Kogumisteenusele rakendatud seadistuste ja nimekirjade versioonid;
 
-#. Alamteenuste seisundite kokkuvõte;
+#. Mikroteenuste seisundite kokkuvõte;
 
-#. Kogumisteenuse tarkvarapakkide olek;
+#. Kogumisteenuse tarkvarapakkide seisund;
 
-#. Kogumisteenuses registreeritud kasutajate arv.
+#. Kogumisteenuses registreeritud kasutajate arv;
+
+#. Kogumisteenusesse laaditud korralduste arv.
 
 Kogumisteenuse üldseisundi tuvastamiseks kogub haldusteenus korrapäraselt
 alamteenustelt nende seisundi kohta andmeid ja peab selle üle arvestust.
-
-.. vim: sts=3 sw=3 et:

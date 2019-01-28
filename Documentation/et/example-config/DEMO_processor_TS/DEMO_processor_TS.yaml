@@ -1,0 +1,89 @@
+# check         - I etapp: e-urni tervikluse kontroll ja e-hääletanute nimekirja väljastamine
+check:
+# Hääled - tulevad Kogujalt ehk RIA-st ************ KONTROLLI FAILI NIME **************
+  ballotbox: DEMO_votes.zip
+  ballotbox_checksum: DEMO_votes.zip.sha256sum.bdoc
+
+# ajatemplid, tulevad SK-st ************ KONTROLLI FAILI NIME **************
+# Registreerimisteenusest pärit registreerimisandmed.
+# Kui määramata, siis ei kontrollita e-urnis sisalduvate häälte vastavust registreerimisandmetega.
+  registrationlist: exporter_output_20181221.zip
+  registrationlist_checksum: exporter_output_20181221.zip.sha256sum.bdoc
+
+# tskey annab RIA (registreerimispäringute tegemise sert)
+  tskey: DEMO_tskey.pem
+
+# Kahtlane, kas on vajalik kui nimekirju pole.
+  districts: DEMO_jaoskonnad.bdoc
+#  DEMO puhul valijate nimekirju pole
+  vlkey: DEMO_valijate_nimekiri.pem
+  voterlists:
+    -  path: DEMO_valijate_nimekiri.txt
+       signature: DEMO_valijate_nimekiri.txt.signature
+# check.districts_mapping Valijate nimekirjas oleva ringkonna ja jaoskonna
+# teisendusfail (valikuline). csv
+  election_start: 2018-12-17T09:00:00+02:00
+  out: DEMO_out-1
+
+#  squash        - II etapp: korduvate e-häälte tühistamine
+squash:
+  ballotbox: DEMO_out-1/bb-1.json
+  ballotbox_checksum: DEMO_out-1/bb-1.json.sha256sum.bdoc
+  districts: DEMO_jaoskonnad.bdoc
+  # Tühistus- ja ennistusnimekirjade loend. Võib olla tühi.
+  # revocationlists:
+  out: DEMO_out-2
+
+#  revoke        - III etapp: topelthääletanute häälte tühistamine (tühistus- ja ennistusnimekirjade rakendamine) ja lugemisele minevate e-hääletanute nimekirja väljastamine
+
+revoke:
+  ballotbox: DEMO_out-2/bb-2.json
+  ballotbox_checksum: DEMO_out-2/bb-2.json.sha256sum.bdoc
+  districts: DEMO_jaoskonnad.bdoc
+  revocationlists:
+#   - DEMO_tuhistusnimekiri.bdoc
+  out: DEMO_out-3
+
+#  anonymize     - IV etapp: e-häälte anonüümistamine
+
+anonymize:
+  ballotbox: DEMO_out-3/bb-3.json
+  ballotbox_checksum: DEMO_out-3/bb-3.json.sha256sum.bdoc
+  enckey: DEMO_pub.pem
+  out: DEMO_out-4
+
+#  verify        - Abifunktsioon: allkirjastatud konteineri verifitseerimine
+verify:
+  file: processor.yaml.bdoc
+
+#  export        - Valimissedelite allkirjastatud konteinerite eksportimine
+export:
+  ballotbox: DEMO_votes.zip
+  ballotbox_checksum: DEMO_votes.zip.sha256sum.bdoc
+  out: DEMO_fullvotes
+
+#  stats         - E-urni statistika genereerimine
+stats:
+  ballotbox: DEMO_votes.zip
+  #election_day Valimispäev. Kõikide e-hääletanute vanused arvutatakse statistika tarbeks selle kuupäeva suhtes.
+  election_day: 2018-12-24
+  #Statistikaperioodi algusaeg (valikuline). Sellest varasema hääletusajaga hääli statistikasse ei kaasata.
+  period_start: 2018-12-17T09:00:00+02:00
+  #Statistikaperioodi lõppaeg (valikuline). Sellest hilisema hääletusajaga hääli statistikasse ei kaasata.
+#  period_end: 2018-12-20T18:00:00+02:00
+# POLE VAJALIKUD kui valijate nimekirja pole
+  districts: DEMO_jaoskonnad.bdoc
+  vlkey: DEMO_valijate_nimekiri.pem
+  voterlists:
+    -  path: DEMO_valijate_nimekiri.txt
+       signature: DEMO_valijate_nimekiri.txt.signature
+  out: DEMO_stats
+
+#  statsdiff     - E-urni statistika võrdlemine
+statsdiff:
+#Statistika võrdluse alusfail JSON-vormingus.
+  compare: DEMO_stats/stats.json
+#Võrreldav statistika fail JSON-vormingus.
+  to: misaganes.json
+#Tööriista väljundfail. Sellesse faili salvestatakse statistikate vahe JSON-vormingus.
+  diff: stats_versus_misiganes.json

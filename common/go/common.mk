@@ -56,8 +56,8 @@ all: generate
 .PHONY: lint
 lint: all
 	if which gometalinter > /dev/null; then \
-		env TABWIDTH=8 gometalinter \
-			--enable-all --disable misspell --disable test --disable testify --disable safesql \
+		env PATH="$(dir $(GO)):$$PATH" TABWIDTH=8 \
+			gometalinter --enable-all \
 			--config $(COMMONDIR)gometalinter.json ./...; \
 	fi
 

@@ -9,17 +9,21 @@ Haldusliidese funktsionaalsus
 Haldusliides on kogumisteenuse haldamise teenuse veebipõhine kasutajaliides ja
 sellel on järgmised funktsioonid:
 
-* Kogumisteenuse seisundi kohta ülevaate esitamine:
+* Kogumisteenuse seisundi ja ajaloo kohta ülevaate esitamine:
 
    * Koondülevaade;
+
+   * Teenuste seisund;
 
    * Valmisnimekirjade seisund;
 
    * Üldstatistika;
 
-   * Kasutajate haldamine;
+   * Kogumisteenuse haldussündmuste logi;
 
 * Korralduste laadimine kogumisteenusesse;
+
+* Kasutajate haldamine;
 
 * E-urni allalaadimine.
 
@@ -53,10 +57,11 @@ Seadistuste, nimekirjade ja volituste koostamine ning laadimine
 ---------------------------------------------------------------
 
 Kasutajaliides kaudu on võimalik süsteemi laadida kogumisteenuse seadistusi,
-valikute- ja valijate nimekirju ning kasutajate volitusi. Nende andmete
-laadimine on võimalik ainult juhul, kui need on vormistatud digitaaltelt
-signeeritud seadistuspakina. Seadistuspakkide ettevalmistamine on kirjeltadud
-dokumendis ``IVXV seadistuste
+valikute- ja valijate nimekirju ning kasutajate volitusi.
+
+Nende andmete peavad olema vormistatud digitaalselt signeeritud korraldusena.
+Seadistuspakkide ettevalmistamine on kirjeldatud dokumendis ``IVXV seadistuste
 koostamise juhend``.
 
-.. vim: sts=3 sw=3 et:
+Süsteemi laaditud seadistuspakke on võimalik alla laadida, kui klõpsata
+kasutajaliideses seadistuspaki versiooniandmetel.

@@ -10,7 +10,6 @@ import (
 
 // https://sk-eid.github.io/dds-documentation/api/api_docs/#getmobilecertificate
 type getMobileCertificate struct {
-	// nolint: lll, the XML namespace forces us to use a long line.
 	XMLName        xml.Name `xml:"http://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl GetMobileCertificate"`
 	IDCode         string
 	PhoneNo        string

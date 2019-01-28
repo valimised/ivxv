@@ -7,8 +7,10 @@ import ee.ivxv.common.service.container.Container;
 import ee.ivxv.common.service.container.ContainerReader;
 import ee.ivxv.common.service.container.InvalidContainerException;
 import ee.ivxv.common.util.Util;
+import eu.europa.esig.dss.tsl.Condition;
 import eu.europa.esig.dss.tsl.ServiceInfo;
 import eu.europa.esig.dss.tsl.ServiceInfoStatus;
+import eu.europa.esig.dss.util.TimeDependentValues;
 import eu.europa.esig.dss.x509.CertificateToken;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,6 +20,9 @@ import java.nio.file.Path;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,13 +32,19 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import javax.xml.crypto.dsig.XMLSignature;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.apache.xml.security.Init;
+import org.apache.xml.security.c14n.Canonicalizer;
 import org.digidoc4j.Configuration;
 import org.digidoc4j.ContainerBuilder;
 import org.digidoc4j.TSLCertificateSource;
-import org.digidoc4j.ValidationResult;
-import org.digidoc4j.impl.bdoc.tsl.TSLCertificateSourceImpl;
+import org.digidoc4j.ContainerValidationResult;
+import org.digidoc4j.impl.asic.tsl.TSLCertificateSourceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 public class BdocContainerReader implements ContainerReader {
 
@@ -41,8 +52,13 @@ public class BdocContainerReader implements ContainerReader {
 
     public static final String FILE_EXTENSION = "bdoc";
     private static final String SIG_FILE_PREFIX = "META-INF/signatures";
+    private static final String SIG_VALUE_EL = "SignatureValue";
 
     private Configuration conf;
+
+    static {
+        Init.init();
+    }
 
     public BdocContainerReader(Conf conf, int nThreads) {
         this(createConfiguration(conf, nThreads));
@@ -121,7 +137,7 @@ public class BdocContainerReader implements ContainerReader {
      */
     protected void validate(org.digidoc4j.Container c, String ref)
             throws InvalidContainerException {
-        ValidationResult vr = c.validate();
+        ContainerValidationResult vr = c.validate();
 
         if (!vr.isValid()) {
             log.warn("BDOC container does not validate! Validation report: {}", vr.getReport());
@@ -160,11 +176,6 @@ public class BdocContainerReader implements ContainerReader {
         return out.toByteArray();
     }
 
-    @Override
-    public String getFileExtension() {
-        return FILE_EXTENSION;
-    }
-
     private byte[] addDataToSignature(String sigXml, byte[] ocsp, byte[] ts, String tsC14nAlg) {
         String unsignedProps = UNSIGNED_PROPS_EL;
 
@@ -190,6 +201,37 @@ public class BdocContainerReader implements ContainerReader {
         String result = ADD_USP.matcher(cleanSigXml).replaceFirst("$1\n" + unsignedProps);
 
         return Util.toBytes(result);
+    }
+
+    @Override
+    public byte[] getTimestampData(byte[] bdoc, String c14nAlg) {
+        try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(bdoc), CHARSET)) {
+            for (ZipEntry ze; (ze = zis.getNextEntry()) != null;) {
+                if (ze.getName().startsWith(SIG_FILE_PREFIX)) {
+                    return calculateTimestampData(Util.toBytes(zis), c14nAlg);
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        throw new RuntimeException("Signature file with prefix" + SIG_FILE_PREFIX + " not found");
+    }
+
+    private byte[] calculateTimestampData(byte[] sigXml, String c14nAlg) throws Exception {
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+        Document doc = dbf.newDocumentBuilder().parse(new ByteArrayInputStream(sigXml));
+        NodeList nl = doc.getElementsByTagNameNS(XMLSignature.XMLNS, SIG_VALUE_EL);
+
+        Canonicalizer c11r = Canonicalizer.getInstance(c14nAlg);
+
+        return c11r.canonicalizeSubtree(nl.item(0));
+    }
+
+    @Override
+    public String getFileExtension() {
+        return FILE_EXTENSION;
     }
 
     @Override
@@ -283,28 +325,31 @@ public class BdocContainerReader implements ContainerReader {
             Configuration conf = new Configuration();
             conf.setTSL(certSource);
             conf.setThreadExecutor(createExecutorService());
+            conf.setAllowASN1UnsafeInteger(true);
             return conf;
         }
 
         private ServiceInfo createOcspServiceInfo(X509Certificate cert) {
             ServiceInfo serviceInfo = new ServiceInfo();
-            ServiceInfoStatus status = new ServiceInfoStatus(OCSP_SERVICE_INFO_STATUS,
+
+            Map<String, List<Condition>> qualifiers = new HashMap<>(); // Must not be null!
+            ServiceInfoStatus status = new ServiceInfoStatus(OCSP_SERVICE_INFO_TYPE,
+                    OCSP_SERVICE_INFO_STATUS, qualifiers, null, null, null,
                     cert.getNotBefore(), cert.getNotAfter());
 
-            serviceInfo.setStatus(Arrays.asList(status));
-            serviceInfo.setType(OCSP_SERVICE_INFO_TYPE);
-
+            serviceInfo.setStatus(new TimeDependentValues(Arrays.asList(status)));
             return serviceInfo;
         }
 
         private ServiceInfo createTsaServiceInfo(X509Certificate cert) {
             ServiceInfo serviceInfo = new ServiceInfo();
-            ServiceInfoStatus status = new ServiceInfoStatus(TSA_SERVICE_INFO_STATUS,
+
+            Map<String, List<Condition>> qualifiers = new HashMap<>(); // Must not be null!
+            ServiceInfoStatus status = new ServiceInfoStatus(TSA_SERVICE_INFO_TYPE,
+                    TSA_SERVICE_INFO_STATUS, qualifiers, null, null, null,
                     cert.getNotBefore(), cert.getNotAfter());
 
-            serviceInfo.setStatus(Arrays.asList(status));
-            serviceInfo.setType(TSA_SERVICE_INFO_TYPE);
-
+            serviceInfo.setStatus(new TimeDependentValues(Arrays.asList(status)));
             return serviceInfo;
         }
 

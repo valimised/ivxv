@@ -3,7 +3,7 @@ package tsp
 import (
 	"bytes"
 	"crypto"
-	"crypto/sha1"
+	"crypto/sha1" // nolint: gosec, Required by RFC 2634.
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -13,7 +13,6 @@ import (
 	"ivxv.ee/cryptoutil"
 
 	// Import all hash functions supported by this package.
-	_ "crypto/sha1"
 	_ "crypto/sha256"
 	_ "crypto/sha512"
 )
@@ -22,7 +21,6 @@ const (
 	// OIDs of supported digest and signature algorithms and signed
 	// attributes. Use strings instead of asn1.ObjectIdentifier, since they
 	// will be used as keys in maps.
-	idSHA1   = "1.3.14.3.2.26"
 	idSHA256 = "2.16.840.1.101.3.4.2.1"
 	idSHA384 = "2.16.840.1.101.3.4.2.2"
 	idSHA512 = "2.16.840.1.101.3.4.2.3"
@@ -41,7 +39,6 @@ const (
 
 var (
 	digestAlgs = map[string]crypto.Hash{
-		idSHA1:   crypto.SHA1,
 		idSHA256: crypto.SHA256,
 		idSHA384: crypto.SHA384,
 		idSHA512: crypto.SHA512,
@@ -51,13 +48,11 @@ var (
 	//       ensure that we are using correct OIDs.
 	signatureAlgs = map[string]map[string]x509.SignatureAlgorithm{
 		idRSA: {
-			idSHA1:   x509.SHA1WithRSA,
 			idSHA256: x509.SHA256WithRSA,
 			idSHA384: x509.SHA384WithRSA,
 			idSHA512: x509.SHA512WithRSA,
 		},
 		idECDSA: {
-			idSHA1:   x509.ECDSAWithSHA1,
 			idSHA256: x509.ECDSAWithSHA256,
 			idSHA384: x509.ECDSAWithSHA384,
 			idSHA512: x509.ECDSAWithSHA512,
@@ -70,7 +65,7 @@ var (
 
 func (c *Client) checkSignedData(token timeStampToken, gen time.Time) error {
 	if !token.ContentType.Equal(idSignedData) {
-		return UnexpectedTSTContentType{ContentType: idSignedData}
+		return UnexpectedTSTContentType{ContentType: token.ContentType}
 	}
 	sData := token.Content
 
@@ -259,7 +254,7 @@ func checkMessageDigest(value []byte, alg pkix.AlgorithmIdentifier, encap []byte
 		return UnsupportedDigestAlgorithm{Algorithm: alg.Algorithm}
 	}
 	hash := chash.New()
-	hash.Write(encap) // nolint: errcheck, hash.Write never returns an error.
+	hash.Write(encap)
 	calculated := hash.Sum(nil)
 
 	if !bytes.Equal(digest, calculated) {
@@ -313,7 +308,7 @@ func checkSigningCert(value []byte, signer *x509.Certificate) (err error) {
 	essCert := signingCert.Certs[0]
 
 	// Check the signed attribute hash to the certificate hash
-	certHash := sha1.Sum(signer.Raw)
+	certHash := sha1.Sum(signer.Raw) // nolint: gosec, SHA1 required by RFC 2634.
 	if !bytes.Equal(certHash[:], essCert.CertHash) {
 		return SingingCertAttrHashMismatch{
 			SigningAttrHash: essCert.CertHash,

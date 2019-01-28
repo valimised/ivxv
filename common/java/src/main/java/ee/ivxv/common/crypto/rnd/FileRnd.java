@@ -37,6 +37,8 @@ public class FileRnd implements Rnd {
 
     /**
      * Read the source and write the result to output buffer.
+     * <p>
+     * This method is not thread-safe and synchronization must be handled by the caller.
      * 
      * @param buf The output buffer.
      * @param offset The offset to start storing the read bytes.
@@ -67,6 +69,8 @@ public class FileRnd implements Rnd {
 
     /**
      * Read the source and write exactly the number of bytes requested into output buffer.
+     * <p>
+     * This method is not thread-safe and synchronization must be handled by the caller.
      * 
      * @param buf The output buffer.
      * @param offset The offset to start storing the read bytes.

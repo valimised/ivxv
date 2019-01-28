@@ -68,18 +68,25 @@ func Configure(c Conf) (o Opener, err error) {
 	reglock.RLock()
 	defer reglock.RUnlock()
 	for t, y := range c {
-		// ...check if it is linked ...
+		// ...check if it is linked, ...
 		re, ok := registry[t]
 		if !ok {
 			return nil, UnlinkedTypeError{Type: t}
 		}
 
+		// ...is configured with the canonical name ...
+		if t != re.canonical {
+			return nil, ConfiguredAliasError{Type: t, Canonical: re.canonical}
+		}
+
 		// ...and if creating an opening function succeeds.
-		f, err := re.n(y)
+		f, err := re.newOpen(y)
 		if err != nil {
 			return nil, ConfigureTypeError{Type: t, Err: err}
 		}
-		o[t] = f
+		for _, alias := range re.aliases {
+			o[alias] = f
+		}
 	}
 
 	return
@@ -98,6 +105,7 @@ func (o Opener) Open(t Type, container io.Reader) (c Container, err error) {
 // OpenFile opens the file at path, and passes its contents to Open. The path
 // must have an extension corresponding to the container type to use.
 func (o Opener) OpenFile(path string) (c Container, err error) {
+	// nolint: gosec, Allow path from variable, assume correct and safe.
 	fp, err := os.Open(path)
 	if err != nil {
 		return nil, OpenFileError{Path: path, Err: err}
@@ -125,5 +133,5 @@ func UnverifiedOpen(t Type, container io.Reader) (c Container, err error) {
 	if !ok {
 		return nil, OpenUnlinkedTypeError{Type: t}
 	}
-	return re.o(container)
+	return re.unverifiedOpen(container)
 }

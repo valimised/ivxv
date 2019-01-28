@@ -86,18 +86,25 @@ type FilterConf struct {
 }
 
 // newFilters returns a new chain of mandatory filters.
-func newFilters(conf *FilterConf, r *rpc.Server, cert tls.Certificate, end time.Time) (f connFilters) {
+func newFilters(conf *FilterConf, r *rpc.Server, cert tls.Certificate, end time.Time) (
+	connFilters, error) {
+
+	tlsFilter, err := newTLSFilter(&conf.TLS, cert)
+	if err != nil {
+		return nil, TLSConfError{Err: err}
+	}
 	return connFilters{
 		connFilterFunc(logFilter),
 		connFilterFunc(connIDFilter),
 		connFilterFunc(proxyFilter),
-		newTLSFilter(&conf.TLS, cert),
+		tlsFilter,
 		&codecFilter{&conf.Codec, r, headerFilters{
 			endFilter(end),
 			headerFilterFunc(sessIDFilter),
+			headerFilterFunc(addrFilter),
 			headerFilterFunc(infoFilter),
 		}},
-	}
+	}, nil
 }
 
 // optional adds optional filters to the chain.
@@ -164,7 +171,7 @@ func connIDFilter(ctx context.Context, c net.Conn, chain connFilters) context.Co
 // environment, we always use PROXY and all connections to services come
 // through HAProxy, so there is no danger of spoofed addresses.
 func proxyFilter(ctx context.Context, c net.Conn, chain connFilters) context.Context {
-	c, health, err := readPROXY(ctx, c)
+	c, addr, health, err := readPROXY(c)
 	if err != nil {
 		close(ctx, c, PROXYProtocolError{Err: err})
 		return ctx
@@ -174,12 +181,24 @@ func proxyFilter(ctx context.Context, c net.Conn, chain connFilters) context.Con
 		close(ctx, c, nil)
 		return ctx
 	}
+	if addr != nil {
+		log.Log(ctx, PROXYProtocol{Address: addr})
+	}
+
+	// XXX: Put remote address into context for addrFilter. Remove once
+	// addrFilter is no longer necessary.
+	ctx = context.WithValue(ctx, addrKey, c.RemoteAddr())
+	if addr != nil {
+		ctx = context.WithValue(ctx, addrKey, addr)
+	}
+
 	return chain.next(ctx, c)
 }
 
-// TLSConf if the TLS filter configuration.
+// TLSConf is the TLS filter configuration.
 type TLSConf struct {
-	HandshakeTimeout int64 // TLS handshake timeout in seconds.
+	HandshakeTimeout int64    // TLS handshake timeout in seconds.
+	CipherSuites     []string // Supported cipher suites.
 }
 
 // tlsFilter creates a new TLS connection that uses c as the underlying
@@ -190,20 +209,26 @@ type tlsFilter struct {
 	tlsConf    *tls.Config
 }
 
-func newTLSFilter(conf *TLSConf, cert tls.Certificate) *tlsFilter {
-	return &tlsFilter{
+//go:generate ./tlsciphersuites tlsCipherSuites
+func newTLSFilter(conf *TLSConf, cert tls.Certificate) (*tlsFilter, error) {
+	f := &tlsFilter{
 		serverConf: conf,
 		tlsConf: &tls.Config{
-			Certificates: []tls.Certificate{cert},
-			ClientAuth:   tls.RequestClientCert,
-			CipherSuites: []uint16{
-				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-			},
-			SessionTicketsDisabled: true,
-			MinVersion:             tls.VersionTLS12,
+			Certificates:             []tls.Certificate{cert},
+			ClientAuth:               tls.RequestClientCert,
+			PreferServerCipherSuites: true,
+			SessionTicketsDisabled:   true,
+			MinVersion:               tls.VersionTLS12,
 		},
 	}
+	for _, name := range conf.CipherSuites {
+		value, ok := tlsCipherSuites[name] // Generated above.
+		if !ok {
+			return nil, UnsupportedTLSCipherSuiteError{CipherSuite: name}
+		}
+		f.tlsConf.CipherSuites = append(f.tlsConf.CipherSuites, value)
+	}
+	return f, nil
 }
 
 func (f *tlsFilter) filter(ctx context.Context, c net.Conn, chain connFilters) context.Context {
@@ -296,7 +321,7 @@ func (f *codecFilter) filter(ctx context.Context, c net.Conn, _ connFilters) con
 	// information to the client (the third case): the codec and filters
 	// must be sure to make any returned errors generic enough, that they
 	// can be sent to the client.
-	_ = f.server.ServeRequest(codec)
+	f.server.ServeRequest(codec) // nolint: errcheck, Read above.
 	close(ctx, codec, nil)
 	return ctx
 }
@@ -331,6 +356,16 @@ func sessIDFilter(header *Header, chain headerFilters) error {
 	// Set session ID in logging context and log.
 	header.Ctx = log.WithSessionID(header.Ctx, header.SessionID)
 	log.Log(header.Ctx, entry)
+	return chain.next(header)
+}
+
+// addrFilter re-logs the remote address of the connection after we have a
+// SessionID.
+//
+// XXX: This is a temporary filter until the log monitor is capable of
+// extracting the address based on ConnectionID.
+func addrFilter(header *Header, chain headerFilters) error {
+	log.Log(header.Ctx, RemoteAddress{Address: header.Ctx.Value(addrKey)})
 	return chain.next(header)
 }
 

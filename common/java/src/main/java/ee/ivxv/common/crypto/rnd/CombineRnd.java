@@ -76,7 +76,8 @@ public class CombineRnd implements Rnd {
 
     /**
      * Fill the buffer with random bytes. Before every read, available bytes from every infinite
-     * entropy source is read and mixed into the pool.
+     * entropy source is read and mixed into the pool. This method is synchronized to allow
+     * concurrent calls from several threads.
      * 
      * @param out The output buffer to store the random bytes in.
      * @param offset The offset at which to start storing the bytes in output buffer.
@@ -91,7 +92,8 @@ public class CombineRnd implements Rnd {
 
     /**
      * Fill the buffer with random bytes. Before every read, exactly requested number of bytes from
-     * every infinite entropy source is read and mixed into the pool.
+     * every infinite entropy source is read and mixed into the pool. This method is synchronized to
+     * allow concurrent calls from several threads.
      * 
      * @param out The output buffer to store the random bytes in.
      * @param offset The offset at which to start storing the bytes in output buffer.
@@ -107,6 +109,8 @@ public class CombineRnd implements Rnd {
     /**
      * Read from sources and mix into the pool. The number of bytes read from every soure depends on
      * the {@code must} parameter.
+     * <p>
+     * This method is synchronized.
      * 
      * @param out The output buffer to store the random bytes in.
      * @param offset The offset at which to start storing the bytes in output buffer.
@@ -115,7 +119,8 @@ public class CombineRnd implements Rnd {
      * @return The requested amount {@code len}.
      * @throws IOException On exception during reading the entropy source.
      */
-    private int read(byte[] out, int offset, int len, boolean must) throws IOException {
+    private synchronized int read(byte[] out, int offset, int len, boolean must)
+            throws IOException {
         updateFromAllSources(len, must);
         computeDigest(out, offset, len);
         padAndFill();
@@ -136,7 +141,8 @@ public class CombineRnd implements Rnd {
     }
 
     /**
-     * Convenience method for {@link #write(buf, 0, buf.length)}.
+     * Convenience method for {@link #write(byte[], int, int)} with {@literal offset} 0 and
+     * {@literal lenbuf.length}.
      * 
      * @param buf The source buffer to read bytes from.
      */

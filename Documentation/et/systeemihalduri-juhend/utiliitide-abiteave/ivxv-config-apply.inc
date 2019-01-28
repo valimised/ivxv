@@ -15,7 +15,7 @@ ivxv-config-apply
 
 .. code-block:: text
 
-   Apply IVXV collector config to IVXV services.
+   Apply loaded IVXV Collector config to services.
 
    Usage: ivxv-config-apply [--type=<type>] ... [<service-id>] ...
 

@@ -17,4 +17,4 @@ ivxv-db-dump
 
    Dump IVXV Collector Management Service database.
 
-   Usage: ivxv-db-dump
+   Usage: ivxv-db-dump [<key>] ...

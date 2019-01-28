@@ -27,13 +27,14 @@ public interface Reporter {
     LogNRecord newLog123Record(String voterId, Ballot b);
 
     /**
-     * Creates and returns new record for {@code LOG4..LOG5} log.
+     * Creates and returns new record for {@code LOG1..LOG3} log.
      * 
-     * @param districtId
-     * @param vote
+     * @param voterId
+     * @param b
+     * @param qid The question id
      * @return
      */
-    Record newLog45Record(String districtId, byte[] vote);
+    Record newLog123Record(String voterId, Ballot b, String qid);
 
     /**
      * Creates and returns new record of revocation report for recurrent vote.
@@ -148,7 +149,7 @@ public interface Reporter {
     }
 
     enum LogType {
-        LOG1("1"), LOG2("2"), LOG3("3"), LOG4("4"), LOG5("5");
+        LOG1("1"), LOG2("2"), LOG3("3");
 
         public final String value;
 

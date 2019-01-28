@@ -9,7 +9,7 @@ Miksimistõendi kontroll
 
 Miksimistõendi kontrollimiseks kasutatakse algoritmi nagu on defineeritud
 `Verificatumi verifitseerija implementeerimise manuaalis
-<http://verificatum.com/files/vmnv-3.0.2.pdf>`_.
+<https://www.verificatum.org/files/vmnv-3.0.3.pdf>`_.
 
 Märgime, et miksimistõendi koostamisel lisatakse krüptogrammile andmed valimiste,
 ringkonna, jaoskonna ja küsimuse identifikaatori kohta.  Lisamiseks kodeeritakse
@@ -50,5 +50,3 @@ Kontrollimaks, et teisendus IVXV e-urni ja Verificatumi krüptogrammide vahel on
 tehtud korrektselt, tuleb korrata teisendust sõltumatult. Pärast sõltumatut
 teisendust tuleb võrrelda saadud väljundeid. Kuna teisendamine on deterministlik
 protseduur, siis garanteerib kordamine tegevuse õigsuse.
-
-.. vim: sts=3 sw=3 et:

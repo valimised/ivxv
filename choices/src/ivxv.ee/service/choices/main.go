@@ -130,45 +130,52 @@ func choicesmain() (code int) {
 	rpc := &RPC{storage: c.Storage}
 
 	var start, stop time.Time
+	var authConf server.AuthConf
 	var err error
-	if c.Conf.Election != nil {
+	if elec := c.Conf.Election; elec != nil {
 		// Check election configuration time values.
-		if start, err = c.Conf.Election.ServiceStartTime(); err != nil {
+		if start, err = elec.ServiceStartTime(); err != nil {
 			return c.Error(exit.Config, StartTimeError{Err: err},
 				"bad service start time:", err)
 		}
 
-		if stop, err = c.Conf.Election.ElectionStopTime(); err != nil {
+		if stop, err = elec.ElectionStopTime(); err != nil {
 			return c.Error(exit.Config, StopTimeError{Err: err},
 				"bad election stop time:", err)
 		}
 
-		rpc.forceList = strings.TrimSpace(c.Conf.Election.IgnoreVoterList)
+		// Parse client-authentication configuration.
+		if authConf, err = server.NewAuthConf(
+			elec.Auth, elec.Identity, &elec.Age); err != nil {
+
+			return c.Error(exit.Config, ServerAuthConfError{Err: err},
+				"failed to configure client authentication:", err)
+		}
+
+		rpc.forceList = strings.TrimSpace(elec.IgnoreVoterList)
 	}
 
 	var s *server.S
-	if tech := c.Conf.Technical; tech != nil {
+	if c.Conf.Technical != nil {
 		// Configure a new server with the service instance
 		// configuration and the RPC handler instance.
+		cert, key := conf.TLS(conf.Sensitive(c.Service.ID))
 		if s, err = server.New(&server.Conf{
-			Sensitive: conf.Sensitive(c.Service.ID),
-			Address:   c.Service.Address,
-			End:       stop,
-			Filter:    &c.Conf.Technical.Filter,
-			Version:   &c.Conf.Version,
+			CertPath: cert,
+			KeyPath:  key,
+			Address:  c.Service.Address,
+			End:      stop,
+			Filter:   &c.Conf.Technical.Filter,
+			Version:  &c.Conf.Version,
 		}, rpc); err != nil {
 			return c.Error(exit.Config, ServerConfError{Err: err},
 				"failed to configure server:", err)
-		}
-		if err = s.WithAuth(tech.Auth, tech.Identity, &tech.Age); err != nil {
-			return c.Error(exit.Config, ServerAuthConfError{Err: err},
-				"failed to configure client authentication:", err)
 		}
 	}
 
 	// Start listening for incoming connections during the voting period.
 	if c.Until >= command.Execute {
-		if err = s.ServeAt(c.Ctx, start); err != nil {
+		if err = s.WithAuth(authConf).ServeAt(c.Ctx, start); err != nil {
 			return c.Error(exit.Unavailable, ServeError{Err: err},
 				"failed to serve choices service:", err)
 		}

@@ -14,7 +14,8 @@ func usage() {
 
 gen searches Go packages for source files with struct literals that have
 undeclared exported types from the same package and attempts to generate the
-struct declaration.
+struct declaration. Declarations are put in output files named gen_types.go and
+gen_types_test.go in the same package, configurable via --name.
 
 Packages are either absolute or relative (beginning with a . or .. element)
 paths to package directories, or names of packages that will be searched for in
@@ -27,10 +28,8 @@ options:`)
 }
 
 var (
-	namep = flag.String("name", "gen_types", "base name of output file: "+
-		"will be suffixed with .go and _test.go for\n    \tliterals "+
-		"found in test files")
-	vp = flag.Bool("v", false, "verbose output")
+	namep = flag.String("name", "gen_types", "base name of output files")
+	vp    = flag.Bool("v", false, "verbose output")
 
 	pwd string
 )

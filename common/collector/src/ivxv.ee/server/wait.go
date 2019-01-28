@@ -15,7 +15,7 @@ func wait(ctx context.Context, t time.Time, f func(context.Context) error) error
 	// Check wall clock every minute until we are at most one minute away
 	// from t.
 	ticker := time.NewTicker(time.Minute)
-	for t.Sub(time.Now()) > time.Minute { // nolint: megacheck, Go 1.7 does not have time.Until.
+	for time.Until(t) > time.Minute {
 		select {
 		case <-ctx.Done():
 			ticker.Stop()
@@ -26,8 +26,7 @@ func wait(ctx context.Context, t time.Time, f func(context.Context) error) error
 	ticker.Stop()
 
 	// Do not follow wall clock changes anymore and just wait until t.
-	// nolint: megacheck, Go 1.7 does not have time.Until.
-	timer := time.NewTimer(t.Sub(time.Now()))
+	timer := time.NewTimer(time.Until(t))
 	select {
 	case <-ctx.Done():
 		if !timer.Stop() {

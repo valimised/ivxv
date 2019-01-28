@@ -23,12 +23,13 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
-import javax.xml.bind.DatatypeConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Helper class for processing election result.
+ */
 public class ElectionResult {
-
     static final Logger log = LoggerFactory.getLogger(ElectionResult.class);
 
     private static final Path INVALID_VOTE_PATH = Paths.get("invalid");
@@ -45,9 +46,15 @@ public class ElectionResult {
     private final Proof proof;
     private final Invalid invalid;
 
-    public final Map<String, List<Reporter.Record>> log4;
-    public final Map<String, List<Reporter.Record>> log5;
-
+    /**
+     * Initialize using values.
+     * 
+     * @param electionName Election identifier
+     * @param candidates Candidates list
+     * @param districts Districts list
+     * @param withProof Boolean indicating if encrypted ballots should be decrypted with proof of
+     *        correct decryption.
+     */
     public ElectionResult(String electionName, CandidateList candidates, DistrictList districts,
             boolean withProof) {
         this.electionName = electionName;
@@ -57,35 +64,64 @@ public class ElectionResult {
         this.tallySet = new HashMap<>();
         this.proof = withProof ? new Proof(electionName) : null;
         this.invalid = new Invalid(electionName);
-        this.log4 = new HashMap<>();
-        this.log5 = new HashMap<>();
     }
 
+    /**
+     * Get the worker for computing the tally.
+     * <p>
+     * The worker works in parallel to decryptions and continuously computes the tally. It separates votes which are invalid or are given for invalid candidates
+     * 
+     * @param voteCount
+     * @param console
+     * @param reporter
+     * @return
+     */
     public ResultWorker getResultWorker(int voteCount, I18nConsole console, Reporter reporter) {
         return new ResultWorker(voteCount, console, reporter);
     }
 
+    /**
+     * Set the end of incoming votes.
+     * <p>
+     * After the last vote has been added, set the end marker indicating the worker thread to stop
+     * waiting for incoming votes.
+     */
     public void setEot() {
         votes.add(Util.EOT);
     }
 
+    /**
+     * Add a vote for worker to process.
+     * 
+     * @param vote
+     */
     public void addVote(Vote vote) {
         votes.add(vote);
     }
 
+    /**
+     * Output tally and the corresponding signature.
+     * 
+     * @param outDir Output directory to store the tally and signature.
+     * @param signer Protocol for constructing the signature for the tally.
+     * @throws Exception When writing or communication with card tokens fail.
+     */
     public void outputTally(Path outDir, SigningProtocol signer) throws Exception {
         for (Map.Entry<String, Tally> tally : tallySet.entrySet()) {
             ByteArrayOutputStream in = new ByteArrayOutputStream();
             Json.write(tally.getValue(), in);
             byte[] signature = signer.sign(in.toByteArray());
-
             Files.write(outDir.resolve(Paths.get(tally.getKey() + TALLY_SUFFIX)), in.toByteArray());
-
-            Files.write(outDir.resolve(Paths.get(tally.getKey() + SIGNATURE_SUFFIX)),
-                    DatatypeConverter.printHexBinary(signature).getBytes());
+            Files.write(outDir.resolve(Paths.get(tally.getKey() + SIGNATURE_SUFFIX)), signature);
         }
     }
 
+    /**
+     * Output proofs of correct decryptions.
+     * 
+     * @param outDir Output directory to store the proofs file.
+     * @throws Exception When writing the proofs file fails.
+     */
     public void outputProof(Path outDir) throws Exception {
         if (!withProof) {
             return;
@@ -93,6 +129,12 @@ public class ElectionResult {
         Json.write(proof, outDir.resolve(PROOF_PATH));
     }
 
+    /**
+     * Output invalid votes.
+     * 
+     * @param outDir Output directory to store the invalid votes.
+     * @throws Exception When writing the file fails.
+     */
     public void outputInvalid(Path outDir) throws Exception {
         Json.write(invalid, outDir.resolve(INVALID_VOTE_PATH));
     }
@@ -130,9 +172,6 @@ public class ElectionResult {
                     if (choice.equals(Tally.INVALID_VOTE_ID)) {
                         log.warn("Vote is invalid!");
                         invalid.getInvalid().add(vote);
-                        addVoteToLog4(vote);
-                    } else {
-                        addVoteToLog5(vote);
                     }
                     addVoteToTally(vote, choice);
                 } else {
@@ -151,7 +190,7 @@ public class ElectionResult {
 
         private boolean isValidChoice(Vote vote) {
             String voteStr = vote.getProof().decrypted.getUTF8DecodedMessage();
-            String[] voteParts = voteStr.split(Util.UNIT_SEPARATOR);
+            String[] voteParts = voteStr.split(Util.UNIT_SEPARATOR, 3);
             if (voteParts.length != 3) {
                 log.warn("isValidChoice() voteParts.length == {}, should be 3", voteParts.length);
                 return false;
@@ -172,17 +211,5 @@ public class ElectionResult {
                     .compute(choice, (c, count) -> count + 1);
         }
 
-        private void addVoteToLog4(Vote vote) {
-            addVoteToLog(vote, log4);
-        }
-
-        private void addVoteToLog5(Vote vote) {
-            addVoteToLog(vote, log5);
-        }
-
-        private void addVoteToLog(Vote vote, Map<String, List<Reporter.Record>> log) {
-            log.computeIfAbsent(vote.getQuestion(), q -> new ArrayList<>())
-                    .add(reporter.newLog45Record(vote.getDistrict(), vote.getVote()));
-        }
     }
 }

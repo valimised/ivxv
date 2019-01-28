@@ -3,7 +3,6 @@ package ee.ivxv.common.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -30,6 +29,8 @@ public class Util {
                                                                                  // character
 
     /**
+     * Return byte array with UTF-8 encoded string.
+     * 
      * @param string
      * @return Returns UTF-8 encoded byte array.
      */
@@ -38,6 +39,8 @@ public class Util {
     }
 
     /**
+     * Decode byte array as UTF-8 encoded string.
+     * 
      * @param bytes
      * @return Returns a string decoded from the bytes using UTF-8 encoding.
      */
@@ -45,10 +48,23 @@ public class Util {
         return new String(bytes, CHARSET);
     }
 
+    /**
+     * Return the InputStream as a byte array.
+     * 
+     * @param stream
+     * @return
+     */
     public static byte[] toBytes(InputStream stream) {
         return toBytes(stream, new byte[1024]);
     }
 
+    /**
+     * Return the InputStream as a byte array using the buffer for storing temporary values.
+     * 
+     * @param stream
+     * @param buffer
+     * @return
+     */
     public static byte[] toBytes(InputStream stream, byte[] buffer) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 
@@ -63,6 +79,24 @@ public class Util {
         return bytes.toByteArray();
     }
 
+    /**
+     * Return the InputStream as an UTF-8 encoded string using the buffer for storing temporary
+     * values.
+     * 
+     * @param stream
+     * @param buffer
+     * @return
+     */
+    public static String toString(InputStream stream, byte[] buffer) {
+        return new String(toBytes(stream, buffer), CHARSET);
+    }
+
+    /**
+     * Return the integer encoded as a big-endian byte array.
+     * 
+     * @param i
+     * @return
+     */
     public static byte[] toBytes(int i) {
         byte[] ret = new byte[4];
         ret[0] = (byte) ((i >>> 24) & 0xff);
@@ -72,6 +106,12 @@ public class Util {
         return ret;
     }
 
+    /**
+     * Return the integer encoded as 4-byte big-endian byte array.
+     * 
+     * @param b
+     * @return
+     */
     public static int toInt(byte[] b) {
         // we assume 4 bytes. if b is other length, then the result may be
         // undefined
@@ -82,6 +122,12 @@ public class Util {
         return k;
     }
 
+    /**
+     * Create a file at a given path.
+     * 
+     * @param path
+     * @throws IOException
+     */
     public static void createFile(Path path) throws IOException {
         if (path.getParent() != null) {
             Files.createDirectories(path.getParent());
@@ -89,6 +135,13 @@ public class Util {
         Files.createFile(path);
     }
 
+    /**
+     * Concatenate the byte arrays into a single byte array.
+     * 
+     * @param first
+     * @param rest
+     * @return
+     */
     public static byte[] concatAll(byte[] first, byte[]... rest) {
         int totalLength = first.length;
         for (byte[] array : rest) {
@@ -103,14 +156,32 @@ public class Util {
         return result;
     }
 
+    /**
+     * MIME-encode the byte array as a certificate.
+     * 
+     * @param bytes
+     * @return
+     */
     public static String encodeCertificate(byte[] bytes) {
         return encodeKey(bytes, BEGIN_CERTIFICATE, END_CERTIFICATE);
     }
 
+    /**
+     * MIME-encode the byte array as a public key.
+     * 
+     * @param bytes
+     * @return
+     */
     public static String encodePublicKey(byte[] bytes) {
         return encodeKey(bytes, BEGIN_PUB_KEY, END_PUB_KEY);
     }
 
+    /**
+     * MIME-encode the byte array as a private key.
+     * 
+     * @param bytes
+     * @return
+     */
     public static String encodePrivateKey(byte[] bytes) {
         return encodeKey(bytes, BEGIN_PRIVATE_KEY, END_PRIVATE_KEY);
     }
@@ -121,16 +192,75 @@ public class Util {
         return out;
     }
 
+    /**
+     * Decode certificate from MIME-encoded string.
+     * 
+     * @param certString
+     * @return
+     * @throws IllegalArgumentException
+     */
     public static byte[] decodeCertificate(String certString) throws IllegalArgumentException {
         return decodeKey(certString, BEGIN_CERTIFICATE, END_CERTIFICATE);
     }
 
+    /**
+     * Decode certificate from MIME-encoded file.
+     * 
+     * @param keyString
+     * @return
+     * @throws IllegalArgumentException
+     */
+    public static byte[] decodeCertificate(Path path) throws IllegalArgumentException, IOException {
+        String certString = new String(Files.readAllBytes(path), Util.CHARSET);
+        return decodeCertificate(certString);
+    }
+
+    /**
+     * Decode public key from MIME-encoded string.
+     * 
+     * @param keyString
+     * @return
+     * @throws IllegalArgumentException
+     */
     public static byte[] decodePublicKey(String keyString) throws IllegalArgumentException {
         return decodeKey(keyString, BEGIN_PUB_KEY, END_PUB_KEY);
     }
 
+    /**
+     * Decode public key from MIME-encoded file.
+     * 
+     * @param path
+     * @return Public key bytes
+     * @throws IllegalArgumentException
+     * @throws IOException
+     */
+    public static byte[] decodePublicKey(Path path) throws IllegalArgumentException, IOException {
+        String keyString = new String(Files.readAllBytes(path), Util.CHARSET);
+        return decodePublicKey(keyString);
+    }
+
+    /**
+     * Decode private key from MIME-encoded string.
+     * 
+     * @param keyString
+     * @return
+     * @throws IllegalArgumentException
+     */
     public static byte[] decodePrivateKey(String keyString) throws IllegalArgumentException {
         return decodeKey(keyString, BEGIN_PRIVATE_KEY, END_PRIVATE_KEY);
+    }
+
+    /**
+     * Decode private key from MIME-encoded file.
+     * 
+     * @param path
+     * @return Private key bytes
+     * @throws IllegalArgumentException
+     * @throws IOException
+     */
+    public static byte[] decodePrivateKey(Path path) throws IllegalArgumentException, IOException {
+        String keyString = new String(Files.readAllBytes(path), Util.CHARSET);
+        return decodePrivateKey(keyString);
     }
 
     private static byte[] decodeKey(String keyString, String prefix, String suffix)
@@ -142,10 +272,6 @@ public class Util {
         keyString = keyString.substring(keyString.indexOf(prefix) + prefix.length(),
                 keyString.indexOf(suffix));
         return Base64.getMimeDecoder().decode(toBytes(keyString));
-    }
-
-    public static BigInteger safePrimeOrder(BigInteger p) {
-        return p.subtract(BigInteger.ONE).divide(BigInteger.valueOf(2));
     }
 
     /**
@@ -165,6 +291,13 @@ public class Util {
         return Util.class.getClassLoader().getResource(name);
     }
 
+    /**
+     * Read the input stream and return it as an X509Certificate.
+     * 
+     * @param pem
+     * @return
+     * @throws CertificateException
+     */
     public static X509Certificate readCertAsPem(InputStream pem) throws CertificateException {
         CertificateFactory certificateFactory = CertificateFactory.getInstance(X509);
         return (X509Certificate) certificateFactory.generateCertificate(pem);

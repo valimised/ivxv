@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	testID    = "11412090004"
+	testID    = "60001019906"
 	testPhone = "+37200000766"
 )
 
@@ -34,13 +34,15 @@ func TestMain(m *testing.M) {
 
 	var err error
 	if testClient, err = New(&Conf{
-		URL:           "https://tsp.demo.sk.ee/v2/",
-		Language:      "EST",
-		ServiceName:   "Testimine",
-		AuthMessage:   "Test authentication message.",
-		SignMessage:   "Test signing message.",
-		Roots:         []string{read("testdata/TEST_of_EE_Certification_Centre_Root_CA.pem")},
-		Intermediates: []string{read("testdata/TEST_of_ESTEID-SK_2011.pem")},
+		URL:            "https://tsp.demo.sk.ee/v2/",
+		Language:       "EST",
+		ServiceName:    "Testimine",
+		AuthMessage:    "Test authentication message.",
+		SignMessage:    "Test signing message.",
+		IDCodeRequired: true,
+		PhoneRequired:  true,
+		Roots:          []string{read("testdata/TEST_of_EE_Certification_Centre_Root_CA.pem")},
+		Intermediates:  []string{read("testdata/TEST_of_ESTEID-SK_2015.pem")},
 		OCSP: ocsp.Conf{
 			Responders: []string{read("testdata/TEST_of_SK_OCSP_RESPONDER_2011.pem")},
 		},
@@ -59,7 +61,7 @@ func TestAuthentication(t *testing.T) {
 	t.Parallel()
 
 	ctx := log.TestContext(context.Background())
-	code, _, challenge, cert, err := testClient.MobileAuthenticate(ctx, testPhone)
+	code, _, challenge, cert, err := testClient.MobileAuthenticate(ctx, testID, testPhone)
 	if err != nil {
 		t.Fatal("failed to start authentication session:", err)
 	}

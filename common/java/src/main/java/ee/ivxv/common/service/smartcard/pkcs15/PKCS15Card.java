@@ -34,6 +34,9 @@ import org.bouncycastle.asn1.DLSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * PKCS15Card implements a card with PKCS15 file system.
+ */
 public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
     private static final Logger log = LoggerFactory.getLogger(PKCS15Card.class);
     private static final byte[] MF_PATH = new byte[] {0x3f, 0x00};
@@ -51,10 +54,23 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
     private int termNo = -1;
     private Apdu apdu;
 
+    /**
+     * Initialize using a card identifier and a console.
+     * 
+     * @param id
+     * @param console
+     */
     public PKCS15Card(String id, I18nConsole console) {
         this(id, -1, console);
     }
 
+    /**
+     * Initialize using a card identifier, terminal number and a console.
+     * 
+     * @param id
+     * @param termNo
+     * @param console
+     */
     private PKCS15Card(String id, int termNo, I18nConsole console) {
         this.id = id;
         // store the terminal number for later use. do not open the channel
@@ -63,6 +79,13 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
         this.console = console;
     }
 
+    /**
+     * Get all available PKCS15Cards.
+     * 
+     * @param console
+     * @return
+     * @throws CardException
+     */
     public static PKCS15Card[] getCards(I18nConsole console) throws CardException {
         List<CardTerminal> terminals = TerminalUtil.getTerminals();
         List<PKCS15Card> cardList = new ArrayList<>();
@@ -163,7 +186,15 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
             throw new PKCS15Exception("Could not get connect to card", e);
         }
         cardChannel = card.getBasicChannel();
-        apdu = new Apdu(cardChannel, console, getId());
+        apdu = new Apdu(cardChannel, console);
+        try {
+            CardInfo info = getCardInfo();
+            id = info == null ? id : info.getId();
+        } catch (SmartCardException e) {
+            throw new PKCS15Exception("Could not read from the card", e);
+        }
+        apdu.setId(getId());
+
     }
 
     @Override
@@ -191,14 +222,26 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
      * interface-specific methods start here
      */
 
-    // erase authentication objects, blobs, keys, certificates -- everything
+    /**
+     * Erase the file system.
+     * <p>
+     * Currently erasing the file system is not implemented and this method is a no-op.
+     * 
+     * @throws PKCS15Exception
+     */
     public void eraseFilesystem() throws PKCS15Exception {
-
+        // not supported
     }
 
-    // create PKCS15 filesystem
+    /**
+     * Create a PKCS15 file system.
+     * <p>
+     * Currently erasing the file system is not implemented and this method is a no-op.
+     * 
+     * @throws PKCS15Exception
+     */
     public void createFilesystem() throws PKCS15Exception {
-
+        // not supported
     }
 
     @Override
@@ -301,6 +344,14 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
         apdu.updateBinary(dodfEntry, offset);
     }
 
+    /**
+     * Store a blob on the card.
+     * 
+     * @param aid Authentication identifier to associate with the file.
+     * @param identifier File identifier.
+     * @param blob File data.
+     * @throws PKCS15Exception
+     */
     public void storeBlob(byte[] aid, byte[] identifier, byte[] blob) throws PKCS15Exception {
         storeBlobRetry(aid, identifier, blob, 0);
     }
@@ -369,8 +420,16 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
         }
     }
 
-    // remove the data object at location 'identifier' which is protected by an
-    // authentication id 'aid'
+    /**
+     * Remove the data object at a location protected with an authentication identifier.
+     * <p>
+     * The implementation does not support removing files. It returns false on every call.
+     * 
+     * @param aid Authentication identifier
+     * @param identifier File identifier
+     * @return Success of removing the blob.
+     * @throws PKCS15Exception
+     */
     public boolean removeBlob(byte[] aid, byte[] identifier) throws PKCS15Exception {
         return false;
     }
@@ -392,9 +451,14 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
         }
     }
 
-    // get the data object at location 'identifier' which is protected by an
-    // authentication id 'aid'. throws exceptions if aid is incorrect or there
-    // is no blob with such identifier
+    /**
+     * Get the blob with authentication identifier.
+     * 
+     * @param aid Authentication identifier.
+     * @param identifier File identifier.
+     * @return File content.
+     * @throws PKCS15Exception
+     */
     public byte[] getBlob(byte[] aid, byte[] identifier) throws PKCS15Exception {
         return getBlobRetry(aid, identifier, RETRY_COUNT);
     }
@@ -453,11 +517,6 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
     @Override
     public void setTerminal(int terminalNo) {
         this.termNo = terminalNo;
-    }
-
-    @Override
-    public boolean isAvailable() {
-        return false;
     }
 
     private DLSequence findDF(DLSequence[] DFs, byte[] identifier) {

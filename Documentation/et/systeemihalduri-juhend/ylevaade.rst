@@ -8,10 +8,10 @@ Kogumisteenuse ülevaade
 
 IVXV kogumisteenus on elektroonilise
 hääletuse käigus hääletajate teenindamiseks ja häälte kogumiseks mõeldud
-takvara.
+tarkvara.
 
 Kogumisteenus koosneb mikroteenustest ja nende haldamiseks mõeldud
-haldusteenusest. Haldusteenese kasutamine on käsureapõhine. Osade funktsioonide
+haldusteenusest. Haldusteenuse kasutamine on käsureapõhine. Osade funktsioonide
 kasutamist on laiendatud veebipõhise liidesega, mida on kirjeldatud dokumendis
 ``IVXV kogumisteenuse haldusliidese
 kasutusjuhend``.
@@ -33,10 +33,6 @@ kasutamine Eesti riiklikel valimistel``:
 * E-hääletamise etapid;
 
 * Süsteemi osapooled ja komponendid.
-
-
-Mõisted ja definitsioonid
--------------------------
 
 
 Kogumisteenuse kasutajate rollid
@@ -112,8 +108,6 @@ teenus, OCSP teenus vms.
 
    * Valmistatakse ette kogumisteenuse :ref:`tugiteenused <tugiteenused>`;
 
-   * Valmendatakse kogumisteenuse tarkvara;
-
    * Koostatakse kogumisteenuse seadistused (usaldusjuur, tehnilised
      seadistused ja valimiste seadistused);
 
@@ -137,10 +131,8 @@ teenus, OCSP teenus vms.
 
    * Eksporditakse kogumisteenusesse kogutud andmed:
 
-      #. e-urn kogutud häältega
+      #. konsolideeritud e-urn kogutud häältega.
 
 * Lugemisetapil
 
    * Lugemisetapil kogumisteenust ei kasutata;
-
-.. vim: sts=3 sw=3 et:

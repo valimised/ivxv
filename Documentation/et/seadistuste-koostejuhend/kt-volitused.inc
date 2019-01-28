@@ -1,7 +1,9 @@
 ..  IVXV kogumisteenuse haldusteenuse kirjeldus
 
-Volitused
----------
+.. _kt-management:
+
+Kogumisteenuse volituste kirjeldamine
+-------------------------------------
 
 Kasutajatele volituste määramine käib süsteemis kirjeldatud rollide kaudu.
 Igale rollile on määratud komplekt õigusi ja kasutajal on kõik volitused, mis
@@ -26,6 +28,9 @@ Faili vorming:
        "cn": "<kasutaja-CN">,
        "roles": "roll1[,roll2]"
    }
+
+
+.. _rollid:
 
 Rollid
 ******
@@ -56,18 +61,6 @@ Kogumisteenuses on järgnevad rollid:
       - none
 
    *  - Üldseisundi ja statistika vaatamine
-      - ✓
-      - ✓
-      - ✓
-      - `-`
-
-   *  - Teenuste sertifikaatide paki allalaadimine
-      - ✓
-      - ✓
-      - ✓
-      - `-`
-
-   *  - Hääletusteenuste registreerimisvõtme allalaadimine
       - ✓
       - ✓
       - ✓
@@ -111,4 +104,4 @@ Volituste reeglid
 
 * Roll annab kasutajale rolliga seotud õigused, ükski roll õigusi ära ei võta.
 
-.. vim: sts=3 sw=3 et syntax=rst:
+.. vim:syntax=rst:

@@ -1,0 +1,82 @@
+@startuml
+
+actor Voter
+participant VER
+participant VA
+
+participant Auth
+participant Sign
+
+box "Collector Service"
+  participant AuthProxy
+  participant SignProxy
+  participant CLS
+  participant VSS
+end box
+
+participant CAVA
+participant TSA
+
+participant CONF
+participant WORKER
+participant MIX
+participant DECRYPT
+actor Owner
+actor Auditor
+
+
+== Setup phase ==
+
+== Voting phase ==
+
+VA -> CLS: Valija identifikaator, id
+
+alt Võimalik autentimine
+  CLS --> VA
+  VA --> AuthProxy
+  AuthProxy --> Auth
+  Auth --> Voter
+  Voter --> Auth
+  Auth --> AuthProxy
+  AuthProxy --> VA
+  VA --> CLS: AUTH(id)
+end
+
+CLS -> VA: Valikute nimekiri, C_id
+
+VA -> Voter: Valikute kuvamine, C_id
+Voter -> VA: Valiku tegemine, choice_id
+
+VA -> VA: r = GEN()
+VA -> VA: ballot_id = ENC(choice_id;r)
+
+alt Allkirjastamine lokaalselt
+  VA --> VA: vote_id = SIGN(ballot_id, id)
+else Allkirjastamine läbi proksi
+  VA --> SignProxy
+  SignProxy --> Sign
+  Sign --> Voter
+  Voter --> Sign
+  Sign --> SignProxy
+  SignProxy --> VA: vote_id = SIGN(ballot_id, id)
+end
+
+VA -> VSS: vote_id
+
+VSS -> CAVA: id
+CAVA -> VSS: val_id = Valid(id)
+
+VSS -> TSA: vote_id
+TSA -> VSS: tok_id = Timestamp(vote_id)
+
+VSS -> VSS: vote_ref = Store(vote_id, val_id, tok_id)
+
+VSS -> VA: tok_id, vote_ref
+
+
+== Tallying phase ==
+
+== Auditing phase ==
+
+
+@enduml

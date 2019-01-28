@@ -14,6 +14,12 @@ import javax.xml.bind.DatatypeConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Helper methods for sending APDUs to a smart card reader.
+ * <p>
+ * The methods handle also authentication. If authentication is needed, then PIN is prompted from
+ * the console or from pinpad.
+ */
 public class Apdu {
     private static final Logger log = LoggerFactory.getLogger(Apdu.class);
     private static final int APDU_RESPONSE_CODE_SUCCESS = 36864; // 0x9000
@@ -24,7 +30,7 @@ public class Apdu {
 
     private final CardChannel channel;
     private final I18nConsole console;
-    private final String cardId;
+    private String cardId;
 
     private enum Instruction {
         CREATE_FILE(0xE0, "CREATE FILE"), READ_BINARY(0xB0, "READ BINARY"), SELECT_FILE(0xA4,
@@ -48,10 +54,19 @@ public class Apdu {
         }
     }
 
-    public Apdu(CardChannel channel, I18nConsole console, String cardId) {
+    /**
+     * Initialize using values.
+     * 
+     * @param channel Channel to send the APDUS
+     * @param console Console for logging
+     */
+    public Apdu(CardChannel channel, I18nConsole console) {
         this.channel = channel;
         this.console = console;
-        this.cardId = cardId;
+    }
+
+    public void setId(String id) {
+        this.cardId = id;
     }
 
     private static int scardCtlCode(int code) {
@@ -97,8 +112,6 @@ public class Apdu {
             offset += data.length;
             toRead = len - offset < 0xFF ? len - offset : 0xFF;
         } while (toRead != 0);
-        byte[] res = outputStream.toByteArray();
-        log.debug("Data read: {}", DatatypeConverter.printHexBinary(res));
         return outputStream.toByteArray();
     }
 
@@ -122,6 +135,13 @@ public class Apdu {
         }
     }
 
+    /**
+     * Update the file at offset.
+     * 
+     * @param data Data to write to file
+     * @param offset Offset at the card to write at
+     * @throws CardException
+     */
     public void updateBinary(byte[] data, int offset) throws CardException {
         int len = data.length;
         int dataOffset = 0;
@@ -151,7 +171,7 @@ public class Apdu {
     private ResponseAPDU transmit(Instruction ins, int p1, int p2, byte[] data, int le,
             int retryCount) throws CardException {
         CommandAPDU apdu = new CommandAPDU(0, ins.getCode(), p1, p2, data, le);
-        log.debug("{}: {}", ins, DatatypeConverter.printHexBinary(apdu.getBytes()));
+        log.debug("APDU(INS={}, P1={}, P2={}, DATA=[HIDDEN], LE={})", ins, p1, p2, le);
         ResponseAPDU r = channel.transmit(apdu);
         try {
             if (r.getSW() == APDU_RESPONSE_CODE_PIN_REQUIRED) {
@@ -183,9 +203,8 @@ public class Apdu {
                     break;
                 }
             }
-        }
-        catch (CardException e) {
-        //    console.log(e);
+        } catch (CardException e) {
+            // console.log(e);
         }
 
         byte[] apdu = new byte[] {0x00, // CLA

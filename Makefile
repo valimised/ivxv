@@ -44,7 +44,7 @@ doc: $(DOCS)
 
 .PHONY: $(DOCS)
 .SECONDEXPANSION: $(DOCS)
-$(DOCS): html-$$@ pdf-$$@
+$(DOCS): $(if $(DEVELOPMENT),html-$$@) pdf-$$@
 
 .PHONY: html
 html: $(HTMLDOCS)
@@ -69,7 +69,7 @@ $(INSTALLDIRS): install-%:
 
 .PHONY: clean
 clean: $(CLEANDIRS)
-	rm -rf build
+	rm -rf build ivxv-*
 
 .PHONY: clean-java
 clean-java: $(JAVADIRS:%=clean-%)
@@ -88,14 +88,7 @@ $(CLEANDIRS): clean-%:
 gopath:
 	@echo $(GOPATH)
 
-.PHONY: version
-version:
-	python3 common/tools/update_project_version.py
-
 # We cannot mark this target as phony without listing all possible targets.
 %-dev:
 	$(MAKE) $* DEVELOPMENT=1
 
-.PHONY: release
-release:
-	$(MAKE) -C release

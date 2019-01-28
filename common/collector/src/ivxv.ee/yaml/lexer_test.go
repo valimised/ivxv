@@ -85,4 +85,19 @@ func TestLex(t *testing.T) {
 		testLex(t, "!!str 123", []lexeme{
 			{"!!str", 1, 1, true}, {"123", 1, 7, false}})
 	})
+
+	t.Run("carriage return", func(t *testing.T) {
+		testLex(t, "content\r", []lexeme{{"content\n", 1, 1, true}})
+		testLex(t, "content\r\n", []lexeme{{"content\n", 1, 1, true}})
+		testLex(t, "hello\rworld", []lexeme{
+			{"hello\n", 1, 1, true}, {"world", 2, 1, true}})
+		testLex(t, "hello\r\nworld", []lexeme{
+			{"hello\n", 1, 1, true}, {"world", 2, 1, true}})
+	})
+
+	t.Run("bom", func(t *testing.T) {
+		testLex(t, "\xefcontent", []lexeme{{"\ufffdcontent", 1, 1, true}})
+		testLex(t, "\xef\xbbcontent", []lexeme{{"\ufffd\ufffdcontent", 1, 1, true}})
+		testLex(t, "\xef\xbb\xbfcontent", []lexeme{{"content", 1, 1, true}})
+	})
 }

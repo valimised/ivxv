@@ -10,6 +10,12 @@ operations of other tools.
 
 The application functionality is provided by the tools described below:
 
+* *convert* - tool for verifying that the proof of shuffle provided by
+  Verificatum corresponds to the anonymized ballot boxes. The input ballot box
+  is the anonymized ballot box output by the processor tool and the output
+  ballot box is the anonymized ballot box output by the Verificatum prover
+  application. The provided public key must be output by key generation
+  tool.
 * *mixer* - tool for verifying the correctness of a proof of shuffle. The tool
   takes as input the protocol information file provided to Verificatum during
   shuffle and the proof directory output by it.
@@ -45,6 +51,11 @@ An example configuration is provided in the examples directory. The example
 configuration uses unit-test data which is not available in distribution
 releases.
 
+* Verify the correctness of file format conversion::
+
+    auditor convert --conf ../examples/app-conf.bdoc --params
+    ../examples/auditor-app-conf.bdoc
+
 * Verify the correcntess of the shuffle::
 
     auditor mixer --conf ../examples/app-conf.bdoc --params
@@ -60,9 +71,17 @@ Sample configuration
 
 .. code-block:: yaml
 
+  convert:
+    input_bb: bb-4.json
+    output_bb: bb-5.json
+    pub: initout/pub.pem
+    protinfo: mixnet/ProtocolInformation.xml
+    proofdir: mixnet/
+
   mixer:
     protinfo: mixnet/ProtocolInformation.xml
     proofdir: mixnet/
+    threaded: true
 
   decrypt:
     input: decout/proof

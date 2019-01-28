@@ -15,11 +15,10 @@ import (
 	"os"
 
 	"ivxv.ee/command/exit"
+	"ivxv.ee/command/status"
 )
 
 func usage() {
-	// nolint: gas, if writing to stderr returns an error, then we do not
-	// have any way to report it anyway.
 	fmt.Fprintln(os.Stderr, "usage:", os.Args[0], `[options] <output> <input>...
 
 voteunion takes a set of ballot boxes exported using voteexp and outputs a
@@ -29,7 +28,13 @@ options:`)
 	flag.PrintDefaults()
 }
 
-var qp = flag.Bool("q", false, "quiet mode")
+var (
+	qp     = flag.Bool("q", false, "quiet, do not show progress")
+	addedp = flag.Bool("added", true, "print the origin and name of "+
+		"files added to output")
+
+	progress *status.Line
+)
 
 func main() {
 	flag.Usage = usage
@@ -40,10 +45,12 @@ func main() {
 		os.Exit(exit.Usage)
 	}
 
+	if !*qp {
+		progress = status.New()
+	}
+
 	code, err := zipunion(args[0], args[1:])
 	if err != nil {
-		// nolint: gas, if writing to stderr returns an error, then we
-		// do not have any way to report it anyway.
 		fmt.Fprintln(os.Stderr, "error:", err)
 	}
 	os.Exit(code)
@@ -79,14 +86,11 @@ func zipunion(output string, input []string) (code int, err error) {
 
 	// Open input archives and add their contents to output if not already
 	// there.
+	showname := progress.Updatable("", false)
+	defer progress.Hide()
 	for _, in := range input {
-		if !*qp {
-			u.out.push("%s: ", in)
-		}
+		showname(in + ":")
 		code, err = u.zipadd(in)
-		if !*qp {
-			u.out.pop()
-		}
 		if err != nil {
 			return code, fmt.Errorf("failed to add %q: %v", in, err)
 		}
@@ -97,7 +101,6 @@ func zipunion(output string, input []string) (code int, err error) {
 type union struct {
 	w        *zip.Writer
 	contents map[string][]byte // file name to SHA-256 hash of the contents.
-	out      progress
 
 	// Reusable scratch variables.
 	hash  hash.Hash
@@ -112,16 +115,20 @@ func (u *union) zipadd(path string) (code int, err error) {
 	}
 	defer r.Close() // nolint: errcheck, ignore close failure of read-only fd.
 
-	count := len(r.File)
-	for i, f := range r.File {
-		if !*qp {
-			u.out.push("%*d/%d %s",
-				len(fmt.Sprint(count)), i+1, count, f.FileHeader.Name)
-		}
+	// Status line: 100% 100000/100000 filename
+	addpercent := progress.Percent(uint64(len(r.File)), false)
+	defer progress.Pop()
+	addcount := progress.Count(uint64(len(r.File)), false)
+	defer progress.Pop()
+	showname := progress.Updatable("", true) // showname triggers a redraw.
+	defer progress.Pop()
+
+	for _, f := range r.File {
+		addpercent(1)
+		addcount(1)
+		showname(f.FileHeader.Name)
+
 		code, err = u.fileadd(f, path)
-		if !*qp {
-			u.out.pop()
-		}
 		if err != nil {
 			return code, fmt.Errorf("failed to copy file %q: %v",
 				f.FileHeader.Name, err)
@@ -174,10 +181,10 @@ func (u *union) fileadd(f *zip.File, path string) (code int, err error) {
 		copy(stored, u.sum)
 		u.contents[name] = stored
 
-		if !*qp {
-			u.out.hide()
+		if *addedp {
+			progress.Hide()
 			fmt.Printf("added %q file %q\n", path, name)
-			u.out.show()
+			progress.Show()
 		}
 	}
 	return

@@ -83,6 +83,12 @@ var (
 		"O":            {2, 5, 4, 10},
 		"OU":           {2, 5, 4, 11},
 		"GN":           {2, 5, 4, 42},
+
+		// Keep an empty line here, since starting with Go 1.11 the fmt
+		// alignment algorithm changed. This causes gofmt (from Go 1.9)
+		// and goimports (compiled with the latest Go) to conflict.
+		// https://go.googlesource.com/go/+/542ea5ad91367d2b40589942cc5757a4d5f43f97
+		"organizationIdentifier": {2, 5, 4, 97},
 	}
 
 	// shortToOID is a version of the shortnames map with lowercase keys
@@ -134,24 +140,24 @@ func encodeATV(buf *bytes.Buffer, atv pkix.AttributeTypeAndValue) error {
 	if haveShort {
 		at = short
 	}
-	buf.WriteString(at) // nolint: gas, always returns nil.
+	buf.WriteString(at)
 
-	buf.WriteByte('=') // nolint: gas, always returns nil.
+	buf.WriteByte('=')
 
 	s, ok := atv.Value.(string)
 	if !haveShort || !ok {
 		// Use hexadecimal encoding of the DER encoding of the value.
-		buf.WriteByte('#') // nolint: gas, always returns nil.
+		buf.WriteByte('#')
 		der, err := asn1.Marshal(atv.Value)
 		if err != nil {
 			return EncodeAttributeValueError{Type: at, Err: err}
 		}
-		buf.WriteString(hex.EncodeToString(der)) // nolint: gas, always returns nil.
+		buf.WriteString(hex.EncodeToString(der))
 		return nil
 	}
 	s = bsEscapeRE.ReplaceAllString(s, `\$1`)
 	s = strings.Replace(s, "\x00", "\\00", -1)
-	buf.WriteString(s) // nolint: gas, always returns nil.
+	buf.WriteString(s)
 	return nil
 }
 

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -97,24 +98,52 @@ public class BallotBox implements IBallotBox {
     }
 
     /**
+     * @param filter The filter to apply to all votes using parallel processing.
      * @return Returns an anonymous ballot box with the latest votes of this ballot box.
      */
-    public AnonymousBallotBox anonymize() {
+    public AnonymousBallotBox anonymize(VoteFilter filter) {
         requireType(Type.DOUBLE_VOTERS_REMOVED);
 
         Map<String, Map<String, Map<String, List<byte[]>>>> anonymous = new LinkedHashMap<>();
 
-        ballots.forEach((vid, vb) -> vb.getLatest().getVotes()
-                .forEach((qid, v) -> anonymous
-                        .computeIfAbsent(vb.getLatest().getDistrictId(), d -> new LinkedHashMap<>())
-                        .computeIfAbsent(vb.getLatest().getStationId(), s -> new LinkedHashMap<>())
-                        .computeIfAbsent(qid, q -> new ArrayList<>()).add(v)));
+        ballots.entrySet().parallelStream()
+                .flatMap(ve -> Vote.streamOf(ve.getKey(), ve.getValue().getLatest())) // All votes
+                .filter(v -> filter.accept(v.voterId, v.ballot, v.questionId, v.vote)) // Filter
+                .collect(Collectors.toList()).stream() // Join threads, restore initial order
+                .forEach(v -> anonymous
+                        .computeIfAbsent(v.ballot.getDistrictId(), d -> new LinkedHashMap<>())
+                        .computeIfAbsent(v.ballot.getStationId(), s -> new LinkedHashMap<>())
+                        .computeIfAbsent(v.questionId, q -> new ArrayList<>()) //
+                        .add(v.vote));
 
         return new AnonymousBallotBox(election, anonymous);
     }
 
     public interface RevokeCallback {
         void call(String voterId, Ballot b, boolean revoke, boolean success);
+    }
+
+    public interface VoteFilter {
+        boolean accept(String voterId, Ballot b, String qid, byte[] vote);
+    }
+
+    private static class Vote {
+        final String voterId;
+        final Ballot ballot;
+        final String questionId;
+        final byte[] vote;
+
+        Vote(String voterId, Ballot ballot, String questionId, byte[] vote) {
+            this.voterId = voterId;
+            this.ballot = ballot;
+            this.questionId = questionId;
+            this.vote = vote;
+        }
+
+        static Stream<Vote> streamOf(String voterId, Ballot ballot) {
+            return ballot.getVotes().entrySet().stream()
+                    .map(e -> new Vote(voterId, ballot, e.getKey(), e.getValue()));
+        }
     }
 
 }

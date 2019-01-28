@@ -13,6 +13,6 @@ ning katab järgnevaid valdkondi:
 
 * Kogumisteenuse seisundi jälgimine;
 
-* Kogumisteenusest e-urni allalaadimine.
+* Kogumisteenusest e-urni allalaadimine;
 
-.. vim: sts=3 sw=3 et:
+* Kogumisteenuse haldussündmuste logi jälgimine.

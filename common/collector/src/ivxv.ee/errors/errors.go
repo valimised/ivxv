@@ -48,7 +48,7 @@ func CausedBy(err error, v interface{}) (found error) {
 		needle = needle.Elem()
 	}
 
-	Walk(err, func(err error) error { // nolint: errcheck, gas, only found or nil is returned.
+	Walk(err, func(err error) error { // nolint: errcheck, gosec, only found or nil is returned.
 		hay := reflect.TypeOf(err)
 		for hay.Kind() == reflect.Ptr {
 			hay = hay.Elem()

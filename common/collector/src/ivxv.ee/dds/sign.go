@@ -9,7 +9,6 @@ import (
 
 // https://sk-eid.github.io/dds-documentation/api/api_docs/#mobilesignhash
 type mobileSignHashRequest struct {
-	// nolint: lll, the XML namespace forces us to use a long line.
 	XMLName          xml.Name `xml:"http://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl MobileSignHashRequest"`
 	IDCode           string
 	PhoneNo          string
@@ -22,7 +21,6 @@ type mobileSignHashRequest struct {
 }
 
 type mobileSignHashResponse struct {
-	// nolint: lll, the XML namespace forces us to use a long line.
 	XMLName     xml.Name `xml:"http://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl MobileSignHashResponse"`
 	Sesscode    string
 	ChallengeID string

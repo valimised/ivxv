@@ -267,7 +267,7 @@ package "Kogumisteenus" as collector {
 
 !ifdef MONITORING
 
-    interface "UDP-JSON" <<IVXV>> as i_log_int
+    interface "RELP-JSON" <<IVXV>> as i_log_int
     interface "Zabbix" <<IVXV>> as i_zabbix
 
     rectangle "Monitooring" {
@@ -305,10 +305,6 @@ package "Kogumisteenus" as collector {
 !ifdef EXTENSION_MODULES
 
     interface "IVXV API" <<IVXV>> as i_api_int
-    i_api_int -down-> i_mid
-    i_api_int -down-> i_auth
-    i_api_int -down-> i_verify
-    i_api_int -down-> i_q11n
 
     rectangle "Mobiil-ID abiteenus" {
         [Autentimine] <<IVXV>> as mid_auth
@@ -348,6 +344,11 @@ package "Kogumisteenus" as collector {
         reg -down-> i_sk_ocsp
         reg -down-> i_rfc_3161
     }
+
+    i_api_int -down-> i_mid
+    i_api_int -down-> i_auth
+    i_api_int -down-> i_verify
+    i_api_int -down-> i_q11n
 !endif
 
 !ifdef SERVICES

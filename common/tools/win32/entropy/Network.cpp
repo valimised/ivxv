@@ -111,6 +111,16 @@ DWORD WINAPI AcceptThread(LPVOID)
 
     while (true) {
         acceptSocket = accept(listenSocket, NULL, NULL);
+        struct linger so_linger;
+        so_linger.l_onoff = 1;
+        so_linger.l_linger = 0;
+        ret = setsockopt(acceptSocket, SOL_SOCKET, SO_LINGER, (char*)&so_linger,
+                         sizeof so_linger);
+
+        if (ret) {
+            OutputError("setsockopt()", WSAGetLastError());
+            return 1;
+        }
 
         if (WSASetEvent(acceptEvent) == FALSE) {
             OutputError("WSASetEvent()", WSAGetLastError());

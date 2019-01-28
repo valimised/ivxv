@@ -15,11 +15,6 @@ import (
 
 // hp is a map from hash function identifier to DigestInfo ASN.1 prefix.
 var hp = map[crypto.Hash][]byte{
-	crypto.SHA1: {
-		0x30, 0x21, 0x30, 0x09,
-		0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a,
-		0x04, 0x14,
-	},
 	crypto.SHA224: {
 		0x30, 0x2d, 0x30, 0x0d,
 		0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x04,
@@ -54,7 +49,7 @@ func DigestInfo(h crypto.Hash, data []byte) []byte {
 	copy(prefix, p)
 
 	hash := h.New()
-	hash.Write(data) // nolint: errcheck, gas, hash.Write never returns an error.
+	hash.Write(data)
 	return hash.Sum(prefix)
 }
 
@@ -77,8 +72,8 @@ func PEMDecode(encoded, blockType string) (decoded []byte, err error) {
 	return block.Bytes, nil
 }
 
-// PEMCertificates parses a one or more PEM type certificates into a slice
-// and returns it.
+// PEMCertificates parses one or more PEM type certificates into a slice and
+// returns them.
 func PEMCertificates(pems ...string) (certs []*x509.Certificate, err error) {
 	for i, pem := range pems {
 		cert, err := PEMCertificate(pem)

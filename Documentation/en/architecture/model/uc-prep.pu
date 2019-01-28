@@ -1,0 +1,99 @@
+@startuml
+
+title "Ettevalmistusfaas kontoris"
+
+usecase (*) as UC0
+
+note left  of UC0
+Mujal menetlemata nüansid
+* Võimekus mitme samaaegse eritüübilise valimise korraldamiseks
+* Võimekus null-autentimismeetodite ja nimekirjade kasutamiseks
+* Andmevormingute spetsifikatsioon
+* Väliste liideste ja sõltuvuste spetsifikatsioon
+end note
+
+actor Omanik
+actor Hääletaja
+actor Koguja
+actor Töötleja
+actor Audiitor
+actor IDP
+actor ATO
+actor STO
+actor Klienditugi
+
+
+
+
+package "Konfiguratsiooni haldamine" {
+    usecase (Tekstide haldus) as UC1.5
+    usecase (Valimisinfo laadimine) as UC1.1
+    usecase (Tehniliste parameetrite haldus) as UC1.4
+    usecase (Autentimisteenuse seadistamine) as UC1.6
+    usecase (Kehtivuskinnitusteenuse seadistamine) as UC1.7
+    usecase (Ajatempliteenuse seadistamine) as UC1.8
+    usecase (Konfiguratsiooni valideerimine) as UC1.9
+    usecase (Konfiguratsiooni allkirjastamine) as UC1.10
+    usecase (Konfiguratsiooni eksport) as UC1.11
+
+    usecase (Allkirja moodustamine, ajatempli saamine, kehtivuses veendumine meetodite määramine)
+
+    usecase (Algoritmi ja votme määramine)
+
+note bottom of UC1.11
+Komponentide põhiste allkirjastatud konfipakkide loomine
+endnote
+
+note bottom of UC1.1
+* Valimine
+* Reeglid
+* Valijad
+* Valikud
+* Jaoskonnad
+endnote
+
+}
+
+Omanik -> UC1.10
+Koguja -> UC1.5
+
+note left of UC1.9
+* Olemasolu kontroll
+* Vormingu kontroll
+* Kooskõlalisuse kontroll
+endnote
+
+note top of UC1.5
+* Kontrollrakendus
+* Valijarakendus
+endnote
+
+
+package "Võtmehaldus" {
+    usecase (Võtmepaari ja PIN-ide genereerimine) as UC2.1
+    usecase (Võtmepaari varukoopia loomine) as UC2.2
+    usecase (Avaliku komponendi transport valijarakendusele) as UC2.3
+    usecase (Valijarakenduse ettevalmistamine) as UC2.4
+
+    ' osad pinniga osad mitte
+
+    note left of UC2.1
+    * MofN
+    * kiipkaart vs. HSM
+    endnote
+
+}
+
+package "Keskkonna ettevalmistamine" {
+    usecase (Paigalduspakkide haldamine) as UC3.1
+    usecase (Süsteemi paigaldamine) as UC3.2
+    usecase (Usaldusnimekiri) as UC3.3
+    usecase (Volitatud isikute sertifikaatide haldus)
+    usecase (Konfiguratsiooni laadmine) as UC3.4
+}
+
+package "Laua peal testimine" {
+    usecase (Võtmepaari kontroll, testhääletamine) as UC4.1
+}
+
+@enduml

@@ -1,5 +1,7 @@
 package ee.ivxv.processor.util;
 
+import ee.ivxv.common.crypto.CorrectnessUtil.CiphertextCorrectness;
+import ee.ivxv.common.model.Ballot;
 import ee.ivxv.common.model.BallotBox;
 import ee.ivxv.common.model.DistrictList;
 import ee.ivxv.common.service.bbox.Ref;
@@ -7,20 +9,23 @@ import ee.ivxv.common.service.bbox.Result;
 import ee.ivxv.common.service.i18n.Message;
 import ee.ivxv.common.service.i18n.MessageException;
 import ee.ivxv.common.service.report.Reporter;
-import ee.ivxv.common.service.report.Reporter.LogNRecord;
 import ee.ivxv.common.service.report.Reporter.LogType;
+import ee.ivxv.common.service.report.Reporter.Record;
 import ee.ivxv.common.util.I18nConsole;
 import ee.ivxv.common.util.Util;
 import ee.ivxv.processor.Msg;
 import ee.ivxv.processor.ProcessorContext;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
@@ -44,17 +49,15 @@ public class ReportHelper {
     }
 
     public void writeLog1(Path dir, BallotBox bb) {
-        writeLogN(dir, bb.getElection(), LogType.LOG1, getLog123Records(bb));
+        writeLogN(dir, bb, LogType.LOG1, (x, y) -> true);
     }
 
-    public void writeLog3(Path dir, BallotBox bb) {
-        writeLogN(dir, bb.getElection(), LogType.LOG3, getLog123Records(bb));
+    public void writeLog2(Path dir, BallotBox bb, BiPredicate<String, String> filter) {
+        writeLogN(dir, bb, LogType.LOG2, filter);
     }
 
-    private Stream<LogNRecord> getLog123Records(BallotBox bb) {
-        return bb.getBallots().entrySet().stream() //
-                .flatMap(e -> e.getValue().getBallots().stream()
-                        .map(b -> ctx.reporter.newLog123Record(e.getKey(), b)));
+    public void writeLog3(Path dir, BallotBox bb, BiPredicate<String, String> filter) {
+        writeLogN(dir, bb, LogType.LOG3, filter);
     }
 
     public void writeLog2(Path dir, String eid, List<Reporter.LogNRecord> records) {
@@ -67,6 +70,27 @@ public class ReportHelper {
             console.println();
             console.println(Msg.m_writing_log_n, type.value);
             Map<String, Path> paths = ctx.reporter.writeLogN(dir, eid, type, records);
+            paths.values().forEach(p -> console.println(Msg.m_output_file, p));
+        } catch (Exception e) {
+            throw new MessageException(e, Msg.e_writing_log_n, type.value, dir, e);
+        }
+    }
+
+    private void writeLogN(Path dir, BallotBox bb, LogType type,
+            BiPredicate<String, String> filter) {
+        Map<String, List<Record>> rmap = new LinkedHashMap<>();
+
+        bb.getBallots()
+                .forEach((voterId, vb) -> vb.getBallots() //
+                        .forEach(b -> b.getVotes().keySet().stream()
+                                .filter(qid -> filter.test(voterId, qid)) //
+                                .forEach(qid -> rmap.computeIfAbsent(qid, x -> new ArrayList<>())
+                                        .add(ctx.reporter.newLog123Record(voterId, b, qid)))));
+
+        try {
+            console.println();
+            console.println(Msg.m_writing_log_n, type.value);
+            Map<String, Path> paths = ctx.reporter.writeRecords(dir, bb.getElection(), type, rmap);
             paths.values().forEach(p -> console.println(Msg.m_output_file, p));
         } catch (Exception e) {
             throw new MessageException(e, Msg.e_writing_log_n, type.value, dir, e);
@@ -123,6 +147,18 @@ public class ReportHelper {
         }
         Message innerMsg = new Message(key, args);
         Message msg = provider.apply(innerMsg);
+        reportErrors(OUT_BB_ERR, s -> String.format("%s\t%s\t%s", ref, res, s), msg.key, msg.args);
+    }
+
+    public void reportAbbError(String voterId, Ballot b, String qid, CiphertextCorrectness res) {
+        Msg key = translate(res);
+        if (key == null) {
+            return;
+        }
+        Message innerMsg = new Message(key);
+        Message msg = new Message(Msg.e_bb_ciphertext_checking, voterId, b.getId(), qid, innerMsg);
+        String ref = String.format("%s/%s", voterId, b.getId());
+
         reportErrors(OUT_BB_ERR, s -> String.format("%s\t%s\t%s", ref, res, s), msg.key, msg.args);
     }
 
@@ -197,11 +233,38 @@ public class ReportHelper {
                 return Msg.e_ballot_without_reg_req;
             case SAME_TIME_AS_LATEST:
                 return Msg.e_same_time_as_latest;
+            case INVALID_SIGNATURE_PROFILE:
+                return Msg.e_invalid_signature_profile;
             case OK:
                 return null;
             default:
                 throw new RuntimeException("Unhandled ballot box processing result: " + res);
         }
+    }
+
+    private Msg translate(CiphertextCorrectness res) {
+        switch (res) {
+            case INVALID:
+                return Msg.e_ciphertext_invalid;
+            case INVALID_BYTES:
+                return Msg.e_ciphertext_invalid_bytes;
+            case INVALID_GROUP:
+                return Msg.e_ciphertext_invalid_group;
+            case INVALID_POINT:
+                return Msg.e_ciphertext_invalid_point;
+            case INVALID_QR:
+                return Msg.e_ciphertext_invalid_qr;
+            case INVALID_RANGE:
+                return Msg.e_ciphertext_invalid_range;
+            case VALID:
+                return null;
+            default:
+                throw new RuntimeException("Unhandled ciphertext correctness result: " + res);
+        }
+    }
+
+    public long countBbErrors() {
+        return bbErrors.values().stream().mapToLong(LongAdder::sum).sum();
     }
 
     public long countBbErrors(Result type) {

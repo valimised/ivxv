@@ -11,15 +11,15 @@ Kogumisteenuse valijale suunatud mikroteenused suhtlevad valijarakendusega ja
 kontrollrakendusega JSON-RPC protokolli vahendusel.
 
 :id: JSON-RPC päringuidentifikaator
-:method: RPC meetod
-:params: Konkreetse RPC meetodi parameetrid
+:method: RPC-meetod
+:params: Konkreetse RPC-meetodi parameetrid
 
 .. literalinclude:: examples/json.rpc.method.query.json
    :language: json
    :linenos:
 
 :error: Võimalik veainfo või ``null`` vea puudumisel
-:id: JSON-RPC päringuidentifikaator, peab ühtima päringus kasutatud id'ga
+:id: JSON-RPC päringuidentifikaator, peab ühtima päringus kasutatud id-ga
 :result: Meetodipõhine vastusandmestruktuur
 
 .. literalinclude:: examples/json.rpc.method.response.json
@@ -29,23 +29,23 @@ kontrollrakendusega JSON-RPC protokolli vahendusel.
 Esimese päringuvahetuse käigus mõne IVXV mikroteenusega väljastatakse suhtlevale
 rakendusele HEX-kodeeritud unikaalne seansiidentifkaator (``result.SessionID``),
 mida rakendus kasutab edaspidi kõigis kogumisteenuse suunalistes päringutes
-(``params.SessionID``). Seansiidentifikaatori abil seostatakse erinevad
-hääletamisega seotud RPC päringud üheks seansiks. Seostamine on informatiivne
+(``params.SessionID``). Seansiidentifikaatori abil seostatakse
+hääletamisega seotud RPC-päringud üheks seansiks. Seostamine on informatiivne
 ning selle eesmärk on logianalüüsi lihtsustamine, hääle ringkonnakuuluvust jm.
 sisulisi aspekte puudutavad otsused tehakse digiallkirjastatud andmete põhjal.
 
 Transpordiprotokollina on kasutusel TLS. Krüpteeritud kanali termineerimine
 toimub konkreetses mikroteenuses. Võimaldamaks koormuse jaotamist ning
-mikroteenuste paindlikku evitamist kasutatakse TLS'i SNI laiendust, mis lubab
+mikroteenuste paindlikku evitamist kasutatakse TLS-i SNI laiendust, mis lubab
 vahendusteenusel TLS voogu termineerimata õigesse mikroteenusinstantsi suunata.
-Vahendusteenus on tüüpiliselt kättesaadav kogumisteenuse välise liidese 443
-pordis.
+Vahendusteenus on tüüpiliselt kättesaadav kogumisteenuse välise liidese pordis
+443.
 
 Valikute nimekirja hankimine
 ----------------------------
 
 Valikute nimekirja hankimine tähendab valijarakenduse suhtlemist
-nimekirjateenusega (SNI choices.ivxv.invalid). Valikute nimekirja hankimine
+nimekirjateenusega (SNI ``choices.ivxv.invalid``). Valikute nimekirja hankimine
 eeldab valija autentimist ning tema ringkonnakuuluvuse tuvastamist.
 
 Valijarakendus teeb päringu ``RPC.VoterChoices`` nimekirjade hankimiseks.
@@ -54,7 +54,7 @@ Valijarakendus teeb päringu ``RPC.VoterChoices`` nimekirjade hankimiseks.
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
 
 Päring ``RPC.VoterChoices`` ID-kaardiga autentimise korral - autentimine toimub
-TLS protokolli tasemel päringu töötlemise ajal kasutades ID-kaardi
+TLS-protokolli tasemel päringu töötlemise ajal kasutades ID-kaardi
 autentimissertifikaati.
 
 .. literalinclude:: examples/id.rpc.voterchoices.query.json
@@ -63,7 +63,7 @@ autentimissertifikaati.
 
 Päring ``RPC.VoterChoices`` Mobiil-ID'ga autentimise korral - päringu
 sooritamiseks tuleb eelnevalt kasutada DigiDocService vahendusteenuse (SNI
-dds.ivxv.invalid) abi allkirjastatud autentimistõendi saamiseks.
+``dds.ivxv.invalid``) abi allkirjastatud autentimistõendi saamiseks.
 
 :params.AuthToken: Autentimisteenuse vahendusel allkirjastatud tõend, mis
                    sisaldab endas valija unikaalset identifikaatorit.
@@ -102,7 +102,7 @@ Allkirjastatud hääle saatmine talletamiseks
 -------------------------------------------
 
 Allkirjastatud hääle saatmine talletamiseks tähendab valijarakenduse suhtlemist
-hääletamisteenusega (SNI voting.ivxv.invalid).
+hääletamisteenusega (SNI ``voting.ivxv.invalid``).
 
 Valijarakendus teeb päringu ``RPC.Vote`` allkirjastatud hääle talletamiseks
 saatmiseks.
@@ -174,7 +174,7 @@ Hääletamine Mobiil-ID'ga
 ------------------------
 
 Mobiil-ID kasutamine allkirjastamis- ning autentimisvahendina tingib teenusega
-DigiDocService liidestuva abiteenuse (SNI dds.ivxv.invalid) kasutamise
+DigiDocService liidestuva abiteenuse (SNI ``dds.ivxv.invalid``) kasutamise
 autentimistõendi hankimiseks enne valikute nimekirja hankimist ning hääle
 allkirjastamiseks enne talletamist.
 
@@ -192,9 +192,9 @@ algatamiseks.
    :language: json
    :linenos:
 
-:result.ChallengeID: Mobiil-ID kontrollkood kuvamiseks valijarakenduses
+:result.ChallengeID: Mobiil-ID kontrollkood valijarakenduses kuvamiseks
 :result.SessionCode: Mobiil-ID seansiidentifikaator edasiste poll-päringute
-                     jaoks,
+                     jaoks
 
 .. literalinclude:: examples/mid.rpc.authenticate.response.json
    :language: json
@@ -223,9 +223,9 @@ hindamiseks.
                    ``null``, kui päringu töötlemine alles käib.
 :result.GivenName: Eduka autentimise korral valija eesnimi
 :result.PersonalCode: Eduka autentimise korral valija isikukood
-:result.Status: Päringu staatus - POLL viitab vajadusele päringut korrata, OK
+:result.Status: Päringu staatus - ``POLL`` viitab vajadusele päringut korrata, ``OK``
                 viitab edukale autentimisele. Vastuse muud väljad sisaldavad
-                infot vaid siis kui väärtus on OK.
+                infot vaid siis kui väärtus on ``OK``.
 :result.Surname: Eduka autentimise korral valija perekonnanimi
 
 
@@ -254,7 +254,8 @@ Hääle allkirjastamine
 Valijarakendus teeb päringu ``RPC.GetCertificate`` allkirjastamissertifikaadi
 hankimiseks.
 
-:params.IDCode: Hääle allkirjastaja isikukood
+:params.AuthMethod: Toetatud ainult autentimismeetod ``ticket``.
+:params.AuthToken: Mobiil-ID autentimistõend.
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
 :params.PhoneNo: Hääle allkirjastaja telefoninumber
 
@@ -263,7 +264,7 @@ hankimiseks.
    :linenos:
 
 
-:result.Certificate: Allkirjastamissertifikaat X509 vormingus
+:result.Certificate: Allkirjastamissertifikaat X509-vormingus
 
 .. literalinclude:: examples/mid.rpc.getcertificate.response.json
    :language: json
@@ -281,8 +282,9 @@ Võimalikud veateated päringu ``RPC.GetCertificate`` korral.
 
 Valijarakendus teeb päringu ``RPC.Sign`` hääle allkirjastamise algatamiseks.
 
+:params.AuthMethod: Toetatud ainult autentimismeetod ``ticket``.
+:params.AuthToken: Mobiil-ID autentimistõend.
 :params.Hash: BASE64-kodeeritud elektroonilise hääle SHA-256 räsi
-:params.IDCode: Hääle allkirjastaja isikukood
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
 :params.PhoneNo: Hääle allkirjastaja telefoninumber
 
@@ -317,11 +319,11 @@ hindamiseks.
    :language: json
    :linenos:
 
-:result.Signature: Juhul kui vastuse Status väli on OK, BASE-64 kodeeritud
-                   PKCS1 vormingus signatuur, vastasel juhul ``null``.
-:result.Status: Päringu staatus - POLL viitab vajadusele päringut korrata, OK
+:result.Signature: Juhul kui vastuse ``Status`` väli on ``OK``, BASE-64 kodeeritud
+                   PKCS1-vormingus signatuur, vastasel juhul ``null``.
+:result.Status: Päringu staatus - ``POLL`` viitab vajadusele päringut korrata, ``OK``
                 viitab edukale allkirjastamisele. Vastuse muud väljad sisaldavad
-                infot vaid siis kui väärtus on OK.
+                infot vaid siis kui väärtus on ``OK``.
 
 .. literalinclude:: examples/mid.rpc.signstatus.response.json
    :language: json
@@ -375,6 +377,3 @@ Võimalikud veateated päringu ``RPC.Verify`` korral.
 :BAD_REQUEST: Vigane päring.
 :INTERNAL_SERVER_ERROR: Viga serveri sisemises töös.
 :VOTING_END: Hääletusperiood on lõppenud.
-
-
-.. vim: sts=3 sw=3 et:

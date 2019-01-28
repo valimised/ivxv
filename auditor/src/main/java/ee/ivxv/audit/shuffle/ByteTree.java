@@ -255,7 +255,7 @@ public class ByteTree {
         }
 
         /**
-         * Initalize a leaf from a GroupElement.
+         * Initialize a leaf from a GroupElement.
          * 
          * @param value A GroupElement to initialize Leaf.
          */
@@ -414,7 +414,7 @@ public class ByteTree {
     }
 
     /**
-     * Short-hand method for {@link #parse(b, 0)}
+     * Short-hand method for {@link #parse(byte[], int)} with {@literal offset} 0.
      * 
      * @param b Byte array to be parsed
      * @return A ByteTree representing the byte array.

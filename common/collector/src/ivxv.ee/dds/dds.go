@@ -47,10 +47,14 @@ var (
 // a file.
 type Conf struct {
 	URL         string // URL of DigiDocService.
+	CountryCode string // Country of origin of users.
 	Language    string // Language for user dialog in mobile phone.
 	ServiceName string // Service name agreed with DigiDocService.
 	AuthMessage string // Message to display during authentication.
 	SignMessage string // Message to display during signing.
+
+	IDCodeRequired bool // Is the personal identification code required for authentication?
+	PhoneRequired  bool // Is the phone number required for authentication?
 
 	Roots         []string  // PEM-encoded authentication certificate verification roots.
 	Intermediates []string  // PEM-encoded authentication certificate verification intermediates.
@@ -67,6 +71,10 @@ type Client struct {
 
 // New returns a new DigiDocService client with the provided configuration.
 func New(conf *Conf) (c *Client, err error) {
+	if !conf.IDCodeRequired && !conf.PhoneRequired {
+		return nil, UnconfiguredRequiredInfoError{}
+	}
+
 	if len(conf.Roots) == 0 {
 		return nil, UnconfiguredRootsError{}
 	}

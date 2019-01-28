@@ -1,0 +1,58 @@
+@startuml
+
+Title Collector service administration service components
+
+skinparam component {
+  backgroundColor<<Väline>> LightSalmon
+}
+
+[User's web browser] as Kasutaja
+
+frame IVXV {
+  [Statistic's server]
+  interface "HTTP" as StatistikaHTTP
+  [Statistic's server] -down- StatistikaHTTP
+
+  frame "Collector service" as cservice {
+    node "Administration service" {
+      [Utilities]
+      [Web server\n (Apache)] as wserver
+      interface HTTPS
+      wserver -u- HTTPS
+      [Kasutaja] -> HTTPS
+
+      [Administration daemon] as admindaemon
+      interface "HTTP" as admindaemonHTTP
+      admindaemonHTTP -- [admindaemon]
+      [Agent daemon] as agentdaemon
+      database "Data catalogue" {
+        [Data files of \n administration \n service] as Andmefailid
+      }
+    }
+
+    [Microservice]
+    interface "SSH" as TeenusSSH
+    [Microservice] -l- TeenusSSH
+  }
+}
+
+/' Välised allikad '/
+StatistikaHTTP -> [agentdaemon]
+
+/' Administration service '/
+[agentdaemon] --> [Andmefailid] : Storing the \n collected \n data
+[admindaemon] --> [Andmefailid] : 1. Adding and \n amending a \n user \n 2. Saving the \n ballot box
+
+[Andmefailid] --> [wserver] : Reading \n generated \n data
+
+[wserver] --> [Andmefailid] : Loading \n commands
+[wserver] --> admindaemonHTTP : Applying \n commands
+
+[Andmefailid] --> [wserver] : Loading the \n ballot box
+
+/' Teenusserverid '/
+TeenusSSH --> [admindaemon] : Loading the \n ballot box \n from the \n storage \n service
+[Utilities] --> TeenusSSH : 1. Service installation \n 2. Service configuration \n 3. Applying choices
+[agentdaemon] --> TeenusSSH : Service monitoring
+
+@enduml

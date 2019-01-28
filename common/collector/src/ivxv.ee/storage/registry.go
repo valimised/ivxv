@@ -78,18 +78,43 @@ type PutGetter interface {
 	// Implementations must obey cancellation signals from ctx.Done().
 	GetWithPrefix(ctx context.Context, prefix string) (<-chan GetWithPrefixResult, <-chan error)
 
-	// CASAndGet compare-and-swaps the value stored with the key cas and if
-	// that succeeds, returns the values indicated by keys. If err is nil,
-	// then the returned map must contain a value for each requested key.
-	//
-	// This is the only method which can overwrite values and is only meant
-	// for read counters. It is an error for any of the keys to not exist.
-	// If reading the values indicated by keys fails, then the old value
-	// indicated by cas should be preserved.
+	// CAS compare-and-swaps the value stored with the key cas. This is the
+	// only method which can overwrite values and is only meant for read
+	// counters.
 	//
 	// Implementations must obey cancellation signals from ctx.Done().
-	CASAndGet(ctx context.Context, cas string, old, new []byte, keys ...string) (
-		map[string][]byte, error)
+	CAS(ctx context.Context, cas string, old, new []byte) error
+}
+
+// PutAllRequest is a single key-value pair to put in a Batcher.PutAll request.
+type PutAllRequest struct {
+	Key   string
+	Value []byte
+}
+
+// Batcher is an optional interface that PutGetters can implement for batch
+// processing. Storage operations will prefer methods in this interface when
+// working on multiple keys at once.
+type Batcher interface {
+	PutGetter
+
+	// BatchSize returns the maximum number of operations that can be
+	// batched by this protocol. Other Batcher methods return errors if
+	// more than BatchSize operations are given.
+	BatchSize() int
+
+	// GetAll returns all the values stored with the given keys. If a key
+	// is missing, then it will not be included in the returned map: it is
+	// the caller's responsibility to ensure that all required keys are
+	// returned.
+	//
+	// Implementations must obey cancellation signals from ctx.Done().
+	GetAll(ctx context.Context, keys ...string) (map[string][]byte, error)
+
+	// PutAll puts all the key-value pairs into the storage service. It is
+	// an error for ANY key to exist. On error, no values will be stored.
+	// Implementations must obey cancellation signals from ctx.Done().
+	PutAll(ctx context.Context, reqs ...PutAllRequest) error
 }
 
 // NewFunc is the type of functions that create a storage protocol client with

@@ -23,5 +23,3 @@ Võtmerakendus
    sissejuhatus
    votmeosakute_protokollid
    viited
-
-.. vim: sts=3 sw=3 et:

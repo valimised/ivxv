@@ -10,3 +10,6 @@ __pycache__
 /build
 /.pybuild
 /collector-admin/IVXVCollectorAdminDaemon.egg-info
+
+# release directory
+/ivxv-*

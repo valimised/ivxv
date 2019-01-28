@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.toCollection;
 import ee.ivxv.common.crypto.CryptoUtil.PublicKeyHolder;
 import ee.ivxv.common.model.Ballot;
 import ee.ivxv.common.model.BallotBox;
+import ee.ivxv.common.model.Voter;
 import ee.ivxv.common.model.VoterBallots;
 import ee.ivxv.common.service.bbox.BboxHelper.BallotsChecked;
 import ee.ivxv.common.service.bbox.BboxHelper.BboxLoader;
@@ -24,8 +25,13 @@ import ee.ivxv.common.service.bbox.impl.FileName.RefProvider;
 import ee.ivxv.common.service.bbox.impl.verify.TsVerifier;
 import ee.ivxv.common.service.console.Progress;
 import ee.ivxv.common.service.container.InvalidContainerException;
+import ee.ivxv.common.util.Util;
 import eu.europa.esig.dss.DSSException;
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.ResolverStyle;
+import java.time.temporal.ChronoField;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.LinkedHashMap;
@@ -39,6 +45,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +56,12 @@ class IvxvBboxLoader<T extends Record<?>, U extends Record<?>, RT extends Keyabl
     static final Logger log = LoggerFactory.getLogger(IvxvBboxLoader.class);
 
     static final int MAX_NUMBER_OF_RETRIES = 5;
+    static final DateTimeFormatter BALLOT_TIMESTAMP_FMT =
+            // Work around JDK-8031085 which prevents the use of SSS:
+            // https://bugs.openjdk.java.net/browse/JDK-8031085
+            new DateTimeFormatterBuilder().appendPattern("uuuuMMddHHmmss")
+                    .appendValue(ChronoField.MILLI_OF_SECOND, 3).appendOffset("+HHMM", "+0000")
+                    .toFormatter().withResolverStyle(ResolverStyle.STRICT);
 
     final Profile<T, U, RT, RU> profile;
     final LoaderHelper<BbRef> helper;
@@ -172,12 +185,58 @@ class IvxvBboxLoader<T extends Record<?>, U extends Record<?>, RT extends Keyabl
             pb.ifPresent(p -> p.finish());
         }
 
+        @Override
+        public void listVoters(Instant start, Instant end, VoterProvider vp,
+                Consumer<Voter> consumer) {
+            Progress pb = helper.getProgress(getNumberOfValidBallots());
+            byte[] buffer = new byte[1024];
+
+            Predicate<FileName<BbRef>> timeFilter = name -> {
+                if (start == null && end == null) {
+                    return true; // Fast path.
+                }
+                Instant timestamp = Instant.from(BALLOT_TIMESTAMP_FMT.parse(name.ref.ballot));
+                return (start == null || !timestamp.isBefore(start))
+                        && (end == null || !timestamp.isAfter(end));
+            };
+
+            // Use processFiles instead of processRecords to avoid reading file content that will
+            // never be used. We only need the BbRef and contents of version file.
+            helper.processFiles((name, in) -> {
+                Optional.of(name) //
+                        .filter(n -> n.type.equals("version")) // Only version files.
+                        .filter(n -> records.containsKey(n.ref)) // Only complete records.
+                        .ifPresent(filename -> {
+                            try {
+                                Optional.of(filename).filter(timeFilter).ifPresent(n -> {
+                                    Voter v = vp.find(n.ref.voter, Util.toString(in, buffer));
+                                    if (v == null) {
+                                        throw new ResultException(Result.VOTER_NOT_FOUND);
+                                    }
+                                    consumer.accept(v);
+                                });
+                            } catch (ResultException e) {
+                                log.error("ResultException was thrown processing file {}: ",
+                                        filename.path, e);
+                                helper.report(filename.ref, e.result, e.args);
+                            } catch (Exception e) {
+                                helper.handleTechnicalError(name, e);
+                            } finally {
+                                // Increase progress on complete record only, not each file.
+                                pb.increase(1);
+                            }
+                        });
+            });
+
+            pb.finish();
+        }
+
         private BallotResponse createBallotResponse(FileName<BbRef> name, T record,
                 VoterProvider vp, TsVerifier tsv, Instant elStart) {
             int i = 0;
             retry: try {
                 RT response = profile.getResponse(record);
-                log.info("BALLOT-NONCE ballot: {}/{} nonce: {}", name.ref.voter, name.ref.ballot,
+                log.info("BALLOT-KEY ballot: {}/{} key: {}", name.ref.voter, name.ref.ballot,
                         response.getKey());
 
                 Ballot b = profile.createBallot(name, record, vp, tsv);
@@ -220,7 +279,7 @@ class IvxvBboxLoader<T extends Record<?>, U extends Record<?>, RT extends Keyabl
          * @param ballots
          */
         private void removeRecurrentResponses(Map<BbRef, BallotResponse> ballots) {
-            ballots.entrySet().stream()
+            ballots.entrySet().stream() //
                     .collect(groupingBy(e -> e.getValue().response.getKey(), // Group by resp key
                             mapping(e -> e, toCollection(() -> new TreeSet<>(this::compare)))))
                     .values().stream().filter(e -> e.size() > 1) // Having only colliding entries
@@ -264,7 +323,7 @@ class IvxvBboxLoader<T extends Record<?>, U extends Record<?>, RT extends Keyabl
         @Override
         public BboxLoaderResult checkRegData(RegDataLoaderResult<RU> regData) {
             Map<String, List<Ballot>> voters = Collections.synchronizedMap(new LinkedHashMap<>());
-            Map<Object, RegRef> regFiles = new LinkedHashMap<>();
+            Map<Object, RegRef> regFiles = Collections.synchronizedMap(new LinkedHashMap<>());
             ExecutorService executor = createExecutorService();
             Progress pb = helper.getProgress(getNumberOfValidBallots());
 
@@ -300,6 +359,8 @@ class IvxvBboxLoader<T extends Record<?>, U extends Record<?>, RT extends Keyabl
                 });
             });
 
+            pb.finish();
+
             executor.shutdown();
 
             try {
@@ -308,13 +369,29 @@ class IvxvBboxLoader<T extends Record<?>, U extends Record<?>, RT extends Keyabl
                 throw new RuntimeException(e);
             }
 
+            // Check all records not among the ballots just processed and remove them from regFiles
+            Progress pb2 = helper.getProgress(getNumberOfValidBallots());
+            helper.processRecords(name -> true, true, profile::createBbRecord, (name, record) -> {
+                pb2.increase(1);
+                if (ballots.containsKey(name.ref)) {
+                    return;
+                }
+                profile.getResponseKey(record).ifPresent(key -> {
+                    log.info("BALLOT-KEY (invalid) ballot: {}/{} key: {}", name.ref.voter,
+                            name.ref.ballot, key);
+                    if (regFiles.remove(key) == null) {
+                        helper.report(name.ref, Result.BALLOT_WITHOUT_REG_REQ);
+                    }
+                });
+            });
+
             // Report registration data without corresponding ballots using regData's reporting
             regFiles.forEach((key, ref) -> regData.report(ref, Result.REG_REQ_WITHOUT_BALLOT));
 
             // Remove entries for voters that never got a valid vote
             voters.values().removeIf(ballotList -> ballotList.isEmpty());
 
-            pb.finish();
+            pb2.finish();
 
             return new BboxLoaderResultImpl(voters, getNumberOfValidBallots());
         }

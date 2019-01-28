@@ -22,5 +22,3 @@ IVXV arhitektuur
 
    lisad
    viited
-
-.. vim: sts=3 sw=3 et:

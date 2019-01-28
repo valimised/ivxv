@@ -6,11 +6,13 @@ public class Signature {
 
     private final Subject signer;
     private final Instant signingTime;
+    private final Profile profile;
     private final byte[] value;
 
-    public Signature(Subject signer, Instant signingTime, byte[] value) {
+    public Signature(Subject signer, Instant signingTime, Profile profile, byte[] value) {
         this.signer = signer;
         this.signingTime = signingTime;
+        this.profile = profile;
         this.value = value;
     }
 
@@ -22,8 +24,16 @@ public class Signature {
         return signingTime;
     }
 
+    public Profile getProfile() {
+        return profile;
+    }
+
     public byte[] getValue() {
         return value;
+    }
+
+    public enum Profile {
+        UNKNOWN, BDOC_TM, BDOC_TS;
     }
 
 }

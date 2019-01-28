@@ -7,11 +7,13 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 
 	"ivxv.ee/command"
 	"ivxv.ee/command/exit"
+	"ivxv.ee/command/status"
 	"ivxv.ee/conf"
 	"ivxv.ee/conf/version"
 	"ivxv.ee/errors"
@@ -27,6 +29,12 @@ other services.
 The choice list container must have an extension corresponding to the container
 type it is, e.g., choicelist.bdoc.`
 
+var (
+	qp = flag.Bool("q", false, "quiet, do not show progress")
+
+	progress *status.Line
+)
+
 func main() {
 	// Call choiceimpmain in a separate function so that it can set up
 	// defers and have them trigger before returning with a non-zero exit
@@ -39,7 +47,10 @@ func choiceimpmain() (code int) {
 	defer func() {
 		code = c.Cleanup(code)
 	}()
-	path := c.Args[0]
+
+	if !*qp {
+		progress = status.New()
+	}
 
 	// Only check the version if it was the specific check requested.
 	if c.Until == command.CheckVersion {
@@ -57,6 +68,7 @@ func choiceimpmain() (code int) {
 	if c.Until < command.CheckInput {
 		return exit.OK
 	}
+	path := c.Args[0]
 
 	// Open the choice list container file.
 	cnt, err := c.Conf.Container.OpenFile(path)
@@ -137,7 +149,12 @@ func choiceimp(ctx context.Context, until int, c *conf.C, s *storage.Client,
 		}
 
 		log.Log(ctx, ImportingChoices{Count: len(choices)})
-		if err := s.PutChoices(ctx, version, choices); err != nil {
+		progress.Static(fmt.Sprintf("Importing %d choices:", len(choices)))
+		addprogress := progress.Percent(uint64(len(choices)), true)
+		progress.Redraw()
+		defer progress.Keep()
+
+		if err := s.PutChoices(ctx, version, choices, addprogress); err != nil {
 			return PutChoicesError{Err: err}
 		}
 	}

@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: IVXV Developer <info@ivotingcentre.ee>
 # Dependencies for admin-ui: dh-python, python3-all, python3-setuptools
 # Dependencies for services: dh-exec, golang-go
-Build-Depends: debhelper (>= 9), dh-exec, dh-python, dh-systemd, golang-go (>= 2:1.7~) | golang-1.7-go, python3-all, python3-debian, python3-setuptools
+Build-Depends: debhelper (>= 11), dh-exec, dh-python, dh-systemd, golang-go (>= 2:1.9~) | golang-1.9-go, golang-go (<< 2:1.10~) | golang-go (>= 2:1.11~) | golang-1.9-go, python3-all, python3-debian, python3-setuptools
 Standards-Version: 3.9.8
 
 Package: ivxv-common
@@ -17,8 +17,8 @@ Description: IVXV alamteenuste ühispakk
  Käesolev pakk sisaldab kogumisteenuse alamteenuste ühisosa
 
 Package: ivxv-admin
-Architecture: all
-Depends: ${misc:Depends}, ${python3:Depends}, apache2, ivxv-common, language-pack-et, libapache2-mod-wsgi-py3, python3-gdbm, python3-pkg-resources
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python3:Depends}, apache2, cron, ivxv-common, language-pack-et, libapache2-mod-wsgi-py3, python3-gdbm, python3-openssl, python3-pkg-resources, rsync
 Description: IVXV kogumisteenuse haldusteenus
  Elektroonilise hääletamise infosüsteem IVXV
  .
@@ -51,6 +51,7 @@ Description: IVXV kontrolliteenus
 Package: ivxv-voting
 Architecture: amd64
 Depends: ${shlibs:Depends}, ${misc:Depends}, ivxv-common, libpam-systemd
+Recommends: ca-certificates
 Description: IVXV hääletamisteenus
  Elektroonilise hääletamise infosüsteem IVXV
  .
@@ -58,7 +59,7 @@ Description: IVXV hääletamisteenus
 
 Package: ivxv-storage
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, etcd (>= 3.1~), ivxv-common, libpam-systemd
+Depends: ${shlibs:Depends}, ${misc:Depends}, etcd (>= 3.2.17), ivxv-common, libpam-systemd
 Description: IVXV talletamisteenus
  Elektroonilise hääletamise infosüsteem IVXV
  .
@@ -67,6 +68,7 @@ Description: IVXV talletamisteenus
 Package: ivxv-dds
 Architecture: amd64
 Depends: ${shlibs:Depends}, ${misc:Depends}, ivxv-common, libpam-systemd
+Recommends: ca-certificates
 Description: IVXV mobiil-ID tugiteenus
  Elektroonilise hääletamise infosüsteem IVXV
  .
@@ -74,9 +76,18 @@ Description: IVXV mobiil-ID tugiteenus
 
 Package: ivxv-log
 Architecture: all
-Depends: ${misc:Depends}, ivxv-common
-Conflicts: ivxv-admin, ivxv-choices, ivxv-dds, ivxv-proxy, ivxv-storage, ivxv-verification, ivxv-voting
+Depends: ${misc:Depends}, ivxv-common, rsync
+Conflicts: ivxv-admin, ivxv-backup, ivxv-choices, ivxv-dds, ivxv-proxy, ivxv-storage, ivxv-verification, ivxv-voting
 Description: IVXV logikogumisteenus
  Elektroonilise hääletamise infosüsteem IVXV
  .
  Käesolev pakk sisaldab kogumisteenuse logikogumisteenust
+
+Package: ivxv-backup
+Architecture: amd64
+Depends: ${misc:Depends}, ivxv-common, rsync
+Conflicts: ivxv-admin, ivxv-choices, ivxv-dds, ivxv-log, ivxv-proxy, ivxv-storage, ivxv-verification, ivxv-voting
+Description: IVXV varundusteenus
+ Elektroonilise hääletamise infosüsteem IVXV
+ .
+ Käesolev pakk sisaldab kogumisteenuse varundusteenust

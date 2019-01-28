@@ -4,12 +4,26 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Helper methods for interpolating a polynomial from evaluation points.
+ */
 public class LagrangeInterpolation {
     /*
      * interpolation is not required in the current context, so we omit the complexity of computing
      * the coeficcients public static Polynomial interpolate() { }
      */
 
+    /**
+     * Find the Lagrange basis polynomial.
+     * <p>
+     * Represent the list of points as {@literal (1, f(1)), ..., (n, f(n))}. Then compute the value
+     * {@literal prod_{i=1, i != base}^n (-1)^n f(i)/(base-f(i)) mod modulus}
+     * 
+     * @param modulus
+     * @param points
+     * @param base
+     * @return
+     */
     public static BigInteger basisPolynomial(BigInteger modulus, Object[] points, BigInteger base) {
         List<BigInteger> realPoints = new ArrayList<>();
         for (int i = 0; i < points.length; i++) {
@@ -37,6 +51,16 @@ public class LagrangeInterpolation {
         return denominator.modInverse(modulus).multiply(nominator).mod(modulus);
     }
 
+    /**
+     * Find the Lagrange basis polynomial.
+     * <p>
+     * Represent the list of points as {@literal (1, f(1)), ..., (n, f(n))}. Then compute the value
+     * {@literal prod_{i=1, i != base}^n (-1)^n f(i)/(base-f(i)) n!}
+     * 
+     * @param points
+     * @param base
+     * @return
+     */
     public static BigInteger basisInverselessPolynomial(Object[] points, BigInteger base) {
         List<BigInteger> realPoints = new ArrayList<>();
         for (int i = 0; i < points.length; i++) {

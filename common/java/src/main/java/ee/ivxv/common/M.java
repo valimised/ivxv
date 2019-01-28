@@ -30,6 +30,7 @@ public enum M implements Translatable {
 
     e_cand_read_error, //
     e_cand_invalid_dist, //
+    e_cand_duplicate_id, //
 
     m_election_id, //
     m_datetime_pattern, //
@@ -60,6 +61,7 @@ public enum M implements Translatable {
     m_bb_loaded, //
     m_bb_checking_type, //
     m_bb_type, //
+    m_bb_numof_collector_ballots, //
     m_bb_numof_ballots, //
     m_bb_checking_integrity, //
     m_bb_data_is_integrous, //

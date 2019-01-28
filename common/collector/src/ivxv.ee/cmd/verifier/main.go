@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"ivxv.ee/command"
 	"ivxv.ee/command/exit"
 	"ivxv.ee/conf"
 	"ivxv.ee/errors"
@@ -17,8 +18,6 @@ import (
 func main() {
 	code, err := verifierMain()
 	if err != nil {
-		// nolint: gas, if writing to stderr returns an error, then we
-		// do not have any way to report it anyway.
 		fmt.Fprintln(os.Stderr, "error:", err)
 	}
 	os.Exit(code)
@@ -26,8 +25,6 @@ func main() {
 
 func verifierMain() (int, error) {
 	flag.Usage = func() {
-		// nolint: gas, if writing to stderr returns an error, then we
-		// do not have any way to report it anyway.
 		fmt.Fprintln(os.Stderr, "Usage: "+os.Args[0]+` [options] <container file>
 
 verifier uses the trust root given in order to verify a container's signatures
@@ -43,10 +40,9 @@ options:`)
 		flag.PrintDefaults()
 	}
 
-	trust := flag.String("trust", "/etc/ivxv/trust.bdoc",
-		"`path` to the trust container. Must have an extension\n"+
-			"    \tcorresponding to the container type it is, e.g., trust.bdoc.\n"+
-			"    \t")
+	trust := flag.String("trust", "/etc/ivxv/trust.bdoc", command.IndentUsage(
+		"`path` to the trust container. Must have an extension corresponding to\n"+
+			"the container type it is, e.g., trust.bdoc.\n"))
 	flag.Parse()
 
 	if len(flag.Args()) != 1 {

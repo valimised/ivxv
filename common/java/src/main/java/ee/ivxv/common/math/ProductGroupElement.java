@@ -6,21 +6,42 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ProductGroupElement is a direct product of group elements
+ */
 public class ProductGroupElement extends GroupElement {
     private final ProductGroup group;
     private GroupElement[] elements;
 
+    /**
+     * Initialize using a ProductGroup and corresponding group elements.
+     * 
+     * @param group
+     * @param elements
+     */
     public ProductGroupElement(ProductGroup group, GroupElement... elements) {
         this.group = group;
         this.elements = elements;
     }
 
+    /**
+     * Initialize using a ProductGroup and uninitalized group elements.
+     * 
+     * @param group
+     */
     public ProductGroupElement(ProductGroup group) {
         this.group = group;
         this.elements = new GroupElement[group.getGroups().length];
     }
 
-    public ProductGroupElement(ProductGroup group, byte[] data) {
+    /**
+     * Initialize using a ProductGroup and serialized data.
+     * 
+     * @param group
+     * @param data
+     * @throws IllegalArgumentException When parsing fails
+     */
+    public ProductGroupElement(ProductGroup group, byte[] data) throws IllegalArgumentException {
         this.group = group;
         Sequence s = new Sequence();
         try {
@@ -53,6 +74,13 @@ public class ProductGroupElement extends GroupElement {
         return order;
     }
 
+    /**
+     * Perform pointwise operation with other element and return the result.
+     * 
+     * @param other
+     * @return
+     * @throws MatchException When group elements are from different groups.
+     */
     @Override
     public GroupElement op(GroupElement other) throws MathException {
         if (!this.group.equals(other.getGroup())) {
@@ -67,6 +95,12 @@ public class ProductGroupElement extends GroupElement {
         return res;
     }
 
+    /**
+     * Scale all direct product elements with a scale factor and return the result.
+     * 
+     * @param factor
+     * @return
+     */
     @Override
     public GroupElement scale(BigInteger factor) {
         GroupElement[] reselements = new GroupElement[elements.length];
@@ -77,6 +111,12 @@ public class ProductGroupElement extends GroupElement {
         return res;
     }
 
+    /**
+     * Scale all direct product elements with corresponding scale factor and return the result.
+     * 
+     * @param factors
+     * @return
+     */
     public ProductGroupElement scale(BigInteger[] factors) {
         GroupElement[] reselements = new GroupElement[elements.length];
         for (int i = 0; i < reselements.length; i++) {
@@ -86,6 +126,11 @@ public class ProductGroupElement extends GroupElement {
         return res;
     }
 
+    /**
+     * Inverse all direct product elements and return the result.
+     * 
+     * @return
+     */
     @Override
     public GroupElement inverse() {
         GroupElement[] inverses = new GroupElement[elements.length];
@@ -120,6 +165,13 @@ public class ProductGroupElement extends GroupElement {
         return this.group;
     }
 
+    /**
+     * Serialize element
+     * <p>
+     * Serializes all direct product elements and returns ASN1 SEQUENCE of them.
+     * 
+     * @return
+     */
     @Override
     public byte[] getBytes() {
         byte[][] encoded = new byte[elements.length][];
@@ -141,6 +193,11 @@ public class ProductGroupElement extends GroupElement {
         return ret;
     }
 
+    /**
+     * Get the corresponding direct product elements.
+     * 
+     * @return
+     */
     public GroupElement[] getElements() {
         return this.elements;
     }

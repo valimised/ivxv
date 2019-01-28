@@ -17,9 +17,8 @@ IVXV kogumisteenuse haldusjuhend
    annotatsioon
    ylevaade
    haldusteenus
-   algseadistamne
+   algseadistamine
    haldustoimingud
+   krahhitaaste
    seadistused
    lisad
-
-.. vim: sts=3 sw=3 et:

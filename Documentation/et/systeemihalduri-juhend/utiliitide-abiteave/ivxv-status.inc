@@ -15,16 +15,18 @@ ivxv-status
 
 .. code-block:: text
 
-   Output IVXV collector state.
+   Output IVXV Collector state.
 
-   Usage: ivxv-status [--json] [--filter=<filter-type> ...]
-                      [--service=<service-id> ...]
+   Usage: ivxv-status [--json] [--service=<service-id> ...] [<filter> ...]
 
    Options:
        --json                  Output full data in JSON format.
                                Note: filters have no effect in JSON output.
-       --filter=<filter-type>  Filter output by section. Possible values are:
-                                 * collector - collector status;
+       --service=<service-id>  Filter output by service ID.
+                               Note: This filter conflicts other section
+                               filters than "smart" or "service".
+       <filter>                Filter output by section. Possible values are:
+                                 * collector - collector state;
                                  * election - election data;
                                  * config - versions of loaded config;
                                  * list - versions of loades lists;
@@ -34,6 +36,3 @@ ivxv-status
                                  * smart - output only relevant data;
                                  * all - output all data;
                                [Default: smart].
-       --service=<service-id>  Filter output by service ID.
-                               Note: This filter conflicts other section
-                               filters than "smart" or "service".

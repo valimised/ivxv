@@ -56,5 +56,3 @@ TeenusSSH --> [Haldusdeemon] : E-urni \n laadimine \n talletusteenusest
 [Agentdeemon] --> TeenusSSH : Teenuse seire
 
 @enduml
-
-# vim:set sts=2 sw=2 et:

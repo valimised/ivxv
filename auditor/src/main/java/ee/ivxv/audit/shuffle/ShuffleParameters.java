@@ -10,6 +10,14 @@ public class ShuffleParameters {
     private String version, auxsid, type;
     int width;
 
+    /**
+     * Initialize the shuffle parameters from values.
+     * 
+     * @param version
+     * @param auxsid
+     * @param width
+     * @param type
+     */
     ShuffleParameters(String version, String auxsid, int width, String type) {
         this.version = version;
         this.auxsid = auxsid;

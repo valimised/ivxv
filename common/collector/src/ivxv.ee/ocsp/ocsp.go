@@ -11,11 +11,14 @@ import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+	"strings"
 	"time"
 
 	"ivxv.ee/cryptoutil"
+	"ivxv.ee/errors"
 	"ivxv.ee/log"
 	"ivxv.ee/safereader"
 )
@@ -34,8 +37,6 @@ const (
 )
 
 var (
-	reader = safereader.New(maxResponseSize)
-
 	// https://tools.ietf.org/html/rfc6960#section-4.4.1
 	idPKIXOCSPNonce = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 48, 1, 2}
 
@@ -44,7 +45,6 @@ var (
 
 	// Map of signature algorithms
 	sigMap = map[string]x509.SignatureAlgorithm{
-		"1.2.840.113549.1.1.5":  x509.SHA1WithRSA,
 		"1.2.840.113549.1.1.11": x509.SHA256WithRSA,
 		"1.2.840.113549.1.1.12": x509.SHA384WithRSA,
 		"1.2.840.113549.1.1.13": x509.SHA512WithRSA,
@@ -56,17 +56,22 @@ var (
 type Conf struct {
 	URL        string
 	Responders []string
+
+	// Retry is the amount of times an OCSP request is retried in case of
+	// network or responder errors.
+	Retry uint64
 }
 
 // Client is used for performing OCSP requests and checking responses.
 type Client struct {
 	url        string
 	responders []*x509.Certificate
+	retry      uint64
 }
 
 // New returns a new OCSP client with the provided configuration.
 func New(conf *Conf) (c *Client, err error) {
-	c = &Client{url: conf.URL}
+	c = &Client{url: conf.URL, retry: conf.Retry}
 	if c.responders, err = cryptoutil.PEMCertificates(conf.Responders...); err != nil {
 		return nil, ResponderParsingError{Err: err}
 	}
@@ -107,9 +112,20 @@ func (c *Client) Check(ctx context.Context, cert, issuer *x509.Certificate, nonc
 	}
 
 	// Submit the request to url and read the response.
-	resp, basic, err := c.submitRequest(ctx, reqCert, nonce)
-	if err != nil {
-		return nil, SubmitRequestError{Err: err}
+	var resp []byte
+	var basic *basicOCSPResponse
+retry:
+	for attempt := uint64(0); ; attempt++ {
+		// nolint: dupl, No need to deduplicate such a small snippet.
+		switch resp, basic, err = c.submitRequest(ctx, reqCert, nonce); {
+		case err == nil:
+			break retry
+		case attempt < c.retry && shouldRetry(err):
+			log.Log(ctx, RetryingSubmitRequest{Attempt: attempt + 1, Err: err})
+			time.Sleep(1 * time.Second)
+		default:
+			return nil, SubmitRequestError{Err: err}
+		}
 	}
 
 	// Check response.
@@ -131,6 +147,31 @@ func (c *Client) Check(ctx context.Context, cert, issuer *x509.Certificate, nonc
 			RevocationReason: int(single.CertStatusRevoked.RevocationReason),
 		},
 	}, nil
+}
+
+func shouldRetry(err error) bool {
+	return errors.Walk(err, func(err error) error {
+		switch t := err.(type) {
+
+		// Sending the HTTP request or reading the response body failed.
+		case SendRequestError, ResponseBodyReadError:
+			return err
+
+		// The HTTP status was a 5xx code.
+		case UnexpectedResponseStatusError:
+			if strings.HasPrefix(t.Status.(string), "5") {
+				return err
+			}
+
+		// The OCSP response status was internalError or tryLater.
+		case UnexpectedOCSPResponseStatusError:
+			if status := t.Status.(string); status == ocspResponseStatus[2] ||
+				status == ocspResponseStatus[3] {
+				return err
+			}
+		}
+		return nil
+	}) != nil
 }
 
 // CheckFullResponse checks a DER-encoded full OCSP response. A full OCSP
@@ -256,16 +297,17 @@ func (c *Client) submitRequest(ctx context.Context, reqCert *certID, nonce []byt
 		return
 	}
 
-	respRaw, err := reader.Read(httpResp.Body)
+	// The entire response will be returned so we need to allocate a new
+	// byte slice using ioutil.ReadAll.
+	response, err = ioutil.ReadAll(safereader.New(httpResp.Body, maxResponseSize))
 	if err != nil {
 		err = ResponseBodyReadError{Err: err}
 		return
 	}
-	defer reader.Recover(respRaw)
-	log.Debug(ctx, BodyDump{Body: respRaw})
+	log.Debug(ctx, BodyDump{Body: response})
 
 	// Unpack basicOCSPResponse
-	resp, err := unpackResponse(respRaw)
+	resp, err := unpackResponse(response)
 	if err != nil {
 		err = ResponseUnpackError{Err: err}
 		return
@@ -278,9 +320,6 @@ func (c *Client) submitRequest(ctx context.Context, reqCert *certID, nonce []byt
 		return
 	}
 
-	// Create copy of raw response before the read buffer is recovered.
-	response = make([]byte, len(respRaw))
-	copy(response, respRaw)
 	return
 }
 

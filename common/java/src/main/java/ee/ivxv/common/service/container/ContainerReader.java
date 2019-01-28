@@ -81,6 +81,16 @@ public interface ContainerReader {
     }
 
     /**
+     * Extracts and returns the bytes from which the Message Digest structure is created which is
+     * sent to the timestamp server.
+     * 
+     * @param data The initial container data without OCSP and TS data.
+     * @param c14nAlg The canonicalization algorithm to be used.
+     * @return
+     */
+    byte[] getTimestampData(byte[] data, String c14nAlg);
+
+    /**
      * @return Returns the file extension for the container type.
      */
     String getFileExtension();

@@ -6,31 +6,40 @@ Database abstraction layer for collector management service.
 import datetime
 import dbm.gnu
 import logging
+import os
 import re
 import time
 
 import dateutil.parser
 
-from . import (COLLECTOR_STATES, COLLECTOR_STATE_NOT_INSTALLED,
-               RFC3339_DATE_FORMAT, SERVICE_STATES, SERVICE_STATE_NOT_INSTALLED)
+from . import (COLLECTOR_STATE_NOT_INSTALLED, COLLECTOR_STATES,
+               RFC3339_DATE_FORMAT, SERVICE_STATE_NOT_INSTALLED,
+               SERVICE_STATES)
 from .config import CONFIG
 
-DB_FILE_PATH = CONFIG.get('ivxv_db_file_path')
+#: Path do database file
+DB_FILE_PATH = CONFIG['ivxv_db_file_path']
 
-# database keys with default values
+#: Database keys with default values
 DB_KEYS = {
     # collector state
-    'collector/status': COLLECTOR_STATE_NOT_INSTALLED,
+    'collector/state': COLLECTOR_STATE_NOT_INSTALLED,
     # election config file version in management service
     'config/election': '',
     # technical config file version in management service
     'config/technical': '',
     # trust root config file version in management service
     'config/trust': '',
+    # logmonitor address
+    'logmonitor/address': '',
+    # logmonitor timestamp of last fetch
+    'logmonitor/last-data': '',
     # choices list file version in management service
     'list/choices': '',
     # choices list file version in choices service
     'list/choices-loaded': '',
+    # districts list file version in management service
+    'list/districts': '',
     # election ID
     'election/election-id': '',
     # election start time
@@ -42,12 +51,12 @@ DB_KEYS = {
     # collector service stop time
     'election/servicestop': '',
 }
-# database keys for service hosts with default values
+#: Database keys for service hosts with default values
 DB_HOST_SUBKEYS = {
     # host state
     'state': '',
 }
-# database keys for services with default values
+#: Database keys for services with default values
 DB_SERVICE_SUBKEYS = {
     # service type
     'service-type': None,
@@ -59,14 +68,16 @@ DB_SERVICE_SUBKEYS = {
     'network': None,
     # service state
     'state': SERVICE_STATE_NOT_INSTALLED,
-    # last data by service PING
+    # last data by service PING (timestamp)
     'last-data': '',
     # count of ping errors
     'ping-errors': '0',
     # service IP address
     'ip-address': None,
+    # registered background information (usually error message)
+    'bg_info': '',
 }
-# database keys for certain service types
+#: Database keys for certain service types
 DB_SERVICE_CONDITIONAL_SUBKEYS = {
     # mobile ID identity token key file checksum (sha256)
     'dds-token-key': '',
@@ -76,11 +87,12 @@ DB_SERVICE_CONDITIONAL_SUBKEYS = {
     'tls-key': '',
     # TSP registration key file checksum (sha256)
     'tspreg-key': '',
+    # automatic backup times for backup service
+    'backup-times': '',
 }
-# full list of allowed database keys
+#: Full list of allowed database keys
 ALLOWED_SERVICE_KEYS = (
-    list(DB_SERVICE_SUBKEYS.keys()) +
-    list(DB_SERVICE_CONDITIONAL_SUBKEYS.keys()))
+    list(DB_SERVICE_SUBKEYS) + list(DB_SERVICE_CONDITIONAL_SUBKEYS))
 
 # create logger
 log = logging.getLogger(__name__)
@@ -90,30 +102,60 @@ class IVXVManagerDb:
     """
     Management service database abstraction class.
 
-    Based on dbm.gnu module.
+    Based on :py:mod:`dbm.gnu` module.
     """
-    db = None  #: database object
-    read_only = None  #: database access mode
+    db = None  #: Database object.
+    read_only = None  #: Database access mode.
+    _retries = None  #: Retry count for failed database open.
+    _retry_delay = None  #: Delay between retries.
+    _db_mode = None  #: Mode string for :py:func:`dbm.open`.
 
-    def __init__(self, open_db=True, for_update=False):
+    def __init__(self, for_update=False, retries=30, retry_delay=0.1):
         """
         Constructor.
 
-        :param open_db: Open database
-        :type open_db: bool
         :param for_update: Open database for update
         :type for_update: bool
         :param retries: Retries before giving up
         :type retries: int
-        :param pause_between_retries: Pause between retries (in seconds)
-        :type pause_between_retries: float
+        :param retry_delay: Pause between retries (in seconds)
+        :type retry_delay: float
         """
         self.read_only = not for_update
-        if open_db:
-            self.open(mode='ws' if for_update else 'r')
+        self._db_mode = 'ws' if for_update else 'r'
+        self._retries = retries
+        self._retry_delay = retry_delay
 
-    def close(self):
-        """Close database."""
+    def __enter__(self, mode=None):
+        """Enter the runtime context, open database."""
+        mode = mode or self._db_mode
+        log.debug('Opening management database %s (mode: %s)',
+                  DB_FILE_PATH, mode)
+        retries = self._retries
+        if mode != 'n' and not os.path.exists(DB_FILE_PATH):
+            log.error('Database file %s not found', DB_FILE_PATH)
+            raise FileNotFoundError()
+        db_error = OSError()
+        while retries > 0:
+            try:
+                self.db = dbm.gnu.open(DB_FILE_PATH, mode)
+                break
+            except OSError as err:
+                if err.errno == 11:  # database is locked
+                    log.debug('Database is locked, retrying')
+                else:
+                    log.debug("Can't open database, retrying (%s)", err)
+                db_error = err
+            retries -= 1
+            time.sleep(self._retry_delay)
+        else:
+            log.error('Error while opening management database: %s', db_error)
+            raise db_error
+
+        return self
+
+    def __exit__(self, *args):
+        """Exit the runtime context, close database."""
         log.debug('Closing management database')
         self.db.close()
 
@@ -121,8 +163,17 @@ class IVXVManagerDb:
         """Get value from database."""
         return self.db[key].decode('UTF-8')
 
-    def set_value(self, key, value):
-        """Validate and set database value."""
+    def set_value(self, key, value, safe=False):
+        """Validate and set database value.
+
+        :param key: Key name
+        :type key: str
+        :param value: Value to set
+        :type value: str
+        :param safe: Is operation safe or not. Safe operation will try to read
+                     old value before writing new one.
+        :type safe: bool
+        """
         assert isinstance(key, str)
 
         # validate value
@@ -131,15 +182,21 @@ class IVXVManagerDb:
         assert isinstance(value, str), 'Invalid value type: %s' % type(value)
 
         # set value
-        if key == 'collector/status':
+        if key in [
+                'election/election-id', 'logmonitor/address',
+                'logmonitor/last-data'
+        ]:
+            pass
+        elif key == 'collector/state':
             assert value in COLLECTOR_STATES, (
                 'Invalid value for %s: %s' % (key, value))
-        elif key == 'election/election-id':
-            pass
         elif re.match('election/(election|service)(start|stop)$', key):
-            if value:
-                assert dateutil.parser.parse(value)
-        elif key in DB_KEYS or re.match(r'list/voters[0-9]{2}(-loaded)?$', key):
+            assert not value or dateutil.parser.parse(value)
+        elif (re.match('election/auth/.+$', key)
+              or key == 'election/tsp-qualification'):
+            assert value == 'TRUE'
+        elif key in DB_KEYS or re.match(r'list/voters[0-9]{2}(-loaded)?$',
+                                        key):
             if value != '':
                 assert len(value.split(' ')) == 2
                 cn, timestamp = value.split(' ')
@@ -156,11 +213,21 @@ class IVXVManagerDb:
             if key_type == 'state':
                 assert value in SERVICE_STATES, (
                     'Invalid value for %s: %s' % (key, value))
+            elif key_type == 'backup-times':
+                assert value == '' or re.match(
+                    r'[0-9]{2}:[0-9]{2}( [0-9]{2}:[0-9]{2})*$',
+                    value), ('Invalid value for %s: %s' % (key, value))
         elif re.match(r'user/.+$', key):
             assert re.match(r'user/.+,.+,[0-9]{11}$', key), (
                 'Invalid user CN: %s' % key.split('/')[1])
         else:
             raise KeyError('Invalid database field name: ' + key)
+
+        # Safe operation reads value before writing it.
+        # This is to avoid unneeded values after database initialization (e.g.
+        # agent daemon may try to update service data in background).
+        if safe:
+            self.db[key]
 
         log.debug('Setting value %s = "%s"', key, value)
         self.db[key] = value
@@ -179,7 +246,7 @@ class IVXVManagerDb:
         :param section: Config section to get
         :type section: string
 
-        :returns: dict
+        :return: dict
         """
         values = {}
         for key in sorted(self.keys()):
@@ -196,47 +263,47 @@ class IVXVManagerDb:
 
         return values.get(section, {}) if section else values
 
-    def open(self, mode):
-        """Open database."""
-        log.debug('Opening management database %s (mode: %s)',
-                  DB_FILE_PATH, mode)
-        retries = 10
-        pause_between_retries = 0.1
-        db_error = Exception()
-        while retries:
-            try:
-                self.db = dbm.gnu.open(DB_FILE_PATH, mode)
-                break
-            except OSError as err:
-                if err.errno == 11:  # database is locked
-                    log.debug('Database is locked, retrying')
-                else:
-                    log.debug("Can't open database, retrying (%s)", err)
-                db_error = err
-            retries -= 1
-            time.sleep(pause_between_retries)
-        else:
-            log.error('Error while opening management database: %s',
-                      db_error)
-            raise db_error
-
-    def reset(self):
+    @classmethod
+    def reset(cls):
         """Reset database."""
-        assert self.db is None
         log.info('Initializing management database %s', DB_FILE_PATH)
-        self.open(mode='n')
+        db = cls()
+        db.__enter__(mode='n')
 
         # write default values
         for key, value in sorted(DB_KEYS.items()):
-            self.set_value(key, value)
+            db.set_value(key, value)
 
-        self.close()
+        db.__exit__()
 
-    def dump(self):
-        """Dump database."""
-        for key in sorted(self.keys()):
-            print('{}: {}'.format(key, self.get_value(key)))
+    def dump(self, filter_keys=None):
+        """
+        Dump database to stdout.
+
+        :param filter_keys: Limit dump with specified values
+        :type filter_keys: list
+        """
+        for key in self.keys():
+            if not filter_keys or key in filter_keys:
+                print(f'{key}: {self.get_value(key)}')
 
     def keys(self):
         """Return all database keys in sorted order."""
         return [key.decode('UTF-8') for key in sorted(self.db.keys())]
+
+
+def check_db_dir():
+    """
+    Check database directory exist or not.
+
+    :return: Database file directory path or None if path does not exist.
+    :rtype: str
+    """
+    db_file_path = CONFIG['ivxv_db_file_path']
+    db_path = os.path.dirname(db_file_path)
+    if os.path.exists(db_path):
+        return db_file_path
+
+    log.error('Database directory "%s" does not exist', db_path)
+
+    return None

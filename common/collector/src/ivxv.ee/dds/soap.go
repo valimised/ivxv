@@ -5,12 +5,15 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 
 	"ivxv.ee/log"
 	"ivxv.ee/safereader"
 )
+
+const maxResponseSize = 10240 // 10 KiB.
 
 type soapEnvelope struct {
 	XMLName xml.Name `xml:"http://schemas.xmlsoap.org/soap/envelope/ Envelope"`
@@ -53,8 +56,6 @@ type soapFault struct {
 	Message     string   `xml:"detail>message"`
 }
 
-var reader = safereader.New(10240)
-
 func soapRequest(ctx context.Context, url string, req interface{}, resp interface{}) error {
 	soapReq, err := xml.Marshal(soapEnvelope{Body: soapBody{embedded: req}})
 	if err != nil {
@@ -91,11 +92,15 @@ func soapRequest(ctx context.Context, url string, req interface{}, resp interfac
 	}
 	log.Debug(ctx, HTTPResponse{Response: string(respDump)})
 
-	body, err := reader.Read(httpResp.Body)
+	// XXX: Does encoding/xml.Unmarshal retain any references to the
+	// original byte slice in the unmarshaled structure? If not, then
+	// instead of allocating a new byte slice here we could reuse pooled
+	// buffers for temporarily storing the XML between reading and
+	// decoding.
+	body, err := ioutil.ReadAll(safereader.New(httpResp.Body, maxResponseSize))
 	if err != nil {
 		return ReadHTTPResponseBodyError{Err: err}
 	}
-	defer reader.Recover(body)
 	log.Debug(ctx, HTTPResponseBody{Body: string(body)})
 
 	var soapResp soapEnvelope

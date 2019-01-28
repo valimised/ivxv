@@ -15,6 +15,7 @@ type Type string
 const (
 	Dummy Type = "dummy" // import "ivxv.ee/container/dummy"
 	BDOC       = "bdoc"  // import "ivxv.ee/container/bdoc"
+	ASiCE      = "asice" // Alias for bdoc.
 )
 
 // OpenFunc is the type of functions that parse and verify an encoded container
@@ -30,8 +31,10 @@ type NewFunc func(yaml.Node) (OpenFunc, error)
 type UnverifiedOpenFunc func(io.Reader) (Container, error)
 
 type regentry struct {
-	n NewFunc
-	o UnverifiedOpenFunc
+	newOpen        NewFunc
+	unverifiedOpen UnverifiedOpenFunc
+	canonical      Type
+	aliases        []Type // Includes canonical.
 }
 
 var (
@@ -46,8 +49,16 @@ var (
 // a specified configuration. o is a container opening function which is used
 // during bootstrapping to open a container without needing any configuration
 // and verifying its signatures.
-func Register(t Type, n NewFunc, o UnverifiedOpenFunc) {
+//
+// If any aliases are given, then they will be registered as alternative valid
+// types that refer to the registered implementation. Container configuration
+// must still refer to the canonical name, but containers can be opened by
+// referring to the canonical name or any of the aliases.
+func Register(t Type, n NewFunc, o UnverifiedOpenFunc, aliases ...Type) {
 	reglock.Lock()
 	defer reglock.Unlock()
-	registry[t] = regentry{n, o}
+	aliases = append(aliases, t)
+	for _, alias := range aliases {
+		registry[alias] = regentry{n, o, t, aliases}
+	}
 }

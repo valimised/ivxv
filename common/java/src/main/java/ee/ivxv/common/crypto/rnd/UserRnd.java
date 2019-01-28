@@ -13,7 +13,8 @@ import java.nio.file.Path;
  * Entropy source which calls external program to obtain entropy. Communication with external
  * program is done using sockets by sending the amount of bytes requested (encoded as C int). The
  * external program is supposed to reply with the exact amount of requested bytes.
- *
+ *<p>
+ * It is intended to be used together with {@link CombineRnd}, adding this as a source to it.
  */
 public class UserRnd implements Rnd {
     private Process process;
@@ -23,9 +24,9 @@ public class UserRnd implements Rnd {
 
     /**
      * Initialize the external entropy random source. The entropy will be provided by the program
-     * defined by {@link externalProg}. The communication is performed over local network, where the
-     * program should listen on {@link port}. The parameter {@link cont} defines, if the program is
-     * started once or started for read.
+     * defined by {@literal externalProg}. The communication is performed over local network, where
+     * the program should listen on {@literal port}. The parameter {@literal cont} defines, if the
+     * program is started once or started for read.
      * 
      * @param externalProg Location of external program to ask for entropy.
      * @param cont Define if the program should not be killed after every entropy query.
@@ -40,16 +41,18 @@ public class UserRnd implements Rnd {
         this.externalProg = externalProg;
     }
 
+    @SuppressWarnings("serial")
     private static class QueryException extends IOException {
-
         public QueryException(String string) {
             super(string);
         }
     }
 
-
     private Process executeExternal(Path location, int port) throws IOException {
-        Process p = new ProcessBuilder(location.toString(), Integer.toString(port)).start();
+        ProcessBuilder pp = new ProcessBuilder(location.toString(), Integer.toString(port));
+        pp.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+        pp.redirectError(ProcessBuilder.Redirect.INHERIT);
+        Process p = pp.start();
         return p;
     }
 
@@ -140,6 +143,8 @@ public class UserRnd implements Rnd {
 
     /**
      * Ask the external program for entropy and write the result to output buffer.
+     * <p>
+     * This method is not thread-safe and synchronization must be handled by the caller.
      * 
      * @param buf The output buffer.
      * @param offset The offset to start storing the read bytes.
@@ -157,6 +162,8 @@ public class UserRnd implements Rnd {
 
     /**
      * Ask the external program for entropy and write the result to output buffer.
+     * <p>
+     * This method is not thread-safe and synchronization must be handled by the caller.
      * 
      * @param buf The output buffer.
      * @param offset The offset to start storing the read bytes.

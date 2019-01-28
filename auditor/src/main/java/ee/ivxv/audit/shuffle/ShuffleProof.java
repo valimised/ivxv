@@ -23,14 +23,47 @@ public class ShuffleProof {
     private final GroupElement[] ciphs, shuffled;
     private final GroupElement pk;
 
+    /**
+     * Default filename of ciphertexts in Verificatum shuffle proof.
+     */
     public static final String CIPHERTEXTS_PATH = "Ciphertexts.bt";
+    /**
+     * Default filename of shuffled ciphertexts in Verificatum shuffle proof.
+     */
     public static final String SHUFFLED_CIPHERTEXTS_PATH = "ShuffledCiphertexts.bt";
+    /**
+     * Default filename of public key in Verificatum shuffle proof.
+     */
     public static final String PUBLICKEY_PATH = "FullPublicKey.bt";
+    /**
+     * Default directory name for proofs in Verificatum shuffle proof.
+     */
     public static final String PROOFS_PATH = "proofs";
+    /**
+     * Default filename of permutation commitment in Verificatum shuffle proof.
+     */
     public static final String PC_PATH = "PermutationCommitment01.bt";
+    /**
+     * Default filename of shuffle commitment in Verificatum shuffle proof.
+     */
     public static final String POSC_PATH = "PoSCommitment01.bt";
+    /**
+     * Default filename of shuffle proof reply in Verificatum shuffle proof.
+     */
     public static final String POSR_PATH = "PoSReply01.bt";
 
+    /**
+     * Initialize the proof from components. Ciphertexts, shuffled ciphertexts and public key are
+     * represented as corresponding group elements.
+     * 
+     * @param prot
+     * @param pc
+     * @param posc
+     * @param posr
+     * @param ciphs
+     * @param shuffled
+     * @param pk
+     */
     public ShuffleProof(ProtocolInformation prot, PermutationCommitment pc, PoSCommitment posc,
             PoSReply posr, GroupElement[] ciphs, GroupElement[] shuffled, GroupElement pk) {
         this.prot = prot;
@@ -42,6 +75,17 @@ public class ShuffleProof {
         this.pk = pk;
     }
 
+    /**
+     * Initialize the proof from components.
+     * 
+     * @param prot
+     * @param pc
+     * @param posc
+     * @param posr
+     * @param ciphs
+     * @param shuffled
+     * @param pk
+     */
     public ShuffleProof(ProtocolInformation prot, PermutationCommitment pc, PoSCommitment posc,
             PoSReply posr, ElGamalCiphertext[] ciphs, ElGamalCiphertext[] shuffled,
             ElGamalPublicKey pk) {
@@ -63,6 +107,16 @@ public class ShuffleProof {
         this.pk = pk.getAsProductGroupElement();
     }
 
+    /**
+     * Initialize the proof from protocol information path and proof directory path.
+     * <p>
+     * Parses the files and constructs the components.
+     * 
+     * @param protpath
+     * @param proofdir
+     * @throws IOException
+     * @throws ShuffleException
+     */
     public ShuffleProof(Path protpath, Path proofdir) throws IOException, ShuffleException {
         Path pcpath = Paths.get(proofdir.toString(), PROOFS_PATH, PC_PATH);
         Path poscpath = Paths.get(proofdir.toString(), PROOFS_PATH, POSC_PATH);
@@ -134,6 +188,14 @@ public class ShuffleProof {
             this.u = DataParser.getAsElementArray(prot.get_parsed_pgroup(), root);
         }
 
+        /**
+         * Initialize the permutation commitment from protocol information and permutation
+         * commitment path.
+         * 
+         * @param prot
+         * @param path
+         * @throws IOException
+         */
         PermutationCommitment(ProtocolInformation prot, Path path) throws IOException {
             this(prot, Files.readAllBytes(path));
         }
@@ -168,6 +230,13 @@ public class ShuffleProof {
             F_prim = (ProductGroupElement) DataParser.getAsElement(ciphgroup, root, 5);
         }
 
+        /**
+         * Initialize the shuffle commitment from protocol information and shuffle commitment path.
+         * 
+         * @param prot
+         * @param path
+         * @throws IOException
+         */
         PoSCommitment(ProtocolInformation prot, Path path) throws IOException {
             this(prot, Files.readAllBytes(path));
         }
@@ -224,6 +293,13 @@ public class ShuffleProof {
             kF = (ProductGroupElement) DataParser.getAsElement(prodgroup, root, 5);
         }
 
+        /**
+         * Initialize the proof reply from protocol information and path to proof reply.
+         * 
+         * @param prot
+         * @param path
+         * @throws IOException
+         */
         PoSReply(ProtocolInformation prot, Path path) throws IOException {
             this(prot, Files.readAllBytes(path));
         }

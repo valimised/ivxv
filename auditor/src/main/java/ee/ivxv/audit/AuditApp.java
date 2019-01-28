@@ -1,5 +1,7 @@
 package ee.ivxv.audit;
 
+import ee.ivxv.audit.tools.ConvertTool;
+import ee.ivxv.audit.tools.ConvertTool.ConvertArgs;
 import ee.ivxv.audit.tools.DecryptTool;
 import ee.ivxv.audit.tools.DecryptTool.DecryptArgs;
 import ee.ivxv.audit.tools.MixerTool;
@@ -20,6 +22,7 @@ class AuditApp extends App<AuditContext> {
 
     private static List<Tool<AuditContext, ?>> createTools() {
         return Arrays.asList( //
+                new Tool<>(Msg.tool_convert, ConvertArgs::new, ConvertTool::new),
                 new Tool<>(Msg.tool_mixer, MixerArgs::new, MixerTool::new),
                 new Tool<>(Msg.tool_decrypt, DecryptArgs::new, DecryptTool::new));
     }

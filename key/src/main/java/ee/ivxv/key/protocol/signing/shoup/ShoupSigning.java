@@ -4,9 +4,8 @@ import ee.ivxv.common.crypto.SignatureUtil;
 import ee.ivxv.common.crypto.rnd.Rnd;
 import ee.ivxv.common.math.LagrangeInterpolation;
 import ee.ivxv.common.math.MathUtil;
-import ee.ivxv.common.service.smartcard.Cards;
+import ee.ivxv.common.service.smartcard.IndexedBlob;
 import ee.ivxv.key.protocol.ProtocolException;
-import ee.ivxv.key.protocol.ProtocolUtil;
 import ee.ivxv.key.protocol.SigningProtocol;
 import ee.ivxv.key.protocol.ThresholdParameters;
 import java.io.ByteArrayOutputStream;
@@ -16,44 +15,61 @@ import java.math.BigInteger;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Set;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 
+/**
+ * Protocol for signing a message using threshold number of card tokens with RSA signing scheme.
+ */
 public class ShoupSigning implements SigningProtocol {
-    private final Cards cards;
+    private final Set<IndexedBlob> blobs;
     private final ThresholdParameters tparams;
-    private final byte[] cardShareAID;
-    private final byte[] cardShareName;
     private final Rnd rnd;
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-    public ShoupSigning(Cards cards, ThresholdParameters tparams, byte[] cardShareAID,
-            byte[] cardShareName, Rnd rnd) throws ProtocolException {
-        if (cards.count() < tparams.getThreshold()) {
+    /**
+     * Initialize the protocol using values.
+     * 
+     * @param blobs The set of blobs that contain the private key shares.
+     * @param tparams Threshold parameters.
+     * @param rnd Random source for signing.
+     * @throws ProtocolException When the number of available cards is less than the threshold.
+     */
+    public ShoupSigning(Set<IndexedBlob> blobs, ThresholdParameters tparams, Rnd rnd)
+            throws ProtocolException {
+        if (blobs.size() < tparams.getThreshold()) {
             throw new ProtocolException("Fewer cards available than threshold");
         }
-        this.cards = cards;
+        this.blobs = blobs;
         this.tparams = tparams;
-        this.cardShareAID = cardShareAID;
-        this.cardShareName = cardShareName;
         this.rnd = rnd;
     }
 
+    /**
+     * Sign the message using RSA-PSS signing scheme.
+     * <p>
+     * The algorithm for constructing the signature is as follows: {@code
+     *  1. get available blobs
+     *  2. parse RSAPrivateKey from every blob
+     *  2b. check that no keys have different modulus
+     *  3. use RSA-PSS signing using every RSAPrivateKEy
+     *  4. compute Lagrange coeficcient for every share
+     *  5. exponentiate modulo n every signature share
+     *  6. multiply the shares
+     *  7. verify the signature
+     * }
+     * 
+     * @return RSA-PSS signature
+     * @throws ProtocolException When exception occurs during card token communication or signature
+     *         share generation.
+     */
     @Override
     public byte[] sign(byte[] msg) throws ProtocolException {
-        // 1. get available blobs
-        // 2. parse RSAPrivateKey from every blob
-        // 2b. check that no keys have different modulus
-        // 3. use RSA-PSS signing using every RSAPrivateKEy
-        // 4. compute Lagrange coeficcient for every share
-        // 5. exponentiate modulo n every signature share
-        // 6. multiply the shares
-        // 7. verify the signature
 
         byte[] salt = new byte[SignatureUtil.RSA.getPSSDigestLength()];
         byte[] signature;
-        byte[][] blobs, sigShares;
-        blobs = ProtocolUtil.getAllBlobs(tparams, cards, cardShareAID, cardShareName);
+        byte[][] sigShares;
         RSAPrivateCrtKey[] parsedKeys;
         try {
             parsedKeys = unpackAllBlobs(blobs);
@@ -84,10 +100,11 @@ public class ShoupSigning implements SigningProtocol {
         return signature;
     }
 
-    private RSAPrivateCrtKey[] unpackAllBlobs(byte[][] blobs) throws InvalidKeySpecException {
-        RSAPrivateCrtKey[] parsed = new RSAPrivateCrtKey[blobs.length];
-        for (int i = 0; i < blobs.length; i++) {
-            parsed[i] = SignatureUtil.RSA.bytesToRSAPrivateKeyCrt(blobs[i]);
+    private RSAPrivateCrtKey[] unpackAllBlobs(Set<IndexedBlob> blobs)
+            throws InvalidKeySpecException {
+        RSAPrivateCrtKey[] parsed = new RSAPrivateCrtKey[tparams.getParties()];
+        for (IndexedBlob blob : blobs) {
+            parsed[blob.getIndex() - 1] = SignatureUtil.RSA.bytesToRSAPrivateKeyCrt(blob.getBlob());
         }
         return parsed;
     }
@@ -176,16 +193,34 @@ public class ShoupSigning implements SigningProtocol {
         return null;
     }
 
+    /**
+     * Get the algorithm identifier for the signing scheme.
+     * 
+     * @return SHA256-with-RSA-Encryption
+     */
     @Override
     public AlgorithmIdentifier getAlgorithmIdentifier() {
         return new AlgorithmIdentifier(PKCSObjectIdentifiers.sha256WithRSAEncryption);
     }
 
+    /**
+     * Get the stream for writing the message value to be signed.
+     * 
+     * @return Stream for writing the message.
+     */
     @Override
     public OutputStream getOutputStream() {
         return out;
     }
 
+    /**
+     * Sign the message written to the output stream.
+     * <p>
+     * Sign the message written to the stream output in {@link #getOutputStream()}
+     * 
+     * @see #getOutputStream()
+     * @return RSA-PSS signature
+     */
     @Override
     public byte[] getSignature() {
         byte[] msg = out.toByteArray();

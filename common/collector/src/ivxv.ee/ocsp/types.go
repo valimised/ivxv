@@ -2,7 +2,7 @@ package ocsp // import "ivxv.ee/ocsp"
 
 import (
 	"bytes"
-	"crypto"
+	"crypto/sha1" // nolint: gosec, See certIDHash.
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -13,11 +13,16 @@ import (
 )
 
 var (
-	// Hash function used by the OCSP while creating a request
-	ocspHash = crypto.SHA1
+	// Hash function used to calculate CertID fields.
+	//
+	// We would like to use a stronger hash function here, but at the
+	// moment of writing, the SK OCSP responders used by Estonian IVXV
+	// deployments do not support anything else (and give very unexpected
+	// responses when used).
+	certIDHash = sha1.Sum
 
-	// SHA1 Object identifier
-	ocspHashOID = asn1.ObjectIdentifier{1, 3, 14, 3, 2, 26}
+	// OID for certIDHash.
+	certIDHashOID = asn1.ObjectIdentifier{1, 3, 14, 3, 2, 26}
 )
 
 // REQUEST
@@ -48,18 +53,18 @@ type certID struct {
 }
 
 func newCertID(cert *x509.Certificate) (id *certID, err error) {
-	name := ocspHash.New()
-	name.Write(cert.RawIssuer) // nolint: errcheck, gas, hash.Write never returns an error.
-
+	// Since certIDHash is SHA-1 then skip calculating the IssuerKeyHash
+	// and simply use AuthorityKeyId.
 	if len(cert.AuthorityKeyId) == 0 {
 		return nil, AuthKeyIDMissingError{}
 	}
 
+	nameHash := certIDHash(cert.RawIssuer)
 	return &certID{
 		HashAlgorithm: pkix.AlgorithmIdentifier{
-			Algorithm: ocspHashOID,
+			Algorithm: certIDHashOID,
 		},
-		IssuerNameHash: name.Sum(nil),
+		IssuerNameHash: nameHash[:],
 		IssuerKeyHash:  cert.AuthorityKeyId,
 		SerialNumber:   cert.SerialNumber,
 	}, nil
@@ -125,7 +130,7 @@ type responseData struct {
 }
 
 // https://tools.ietf.org/html/rfc6960#page-15
-type singleResponse struct { // nolint: aligncheck, preserve RFC ordering.
+type singleResponse struct { // nolint: aligncheck, maligned, preserve RFC ordering.
 	CertID certID
 
 	// The asn1 module does not support choices, so use 3 optional fields

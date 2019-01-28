@@ -1,0 +1,27 @@
+# Mixneti teisenduse kontrollimine
+convert:
+# IVXV segamise-eelse e-urni asukoht.
+  input_bb: DEMO_bb-4.json
+# IVXV segamise-järgse e-urni asukoht.
+  output_bb: DEMO_shuffled.json
+  pub: DEMO_pub.pem
+#  Verificatumi segamistõendi protokollifaili asukoht.
+  protinfo: DEMO_proof/prot.xml
+# Verificatumi segamistõendi asukoht.
+  proofdir: DEMO_proof/mixnet/
+
+# Miksimistõendi kontrollimine
+# Tööriist mixer kontrollib Verificatumi lugemistõendi korrektsust.
+mixer:
+  protinfo: DEMO_proof/prot.xml
+  proofdir: DEMO_proof/mixnet/
+# Kasuta mitmelõimelist implementatsiooni. Kasutatavate lõimede arv sõltub rakenduse argumentidest
+  threaded: true
+
+
+# Dekrüpteerimistõestuste verifitseerimine
+#Tööriist decrypt kontrollib dekrüpteerimistõendi korrektsust.
+decrypt:
+  input: DEMO_decout_true/proof
+  pub: DEMO_pub.pem
+  out: DEMO_auditout

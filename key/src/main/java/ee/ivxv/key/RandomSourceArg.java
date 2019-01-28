@@ -15,10 +15,56 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Function;
 
+/**
+ * Helper class for parsing random source arguments.
+ */
 public class RandomSourceArg extends Args {
+    /**
+     * Randomness source type.
+     */
     static enum RndType {
-        stream(p -> newFileRnd(p, false)), file(p -> newFileRnd(p, true)), //
-        DPRNG(RndType::newDPRNG), system(p -> new NativeRnd()), //
+        /**
+         * Stream random source reads infinite random source.
+         * <p>
+         * Stream file source corresponds to {@link ee.ivxv.common.crypto.rnd.FileRnd}, initializing
+         * it with finite argument true.
+         * <p>
+         * The command line takes a single argument denoting the location of the stream source.
+         */
+        stream(p -> newFileRnd(p, false)),
+        /**
+         * File random source reads finite random source.
+         * <p>
+         * Stream file source corresponds to {@link ee.ivxv.common.crypto.rnd.FileRnd}, initializing
+         * it with finite argument false.
+         * <p>
+         * The command line takes a single argument denoting the location of the file.
+         */
+        file(p -> newFileRnd(p, true)),
+        /**
+         * DPRNG random source reads a seed from the file and initializes a deterministic pseudo
+         * random number generator.
+         * <p>
+         * It uses {@link ee.ivxv.common.crypto.rnd.DPRNG}.
+         * <p>
+         * The command line takes a single argument denoting the location of the seed file.
+         */
+        DPRNG(RndType::newDPRNG),
+        /**
+         * System random source uses the system random source.
+         * <p>
+         * Internally, it uses {@link ee.ivxv.common.crypto.rnd.NativeRnd}.
+         * <p>
+         * Does not process given arguments.
+         */
+        system(p -> new NativeRnd()),
+        /**
+         * User random source uses external program to obtain randomness.
+         * <p>
+         * This method uses {@link ee.ivxv.common.crypto.rnd.UserRnd}.
+         * <p>
+         * Takes as a location the external program which is run for obtaining entropy.
+         */
         user(p -> newUserRnd(p));
 
         private final Function<Path, Rnd> supplier;
@@ -67,6 +113,9 @@ public class RandomSourceArg extends Args {
         }
     }
 
+    /**
+     * Single random source argument.
+     */
     public static class RndListEntry extends Args {
         Arg<RndType> type = Arg.aChoice(Msg.arg_random_source_type, RndType.values());
         // Must be optional, because of NATIVE random type that does not require path
@@ -78,10 +127,25 @@ public class RandomSourceArg extends Args {
         }
     }
 
+    /**
+     * Get argument for setting multiple random source values.
+     * 
+     * @return
+     */
     public static Arg<List<RndListEntry>> getArgument() {
         return new TreeList<>(Msg.arg_random_source, RndListEntry::new);
     }
 
+    /**
+     * Construct a random source combining given argument values.
+     * <p>
+     * If the argument is not set, then returns null. Otherwise, initialize all random sources and
+     * combine it using {@link ee.ivxv.common.crypto.rnd.CombineRnd} and return the instance.
+     * 
+     * @param argument Argument values
+     * @return Combined random source or null if arguments not given.
+     * @throws IOException When exception occurs during initialization of single random source.
+     */
     public static CombineRnd combineFromArgument(Arg<List<RndListEntry>> argument)
             throws IOException {
         if (!argument.isSet()) {

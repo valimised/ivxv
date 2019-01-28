@@ -7,6 +7,9 @@ import ee.ivxv.common.service.smartcard.CardService;
 import ee.ivxv.common.service.smartcard.Cards;
 import ee.ivxv.common.util.I18nConsole;
 
+/**
+ * PKCS15CardService is a card service which handles cards with PKCS15 file system.
+ */
 public class PKCS15CardService implements CardService {
 
     private final I18nConsole console;
@@ -25,6 +28,11 @@ public class PKCS15CardService implements CardService {
         return new Cards(this, console) {
             // Empty block
         };
+    }
+
+    @Override
+    public boolean isPluggableService() {
+        return true;
     }
 
 }

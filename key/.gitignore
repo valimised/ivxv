@@ -6,4 +6,4 @@ build/
 /log/
 bin/
 .settings/
-dummy_cards/
+dummy_card_filesystems

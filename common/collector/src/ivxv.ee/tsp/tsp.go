@@ -12,12 +12,15 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"io/ioutil"
 	"math/big"
 	"net/http"
 	"net/http/httputil"
+	"strings"
 	"time"
 
 	"ivxv.ee/cryptoutil"
+	"ivxv.ee/errors"
 	"ivxv.ee/log"
 	"ivxv.ee/safereader"
 )
@@ -39,13 +42,9 @@ const (
 	maxResponseSize = 10240 // 10 KiB.
 )
 
-var (
-	reader = safereader.New(maxResponseSize)
-
-	// The CMS content type used for timestamp tokens.
-	// https://tools.ietf.org/html/rfc3161#page-8
-	idCTTSTInfo = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 16, 1, 4}
-)
+// The CMS content type used for timestamp tokens.
+// https://tools.ietf.org/html/rfc3161#page-8
+var idCTTSTInfo = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 16, 1, 4}
 
 // Conf contains the configurable options for the TSP client. It only contains
 // serialized values such that it can easily be unmarshaled from a file.
@@ -58,6 +57,10 @@ type Conf struct {
 
 	// The maximum time that GenTime and SignTime can differ in a timestamp
 	DelayTime int64
+
+	// Retry is the amount of times a TSP request is retried in case of
+	// network or server errors.
+	Retry uint64
 }
 
 // Client is used for performing TSP requests and checking responses.
@@ -65,6 +68,7 @@ type Client struct {
 	url     string
 	signers []*x509.Certificate
 	delay   time.Duration
+	retry   uint64
 }
 
 // New returns a new TSP client with the provided configuration.
@@ -76,6 +80,7 @@ func New(conf *Conf) (c *Client, err error) {
 	c = &Client{
 		url:   conf.URL,
 		delay: time.Duration(conf.DelayTime) * time.Second,
+		retry: conf.Retry,
 	}
 	if c.signers, err = cryptoutil.PEMCertificates(conf.Signers...); err != nil {
 		return nil, SignerParsingError{Err: err}
@@ -100,9 +105,20 @@ func (c *Client) Create(ctx context.Context, data, nonce []byte) ([]byte, error)
 		}
 	}
 
-	tst, err := c.submitRequest(ctx, data, nonce)
-	if err != nil {
-		return nil, RequestSubmissionError{Err: err}
+	var tst timeStampToken
+	var err error
+retry:
+	for attempt := uint64(0); ; attempt++ {
+		// nolint: dupl, No need to deduplicate such a small snippet.
+		switch tst, err = c.submitRequest(ctx, data, nonce); {
+		case err == nil:
+			break retry
+		case attempt < c.retry && shouldRetry(err):
+			log.Log(ctx, RetryingRequestSubmission{Attempt: attempt + 1, Err: err})
+			time.Sleep(1 * time.Second)
+		default:
+			return nil, RequestSubmissionError{Err: err}
+		}
 	}
 
 	info, err := checkTSTInfo(tst, data, nonce)
@@ -121,27 +137,46 @@ func (c *Client) Create(ctx context.Context, data, nonce []byte) ([]byte, error)
 	return tst.Raw, nil
 }
 
-// Check checks a stored DER-encoded timestamp token on data. If nonce is not
-// nil, then the nonce in the timestamp token must match that value.
-func (c *Client) Check(response, data, nonce []byte) (err error) {
+func shouldRetry(err error) bool {
+	return errors.Walk(err, func(err error) error {
+		switch t := err.(type) {
+
+		// Sending the HTTP request or reading the response body failed.
+		case SendRequestError, ResponseBodyReadError:
+			return err
+
+		// The HTTP status was a 5xx code.
+		case ResponseStatusNotOK:
+			if strings.HasPrefix(t.Status.(string), "5") {
+				return err
+			}
+		}
+		return nil
+	}) != nil
+}
+
+// Check checks a stored DER-encoded timestamp token on data and returns the
+// token generation time. If nonce is not nil, then the nonce in the timestamp
+// token must match that value.
+func (c *Client) Check(response, data, nonce []byte) (time.Time, error) {
 	var tsToken timeStampToken
 	rest, err := asn1.Unmarshal(response, &tsToken)
 	if err != nil {
-		return TSTokenUnmarshalError{Err: err}
+		return time.Time{}, TSTokenUnmarshalError{Err: err}
 	}
 	if len(rest) > 0 {
-		return TSTokenExcessBytes{ExcessBytes: rest}
+		return time.Time{}, TSTokenExcessBytes{ExcessBytes: rest}
 	}
 
 	info, err := checkTSTInfo(tsToken, data, nonce)
 	if err != nil {
-		return CheckTSTInfoCheckError{Err: err}
+		return time.Time{}, CheckTSTInfoCheckError{Err: err}
 	}
 
 	if err = c.checkSignedData(tsToken, info.GenTime); err != nil {
-		return CheckSignedDataCheckError{Err: err}
+		return time.Time{}, CheckSignedDataCheckError{Err: err}
 	}
-	return
+	return info.GenTime, nil
 }
 
 func (c *Client) submitRequest(ctx context.Context, data, nonce []byte) (
@@ -226,12 +261,13 @@ func (c *Client) submitRequest(ctx context.Context, data, nonce []byte) (
 		return
 	}
 
-	body, err := reader.Read(httpResp.Body)
+	// The entire response will be returned (as tst.Raw) so we need to
+	// allocate a new byte slice using ioutil.ReadAll.
+	body, err := ioutil.ReadAll(safereader.New(httpResp.Body, maxResponseSize))
 	if err != nil {
 		err = ResponseBodyReadError{Err: err}
 		return
 	}
-	defer reader.Recover(body)
 	log.Debug(ctx, BodyDump{Body: body})
 
 	// Parse the response and check TSP status.
@@ -289,7 +325,7 @@ func checkTSTInfo(tst timeStampToken, data, nonce []byte) (info tstInfo, err err
 		}
 	}
 	hash := chash.New()
-	hash.Write(data) // nolint: errcheck, hash.Write never returns an error.
+	hash.Write(data)
 	calculated := hash.Sum(nil)
 
 	if !bytes.Equal(info.MessageImprint.HashedMessage, calculated) {

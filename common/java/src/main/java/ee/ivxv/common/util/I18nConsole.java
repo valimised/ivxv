@@ -35,4 +35,7 @@ public class I18nConsole {
         return console.startProgress(i18n.get(M.m_progress_bar), total);
     }
 
+    public Progress startInfiniteProgress(long total) {
+        return console.startInfiniteProgress(i18n.get(M.m_progress_bar), total);
+    }
 }

@@ -11,6 +11,7 @@ state Paigaldamata
 state Paigaldatud
 state Seadistatud <<OK>>
 state Tõrge <<Invalid>>
+state Eemaldatud
 
 Paigaldamata: Teenus kirjeldatud tehnilistes seadistustes,
 Paigaldamata: kuid teenuse tarkvara on paigaldamata või
@@ -26,19 +27,25 @@ Seadistatud : Teenus on töökorras
 
 Tõrge : Teenus pole töökorras
 
+Eemaldatud : Teenus on kogumisteenuse
+Eemaldatud : koosseisust eemaldatud
+
 [*] --> Paigaldamata
 
 Paigaldamata --> Paigaldatud : Haldusteenus paigaldab \n teenuse tarkvara ning \n rakendab usaldusjuure ja \n tehnilised seadistused
 
 Paigaldatud --> Seadistatud : Haldusteenus rakendab \n teenusele \n valimiste seadistused
+Paigaldatud --> Eemaldatud : Teenus eemaldatakse \n kogumisteenusest
 
 Seadistatud --> Tõrge : Haldusteenusel \n kaob ühendus \n teenusega
+Seadistatud --> Eemaldatud : Teenus eemaldatakse \n kogumisteenusest
 
 Tõrge --> Seadistatud : Seadistatud \n teenuse \n tõrge \n kõrvaldatakse
+Tõrge --> Eemaldatud : Teenus eemaldatakse \n kogumisteenusest
 Tõrge --> [*] : Hääletusperiood \n lõppeb
 
 Seadistatud --> [*] : Hääletusperiood \n lõppeb
 
-@enduml
+Eemaldatud --> [*]
 
-# vim:set sts=2 sw=2 et:
+@enduml

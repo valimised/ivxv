@@ -4,7 +4,19 @@ import ee.ivxv.common.crypto.rnd.Rnd;
 import java.io.IOException;
 import java.math.BigInteger;
 
+/**
+ * Helper functions for constructing random integers.
+ */
 public class IntegerConstructor {
+    /**
+     * Return a uniformly distributed integer less than the limit.
+     * 
+     * @param rnd
+     * @param upper
+     * @return
+     * @throws IllegalArgumentException
+     * @throws IOException
+     */
     public static BigInteger construct(Rnd rnd, BigInteger upper)
             throws IllegalArgumentException, IOException {
         if (upper.signum() != 1) {
@@ -26,6 +38,15 @@ public class IntegerConstructor {
         }
     }
 
+    /**
+     * Return a uniformly distributed prime less than the limit.
+     * 
+     * @param rnd
+     * @param upper
+     * @return
+     * @throws IllegalArgumentException
+     * @throws IOException
+     */
     public static BigInteger constructPrime(Rnd rnd, BigInteger upper)
             throws IllegalArgumentException, IOException {
         BigInteger res;

@@ -1,0 +1,4 @@
+statsdiff:
+  compare: out-stats/stats.json
+  to: voting-stats.json
+  diff: stats-diff.json

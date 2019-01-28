@@ -37,7 +37,7 @@ implementeerima `ee.ivxv.key.protocol.DecryptionProtocol` liidese::
 
 Meetod `decryptMessage()` võtab sisendina krüptogrammi DER formaadis ning
 väljastab `ElGamalDecryptionProof` instantsi. Juhul kui protokoll ei toeta
-lugemistõendid väljastamist, siis on vastavad väljad väärtustatud tühiväärtusega
+lugemistõendi väljastamist, siis on vastavad väljad väärtustatud tühiväärtusega
 (`null`).
 
 Analoogselt võtmeosakute genereerimise protokollile tuleb protokolli
@@ -47,24 +47,24 @@ Allkirjastamise protokolli liides
 ---------------------------------
 
 Lisaks dekrüpteerimise protokollile saab implementeerida ka allkirjastamise
-protokolli. Sarnaselt dekrüpteerimiseprotokollile võib ühele võtmegeneerimise
+protokolli. Sarnaselt dekrüpteerimisprotokollile võib ühele võtmegenereerimise
 meetodile vastata mitu allkirjastamise protokolli. Protokoll peab
 implementeerima `ee.ivxv.key.protocol.SigningProtocol` liidese::
 
     public interface SigningProtocol {
-        byte[] sign(byte[] msg) throws ProtoclException;
+        byte[] sign(byte[] msg) throws ProtocolException;
     }
 
 Meetod `sign()` võtab sisendina sõnumi, mida soovitakse allkirjastada, ja
-võljastab RSA-PSS allkirja järgnevate parameetritega:
+väljastab RSA-PSS allkirja järgnevate parameetritega:
 
 .. _RSA-PSS parameetrid:
 
 - sõnumi räsifunktsioon: SHA2-256
-- maski genereermise funktsioon: MGF1, maski räsifunktsioon SHA2-256 ja maski
+- maski genereerimise funktsioon: MGF1, maski räsifunktsioon SHA2-256 ja maski
   pikkus 32 baiti
 - soola pikkus: 32 baiti
-- sababait: `0x01`
+- sababait: `0xbc`
 
 Analoogselt võtmeosakute genereerimise protokollile tuleb protokolli
 parameetrid määrata klassiinstantsi initsialiseerimise ajal.
@@ -91,10 +91,10 @@ Hetkel on teostatud järgnevad võtmeosakute genereerimise protokollid:
   + `byte[] cardShareName`: võtmeosaku identifikaator PKCS15 pääsmikul.
 
 * `ee.ivxv.key.protocol.generation.shoup.ShoupGeneration`: Võtmeosakud on
-  sellised, et oleks võimalik kasutada [Shoup00]_ põhinevat hajutatatud
-  allkirjastamisprotokolli. Võtmeosakud salvestatakse otse PKCS15 lidiest
-  toetavale pääsmikule. Klassiinstantsi initialiseerimise ajal saab anda
-  järngevaid argumente:
+  sellised, et oleks võimalik kasutada [Shoup00]_ põhinevat hajutatud
+  allkirjastamisprotokolli. Võtmeosakud salvestatakse otse PKCS15 liidest
+  toetavale pääsmikule. Klassiinstantsi initsialiseerimise ajal saab anda
+  järgnevaid argumente:
 
   + `PKCS15Card[] cards`: järjend objektidest, mis implementeerivad PKCS15Card
     liidest (nt. kiipkaardid või tarkvaralised pääsmikud).
@@ -112,7 +112,7 @@ On teostatud järgnevad dekrüpteerimise protokollid:
   liidest toetavatelt pääsmikelt võtmeosakud, rekonstrueeritakse nende abil
   operatiivmälus salajane võti ning teostatakse dekrüpteerimine lugemistõendiga.
   Klassiinstantsi initsialiseerimise ajal saab anda järgnevaid argumente:
-  
+
   + `PKCS15Card[] cards`: järjend objektides mis implementeerivad PKCS15Card
     liidest (nt. kiipkaardid või tarkvaralised pääsmikud).
   + `ThresholdParameters tparams`: läviskeemi parameetrid.
@@ -121,7 +121,7 @@ On teostatud järgnevad dekrüpteerimise protokollid:
     ligi.
   + `byte[] cardShareName`: võtmeosaku identifikaator PKCS15 pääsmikul.
 
-On teostatud järgnevad allkirjastamise protkollid:
+On teostatud järgnevad allkirjastamise protokollid:
 
 * `ee.ivxv.key.protocol.signing.shoup.ShoupSigning`: Loetakse PKCS15 liidest
   toetavatelt pääsmikelt võtmeosakud, konstrueeritakse mälus allkirjastamise
@@ -164,7 +164,7 @@ Shamiri saladuse jagamise skeem
 
 Olgu meil salajane väärtus :math:`s = a_0` ja soovime seda jagada :math:`n`
 osapoole vahel selliselt, et vähemalt :math:`t` osapoolt saaksid selle saladuse
-rekonstrueerida.  Selleks valime koefitsendid :math:`a_1` kuni :math:`a_{t-1}`
+rekonstrueerida.  Selleks valime koefitsiendid :math:`a_1` kuni :math:`a_{t-1}`
 ning vaatame polünoomi muutuja :math:`x` suhtes:
 
 .. math::
@@ -180,7 +180,7 @@ joonistamiseks piisab meile :math:`t` punktist (sirge jaoks kaks punkti,
 parabooli jaoks kolm punkti jne.). Salajane väärtus on selle polünoomi väärtus
 y-telje lõikepunktis.
 
-Vaadates rekonstrueerimist arvuliselt, mitte geomeetriliselt, saame kasutade
+Vaadates rekonstrueerimist arvuliselt, mitte geomeetriliselt, saame kasutades
 Lagrange interpoleerimise meetodit. Tähist :math:`\prod` kasutame me mitme
 liikmega korrutise tähistamiseks ja tähist :math:`\sum` kasutame me mitme
 liikmega summa tähistamiseks.
@@ -359,7 +359,7 @@ et :math:`x` ja :math:`y` korral leiduvad :math:`a` ja :math:`b` selliselt, et
 on võimalik leida laiendatud Eukleidese algoritmiga suurima ühisteguri
 leidmiseks.
 
-Kasutades Eukleides laiendatud algoritmi, leitakse :math:`a` ja :math:`b`,
+Kasutades Eukleidese laiendatud algoritmi, leitakse :math:`a` ja :math:`b`,
 selliselt et :math:`ae+bn!=\gcd(e,n!)`. Kuna avalik võti :math:`e` on valitud
 algarv, siis :math:`\gcd(e,n!)=1`. Arvutame:
 

@@ -24,12 +24,14 @@ public enum Msg implements NameHolder {
     // Tool arguments
     arg_hash, arg_input("i"), arg_links("l"), arg_out("o"), arg_pbb("p"), arg_pub("p"), //
     arg_revoke("r"), arg_seed("s"), arg_storage("s"), arg_signaturepub, arg_threads("t"), //
-    arg_input_bb, arg_output_bb, arg_protinfo, arg_proofdir,//
+    arg_input_bb, arg_output_bb, arg_protinfo, arg_proofdir, arg_threaded, //
 
     // Messages
     m_pub_loading, m_pub_loaded, m_failurecount, m_verify_start, m_verify_finish, //
     m_shuffle_proof_loading, m_shuffle_proof_failed_reason, m_shuffle_proof_succeeded, //
-    m_shuffle_proof_failed;
+    m_shuffle_proof_failed, m_convert_publickey_failed, m_convert_publickey_succ, //
+    m_convert_bb_to_bt_failed, m_convert_bb_to_bt_succ, m_convert_bt_to_bb_failed, //
+    m_convert_bt_to_bb_succ;
 
     private final String shortName;
 

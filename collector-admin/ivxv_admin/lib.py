@@ -3,38 +3,223 @@
 Library for collector management service.
 """
 
+import atexit
 import datetime
+import fcntl
+import json
 import logging
 import os
+import shutil
 
-import dateutil.parser
-
-from . import CONFIG_TYPES, VOTING_LIST_TYPES
-from . import (COLLECTOR_STATE_CONFIGURED, COLLECTOR_STATE_FAILURE,
-               COLLECTOR_STATE_INSTALLED, COLLECTOR_STATE_NOT_INSTALLED,
-               COLLECTOR_STATE_PARTIAL_FAILURE)
-from . import (SERVICE_STATE_CONFIGURED, SERVICE_STATE_FAILURE,
-               SERVICE_STATE_INSTALLED, SERVICE_STATE_NOT_INSTALLED)
-from .config import CONFIG
-from .db import IVXVManagerDb, DB_SERVICE_SUBKEYS
-from .ivxv_pkg import COLLECTOR_PACKAGE_FILENAMES
+from . import (CFG_TYPES, RFC3339_DATE_FORMAT_WO_FRACT, SERVICE_STATE_REMOVED,
+               SERVICE_TYPE_PARAMS, VOTING_LIST_TYPES)
+from .collector_state import generate_collector_state
+from .config import CONFIG, cfg_path
+from .db import DB_SERVICE_SUBKEYS, IVXVManagerDb
+from .event_log import register_service_event
+from .service import generate_service_list
+from .service.service import Service
 
 # create logger
 log = logging.getLogger(__name__)
 
 
-def gen_service_record_defaults(db, config):
+class IvxvError(Exception):
+    """IVXV exception class."""
+    pass
+
+
+class PidLocker:
+    """Pidfile creator and locker.
+
+    Create pidfile and keep it locked until program exit.
+    Raise IOError if
+
+    >>> try:
+    ...     PidLocker('/path/to/pidfile')
+    ... except IOError:
+    ...     print('Locking failed')
+    ...     exit(1)
     """
-    Add database records for services with default values.
+    filepath = None  #: Pidfile name
+    fp = None  #: Pidfile descriptor
+
+    def __init__(self, pidfile_name):
+        """Create and lock pidfile.
+
+        :raises IOError: On locking failure
+        """
+        self.filepath = pidfile_name
+        self.fp = open(pidfile_name, 'ab')
+        fcntl.flock(self.fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        atexit.register(self.rm_pid)
+        self.fp.write(bytes('{}\n'.format(os.getpid()), 'ASCII'))
+        self.fp.flush()
+
+    def rm_pid(self):
+        """Remove pidfile."""
+        try:
+            os.remove(self.filepath)
+        except FileNotFoundError:
+            log.warning('PID file %s already removed', self.filepath)
+
+    @classmethod
+    def get_pidfile_path(cls, pidfile_name):
+        """Get pidfile path."""
+        pidfile_path = cfg_path('ivxv_admin_data_path', pidfile_name)
+        return pidfile_path
+
+    @classmethod
+    def pidfile_exists(cls, pidfile_name):
+        """Check if pidfile exist."""
+        pidfile_path = cls.get_pidfile_path(pidfile_name)
+        return os.path.exists(pidfile_path)
+
+    @classmethod
+    def rm_stale_pidfile(cls, pidfile_name):
+        """Remove stale or invalid pidfile."""
+        if not cls.pidfile_exists(pidfile_name):
+            return
+
+        pidfile_path = cls.get_pidfile_path(pidfile_name)
+        with open(pidfile_path) as fp:
+            pidline = fp.readline()
+
+        reason = '' if pidline.strip() else 'empty'
+        if not reason:
+            try:
+                pid = int(pidline)
+            except ValueError:
+                reason = 'invalid'
+        if not reason and not os.path.exists(f'/proc/{pid}'):
+            reason = 'stale'
+        if reason:
+            log.error('Removing %s pidfile %s', reason, pidfile_path)
+            os.remove(pidfile_path)
+
+
+def register_tech_cfg_items(cfg, cfg_version):
+    """Register technical config items in management database.
+
+    Create database records for service hosts and services if not created and
+    register removed services.
+
+    :param cfg: Technical config
+    :param cfg_version: Config version
+    """
+    with IVXVManagerDb(for_update=True) as db:
+        register_removed_services(db, cfg, cfg_version)
+        gen_service_record_defaults(db, cfg)
+        gen_host_record_defaults(db, cfg)
+        gen_logmon_data(db, cfg.get('logging'))
+
+
+def register_removed_services(db, cfg, cfg_version):
+    """Mark removed services in database with REMOVED state.
+
+    Change state of removed services to REMOVED.
+
+    :param db: Database handler
+    :param cfg: Technical config
+    """
+    existing_services = get_services(db=db)
+    services_from_cfg = generate_service_list(cfg['network'])
+
+    # find removed services
+    existing_service_ids = set(existing_services.keys())
+    new_service_ids = set(
+        new_service_cfg[1]['id']
+        for new_service_cfg in services_from_cfg)
+    removed_service_ids = existing_service_ids.difference(new_service_ids)
+    if not removed_service_ids:
+        return
+
+    # change loading states of choices and voters lists
+    # if all existing storage services are removed
+    storages_removed = set(
+        service_id
+        for service_id, service_data in existing_services.items()
+        if service_data['service-type'] == 'storage' and
+        service_data['state'] != SERVICE_STATE_REMOVED)
+    storages_added = set(
+        new_service_cfg['id']
+        for service_type, new_service_cfg in services_from_cfg
+        if service_type == 'storage')
+    if not storages_removed.intersection(storages_added):
+        # all storages removed
+        log_msg = (
+            f'All existing storage service instances are removed with '
+            f'technical config {cfg_version}')
+        log.warning(log_msg)
+        _reset_list_loading_state(db, 'choices', 'choices list', log_msg)
+        for list_no in range(detect_voters_list_order_no(db), 0, -1):
+            _reset_list_loading_state(
+                db, f'voters{list_no:02d}', f'voterst list #{list_no:02d}',
+                log_msg)
+
+    # change removed service states
+    db_values = db.get_all_values()['service']
+    for service_id in sorted(removed_service_ids):
+        log.info('Changing service %s state to REMOVED', service_id)
+        service = Service(service_id, db_values[service_id])
+        service.register_state(
+            db,
+            SERVICE_STATE_REMOVED,
+            bg_info=f'Service removed with technical config: {cfg_version}',
+        )
+
+
+def _reset_list_loading_state(db, list_type, list_descr, log_msg):
+    """Reset choices and voters list loading state."""
+    # check if list is loaded
+    list_version = db.get_value(f'list/{list_type}')
+    if not list_version:
+        return
+
+    log_msgs = [log_msg]
+    timestamp = datetime.datetime.now().strftime(RFC3339_DATE_FORMAT_WO_FRACT)
+
+    # load list metadata file
+    filepath = get_loaded_cfg_file_path(list_type)
+    assert filepath, (
+        f'Config file for {list_descr} "{list_version}" does not exist')
+    filepath = filepath.replace('.bdoc', '.json')
+    with open(filepath) as fp:
+        choices_cfg_state = json.load(fp)
+
+    # set list state to PENDING in management database
+    db_key = f'list/{list_type}-loaded'
+    if db.get_value(db_key):
+        log_msg = f'Setting {list_descr} state to PENDING'
+        log.info(log_msg)
+        log_msgs.append(log_msg)
+        db.set_value(db_key, '')
+
+    # write config metadata file
+    log_msgs = [f'{timestamp} {log_msg}' for log_msg in log_msgs]
+    choices_cfg_state['log'] += [log_msgs]
+    choices_cfg_state['attempts'] = 0
+    choices_cfg_state['completed'] = False
+    tmp_filepath = f'{filepath}.tmp'
+    with open(tmp_filepath, 'w') as fp:
+        json.dump(choices_cfg_state, fp)
+    shutil.move(tmp_filepath, filepath)
+
+
+def gen_service_record_defaults(db, cfg):
+    """Add database records for services with default values.
 
     Parse the list of services from technical config and create
     missing database records for every defined service.
+
+    :param db: Database handler
+    :param cfg: Technical config
     """
-    assert 'network' in config
+    assert 'network' in cfg
 
     # generate list of default values
     service_values = {}
-    for network in config['network']:
+    for network in cfg['network']:
         for service_type, services in sorted(network['services'].items()):
             for service in services or []:
                 service_id = service['id']
@@ -46,56 +231,50 @@ def gen_service_record_defaults(db, config):
                 })
 
     # set service default values
-    for service_id, service_defaults in service_values.items():
-        db_key_prefix = 'service/{}'.format(service_id)
+    for service_id, service_defaults in sorted(service_values.items()):
+        db_key_prefix = f'service/{service_id}'
         try:
             db.get_value(db_key_prefix + '/service-type')
             continue
         except KeyError:
             log.info('Registering new service %s in management service',
                      service_id)
+            register_service_event(
+                'SERVICE_REGISTER',
+                service=service_id,
+                params={'service_type': service_defaults['service-type']})
 
         for key, val in service_defaults.items():
             db.set_value(db_key_prefix + '/' + key, val)
 
-    set_service_cond_values(db, config)
+    _set_tech_cfg_service_cond_values(db, cfg)
 
 
-def set_service_cond_values(db, config):
-    """Set/remove service conditional values."""
-
-    for network in config['network']:
+def _set_tech_cfg_service_cond_values(db, cfg):
+    """Set/remove service conditional values related to technical config."""
+    for network in cfg['network']:
         for service_type, services in sorted(network['services'].items()):
             for service in services or []:
-                db_key_prefix = 'service/{}'.format(service['id'])
-                # create 'dds-token-key' for dds/choices/voting services
-                # only if auth.ticket block exist in technical config
-                if service_type in ['dds', 'choices', 'voting']:
-                    manage_db_cond_value(db, db_key_prefix + '/dds-token-key',
-                                         'ticket' in config.get('auth', {}))
                 # create 'tls-key' and 'tls-cert' for
                 # choices/dds/storage/verification/voting services
-                if service_type in ['choices', 'dds', 'storage',
-                                    'verification', 'voting']:
-                    manage_db_cond_value(db, db_key_prefix + '/tls-key', True)
-                    manage_db_cond_value(db, db_key_prefix + '/tls-cert', True)
-                # create 'tspreg-key' for voting service
-                # only if registration service is DigiDocService
-                if service_type == 'voting':
-                    manage_db_cond_value(
-                        db, db_key_prefix + '/tspreg-key',
-                        [True
-                         for i in config.get('qualification', [])
-                         if i.get('protocol') == 'tspreg'])
+                if SERVICE_TYPE_PARAMS[service_type]['require_tls']:
+                    _manage_db_cond_value(db, service['id'], 'tls-key', True)
+                    _manage_db_cond_value(db, service['id'], 'tls-cert', True)
+                # create 'backup-times' for backup service
+                elif service_type == 'backup':
+                    _manage_db_cond_value(
+                        db, service['id'], 'backup-times',
+                        True, ' '.join(cfg.get('backup') or []))
 
 
-def manage_db_cond_value(db, key, set_value):
-    """Manage (create/remove) database value."""
+def _manage_db_cond_value(db, service_id, key, set_value, value=None):
+    """Manage (create/remove) service conditional database value."""
+    key = f'service/{service_id}/{key}'
     if set_value:  # create key
         try:
             db.get_value(key)
         except KeyError:
-            db.set_value(key, '')
+            db.set_value(key, value or '')
     else:  # remove key
         try:
             db.rm_value(key)
@@ -103,23 +282,64 @@ def manage_db_cond_value(db, key, set_value):
             pass
 
 
-def gen_host_record_defaults(db, config):
+def manage_db_dds_fields(db):
+    """Create/remove service DDS token keys in database.
+
+    Check 'ticket' authentication method in election config and manage
+    "dds-token-key" keys in management database for dds, choices and voting
+    services. Keys will created or removed as 'ticket' authentication method is
+    used or not.
     """
-    Add database records for service hosts with default values.
+    ticket_auth = 'ticket' in db.get_all_values('election').get('auth', {})
+    for service_id, service_data in db.get_all_values('service').items():
+        if service_data['service-type'] not in ['dds', 'choices', 'voting']:
+            continue
+        key = f'service/{service_id}/dds-token-key'
+        if ticket_auth:
+            if 'dds-token-key' not in service_data:
+                db.set_value(key, '')
+        elif 'dds-token-key' in service_data:
+            db.rm_value(key)
+
+
+def manage_db_tsp_fields(db):
+    """Create/remove service TSP registration keys in database.
+
+    Check 'qualification' protocol in election config and manage "tspreg-key"
+    keys in management database for voting services. Keys will created or
+    removed as 'tspreg' protocol is used or not.
+    """
+    tspreg = db.get_all_values('election').get('tspreg', '')
+    for service_id, service_data in db.get_all_values('service').items():
+        if service_data['service-type'] not in ['voting']:
+            continue
+        key = f'service/{service_id}/tspreg-key'
+        if tspreg:
+            if 'tspreg-key' not in service_data:
+                db.set_value(key, '')
+        elif 'tspreg-key' in service_data:
+            db.rm_value(key)
+
+
+def gen_host_record_defaults(db, cfg):
+    """Add database records for service hosts with default values.
 
     Parse the list of services from technical config and create
     missing database records for service hosts.
+
+    :param db: Database handler
+    :param cfg: Technical config
     """
     # generate list of default values
     hostnames = set()
-    for network in config['network']:
+    for network in cfg['network']:
         for services in network['services'].values():
             for service in services or []:
                 hostnames |= {service['address'].split(':')[0]}
 
     # set host default values
     for hostname in sorted(hostnames):
-        db_key_prefix = 'host/{}'.format(hostname)
+        db_key_prefix = f'host/{hostname}'
         try:
             db.get_value(db_key_prefix + '/state')
             continue
@@ -130,178 +350,76 @@ def gen_host_record_defaults(db, config):
         db.set_value(db_key_prefix + '/state', '')
 
 
-def get_service_conf_status(db, config):
+def gen_logmon_data(db, logging_params):
+    """Add database record for Log Monitor service.
+
+    :param logging_params: Logging params from technical config.
+    :type logging_params: list of dicts
     """
-    Get list of services that requires config update.
-
-    Check technical config records against database and generate list of
-    services that require config update.
-
-    Returns dict:
-
-    .. code-block:: text
-
-        {
-            'service-id': {
-                'technical': boolean,
-                'election': boolean,
-                'choices': boolean,
-                'voters': [list-number, ...],
-            },
-            ...
-        }
-    """
-    assert 'network' in config
-
-    # detect config versions
-    tech_conf_ver = db.get_value('config/technical')
-    election_conf_ver = db.get_value('config/election')
-
-    # detect need for list updates
-    update_choices_list = (db.get_value('list/choices') !=
-                           db.get_value('list/choices-loaded'))
-    update_voters_list = []
-    voter_list_no = 1
-    while True:
-        try:
-            voters_list_not_applied = (
-                db.get_value('list/voters%02d' % voter_list_no) !=
-                db.get_value('list/voters%02d-loaded' % voter_list_no))
-        except KeyError:
-            break
-        if voters_list_not_applied:
-            update_voters_list.append(voter_list_no)
-        voter_list_no += 1
-
-    service_list = {}
-
-    # create list of services
-    for network in config['network']:
-        for service_type, services in sorted(network['services'].items()):
-            for service in services or []:
-                db_key_prefix = 'service/{}'.format(service['id'])
-
-                service_tech_conf_ver = db.get_value(
-                    db_key_prefix + '/technical-conf-version')
-                service_election_conf_ver = (
-                    election_conf_ver and
-                    db.get_value(db_key_prefix + '/election-conf-version'))
-
-                service_list[service['id']] = {
-                    'technical': service_tech_conf_ver != tech_conf_ver,
-                    'election': service_election_conf_ver != election_conf_ver,
-                    'choices':
-                    service_type == 'choices' and update_choices_list,
-                    'voters': update_voters_list,
-                }
-                if service_list[service['id']]['technical']:
-                    log.debug('Service %s have no latest version of '
-                              'technical config', service['id'])
-
-                if service_list[service['id']]['election']:
-                    log.debug('Service %s have no latest version of '
-                              'election config', service['id'])
-
-    return service_list
+    if logging_params:
+        db.set_value('logmonitor/address', logging_params[0]['address'])
 
 
-def config_type_verbose(config_type):
+def cfg_type_verbose(cfg_type):
     """Get config type as human readable string."""
     try:
-        return CONFIG_TYPES[config_type]
+        return CFG_TYPES[cfg_type]
     except KeyError:
-        return VOTING_LIST_TYPES[config_type]
+        return VOTING_LIST_TYPES[cfg_type]
 
 
-def generate_service_list(service_networks, service_id_filter):
-    """
-    Generate service list from collector technical config.
+def get_services(db=None,
+                 require_collector_state=None,
+                 service_state=None,
+                 include_types=None,
+                 exclude_types=None):
+    """Generate filtered list of services.
 
-    .. code-block:: text
-
-        [
-            [<service_type>, {param: value, ...}],
-            ...
-        ]
-
-    :param service_networks: Service networks from collector technical config
-                             (section 'networks').
-    :type service_networks: dict
-    :param service_id_filter: Service IDs to include.
-                              All services are included if empty.
-    :type service_id_filter: list
-
-    :returns: List of services or None if some of specified services not found.
-    """
-    service_list = []
-    service_ids = service_id_filter[:]
-    for network in service_networks:
-        for service_type, services in sorted(network['services'].items()):
-            for service_data in services or []:
-                service_id = service_data['id']
-                if service_id_filter and service_id not in service_ids:
-                    log.debug('Skipping service %s', service_id)
-                    continue
-                if service_ids:
-                    service_ids.remove(service_id)
-                service_list.append([service_type, service_data])
-
-    if service_ids:
-        log.error('Invalid service ID: %s', ', '.join(service_ids))
-        return
-
-    return service_list
-
-
-def get_services(require_collector_status=None, service_status=None,
-                 include_types=None, exclude_types=None):
-    """
-    Generate filtered list of services.
-
-    :param require_collector_status: Require specified status for collector
-    :type require_collector_status: list
+    :param require_collector_state: Require specified state for collector
+    :type require_collector_state: list
     :param include_types: Include specified service types
     :type include_types: list
     :param exclude_types: Exclude specified service types
     :type exclude_types: list
-    :returns: dict of services (key is service ID and value
-              is dict with service database values) or
-              None if collector is not in expected state
+    :return: dict of services (key is service ID and value
+             is dict with service database values) or
+             None if collector is not in expected state
     """
-    require_collector_status = require_collector_status or []
-    assert isinstance(require_collector_status, list)
-    service_status = service_status or []
-    assert isinstance(service_status, list)
+    require_collector_state = require_collector_state or []
+    assert isinstance(require_collector_state, list)
+    service_state = service_state or []
+    assert isinstance(service_state, list)
     include_types = include_types or []
     exclude_types = exclude_types or []
     assert isinstance(include_types, list)
     assert isinstance(exclude_types, list)
     assert not include_types or not exclude_types
 
-    # collect status data
-    db = IVXVManagerDb()
-    collector_status = generate_collector_status(db)
-    db.close()
+    # get collector state
+    if db:
+        collector_state = generate_collector_state(db)
+    else:
+        with IVXVManagerDb() as db:
+            collector_state = generate_collector_state(db)
 
-    # check collector status
-    if (require_collector_status and
-            collector_status['collector_status']
-            not in require_collector_status):
-        log.info('Collector service status is %s',
-                 collector_status['collector_status'])
-        if len(require_collector_status) == 1:
-            log.error('Collector status must be %s for this operation',
-                      require_collector_status[0])
+    # check collector state
+    if (require_collector_state and
+            collector_state['collector_state'] not in require_collector_state):
+        log.info('Collector service state is %s',
+                 collector_state['collector_state'])
+        if len(require_collector_state) == 1:
+            log.error('Collector state must be %s for this operation',
+                      require_collector_state[0])
         else:
-            log.error('Collector status must be %s or %s for this operation',
-                      ', '.join(require_collector_status[:-1]),
-                      require_collector_status[-1])
-        return
+            log.error('Collector state must be %s or %s for this operation',
+                      ', '.join(require_collector_state[:-1]),
+                      require_collector_state[-1])
+        return None
 
     # create list of services
     services = {}
-    for service_id, service_data in collector_status['service'].items():
-        if service_status and service_data.get('state') not in service_status:
+    for service_id, service_data in collector_state.get('service', {}).items():
+        if service_state and service_data.get('state') not in service_state:
             continue
         if include_types:
             if service_data['service-type'] in include_types:
@@ -316,7 +434,7 @@ def get_services(require_collector_status=None, service_status=None,
     return services
 
 
-def clean_directory(path):
+def clean_dir(path):
     """Remove all files from directory."""
     log.debug('Cleaning directory %s', path)
     for filename in os.listdir(path):
@@ -324,132 +442,9 @@ def clean_directory(path):
         os.unlink(role_filename)
 
 
-def generate_collector_status(db):
-    """Generate collector status data."""
-    status = db.get_all_values()
-    service_states = [val['state']
-                      for val in status.get('service', {}).values()]
-
-    # generate service hints
-    if status.get('service'):
-        generate_service_hints(status['service'])
-
-    # group services by network
-    if status.get('service'):
-        status['network'] = dict()
-        for service_id, service_rec in status.get('service').items():
-            nw_name = service_rec.pop('network')
-            status['network'][nw_name] = status['network'].get(nw_name, dict())
-            status['network'][nw_name][service_id] = service_rec
-
-    # check package files
-    assert 'storage' not in status
-    status['storage'] = {'debs_exists': [], 'debs_missing': []}
-    pkg_path = CONFIG.get('deb_pkg_path')
-    for pkg_filename in COLLECTOR_PACKAGE_FILENAMES.values():
-        pkg_filepath = os.path.join(pkg_path, pkg_filename)
-        key = 'debs_exists' if os.path.exists(pkg_filepath) else 'debs_missing'
-        status['storage'][key].append(pkg_filepath)
-
-    # detect collector status
-    status['collector_status'] = detect_collector_state(status, service_states)
-
-    # detect counts of voter lists
-    list_counters = {'voters-list-loaded': 0,
-                     'voters-list-pending': 0}
-    voter_list_no = 0
-    while True:
-        key = 'voters%02d' % (voter_list_no + 1)
-        try:
-            if not status['list'][key]:
-                break
-        except KeyError:
-            break
-        if status['list'][key] == status['list'][key + '-loaded']:
-            list_counters['voters-list-loaded'] += 1
-        else:
-            list_counters['voters-list-pending'] += 1
-        voter_list_no += 1
-    status['list'].update(list_counters)
-
-    # detect election phase
-    status['election']['phase'] = None
-    status['election']['phase-start'] = None
-    status['election']['phase-end'] = None
-    if status['election']:
-
-        def get_ts(name):
-            """
-            Get timestamp value as datetime.datetime object
-            or None if value is not set.
-            """
-            value = status['election'][name]
-            return dateutil.parser.parse(value) if value else None
-
-        electionstart = get_ts('electionstart')
-        electionstop = get_ts('electionstop')
-        servicestart = get_ts('servicestart')
-        servicestop = get_ts('servicestop')
-        ts_format = '%Y-%m-%dT%H:%M %Z'
-
-        phases = [
-            [not electionstart, 'PREPARING', None, None],
-            [servicestart and
-             datetime.datetime.now(servicestart.tzinfo) < servicestart,
-             'WAITING FOR SERVICE START', None, servicestart],
-            [electionstart and
-             datetime.datetime.now(electionstart.tzinfo) < electionstart,
-             'WAITING FOR ELECTION START', servicestart, electionstart],
-            [electionstop and
-             datetime.datetime.now(electionstop.tzinfo) < electionstop,
-             'ELECTION', electionstart, electionstop],
-            [servicestop and
-             datetime.datetime.now(servicestop.tzinfo) < servicestop,
-             'WAITING FOR SERVICE STOP', electionstop, servicestop],
-            [True, 'FINISHED', servicestop, None],
-        ]
-        for phase_data in phases:
-            if phase_data[0]:
-                break
-        status['election']['phase'] = phase_data[1]
-        status['election']['phase-start'] = (
-            phase_data[2].strftime(ts_format)
-            if phase_data[2] else '-')
-        status['election']['phase-end'] = (
-            phase_data[3].strftime(ts_format)
-            if phase_data[3] else '-')
-
-    return status
-
-
-def generate_service_hints(services):
-    """Generate hints for services."""
-    for service_id, params in services.items():
-        # ordered list of hints
-        hints = [
-            ['Apply technical config', not params['technical-conf-version']],
-        ]
-        # add other hints if services is not a log collector
-        if params['service-type'] != 'log':
-            hints += [
-                ['Install TLS key', not params.get('tls-key', True)],
-                ['Install TLS certificate', not params.get('tls-cert', True)],
-                ['Install mobile ID identity token key',
-                 not params.get('dds-token-key', True)],
-                ['Install TSP registration key',
-                 not params.get('tspreg-key', True)],
-                ['Apply election config', not params['election-conf-version']],
-            ]
-
-        for hint, is_relevant in hints:
-            if is_relevant:
-                services[service_id]['hint'] = hint
-                break
-
-
 def populate_user_permissions(db):
     """Populate user permissions for Apache web server."""
-    permissions_path = CONFIG.get('permissions_path')
+    permissions_path = CONFIG['permissions_path']
     permissions_to_create = []
 
     for user_cn, permissions in db.get_all_values('user').items():
@@ -474,63 +469,30 @@ def populate_user_permissions(db):
                 fp.write('Created %s' % datetime.datetime.now().strftime('%c'))
 
 
-def detect_collector_state(status, service_states):
-    """Detect collector state."""
-    # NOT INSTALLED
-    # Stay in NOT INSTALLED state while:
-    # - some service is not installed
-    if (status['collector']['status'] == COLLECTOR_STATE_NOT_INSTALLED and
-            (not status['config']['technical'] or
-             not service_states or
-             SERVICE_STATE_NOT_INSTALLED in service_states)):
-        return COLLECTOR_STATE_NOT_INSTALLED
-
-    # INSTALLED
-    # Stay in INSTALLED state until technical config is applied to all services
-    if (status['collector']['status'] == COLLECTOR_STATE_INSTALLED and
-            SERVICE_STATE_INSTALLED in service_states):
-        return COLLECTOR_STATE_INSTALLED
-
-    # CONFIGURED
-    if SERVICE_STATE_FAILURE not in service_states:
-        return COLLECTOR_STATE_CONFIGURED
-
-    # collect service states by type
-    service_state_by_type = {}
-    for _, service_data in sorted(status['service'].items()):
-        service_state_by_type[service_data['service-type']] = (
-            service_state_by_type.get(service_data['service-type'], []))
-        service_state_by_type[service_data['service-type']].append(
-            service_data['state'])
-
-    # FAILURE
-    important_service_types = ['choices', 'dds', 'proxy', 'storage',
-                               'verification', 'voting']
-    for service_type in important_service_types:
-        if (service_type in service_state_by_type and
-                SERVICE_STATE_CONFIGURED not in
-                service_state_by_type[service_type]):
-            return COLLECTOR_STATE_FAILURE
-
-    # PARTIAL FAILURE
-    return COLLECTOR_STATE_PARTIAL_FAILURE
-
-
 def detect_voters_list_order_no(db):
-    """Detect next voters list order number from database."""
-    voter_list_no = 0
-    while True:
+    """Detect next voters list order number from database.
+
+    :rtype: int
+    """
+    for voter_list_no in range(1, 100):
         try:
-            db.get_value('list/voters%02d' % (voter_list_no + 1))
+            db.get_value(f'list/voters{voter_list_no:02d}')
         except KeyError:
-            break
-        voter_list_no += 1
-    return voter_list_no
+            return voter_list_no - 1
+    return 0
 
 
-def ask_user_confirmation(question):
-    """Ask user confirmation."""
-    while True:
-        answer = input(question).upper()
-        if answer in 'YN':
-            return answer == 'Y'
+def get_loaded_cfg_file_path(cfg_type):
+    """Get real file path for loaded config file.
+
+    :return: File path or None if file does not exist
+    :rtype: str
+    """
+    filepath = cfg_path('active_config_files_path', f'{cfg_type}.bdoc')
+    if not os.path.exists(filepath):
+        return None
+
+    assert os.path.islink(filepath), (
+        f'Config file {filepath} is not a symbolic link')
+
+    return os.path.realpath(filepath)

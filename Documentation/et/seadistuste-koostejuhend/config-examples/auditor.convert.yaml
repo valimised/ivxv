@@ -1,0 +1,6 @@
+convert:
+  input_bb: BallotBox.json
+  output_bb: ShuffledBallotBox.json
+  pub: Publickey.pem
+  protinfo: prot.xml
+  proofdir: mixnet/

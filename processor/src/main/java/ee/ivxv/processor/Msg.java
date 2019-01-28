@@ -16,7 +16,7 @@ public enum Msg implements NameHolder {
     app_processor,
 
     // Tools
-    tool_check, tool_squash, tool_revoke, tool_anonymize, tool_export,
+    tool_check, tool_squash, tool_revoke, tool_anonymize, tool_export, tool_stats, tool_statsdiff,
 
     // Tool arguments
     arg_ballotbox("bb"), arg_ballotbox_checksum("bbcs"), //
@@ -24,14 +24,18 @@ public enum Msg implements NameHolder {
     arg_districts, arg_revocationlists, //
     arg_tskey, arg_vlkey, //
     arg_voterlists, arg_path, arg_signature, //
+    arg_districts_mapping, //
     arg_voter_id, //
     arg_election_start, //
+    arg_enckey, //
+    arg_election_day, arg_period_start, arg_period_end, //
+    arg_compare, arg_to, arg_diff, //
     arg_out("o"),
 
     // Error messages
     e_tehcnical_error,
 
-    e_vl_vlkey_missing, //
+    e_vl_districts_missing, e_vl_vlkey_missing, //
     e_vl_first_not_initial, e_vl_initial_not_first, //
     e_vl_read_error, e_vl_signature_error, e_vl_election_id, //
     e_vl_invalid_header, e_vl_invalid_voter_row, e_vl_invalid_row_number, //
@@ -41,6 +45,9 @@ public enum Msg implements NameHolder {
     e_vl_fictive_single_district_and_station_required, //
     e_vl_error_report,
 
+    e_dist_mapping_invalid_row,
+
+    e_reg_checksum_missing, //
     e_bb_read_error, e_bb_ballot_processing, e_reg_record_processing, //
     e_bb_invalid_file_name, e_bb_missing_file, e_bb_repeated_file, e_bb_unknown_file_type, //
     e_ocsp_resp_invalid, e_ocsp_resp_status_not_suffessful, e_ocsp_resp_cert_status_not_good, //
@@ -53,21 +60,35 @@ public enum Msg implements NameHolder {
     e_reg_resp_nonce_sig_invalid, //
     e_unknown_file_in_vote_container, //
     e_reg_resp_req_unmatch, e_reg_req_without_ballot, e_ballot_without_reg_req, //
-    e_same_time_as_latest, //
+    e_same_time_as_latest, e_invalid_signature_profile, //
     e_bb_error_report,
 
     e_rl_read_error, e_rl_election_id, //
     e_rl_processing_error, //
     e_rl_voter_not_found_in_bb, e_rl_ballot_already_revoked, e_rl_ballot_already_restored,
 
+    e_bb_ciphertext_checking, //
+    e_ciphertext_invalid, //
+    e_ciphertext_invalid_bytes, //
+    e_ciphertext_invalid_group, //
+    e_ciphertext_invalid_point, //
+    e_ciphertext_invalid_qr, //
+    e_ciphertext_invalid_range, //
+
     e_writing_ivoter_list, //
     e_writing_revocation_report, //
     e_writing_log_n, //
     e_writing_error_report,
 
+    e_stats_code_not_estonian,
+
     // Messages
     m_output_file, //
     m_read, //
+
+    m_bb_unsigned_skipping_output, //
+    m_reg_skipping_compare, //
+    m_bb_grouping_votes_by_voter, //
 
     m_vl_reading, //
     m_vl, //
@@ -95,6 +116,10 @@ public enum Msg implements NameHolder {
     m_rl_restore_ballots_after, //
     m_rl_restore_done, //
 
+    m_dist_mapping_loading, //
+    m_dist_mapping_arg_for_cont, //
+    m_dist_mapping_loaded, //
+
     m_removing_recurrent_votes, //
     m_applying_revocation_lists, //
     m_anonymizing_ballot_box,
@@ -102,6 +127,9 @@ public enum Msg implements NameHolder {
     m_writing_ivoter_list, //
     m_writing_revocation_report, //
     m_writing_log_n, //
+
+    m_stats_generating, m_stats_generated, m_stats_ballot_errors, m_stats_valid_ballots, //
+    m_stats_json_saved, m_stats_csv_saved, m_stats_diff_saved, //
 
     ;
 

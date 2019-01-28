@@ -1,0 +1,14 @@
+groupgen:
+ paramtype: mod
+ length: 3072
+ init_template: key.init.template.yaml
+ random_source:
+   - random_source_type: system
+#  - random_source_type: file
+#    random_source_path: randomness_file
+#  - random_source_type: DPRNG
+#    random_source_path: seed_file
+#  - random_source_type: stream
+#    random_source_path: /dev/urandom
+   - random_source_type: user
+     random_source_path: server.exe

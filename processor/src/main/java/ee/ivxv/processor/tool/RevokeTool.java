@@ -34,7 +34,6 @@ public class RevokeTool implements Tool.Runner<RevokeArgs> {
     private static final String OUT_BB = "bb-3.json";
     private static final String OUT_RR = "revocation-report.csv";
     private static final String OUT_IVLJSON = "ivoterlist.json";
-    private static final String OUT_IVLPDF = "ivoterlist.pdf";
 
     final ProcessorContext ctx;
     final I18nConsole console;
@@ -59,7 +58,7 @@ public class RevokeTool implements Tool.Runner<RevokeArgs> {
 
         applyRevocationLists(bb, args.revLists.value(), loader);
 
-        reporter.writeIVoterList(out.resolve(OUT_IVLJSON), out.resolve(OUT_IVLPDF), bb, dl);
+        reporter.writeIVoterList(out.resolve(OUT_IVLJSON), null, bb, dl);
         reporter.writeRevocationReport(out.resolve(OUT_RR), bb.getElection(), loader.revRecords);
         reporter.writeLog2(out, bb.getElection(), loader.getLog2Records());
 

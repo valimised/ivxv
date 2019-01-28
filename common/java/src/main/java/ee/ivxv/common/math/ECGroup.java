@@ -9,6 +9,9 @@ import org.bouncycastle.math.ec.ECFieldElement;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.math.ec.custom.sec.SecP384R1Curve;
 
+/**
+ * Elliptic curve group
+ */
 public class ECGroup extends Group {
     /** The curve name constant for P-384 curve. */
     public final static String P384 = "P-384";
@@ -23,27 +26,65 @@ public class ECGroup extends Group {
     private final ECGroupElement base;
 
     // initialize a P-384 group
+    /**
+     * Initialize an elliptic curve P-384
+     */
     public ECGroup() {
         this(P384);
     }
 
-    public ECGroup(byte[] data) {
+    /**
+     * Initialize an elliptic curve using a serialized value.
+     * 
+     * @see #getBytes()
+     * @param data
+     * @throws IllegalArgumentException When parsing fails
+     */
+    public ECGroup(byte[] data) throws IllegalArgumentException {
         this(getASN1CurveName(data));
     }
 
-    public ECGroup(String curvename) {
+    /**
+     * Initialize an elliptic curve using a standard name for the curve.
+     * 
+     * @param curvename
+     * @throws IllegalArgumentException When unknown curve name is used.
+     */
+    public ECGroup(String curvename) throws IllegalArgumentException {
         name = curvename;
         switch (curvename) {
             case P384:
                 curve = new SecP384R1Curve();
-                BigInteger x = new BigInteger("aa87ca22be8b05378eb1c71ef320ad746e1d3b628ba79b9859f741e082542a385502f25dbf55296c3a545e3872760ab7", 16);
-                BigInteger y = new BigInteger("3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f", 16);
+                BigInteger x = new BigInteger(
+                        "aa87ca22be8b05378eb1c71ef320ad746e1d3b628ba79b9859f741e082542a385502f25dbf55296c3a545e3872760ab7",
+                        16);
+                BigInteger y = new BigInteger(
+                        "3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f",
+                        16);
                 base = new ECGroupElement(this, getPoint(x, y));
                 break;
             default:
                 throw new IllegalArgumentException("Unknown curve: " + curvename);
         }
         inf = new ECGroupElement(this);
+    }
+
+    /**
+     * Initialize an elliptic curve over a field with specified bitlength.
+     * 
+     * @param len
+     */
+    public ECGroup(int len) {
+        this(getIntCurveName(len));
+    }
+
+    private static String getIntCurveName(int len) {
+        switch (len) {
+            case 384:
+                return P384;
+            default:
+                throw new IllegalArgumentException("Invalid curve length");
+        }
     }
 
     private static String getASN1CurveName(byte[] data) throws IllegalArgumentException {
@@ -78,11 +119,33 @@ public class ECGroup extends Group {
                 .multiply(BigInteger.valueOf(curve.getField().getDimension()));
     }
 
+    /**
+     * Return point at infinity.
+     * 
+     * @return Point at infinity
+     */
     @Override
     public GroupElement getIdentity() {
         return inf;
     }
 
+    /**
+     * Encode a plaintext as an elliptic curve point.
+     * <p>
+     * We perform deterministic hashing. The algorithm for encoding the message is: {@code
+     * * if the msg is larger than the point size + padding size, then the message is too large
+     * 1. we allocate the room for second padding
+     * 2. compute f(x) = x^3 - 3x + b
+     * 3. set i = 0
+     * 4. we take x as x = m || i,
+     * 5. then we check if f(x) is quadratic residue, allowing us to take the square root of f(x).
+     * 5.1 if not, let i += 1 and got to 4.
+     * 5. the square root of f(x) will then become the y-coordinate of the point.
+     * }
+     * 
+     * @param msg
+     * @return
+     */
     @Override
     public GroupElement encode(Plaintext msg) {
         int limit = paddedMessageLengthBits();
@@ -117,10 +180,20 @@ public class ECGroup extends Group {
     }
 
     @Override
-    public Plaintext decode(GroupElement msg) {
-        if (!isGroupElement(msg)) {
-            throw new IllegalArgumentException("Message is not group element");
+    public Decodable isDecodable(GroupElement el) {
+        if (!isGroupElement(el)) {
+            return Decodable.INVALID_GROUP;
         }
+        ECGroupElement m = (ECGroupElement) el;
+        ECPoint M = m.getPoint();
+        if (!M.isValid()) {
+            return Decodable.INVALID_POINT;
+        }
+        return Decodable.VALID;
+    }
+
+    @Override
+    public Plaintext decode(GroupElement msg) {
         ECGroupElement m = (ECGroupElement) msg;
         ECPoint M = m.getPoint();
         BigInteger MM = M.getAffineXCoord().toBigInteger().shiftRight(ENCODING_SUCCESS);
@@ -146,11 +219,23 @@ public class ECGroup extends Group {
         return this.equals(el.getGroup());
     }
 
+    /**
+     * Serialize the group.
+     * <p>
+     * Returns GENERALSTRING of the curve name.
+     * 
+     * @return
+     */
     @Override
     public byte[] getBytes() {
         return new Field(name).encode();
     }
 
+    /**
+     * Get the curve name.
+     * 
+     * @return
+     */
     public String getCurveName() {
         return name;
     }
@@ -167,6 +252,11 @@ public class ECGroup extends Group {
         return this.curve;
     }
 
+    /**
+     * Get the base point of the group.
+     * 
+     * @return
+     */
     public ECGroupElement getBasePoint() {
         return base;
     }
@@ -186,5 +276,10 @@ public class ECGroup extends Group {
     @Override
     public int hashCode() {
         return this.curve.hashCode() ^ 0x0002;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("ECGroup(\"%s\")", getCurveName());
     }
 }

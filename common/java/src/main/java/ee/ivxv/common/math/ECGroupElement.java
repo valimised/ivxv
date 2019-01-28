@@ -2,27 +2,47 @@ package ee.ivxv.common.math;
 
 import ee.ivxv.common.asn1.ASN1DecodingException;
 import ee.ivxv.common.asn1.Field;
-import ee.ivxv.common.asn1.Sequence;
 import java.math.BigInteger;
 import java.util.Arrays;
 import org.bouncycastle.math.ec.ECFieldElement;
 import org.bouncycastle.math.ec.ECPoint;
 
+/**
+ * ECGroupElement holds elliptic curve points.
+ */
 public class ECGroupElement extends GroupElement {
     private final ECGroup group;
     private final ECPoint point;
 
+    /**
+     * Initializie using a group and point.
+     * 
+     * @param group
+     * @param point
+     */
     public ECGroupElement(ECGroup group, ECPoint point) {
         this.group = group;
         this.point = point.normalize();
         checkPoint();
     }
 
-    // point at infinity
+    /**
+     * Initialize a point at infinity.
+     * 
+     * @param group
+     */
     public ECGroupElement(ECGroup group) {
         this(group, group.getInfinitePoint());
     }
 
+    /**
+     * Initialize a point field element integer representation as coordinates.
+     * 
+     * @param group
+     * @param x
+     * @param y
+     * @throws IllegalArgumentException
+     */
     public ECGroupElement(ECGroup group, BigInteger x, BigInteger y)
             throws IllegalArgumentException {
         this.group = group;
@@ -30,11 +50,26 @@ public class ECGroupElement extends GroupElement {
         checkPoint();
     }
 
+    /**
+     * Initialize using field elements as coordinates.
+     * 
+     * @param group
+     * @param X
+     * @param Y
+     * @throws IllegalArgumentException
+     */
     public ECGroupElement(ECGroup group, ECFieldElement X, ECFieldElement Y)
             throws IllegalArgumentException {
         this(group, X.toBigInteger(), Y.toBigInteger());
     }
 
+    /**
+     * Initialize using serialized data.
+     * 
+     * @param group
+     * @param data
+     * @throws IllegalArgumentException
+     */
     public ECGroupElement(ECGroup group, byte[] data) throws IllegalArgumentException {
         this.group = group;
         BigInteger[] coords = getANSICoords(data);
@@ -70,15 +105,16 @@ public class ECGroupElement extends GroupElement {
             return null;
         }
         if (data.length % 2 != 1) {
-            throw new IllegalArgumentException("ANSI coordinates must consist of mode byte and coordinates");
+            throw new IllegalArgumentException(
+                    "ANSI coordinates must consist of mode byte and coordinates");
         }
         if (data[0] != 0x04) {
             throw new IllegalArgumentException("Invalid point representation method");
         }
         int coordLen = (data.length - 1) / 2;
         BigInteger[] coords = new BigInteger[2];
-        coords[0] = new BigInteger(1, Arrays.copyOfRange(data, 1, coordLen+1));
-        coords[1] = new BigInteger(1, Arrays.copyOfRange(data, coordLen+1, 2*coordLen+1));
+        coords[0] = new BigInteger(1, Arrays.copyOfRange(data, 1, coordLen + 1));
+        coords[1] = new BigInteger(1, Arrays.copyOfRange(data, coordLen + 1, 2 * coordLen + 1));
         return coords;
     }
 
@@ -87,6 +123,12 @@ public class ECGroupElement extends GroupElement {
         return group.getOrder();
     }
 
+    /**
+     * Add another point to this point and return the result.
+     * 
+     * @param other
+     * @return
+     */
     @Override
     public GroupElement op(GroupElement other) throws MathException {
         if (!this.group.equals(other.getGroup())) {
@@ -96,21 +138,40 @@ public class ECGroupElement extends GroupElement {
         return new ECGroupElement(this.group, this.getPoint().add(e.getPoint()));
     }
 
+    /**
+     * Scale the point with factor.
+     * 
+     * @param factor
+     * @return
+     */
     @Override
     public GroupElement scale(BigInteger factor) {
         return new ECGroupElement(this.group, this.getPoint().multiply(factor));
     }
 
+    /**
+     * Return the inverse of the point.
+     * 
+     * @return
+     */
     @Override
     public GroupElement inverse() {
         return new ECGroupElement(this.group, this.getPoint().negate());
     }
 
+    /**
+     * Serialize the point.
+     * <p>
+     * See X9-62 section 4.3.6 for EC point serialization algorithm. The point is then encoded as
+     * ASN1 OCTETSTRING
+     * 
+     * @return
+     */
     @Override
     public byte[] getBytes() {
         // ref: https://www.security-audit.com/files/x9-62-09-20-98.pdf section 4.3.6
         if (this.getPoint().isInfinity()) {
-            return new byte[]{0x00};
+            return new byte[] {0x00};
         }
         byte[] res = this.getPoint().getEncoded(false);
         return new Field(res).encode();
@@ -128,6 +189,11 @@ public class ECGroupElement extends GroupElement {
         return this.group;
     }
 
+    /**
+     * Get the actual point of the element.
+     * 
+     * @return
+     */
     public ECPoint getPoint() {
         return point;
     }

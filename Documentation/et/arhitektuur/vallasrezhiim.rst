@@ -7,27 +7,40 @@ Rakendused
 Üldpõhimõtted
 -------------
 
-Kõik rakendused on käsurealiidesega rakendused, mis on pakendatud töötama operatsioonisüsteemi Windows 7 (või uuem) keskkonnas. Komponentide kasutajaliidesed on ühekeelsed. Komponendid tarnitakse eestikeelsetena, nende tõlkimine on võimalik tõlkefaili abil.
+Kõik rakendused on käsurealiidesega rakendused, mis on pakendatud töötama
+operatsioonisüsteemi Windows 7 (või uuem) keskkonnas. Komponentide
+kasutajaliidesed on ühekeelsed. Komponendid tarnitakse eestikeelsetena, nende
+tõlkimine on võimalik tõlkefaili abil.
 
-Rakendused programmeeritakse keeles Java.
+Rakendused on programmeeritud Java keeles.
 
-Väliste infosüsteemidega suhtlevad rakendused kasutavad maksimaalselt olemasolevaid liideseid/andmestruktuure.
+Väliste infosüsteemidega suhtlevad rakendused kasutavad maksimaalselt
+olemasolevaid liideseid/andmestruktuure.
 
-Rakendused saavad oma sisendi rakenduste seadistustest ja seadistustes näidatud failidest failisüsteemis ning salvestavad oma väljundi kasutaja näidatud kausta failisüsteemis. Failid võivad paikneda ka operatiiv-mälukettal.
+Rakendused saavad oma sisendi rakenduste seadistustest ja seadistustes näidatud
+failidest failisüsteemis ning salvestavad oma väljundi kasutaja näidatud kausta
+failisüsteemis. Failid võivad paikneda ka operatiiv-mälukettal.
 
-Relevantsed rakendused toetavad ElGamal krüptosüsteemi täisarvujäägikorpustel ning P-384 elliptkõveral. Lugemistõend realiseeritakse Schnorri nullteadmustõestusel põhineval protokollil.
+Relevantsed rakendused toetavad ElGamal krüptosüsteemi täisarvujäägikorpustel
+ning P-384 elliptkõveral. Lugemistõend on realiseeritud Schnorri
+nullteadmustõestusel põhineval protokollil.
 
 .. figure:: model/app_modules.png
 
    Rakenduste abimoodulid
 
-
-Rakenduste jaoks unifitseeritakse valimise liides, mis võimaldab erinevate valimistüüpide realiseerimist moodulitena. Digiallkirja verifitseerimise funktsionaalsus luuakse digidoc4j teegi (https://github.com/open-eid/digidoc4j) abil. Abimoodulite kasutamist alljärgnevatel skeemidel eraldi välja ei tooda.
+Valimise liides on rakenduste jaoks unifitseeritud, see võimaldab erinevate
+valimistüüpide realiseerimist moodulitena. Digiallkirja verifitseerimise
+funktsionaalsus on loodud `digidoc4j <https://github.com/open-eid/digidoc4j>`_
+teegi abil. Abimoodulite kasutamist alljärgnevatel skeemidel eraldi välja ei
+tooda.
 
 Rakenduste seadistamine
 ```````````````````````
 
-Rakendused seadistatakse kas digitaalallkirjastatud konfiguratsioonipakiga või käsureavõtmetega. Hierarhilise struktuuriga seadistuste sisestamist käsureavõtmed ei toeta. Seadistused konfiguratsioonipakis kirjeldatakse keeles YAML:
+Rakendused seadistatakse kas digitaalallkirjastatud konfiguratsioonipakiga või
+käsureavõtmetega. Käsureavõtmed ei toeta hierarhilise struktuuriga seadistuste
+sisestamist. Seadistused konfiguratsioonipakis kirjeldatakse YAML-keeles:
 
 .. code-block:: yaml
 
@@ -77,16 +90,27 @@ Sisendite kooskõlalisuse kontroll
 Kõik rakendused teostavad konfiguratsioonile sisendite kooskõlalisuse kontrolli vastavalt nende poolt kasutatavale konfiguratsioonile:
 
 #. sertifikaatide konfiguratsiooni laadimine;
+
 #. konfiguratsiooni digiallkirja verifitseerimine;
+
 #. ringkondade nimekirja verifitseerimine;
+
 #. ringkondade nimekirja kooskõlalisuse kontroll;
+
 #. ringkondade nimekirja laadimine;
+
 #. valikute nimekirja verifitseerimine;
+
 #. valikute nimekirja kooskõlalisuse kontroll;
+
 #. valikute nimekirja laadimine;
+
 #. valijate nimekirjade verifitseerimine;
+
 #. valijate nimekirjade kooskõlalisus kontroll;
-#. valijate nimekirjade laadimine;
+
+#. valijate nimekirjade laadimine.
+
 
 Võtmerakendus
 -------------
@@ -95,66 +119,95 @@ Võtmerakendus
 
    Võtmerakenduse liidesed
 
+Võtmerakendusega genereeritakse iga hääletamise jaoks häälte salastamise ja
+häälte avamise võti, samuti toimub selle abil häälte lugemine ja tulemuse
+väljastamine.
 
-Võtmerakendus on rakendus, millega genereeritakse iga hääletamise jaoks häälte salastamise ja häälte avamise võti ning mille abil toimub häälte lugemine ja tulemuse väljastamine.
+Võtmerakendus kasutab [DesmedtF89]_ läviskeemi, mis põhineb usaldataval
+osakujagajal ning rakendab Shamiri osakujagamist, mis on
+informatsiooniteoreetiliselt turvaline :math:`t < M` osapoole korral, kus M on
+lävipiir.
 
-Võtmerakendus kasutab [DesmedtF89]_  läviskeemi, mis baseerub usaldataval osakujagajal ning rakendab Shamiri osakujagamist, mis on informatsiooniteoreetiliselt turvaline t < M osapoole korral, kus M on lävipiir.
+Võtmeosakud genereeritakse operatiivmälus ning talletatakse PKCS15-liidese
+vahendusel kiipkaardile.
 
-Võtmeosakud genereeritakse operatiivmälus ning talletatakse kiipkaardile PKCS15 liidese vahendusel.
+Võtmerakenduse sisend võtme genereerimisel on:
 
-Võtmerakenduse sisend võtme genereerimisel on
+- Võtmepaari identifikaator;
 
-- Võtmepaari identifikaator
-- Krüptosüsteemi ElGamal spetsifikatsioon – täisarvujäägikorpus või P-384 elliptkõver ning võtmepikkus
-- M-N läviskeemi spetsifikatsioon, mis peab vastama reeglile N >= 2 * M - 1
-- N PKCS15 ühilduvat kiipkaarti
+- Krüptosüsteemi ElGamal spetsifikatsioon – täisarvujäägikorpus või P-384
+  elliptkõver ning võtmepikkus;
 
-Võtmerakenduse väljund võtme genereerimisel on
+- M-N läviskeemi spetsifikatsioon, mis peab vastama reeglile
+  :math:`N >= 2 * M - 1`;
 
-- Isesigneeritud sertifikaat
-- N võtmeosakut talletatuna kiipkaartidel
-- Rakenduse detailne tegevuslogi
-- Rakenduse detailne vealogi
+- N PKCS15-ühilduvat kiipkaarti;
 
-Võtmerakenduse sisend häälte lugemisel on
+Võtmerakenduse väljund võtme genereerimisel on:
 
-- Miksitud hääled
-- Võtmepaari identifikaator
-- M võtmeosakut vastavalt läviskeemi spetsifikatsioonile
+- Isesigneeritud sertifikaat;
 
-Võtmerakenduse väljund häälte lugemisel on
+- N võtmeosakut talletatuna kiipkaartidel;
 
-- Signeeritud hääletamistulemus
-- Kehtetute häälte loend
-- Lugemistõend (Schnorri nullteadmustõestusel põhinev protokoll nagu viidatud hankedokumentides)
-- Rakenduse detailne tegevuslogi
-- Rakenduse detailne vealogi
+- Rakenduse detailne tegevuslogi;
 
-Lisaks varem defindeeritud liidestele ja sõltuvustele kasutab töötlemisrakendus kolmanda osapoole teeki PKCS15 liidese realiseerimiseks. Konkreetne teek valitakse välja projekteerimisfaasis.
+- Rakenduse detailne vealogi.
+
+Võtmerakenduse sisend häälte lugemisel on:
+
+- Miksitud hääled;
+
+- Võtmepaari identifikaator;
+
+- M võtmeosakut vastavalt läviskeemi spetsifikatsioonile.
+
+Võtmerakenduse väljund häälte lugemisel on:
+
+- Signeeritud hääletamistulemus;
+
+- Kehtetute häälte loend;
+
+- Lugemistõend (Schnorri nullteadmustõestusel põhinev protokoll vastavalt
+  hankedokumentides viidatule);
+
+- Rakenduse detailne tegevuslogi;
+
+- Rakenduse detailne vealogi.
 
 Töötlemisrakendus
 -----------------
 
-Töötlemisrakendus on rakendus hääletamisperioodil kogutud häälte verifitseerimiseks, tühistamiseks ning anonüümimiseks, mis toimib vastavalt Üldkirjelduse jaotisele 7.6.
+Töötlemisrakendusega verifitseeritakse, tühistatakse ning anonüümistatakse
+hääletamisperioodil kogutud hääli vastavalt Üldkirjelduse jaotisele 7.6.
 
-Töötlemisrakenduse sisendid on
+Töötlemisrakenduse sisendid on:
 
 - kogumisteenuse poolt talletatud elektroonilised hääled;
+
 - registreerimisteenuse poolt väljastatud ajamärgendid;
+
 - valijate nimekirjad;
+
 - ringkondade nimekiri;
+
 - tühistusnimekirjad;
+
 - ennistusnimekirjad.
 
-Töötlemisrakenduse väljundid on
+Töötlemisrakenduse väljundid on:
 
 - rakenduse detailne tegevuslogi;
+
 - rakenduse detailne vealogi;
-- e-hääletanute nimekiri PDF vormingus, vastavalt töötlemise etapile;
+
+- e-hääletanute nimekiri PDF-vormingus, vastavalt töötlemise etapile;
+
 - e-hääletanute nimekiri masintöödeldaval kujul, vastavalt töötlemise etapile;
+
 - anonüümitud hääled.
 
-Lisaks varem defindeeritud liidestele ja sõltuvustele kasutab töötlemisrakendus kolmanda osapoole teeki PDFide väljastamise funktsionaalsuse realiseerimiseks.
+Lisaks varem defineeritud liidestele ja sõltuvustele kasutab töötlemisrakendus
+kolmanda osapoole teeki PDF-ide väljastamise funktsionaalsuse teostamiseks.
 
 .. figure:: model/processing.png
 
@@ -163,25 +216,46 @@ Lisaks varem defindeeritud liidestele ja sõltuvustele kasutab töötlemisrakend
 Elektrooniliste häälte täielik töötlemine
 `````````````````````````````````````````
 
-Elektrooniliste häälte täielik töötlemine on tegevus, mille käigus töötlemisrakendus võrdleb Kogumisteenuse poolt talletatud häältehulka registreerimisteenuse poolt talletatud häältehulgaga, kontrollib talletatud häälte vastavust valimiste konfiguratsioonile, tuvastab loendamisele minevad hääled ning anonüümistab need Võtmerakendusele üle andmiseks.
+Elektrooniliste häälte täielik töötlemine on tegevus, mille käigus
+töötlemisrakendus võrdleb Kogumisteenuse poolt talletatud häälte hulka
+registreerimisteenuse poolt talletatud häälte hulgaga, kontrollib talletatud
+häälte vastavust valimiste konfiguratsioonile, tuvastab loendamisele minevad
+hääled ning anonüümistab need Võtmerakendusele üle andmiseks.
 
-#. rakenduse seadistuste laadimine
+#. rakenduse seadistuste laadimine;
+
 #. elektrooniliste häälte digitaalallkirjade verifitseerimine;
+
 #. registreerimisteenuse kinnituste verifitseerimine;
+
 #. ajamärgendite verifitseerimine;
+
 #. iga valija kohta viimase kehtiva hääle tuvastamine;
+
 #. algse elektrooniliselt hääletanute nimekirja väljastamine PDF-vormingus;
+
 #. tühistus- ja ennistusnimekirjade verifitseerimine;
+
 #. tühistus- ja ennistusnimekirjade kooskõlalisuse kontroll;
+
 #. tühistus- ja ennistusnimekirjade rakendamine;
-#. miksimisele minevate häälte nimekirja koostamine, krüptogrammide eraldamine digitaalallkirjadest;
-#. lõpliku elektrooniliselt hääletanute nimekirja väljastamine masinloetavas vormingus.
+
+#. miksimisele minevate häälte nimekirja koostamine, krüptogrammide eraldamine
+   digitaalallkirjadest;
+
+#. lõpliku elektrooniliselt hääletanute nimekirja väljastamine masinloetavas
+   vormingus.
+
 
 Elektrooniliselt hääletanute nimekirja genereerimine
 ````````````````````````````````````````````````````
-#. rakenduse seadistuste laadimine
+
+#. rakenduse seadistuste laadimine;
+
 #. elektrooniliste häälte digitaalallkirjade verifitseerimine;
-#. algse elektrooniliselt hääletanute nimekirja väljastamine PDF-vormingus;
+
+#. algse elektrooniliselt hääletanute nimekirja väljastamine PDF-vormingus.
+
 
 Auditirakendus
 --------------
@@ -190,15 +264,19 @@ Auditirakendus
 
    Auditirakenduse liidesed
 
-Auditirakendus (joonis 9) on rakendus, mis verifitseerib matemaatliselt häälte kokkulugemise korrektsust ning miksimise kasutamisel ka miksimise korrektsust.
+Auditirakendusega (joonis 9) verifitseeritakse matemaatiliselt häälte
+kokkulugemise korrektsust ning miksimise kasutamisel ka miksimise korrektsust.
 
-Auditirakenduse sisendid on
+Auditirakenduse sisendid on;
 
-- anonüümitud hääled,
-- miksitud hääled,
-- miksimistõend (NB! Nii miksimistõend kui konkreetne miksimismeetod on defineerimata),
+- anonüümitud hääled;
+
+- miksitud hääled;
+
+- Verificatum miksimistõend;
+
 - hääletamistulemus.
 
-Auditirakenduse väljund on rakenduse detailne tegevuslogi, mis sisaldab ka hinnangut auditi tervikliku õnnestumise kohta. Vajadusel väljastatakse ka rakenduse detailne vealogi.
-
-.. vim: sts=3 sw=3 et:
+Auditirakenduse väljund on rakenduse detailne tegevuslogi, mis sisaldab ka
+hinnangut auditi tervikliku õnnestumise kohta. Vajadusel väljastatakse ka
+rakenduse detailne vealogi.

@@ -17,6 +17,7 @@ func TestNew(t *testing.T) {
 		technical string
 	}{
 		{"dummy", "testdata/trust.dummy", "testdata/election.dummy", "testdata/technical.dummy"},
+		{"prefixed", "testdata/prefix.trust.dummy", "", ""},
 	}
 
 	for _, test := range tests {

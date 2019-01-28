@@ -7,28 +7,59 @@ import ee.ivxv.common.util.Util;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-// Plaintext is an immutable plaintext
+/**
+ * Plaintext instance represents an immutable plaintext suitable for encryption. It includes
+ * additional methods for padding, encoding and decoding the messages.
+ *
+ */
 public class Plaintext {
     private final byte[] msg;
     private final boolean padded;
 
+    /**
+     * Initialize the Plaintext instance from byte array.
+     * 
+     * @param msg Byte array to set message.
+     * @param padded A boolean indicating if the message is already padded.
+     */
     public Plaintext(byte[] msg, boolean padded) {
         this.msg = msg;
         this.padded = padded;
     }
 
+    /**
+     * Initialize Plaintext from unpadded byte array.
+     * 
+     * @param msg Byte array to set message.
+     */
     public Plaintext(byte[] msg) {
         this(msg, false);
     }
 
+    /**
+     * Initialize Plaintext from unpadded UTF-8 encoded String.
+     * 
+     * @param msg Unpadded UTF-8 encoded message.
+     */
     public Plaintext(String msg) {
         this(Util.toBytes(msg), false);
     }
 
+    /**
+     * Initialize empty Plaintext.
+     */
     public Plaintext() {
         this(new byte[] {}, false);
     }
 
+    /**
+     * Initialize Plaintext from BigInteger from its byte representation. Truncating or padding with
+     * zeros the byte representation if necessary.
+     * 
+     * @param msg BigInteger to initialize from.
+     * @param totalBits The number of bits to use. Lower bits are truncated if necessary.
+     * @param padded Indicate if the BigInteger denotes a padded message.
+     */
     // the user must be sure that the msg fits into this number of bits. we
     // truncate the lower bits if they do not fit
     public Plaintext(BigInteger msg, int totalBits, boolean padded) {
@@ -44,27 +75,47 @@ public class Plaintext {
         return String.format("Plaintext(%s)", printHexBinary(msg));
     }
 
+    /**
+     * Get byte-encoded representation of the Plaintext, embedded in a ASN1 OCTETSTRING.
+     * 
+     * @return ASN1 encoded message in bytes.
+     */
     public byte[] getBytes() {
         return new Field(this.msg).encode();
     }
 
+    /**
+     * Get byte-encoded representation of the Plaintext.
+     * 
+     * @return Message in bytes.
+     */
     public byte[] getMessage() {
         return this.msg.clone();
     }
 
-    // assumption is that the message is UTF-8. If not, then the output is
-    // ill-defined (invalid characters are replaced with replacement
-    // characters).
+    /**
+     * Get UTF-8 decoded representation of the message. If the message is not valid UTF-8, then the
+     * result is undefined.
+     * 
+     * @return
+     */
     public String getUTF8DecodedMessage() {
         return Util.toString(this.msg);
     }
 
+    /**
+     * Return a Plaintext with additional padding.
+     * 
+     * @param totalBytes The number of bytes to pad to.
+     * @return Plaintext with padded message.
+     * @throws IllegalArgumentException If the message does not fit into given number of bytes.
+     */
     public Plaintext addPadding(int totalBytes) throws IllegalArgumentException {
         if (this.padded) {
             return this;
         }
         if (this.msg.length > totalBytes - 3) {
-            throw new IllegalArgumentException("Padded message length too short");
+            throw new IllegalArgumentException("Padded message length too long");
         }
         byte[] padded = new byte[totalBytes];
         int i;
@@ -78,6 +129,12 @@ public class Plaintext {
         return new Plaintext(padded, true);
     }
 
+    /**
+     * Strip padding. No-op if message is already unpadded.
+     * 
+     * @return Unpadded Plaintext.
+     * @throws IllegalArgumentException If padding is invalid.
+     */
     public Plaintext stripPadding() throws IllegalArgumentException {
         if (!this.padded) {
             return this;
@@ -104,6 +161,11 @@ public class Plaintext {
         throw new IllegalArgumentException("Padding unexpected");
     }
 
+    /**
+     * Return a BigInteger representation of the message.
+     * 
+     * @return BigInteger representation of the message.
+     */
     public BigInteger toBigInteger() {
         return new BigInteger(1, this.msg);
     }

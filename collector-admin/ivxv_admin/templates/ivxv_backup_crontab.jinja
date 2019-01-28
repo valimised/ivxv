@@ -1,0 +1,47 @@
+{#
+
+IVXV Internet voting framework
+
+Template file for backup automation crontab.
+
+-#}
+# Crontab for IVXV Management Service backup automation
+
+# This file is managed by IVXV Management Service
+# Current version is generated @ {{ time_generated }}
+
+# This file is (re)generated automatically on the following events:
+#
+# - Backup service comes to configured state
+# - Any of voting service instances comes to configured state
+# - Any of log collectors comes to configured state
+#
+# This file is removed automatically on the following events:
+#
+# - Management database is initialized
+
+{% if not configured_backup_services %}
+# Backup service is NOT CONFIGURED
+{% else %}
+# Backup service is configured
+# Configured voting services: {{ configured_voting_services }}
+# Configured log collectors: {{ configured_log_collectors }}
+
+{% for hour, minute in backup_times -%}
+
+# @ {{ "%02d"|format(hour) }}:{{ "%02d"|format(minute) }}
+    {%- if configured_backup_services %}
+{{ minute }} {{ hour }} * * * ivxv-backup management-conf
+    {%- endif -%}
+    {%- if configured_voting_services %}
+{{ minute }} {{ hour }} * * * ivxv-backup ballot-box
+    {%- endif -%}
+    {%- if configured_log_collectors %}
+{{ minute }} {{ hour }} * * * ivxv-backup log
+    {%- endif %}
+
+{% endfor -%}
+{% endif %}
+{#-
+vim:ft=jinja:
+#}

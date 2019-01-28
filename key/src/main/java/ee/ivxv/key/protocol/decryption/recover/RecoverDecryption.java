@@ -1,44 +1,60 @@
 package ee.ivxv.key.protocol.decryption.recover;
 
+import ee.ivxv.common.crypto.CorrectnessUtil;
 import ee.ivxv.common.crypto.Plaintext;
 import ee.ivxv.common.crypto.elgamal.ElGamalCiphertext;
 import ee.ivxv.common.crypto.elgamal.ElGamalDecryptionProof;
 import ee.ivxv.common.crypto.elgamal.ElGamalParameters;
 import ee.ivxv.common.crypto.elgamal.ElGamalPrivateKey;
+import ee.ivxv.common.crypto.elgamal.ElGamalPublicKey;
 import ee.ivxv.common.math.LagrangeInterpolation;
 import ee.ivxv.common.math.MathException;
-import ee.ivxv.common.service.smartcard.Cards;
+import ee.ivxv.common.service.smartcard.IndexedBlob;
 import ee.ivxv.key.protocol.DecryptionProtocol;
 import ee.ivxv.key.protocol.ProtocolException;
-import ee.ivxv.key.protocol.ProtocolUtil;
 import ee.ivxv.key.protocol.ThresholdParameters;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Set;
 
-// this protocol gets the keyshares from the cards, reconstructs the key in
-// memory and then performs software decryption
+/**
+ * RecoverDecryption is a protocol for decrypting the ciphertext by reconstructing the private key
+ * from private key shares.
+ */
 public class RecoverDecryption implements DecryptionProtocol {
-    private final Cards cards;
+    private final Set<IndexedBlob> blobs;
     private final ThresholdParameters tparams;
-    private final byte[] cardShareAID;
-    private final byte[] cardShareName;
     private final boolean withProof;
     private ElGamalPrivateKey sk;
 
-    public RecoverDecryption(Cards cards, ThresholdParameters tparams, byte[] cardShareAID,
-            byte[] cardShareName) throws ProtocolException {
-        this(cards, tparams, cardShareAID, cardShareName, true);
+    /**
+     * Initialize the protocol from values.
+     * 
+     * @param blobs The set of blobs that contain the private key shares.
+     * @param tparams Parameters for threshold decryption.
+     * @throws ProtocolException When the number of cards is less than is required for decryption.
+     */
+    public RecoverDecryption(Set<IndexedBlob> blobs, ThresholdParameters tparams)
+            throws ProtocolException {
+        this(blobs, tparams, true);
     }
 
-    public RecoverDecryption(Cards cards, ThresholdParameters tparams, byte[] cardShareAID,
-            byte[] cardShareName, boolean withProof) throws ProtocolException {
-        if (cards.count() < tparams.getThreshold()) {
+    /**
+     * Initialize the protocol from values.
+     * 
+     * @param blobs The set of blobs that contain the private key shares.
+     * @param tparams Parameters for threshold decryption.
+     * @param withProof Boolean indicating if decrypting without providing proofs of correct
+     *        decryption.
+     * @throws ProtocolException When the number of cards is less than is required for decryption.
+     */
+    public RecoverDecryption(Set<IndexedBlob> blobs, ThresholdParameters tparams, boolean withProof)
+            throws ProtocolException {
+        if (blobs.size() < tparams.getThreshold()) {
             throw new ProtocolException("Fewer cards available than threshold");
         }
-        this.cards = cards;
+        this.blobs = blobs;
         this.tparams = tparams;
-        this.cardShareAID = cardShareAID;
-        this.cardShareName = cardShareName;
         this.withProof = withProof;
         recoverKey();
     }
@@ -50,7 +66,6 @@ public class RecoverDecryption implements DecryptionProtocol {
     }
 
     private ElGamalPrivateKey forceKeyRecover() throws ProtocolException {
-        byte[][] blobs = ProtocolUtil.getAllBlobs(tparams, cards, cardShareAID, cardShareName);
         ElGamalPrivateKey[] parsedKeys = parseAllBlobs(blobs);
         if (!filterKeys(parsedKeys)) {
             throw new ProtocolException("Key share parameters mismatch");
@@ -59,15 +74,13 @@ public class RecoverDecryption implements DecryptionProtocol {
         return secretKey;
     }
 
-    private ElGamalPrivateKey[] parseAllBlobs(byte[][] blobs) throws ProtocolException {
-        ElGamalPrivateKey[] parsed = new ElGamalPrivateKey[blobs.length];
-        for (int i = 0; i < blobs.length; i++) {
-            if (blobs[i] == null) {
-                parsed[i] = null;
-                continue;
-            }
+    private ElGamalPrivateKey[] parseAllBlobs(Set<IndexedBlob> blobs) throws ProtocolException {
+        ElGamalPrivateKey[] parsed = new ElGamalPrivateKey[tparams.getParties()];
+        for (IndexedBlob blob : blobs) {
+
+            int i = blob.getIndex();
             try {
-                parsed[i] = new ElGamalPrivateKey(blobs[i]);
+                parsed[i - 1] = new ElGamalPrivateKey(blob.getBlob());
             } catch (IllegalArgumentException e) {
                 throw new ProtocolException(
                         "Exception while parsing secret share: " + e.toString());
@@ -119,6 +132,19 @@ public class RecoverDecryption implements DecryptionProtocol {
         return new ElGamalPrivateKey(params, k);
     }
 
+    /**
+     * Decrypt the message using private key reconstructed in memory.
+     * <p>
+     * If the protocol was initialized to decrypt without proofs, then the corresponding values in
+     * the returned value are null.
+     * 
+     * @param msg Message to be decrypted. Must be serialized instance of
+     *        {@link ee.ivxv.common.crypto.elgamal.ElGamalCiphertext}
+     * @return Decrypted message
+     * @throws ProtocolException If the secret key has not bee decrypted or computation exception
+     *         occurs.
+     * @throws IllegalArgumentException If invalid input.
+     */
     @Override
     public ElGamalDecryptionProof decryptMessage(byte[] msg)
             throws ProtocolException, IllegalArgumentException, IOException {
@@ -130,11 +156,31 @@ public class RecoverDecryption implements DecryptionProtocol {
             if (withProof) {
                 return this.sk.provableDecrypt(ct);
             } else {
-                Plaintext pt = this.sk.decrypt(ct);
+                Plaintext pt = this.sk.decrypt(ct, true);
                 return new ElGamalDecryptionProof(ct, pt, this.sk.getPublicKey());
             }
         } catch (MathException e) {
             throw new ProtocolException("Arithmetic error: " + e.toString());
         }
+    }
+
+    /**
+     * Check the ciphertext correctness.
+     * <p>
+     * Calls {@link ee.ivxv.common.crypto.CorrectnessUtil#isValidCiphertext(ElGamalPublicKey, byte[])}.
+     * 
+     * @see ee.ivxv.common.crypto.CorrectnessUtil
+     * 
+     * @param msg
+     * @throws ProtocolException When the protocol is not fully initialized
+     */
+    @Override
+    public CorrectnessUtil.CiphertextCorrectness checkCorrectness(byte[] msg)
+            throws ProtocolException {
+        if (this.sk == null) {
+            throw new ProtocolException("Secret key not reconstructed");
+        }
+        ElGamalPublicKey pk = sk.getPublicKey();
+        return CorrectnessUtil.isValidCiphertext(pk, msg);
     }
 }

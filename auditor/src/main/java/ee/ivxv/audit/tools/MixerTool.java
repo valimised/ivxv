@@ -4,6 +4,7 @@ import ee.ivxv.audit.AuditContext;
 import ee.ivxv.audit.Msg;
 import ee.ivxv.audit.shuffle.ShuffleException;
 import ee.ivxv.audit.shuffle.ShuffleProof;
+import ee.ivxv.audit.shuffle.ThreadedVerifier;
 import ee.ivxv.audit.shuffle.Verifier;
 import ee.ivxv.audit.tools.MixerTool.MixerArgs;
 import ee.ivxv.common.cli.Arg;
@@ -12,18 +13,23 @@ import ee.ivxv.common.cli.Tool;
 import ee.ivxv.common.util.I18nConsole;
 import java.nio.file.Path;
 
+/**
+ * Tool for verifying the correctness of the shuffle.
+ */
 public class MixerTool implements Tool.Runner<MixerArgs> {
-    private final AuditContext ctx;
     private final I18nConsole console;
+    private AuditContext ctx;
 
     public static class MixerArgs extends Args {
         Arg<Path> protPath = Arg.aPath(Msg.arg_protinfo, true, false);
         Arg<Path> proofPath = Arg.aPath(Msg.arg_proofdir, true, true);
+        Arg<Boolean> threaded = Arg.aFlag(Msg.arg_threaded);
 
         public MixerArgs() {
             super();
             args.add(protPath);
             args.add(proofPath);
+            args.add(threaded);
         }
     }
 
@@ -37,7 +43,12 @@ public class MixerTool implements Tool.Runner<MixerArgs> {
         console.println();
         console.println(Msg.m_shuffle_proof_loading, args.protPath.value(), args.proofPath.value());
         ShuffleProof proof = new ShuffleProof(args.protPath.value(), args.proofPath.value());
-        Verifier ver = new Verifier(proof);
+        Verifier ver;
+        if (args.threaded.value()) {
+            ver = new ThreadedVerifier(proof, ctx.args.threads.value());
+        } else {
+            ver = new Verifier(proof);
+        }
         boolean res = false;
         try {
             res = ver.verify_all();

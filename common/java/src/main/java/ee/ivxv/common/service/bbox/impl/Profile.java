@@ -6,6 +6,7 @@ import ee.ivxv.common.service.bbox.Ref;
 import ee.ivxv.common.service.bbox.Result;
 import ee.ivxv.common.service.bbox.impl.verify.TsVerifier;
 import ee.ivxv.common.service.container.InvalidContainerException;
+import java.util.Optional;
 
 /**
  * Profile abstracts the contents of ballot box and registration data.
@@ -41,9 +42,18 @@ public interface Profile<T extends Record<?>, U extends Record<?>, RT extends Ke
     Ballot createBallot(FileName<Ref.BbRef> name, T record, VoterProvider vp, TsVerifier tsv)
             throws Exception, InvalidContainerException, ResultException;
 
-    RT getResponse(T record) throws Exception;
+    RT getResponse(T record);
 
-    RU getRequest(U record) throws Exception;
+    RU getRequest(U record);
+
+    /**
+     * Tries to create response key from potentially partial or invalid record in order to match it
+     * later against the request key.
+     * 
+     * @param record
+     * @return Optional response key, possibly empty optional.
+     */
+    Optional<Object> getResponseKey(T record);
 
     Result checkRegistration(RT response, RU request);
 

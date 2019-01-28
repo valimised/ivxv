@@ -94,6 +94,7 @@ func lex(done <-chan struct{}, r io.Reader) (c <-chan lexeme, err <-chan error) 
 			errc <- stopped(nil, recover()) // Buffered write, does not block.
 		}()
 
+		l.discardBOM()
 		for {
 			// Skip any spaces between lexemes. We will get
 			// indentation information from the column location.
@@ -104,12 +105,6 @@ func lex(done <-chan struct{}, r io.Reader) (c <-chan lexeme, err <-chan error) 
 				l.send("", 0, 0) // Flush pending content.
 				return
 			}
-			// XXX: The large number of cases in this switch makes
-			// gocyclo complain about the cyclomatic complexity. We
-			// could move the bodies of the cases to external
-			// methods (since they also contain branching code),
-			// but that would hurt readability, so let us just
-			// ignore that warning.
 			switch r {
 			case '#':
 				// Comment: skip until end of line.
@@ -203,13 +198,50 @@ func lex(done <-chan struct{}, r io.Reader) (c <-chan lexeme, err <-chan error) 
 	return l.c, errc
 }
 
+// discardBOM discards an optional UTF-8 byte order mark.
+func (l *lexer) discardBOM() {
+	switch bom, err := l.b.Peek(3); err {
+	case nil:
+		if bytes.Equal(bom, []byte{0xef, 0xbb, 0xbf}) {
+			// nolint: errcheck, l.b.Discard(3) is guaranteed to
+			// work after l.b.Peek(3), since l.b.Buffered() >= 3.
+			l.b.Discard(3)
+		}
+	case io.EOF:
+	default:
+		l.error(LexPeekBOMError{Err: err})
+	}
+}
+
 // rune reads the next rune from input.
 func (l *lexer) rune() (r rune, eof bool) {
 	l.column++
+
+	// Peek next two bytes to detect \r\n. In that case we discard the \r
+	// and only read \n to normalize the line ending. Must happen before
+	// ReadRune in order for UnreadRune to work.
+	switch rn, err := l.b.Peek(2); err {
+	case nil:
+		if rn[0] == '\r' && rn[1] == '\n' {
+			// nolint: errcheck, l.b.Discard(1) is guaranteed to
+			// work after l.b.Peek(2), since l.b.Buffered() >= 1.
+			l.b.Discard(1)
+		}
+	case io.EOF:
+	default:
+		// Do not rely on the same error happening again on ReadRune.
+		// It might have been a temporary failure, which results in
+		// ReadRune succeeding and bypassing normalization.
+		l.error(LexPeekError{Err: err})
+	}
+
 	r, _, err := l.b.ReadRune()
 	eof = err == io.EOF
 	if err != nil && !eof {
 		l.error(LexReadError{Err: err})
+	}
+	if r == '\r' { // Also normalize a lone \r to \n.
+		r = '\n'
 	}
 	return
 }
@@ -225,8 +257,8 @@ func (l *lexer) unread() {
 
 // peek reads the next rune and immediately unreads it.
 func (l *lexer) peek() (r rune, eof bool) {
-	// We could also do utf8.DecodeRune(l.b.Peek(4)), but keep this at a
-	// higher abstraction level.
+	// Use rune and unread instead of utf8.DecodeRune(l.b.Peek(4)) to get
+	// line-ending normalization.
 	r, eof = l.rune()
 	if !eof {
 		l.unread()
@@ -245,6 +277,8 @@ func (l *lexer) while(set string) (read string, next rune, eof bool) {
 
 // until reads all following runes from input until one that is present in set
 // is found.
+//
+// nolint: unparam, eof is currently not used, but still keep it for the future.
 func (l *lexer) until(set string) (read string, next rune, eof bool) {
 	return l.whileEq(set, false)
 }

@@ -13,5 +13,3 @@ Viited
    207-220
 .. [RFC8017]  PKCS #1: RSA Cryptography Specifications Version 2.2.
    https://tools.ietf.org/html/rfc8017
-
-.. vim: sts=3 sw=3 et:

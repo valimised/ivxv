@@ -20,6 +20,11 @@ set -e
 
 
 case "$1" in
+    remove)
+        # stop ivxv-proxy service
+        deb-systemd-invoke stop "ivxv-proxy@*service"
+    ;;
+
     purge)
         # remove haproxy dependency
         if getent passwd haproxy > /dev/null
@@ -34,7 +39,7 @@ case "$1" in
         rm -f /etc/rsyslog.d/49-haproxy.conf
     ;;
 
-    remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
     ;;
 
     *)
@@ -54,5 +59,3 @@ fi
 #DEBHELPER#
 
 exit 0
-
-# vim:sts=4 sw=4 et:

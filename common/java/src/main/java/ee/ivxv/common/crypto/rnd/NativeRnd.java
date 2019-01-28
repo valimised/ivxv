@@ -6,14 +6,16 @@ import java.security.SecureRandom;
 
 /**
  * NativeRnd is a entropy source which reads the random bytes directly from system.
+ * <p>
+ * It is intended to be used together with {@link CombineRnd}, adding this as a source to it.
  */
 public class NativeRnd implements Rnd {
     private SecureRandom src;
 
     /**
      * Initialize the source. Internally, different interfaces used depending on the operating
-     * system. For Windows systems, {@link #initWin()} is called. For other systems (Linux,BSD,OS
-     * X), {@link #initLinux()} is called.
+     * system. For Windows systems, {@link #initWin()} is called. For other systems (Linux, BSD,
+     * OSX), {@link #initLinux()} is called.
      * 
      * @throws RuntimeException On exception during initializing the system source.
      */
@@ -69,7 +71,7 @@ public class NativeRnd implements Rnd {
     }
 
     /**
-     * Returns {@link read(buf, offset, len)}.
+     * Returns {@link #read(byte[], int, int)}.
      * 
      * @param buf The output buffer to write the bytes into.
      * @param offset The offset at the output buffer to start writing the random bytes into.
@@ -90,8 +92,10 @@ public class NativeRnd implements Rnd {
     }
 
     /**
-     * A no-op.
+     * Close random source.
      */
     @Override
-    public void close() {}
+    public void close() {
+        // no op
+    }
 }

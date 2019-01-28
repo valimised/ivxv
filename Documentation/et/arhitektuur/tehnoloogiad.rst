@@ -1,5 +1,7 @@
 ..  IVXV arhitektuur
 
+.. _tehnoloogiad:
+
 Kasutatavad tehnoloogiad
 ========================
 
@@ -10,8 +12,11 @@ Kogumisteenuse tuumikfunktsionaalsus on programmeeritud keeles Go, mis vastab
 järgmistele hanke nõuetele:
 
 * Staatiline tüüpimine;
+
 * Automaatne mäluhaldus;
+
 * Kompilaator avatud lähtekoodiga;
+
 * Ribastamine (rööprapse).
 
 Kogumisteenuse haldusteenus on programmeeritud keeles Python.
@@ -50,12 +55,12 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Kogumisteenuse haldusteenuse kasutajaliidese kujundus
 
    *  - Bouncy Castle
-      - 1.55
+      - 1.58
       - MIT
       - ASN1 käsitlemine, andmetüübi BigInteger abifunktsioonid
 
    *  - `Bottle <https://bottlepy.org/>`_
-      - 0.12.7
+      - 0.12.13
       - MIT
       - Raamistik kogumisteenuse haldusteenuse veebiliidese teostamiseks
 
@@ -65,16 +70,16 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Mitmekeelsuse tugi, tõlkefailide valideerimine
 
    *  - Digidoc 4j
-      - 1.0.6
+      - 2.1.0
       - LGPL
       - BDoc konteinerite käsitlemine
 
    *  - Digidoc 4j DSS
-      - 4.7.RC2.d4j.1
+      - 5.2.d4j.3
       - LGPL
       - Digidoc 4j sõltuvus
 
-   *  - Apache Commons (cli 1.4, codec 1.10, collections 3.2.2, io 2.5, lang 2.6, logging 1.2, compress 1.3)
+   *  - Apache Commons (cli 1.4, codec 1.10, collections 4.1, io 2.5, lang 3.6, logging 1.2, compress 1.3)
       - -
       - Apache License v2.0
       - Digidoc 4j ja PDFBox sõltuvused
@@ -85,7 +90,12 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Digidoc 4j sõltuvus
 
    *  - Apache Santuario
-      - 2.0.8
+      - 2.0.9
+      - Apache License v2.0
+      - Digidoc 4j sõltuvus
+
+   *  - Google Guava
+      - 20.0
       - Apache License v2.0
       - Digidoc 4j sõltuvus
 
@@ -100,7 +110,7 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Digidoc 4j sõltuvus
 
    *  - log4j
-      - 1.2.17
+      - 1.2.6
       - Apache License 2.0
       - Digidoc 4j sõltuvus
 
@@ -120,12 +130,12 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Digidoc 4j sõltuvus
 
    *  - `Docopt <http://docopt.org/>`_
-      - 0.6.1
+      - 0.6.2
       - MIT
       - Kogumisteenuse haldusutiliitide käsurealiidese teostus
 
    *  - `etcd <https://coreos.com/etcd>`_
-      - 3.1.0
+      - 3.2.17
       - Apache License v2.0
       - Talletusteenusena kasutatav hajus võti-väärtus andmebaas
 
@@ -169,7 +179,7 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Apache License v2.0
       - etcd klientteegi sõltuvus
 
-   *  - `github.com/beorn7/perks/quantile <https://https://github.com/beorn7/perks>`_
+   *  - `github.com/beorn7/perks/quantile <https://github.com/beorn7/perks>`_
       - 4c0e845
       - MIT
       - Prometheuse klientteegi sõltuvus
@@ -185,9 +195,9 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Java rakenduste ehitamise raamistik
 
    *  - `HAProxy <http://www.haproxy.org/>`_
-      - 1.6.3
+      - 1.8.8
       - GPL v2
-      - Vahendusteenusena kasutatav TCP proksi
+      - Vahendusteenusena kasutatav TCP-proksi
 
    *  - IvyPot
       - 0.4
@@ -222,12 +232,12 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Kogumisteenuse haldusteenuse kasutajaliides
 
    *  - PDFBox
-      - 2.0.6
+      - 2.0.8
       - Apache License v2.0
       - PDF vormingus raportite genereerimise tugi Java rakendustele
 
    *  - `PyYAML <http://pyyaml.org/>`_
-      - 3.11
+      - 3.12
       - MIT
       - Kogumisteenuse seadistusfailide töötlemise tugi haldusteenusele
 
@@ -277,7 +287,7 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Testide parametriseerimise tugi
 
    *  - Mockito
-      - 2.+
+      - 2.10.0
       - MIT
       - Testitava koodi sõltuvuste mockimise tugi
 
@@ -291,8 +301,13 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Apache License v2.0
       - Mockito sõltuvus
 
-   *  - libdigidocpp
-      - 3.13.0
+   *  - libdigidoc2
+      - 3.10.4.1218
+      - LGPL
+      - Testandmete genereerimine
+
+   *  - libdigidocpp-tools
+      - 3.13.6.1371
       - LGPL
       - Testandmete genereerimine
 
@@ -307,18 +322,21 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Kasutusvajadus
 
    *  - `Behave <https://github.com/behave/behave>`_
-      - 1.2.5
+      - 1.2.6
       - BSD
       - Regressioonitestide käivitaja (*Behavior-driven development*)
 
    *  - `Docker <http://www.docker.com/>`_
-      - 1.13 (või uuem)
+      - 18.06 (või uuem)
       - Apache License 2.0
       - Regressioonitestide läbiviimise keskkond - tarkvarakonteinerid
 
    *  - `Docker Compose <http://www.docker.com/>`_
-      - 1.10.0
+      - 1.22.0
       - Apache License 2.0
       - Regressioonitestide läbiviimise keskkond - tarkvarakonteinerite haldus
 
-.. vim: sts=3 sw=3 et:
+   *  - `Sphinx <http://www.sphinx-doc.org/>`_
+      - 1.8.2
+      - BSD
+      - Dokumentatsiooni genereerimine

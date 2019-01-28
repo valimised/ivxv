@@ -1,5 +1,6 @@
 package ee.ivxv.key.protocol;
 
+@SuppressWarnings("serial")
 public class ProtocolException extends Exception {
     public ProtocolException(String msg) {
         super(msg);

@@ -21,25 +21,8 @@ set -e
 
 case "$1" in
     purge)
-        # REMOVE ivxv-log USER
-        if getent passwd ivxv-log > /dev/null; then
-            # FIXME killing ivxv-log user processes may be needed only in test
-            #       environment. There is issue while removing installed
-            #       ivxv-log package that fails on removing ivxv-log user
-            #       which have running systemd processes.
-            pkill --uid ivxv-log || true
-
-            USER_HOME_DIR="$(getent passwd ivxv-log | cut -d: -f6)"
-            # remove user home directory using local hack
-            # to avoid dependency of perl-modules
-            # that is required for use deluser --remove-home option.
-            deluser --system ivxv-log
-            rm -rf ${USER_HOME_DIR}
-        fi
-
-        # CONFIGURE RSYSLOG
         echo "# Restarting rsyslog log server"
-        systemctl restart rsyslog
+        deb-systemd-invoke restart rsyslog
     ;;
 
     remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
@@ -57,5 +40,3 @@ esac
 #DEBHELPER#
 
 exit 0
-
-# vim:sts=4 sw=4 et:

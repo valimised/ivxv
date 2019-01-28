@@ -21,12 +21,12 @@ set -e
 case "$1" in
     configure)
         # generate ssh key
-        SSH_KEY_FILE=~ivxv-admin/.ssh/id_rsa
+        SSH_KEY_FILE=~ivxv-admin/.ssh/id_ed25519
         SSH_PUBKEY_FILE=${SSH_KEY_FILE}.pub
         if [ ! -e ${SSH_KEY_FILE} ]; then
             echo "# Generating SSH key for user 'ivxv-admin'"
             rm -f "${SSH_PUBKEY_FILE}"
-            su -c "ssh-keygen -N '' -f ${SSH_KEY_FILE}" ivxv-admin
+            su -c "ssh-keygen -t ed25519 -N '' -f ${SSH_KEY_FILE}" ivxv-admin
         fi
         # mark ssh key with comment "ivxv-admin-account"
         if ! grep --quiet ivxv-admin-account "${SSH_PUBKEY_FILE}"; then
@@ -39,7 +39,7 @@ case "$1" in
         ivxv-create-data-dirs
 
         DIR='/var/lib/ivxv/admin-ui-permissions'
-        chown --changes --recursive ivxv-admin:www-data ${DIR}
+        chown --changes ivxv-admin:www-data ${DIR}
         chmod --changes 2770 ${DIR}
 
         DIR='/var/lib/ivxv/upload'
@@ -69,6 +69,9 @@ case "$1" in
 
         # FIXME temporary hack to provide access to ivxv data for www-data account
         usermod --groups ivxv www-data
+
+        # set management service config file permissions
+        chmod --changes 755 /etc/ivxv/ivxv-collector-admin.conf
 
         # CONFIGURE APACHE
         APACHE_RESTART="reload"
@@ -103,12 +106,14 @@ case "$1" in
         if [ ! -f ${RSA_KEY_FILE} ]; then
             echo "# Generating RSA-key for Apache web server default certificate"
             openssl genrsa -out ${RSA_KEY_FILE} 2048
+            rm -f ${CSR_FILE} ${CRT_FILE}
         fi
         chmod 0640 ${RSA_KEY_FILE}
         chown root:root ${RSA_KEY_FILE}
         if [ ! -f ${CSR_FILE} ]; then
             echo "# Generating certificate request for Apache web server default certificate"
             openssl req -new -subj "${CRT_SUBJ}" -key ${RSA_KEY_FILE} -out ${CSR_FILE}
+            rm -f ${CRT_FILE}
         fi
         if [ ! -f ${CRT_FILE} ]; then
             echo "# Generating certificate for Apache web server"
@@ -123,12 +128,12 @@ case "$1" in
 
         # (re)starting Apache server
         echo "# Starting Apache web server"
-        systemctl status apache2 > /dev/null || APACHE_RESTART="start"
-        systemctl ${APACHE_RESTART} apache2
+        deb-systemd-invoke status apache2 > /dev/null || APACHE_RESTART="start"
+        deb-systemd-invoke ${APACHE_RESTART} apache2
 
         # CONFIGURE RSYSLOG
         echo "# Restarting rsyslog log server"
-        systemctl restart rsyslog
+        deb-systemd-invoke restart rsyslog
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
@@ -146,5 +151,3 @@ esac
 #DEBHELPER#
 
 exit 0
-
-# vim:sts=4 sw=4 et:

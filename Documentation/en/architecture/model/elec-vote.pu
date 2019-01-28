@@ -1,0 +1,78 @@
+@startuml
+
+title "Hääletamisfaas"
+
+actor Valija as Voter
+participant VER
+participant VA
+
+participant Auth
+participant Sign
+participant CAVA
+participant TSA
+
+box "Collector Service"
+  participant AuthProxy
+  participant SignProxy
+  participant VerProxy
+  participant CLS
+  participant VSS
+end box
+
+== Hääletamine ==
+
+VA -> CLS: Valija identifikaator, id
+
+alt Võimalik autentimine
+  CLS --> VA
+  VA --> AuthProxy
+  AuthProxy --> Auth
+  Auth --> Voter
+  AuthProxy --> VA
+  VA --> CLS: AUTH(id)
+end
+
+CLS -> VA: Valikute nimekiri, C_id
+
+VA -> Voter: Valikute kuvamine, C_id
+Voter -> VA: Valiku tegemine, choice_id
+
+VA -> VA: r = GEN()
+VA -> VA: ballot_id = ENC(choice_id;r)
+
+alt Allkirjastamine lokaalselt
+  VA --> VA: vote_id = SIGN(ballot_id, id)
+else Allkirjastamine läbi proksi
+  VA --> SignProxy
+  SignProxy --> Sign
+  Sign --> Voter
+  SignProxy --> VA: vote_id = SIGN(ballot_id, id)
+end
+
+VA -> VSS: vote_id
+
+VSS -> CAVA: id
+CAVA -> VSS: val_id = Valid(id)
+
+VSS -> TSA: vote_id
+TSA -> VSS: tok_id = Timestamp(vote_id)
+
+VSS -> VSS: vote_ref = Store(vote_id, val_id, tok_id)
+
+VSS -> VA: tok_id, vote_ref
+
+VA -> VA: VerTimestamp(tok_id)
+VA -> Voter: vote_ref, r
+
+== Hääle kontroll ==
+
+Voter -> VER: vote_ref, r
+
+VER -> VerProxy: vote_ref
+VerProxy -> VSS: vote_ref
+VSS -> VerProxy: vote_id, tok_id, val_id
+VerProxy -> VER: vote_id, tok_id, val_id
+VER -> VER: id, choice = VerifyVote(vote_id, tok_id, val_id)
+VER -> Voter: id, choice
+
+@enduml

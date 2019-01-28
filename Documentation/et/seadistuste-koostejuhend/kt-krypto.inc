@@ -2,8 +2,8 @@
 
 .. _kt-krypto:
 
-Krüptovõtmed
-------------
+Kogumisteenuse krüptovõtmed
+---------------------------
 
 Kogumisteenuse andmevahetuse turvamiseks on tarvis luua komplekt
 krüptograafilisi võtmeid. Komplekti koosseis sõltub kogumisteenuse tehnilistest
@@ -87,7 +87,8 @@ Sertifikaadi genereerimiseks peab failisüsteemis olema seadistusfail
 Hääletamisteenuse ajatemplipäringute signeerimisvõtme ja sertifikaadi genereerimine
 ***********************************************************************************
 
-Hääletusteenuse registreerimisvõti genereeritakse järgneva käsuga:
+Hääletamisteenuse registreerimispäringute tegemise võti genereeritakse
+järgneva käsuga:
 
 .. code-block:: shell-session
 
@@ -95,7 +96,8 @@ Hääletusteenuse registreerimisvõti genereeritakse järgneva käsuga:
 
 Käsu väljundiks on fail :file:`tspreg.key`.
 
-Hääletusteenuse registreerimisvõtme sertifikaat genereeritakse järgneva käsuga:
+Hääletamisteenuse registreerimispäringute tegemise võtme sertifikaat
+genereeritakse järgneva käsuga:
 
 .. code-block:: shell-session
 
@@ -107,7 +109,7 @@ Käsu väljundiks on fail :file:`tspreg.pem`.
 .. note::
 
    Hääletamisteenuse ajatemplipäringute signeerimisvõti on vaja genereerida
-   vaid juhul, kui ajatempliteenust kasutatakse on registreerimisteenuseks.
+   vaid juhul, kui ajatempliteenust kasutatakse registreerimisteenuseks.
 
 
 Mobiil-ID tugiteenusele jagatud krüptimissaladuse genereerimine
@@ -127,4 +129,4 @@ mobiil-ID teenus hakkab kasutama sümmeetrilise AES-256 krüptimise jaoks.
    Mobiil-ID tugiteenuse jagatud krüptimissaladus on vaja genereerida vaid
    juhul, kui Mobiil-ID tugiteenus on kasutusel.
 
-.. vim: sts=3 sw=3 et syntax=rst:
+.. vim:syntax=rst:

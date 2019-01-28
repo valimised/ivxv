@@ -57,6 +57,9 @@ const (
 	authClientKey            // Context key for authenticated client's distinguished name.
 	voteIDKey                // Context key for vote identifier from authentication token.
 	voterIDKey               // Context key for authenticated client's unique identifier.
+
+	// Keys only used internally.
+	addrKey // Context key for connection's remote address.
 )
 
 // TLSClient returns the list of certificates presented by the TLS client.
@@ -65,37 +68,37 @@ const (
 // provided, checks if the client is in possession of the private key: it does
 // NOT verify the certificate. If client authentication is required, then it is
 // up to the authentication module to verify the certificate.
-func TLSClient(ctx context.Context) (certs []*x509.Certificate) {
+func TLSClient(ctx context.Context) []*x509.Certificate {
 	if val := ctx.Value(tlsClientKey); val != nil {
-		certs = val.([]*x509.Certificate)
+		return val.([]*x509.Certificate)
 	}
-	return
+	return nil
 }
 
 // AuthenticatedClient returns the name of the authenticated client or nil if
 // no authentication was done in this context.
-func AuthenticatedClient(ctx context.Context) (name *pkix.Name) {
+func AuthenticatedClient(ctx context.Context) *pkix.Name {
 	if val := ctx.Value(authClientKey); val != nil {
-		name = val.(*pkix.Name)
+		return val.(*pkix.Name)
 	}
-	return
+	return nil
 }
 
 // VoteIdentifier returns the vote identifier specified by the authentication
 // token or nil if no authentication was done in this context or the used
 // authentication method does not specify a vote identifier.
-func VoteIdentifier(ctx context.Context) (voteID []byte) {
+func VoteIdentifier(ctx context.Context) []byte {
 	if val := ctx.Value(voteIDKey); val != nil {
-		voteID = val.([]byte)
+		return val.([]byte)
 	}
-	return
+	return nil
 }
 
 // VoterIdentity returns the unique identifier of the authenticated client or
 // empty string if no authentication was done in this context.
-func VoterIdentity(ctx context.Context) (id string) {
+func VoterIdentity(ctx context.Context) string {
 	if val := ctx.Value(voterIDKey); val != nil {
-		id = val.(string)
+		return val.(string)
 	}
-	return
+	return ""
 }

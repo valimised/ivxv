@@ -2,7 +2,7 @@
 Description=IVXV @service@ service
 
 # All collector services bind to an explicitly configured address, so we
-# require the network to be online. IP_FREEBIND is not a good option in Go 1.7.
+# require the network to be online. IP_FREEBIND is not a good option in Go 1.9.
 Wants=network-online.target
 After=network-online.target
 

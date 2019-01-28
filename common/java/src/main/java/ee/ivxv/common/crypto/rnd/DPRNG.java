@@ -10,6 +10,8 @@ import java.security.MessageDigest;
 /**
  * DPRNG is a deterministic pseudorandom number generator. It is an entropy source which extends the
  * input seed.
+ * <p>
+ * It is intended to be used together with {@link CombineRnd}, adding this as a source to it.
  */
 public class DPRNG implements Rnd {
     private MessageDigest dgst;
@@ -86,6 +88,8 @@ public class DPRNG implements Rnd {
      * infinite byte array <code>H(1||seed) || H(2||seed) || ..</code>.
      * <p>
      * The hash function <code>H</code> used is given in {@link #getDigestInstance()}.
+     * <p>
+     * This method is not thread-safe and synchronization must be handled by the caller.
      * 
      * @param buf The output buffer to store the value in.
      * @param off The offset in output buffer for storing the value.
@@ -107,7 +111,9 @@ public class DPRNG implements Rnd {
     }
 
     /**
-     * Returns {@link read(buf, off, len)}
+     * Returns {@link #read(byte[], int, int)}
+     * <p>
+     * This method is not thread-safe and synchronization must be handled by the caller.
      * 
      * @param buf The output buffer to store the value in.
      * @param off The offset in output buffer for storing the value.
@@ -165,8 +171,10 @@ public class DPRNG implements Rnd {
     }
 
     /**
-     * A no-op.
+     * Close random source.
      */
     @Override
-    public void close() {}
+    public void close() {
+        // no-op
+    }
 }

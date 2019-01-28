@@ -8,36 +8,14 @@ IVXV Internet voting framework
  Building
 ----------
 
-Building the collector components requires Go 1.7 and the management
-applications require Java 8.
+Building the collector components requires Go 1.9 and the management
+applications require Java 8::
 
-The code is tested on Ubuntu 16.04 LTS Xenial Xerus. However, it does not have
-Go 1.7 packaged for it, so to install the required compilers, do
+        sudo apt-get install --no-install-recommends openjdk-8-jdk-headless golang-1.9-go
 
-::
 
-        cat <<HERE | sudo tee /etc/apt/sources.list.d/yakkety-universe.list > /dev/null
-        deb http://archive.ubuntu.com/ubuntu yakkety universe
-        deb http://archive.ubuntu.com/ubuntu yakkety-updates universe
-        deb http://security.ubuntu.com/ubuntu yakkety-security universe
-        HERE
-
-        cat <<HERE | sudo tee /etc/apt/apt.conf.d/99default-release > /dev/null
-        APT::Default-Release "xenial";
-        HERE
-
-        sudo apt-get update
-        sudo apt-get install --no-install-recommends openjdk-8-jdk-headless golang-1.7-go
-
-This will add the Ubuntu 16.10 Yakkety Yak repository as an additional source,
-but mark Xenial as the default release, so packages will be installed from it
-only if they are not available in the Xenial repository.
-
-        *Note!* Go 1.7 is only required for building—the servers that will
-        be running collector services do not need to perform these steps!
-
-Next, external dependencies need to be acquired. See
-`common/external/README.rst` for instructions on this.
+Next, external dependencies need to be acquired. See common/external/README.rst
+for instructions on this.
 
 Finally, to build, test, and clean the entire codebase, just do
 

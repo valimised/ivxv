@@ -11,9 +11,11 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"ivxv.ee/command"
 	"ivxv.ee/command/exit"
+	"ivxv.ee/command/status"
 	"ivxv.ee/errors"
 	"ivxv.ee/log"
 	"ivxv.ee/q11n"
@@ -33,8 +35,12 @@ then voteexp exits with code 2.`
 
 var (
 	optionalp = flag.String("optional", "tspreg",
-		"comma-separated `list` of vote fields which are optional\n"+
-			"    \t") // New line for printing default value.
+		// End with newline for printing default value.
+		"comma-separated `list` of vote fields which are optional\n")
+
+	qp = flag.Bool("q", false, "quiet, do not show progress")
+
+	progress *status.Line
 )
 
 func main() {
@@ -48,10 +54,9 @@ func voteexpmain() (code int) {
 	defer func() {
 		code = c.Cleanup(code)
 	}()
-	output := c.Args[0]
 
 	var qps []q11n.Protocol
-	for _, q := range c.Conf.Technical.Qualification {
+	for _, q := range c.Conf.Election.Qualification {
 		qps = append(qps, q.Protocol)
 	}
 	var opt []string
@@ -59,9 +64,14 @@ func voteexpmain() (code int) {
 		opt = strings.Split(*optionalp, ",")
 	}
 
+	if !*qp {
+		progress = status.New()
+	}
+
 	if c.Until < command.Execute {
 		return exit.OK
 	}
+	output := c.Args[0]
 
 	// Create the output container file.
 	fp, err := os.OpenFile(output, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
@@ -114,7 +124,12 @@ func export(ctx context.Context, s *storage.Client, qps []q11n.Protocol,
 	}()
 
 	// Start exporting votes from the storage service.
-	log.Log(ctx, GettingVotes{})
+	log.Log(ctx, ExportingVotes{})
+	progress.Static("Exporting votes:")
+	addprogress := progress.Count(0, true)
+	progress.Redraw()
+	defer progress.Keep()
+
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel() // Stop GetVotes if we terminate early.
 	c, errc := s.GetVotes(ctx, qps, optional)
@@ -127,10 +142,15 @@ func export(ctx context.Context, s *storage.Client, qps []q11n.Protocol,
 		var gerr log.ErrorEntry
 		for err := range errc {
 			gerr = GetVotesError{Err: err}
+			if errors.CausedBy(err, new(storage.GetVotesFatalError)) != nil {
+				break
+			}
+
+			gerr = NonFatalError{Err: gerr}
 			log.Error(ctx, gerr)
-		}
-		if gerr != nil && errors.CausedBy(gerr, new(storage.GetVotesFatalError)) == nil {
-			gerr = NonFatalError{}
+			progress.Hide()
+			fmt.Fprintln(os.Stderr, "error: non-fatal error:", gerr)
+			progress.Show()
 		}
 		gerrc <- gerr
 	}()
@@ -148,24 +168,21 @@ func export(ctx context.Context, s *storage.Client, qps []q11n.Protocol,
 	//       ├ <timestamp>.<vote type>
 	//       └ <timestamp>.<q11n protocol>*
 	//
-	progress := AddingVoteToArchive{VoteID: "", Index: 0}
+	var count uint64
+	countlog := VoteExportProgress{Current: 0}
+	const logstep = 10000 // Log progress after each logstep.
 	for vote := range c {
-		// If debugging is enabled, then report progress.
-		progress.VoteID = vote.VoteID
-		progress.Index = progress.Index.(int) + 1
-		log.Debug(ctx, progress)
-
 		prefix := fmt.Sprintf("votes/%s/%s.", vote.Voter,
 			strings.Replace(vote.Time.Format("20060102150405.000-0700"), ".", "", -1))
 
-		if err = addFile(w, prefix+"version", []byte(vote.Version)); err != nil {
+		if err = addFile(w, vote.Time, prefix+"version", []byte(vote.Version)); err != nil {
 			return AddVersionError{VoteID: vote.VoteID, Prefix: prefix, Err: err}
 		}
-		if err = addFile(w, prefix+string(vote.VoteType), vote.Vote); err != nil {
+		if err = addFile(w, vote.Time, prefix+string(vote.VoteType), vote.Vote); err != nil {
 			return AddVoteError{VoteID: vote.VoteID, Prefix: prefix, Err: err}
 		}
 		for p, b := range vote.Qualification {
-			if err = addFile(w, prefix+string(p), b); err != nil {
+			if err = addFile(w, vote.Time, prefix+string(p), b); err != nil {
 				return AddQualifyingPropertyError{
 					VoteID:   vote.VoteID,
 					Prefix:   prefix,
@@ -174,13 +191,20 @@ func export(ctx context.Context, s *storage.Client, qps []q11n.Protocol,
 				}
 			}
 		}
+
+		if count = addprogress(1); count%logstep == 0 {
+			countlog.Current = count
+			log.Log(ctx, countlog)
+		}
 	}
-	log.Log(ctx, VoteCount{Count: progress.Index.(int)})
+	log.Log(ctx, VoteCount{Count: count})
 	return
 }
 
-func addFile(w *zip.Writer, name string, value []byte) error {
-	f, err := w.Create(name)
+func addFile(w *zip.Writer, mod time.Time, name string, value []byte) error {
+	h := &zip.FileHeader{Name: name, Method: zip.Deflate}
+	h.SetModTime(mod) // nolint: megacheck, Use deprecated API to support Go 1.9.
+	f, err := w.CreateHeader(h)
 	if err != nil {
 		return AddFileCreateError{Name: name, Err: err}
 	}

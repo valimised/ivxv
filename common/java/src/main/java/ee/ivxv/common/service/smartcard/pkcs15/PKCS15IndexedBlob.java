@@ -6,12 +6,27 @@ import ee.ivxv.common.asn1.Sequence;
 import ee.ivxv.common.service.smartcard.IndexedBlob;
 import ee.ivxv.common.util.Util;
 
+/**
+ * PKCS15IndexedBlob is a blob with an index.
+ */
 public class PKCS15IndexedBlob extends IndexedBlob {
-
+    /**
+     * Initialize using a file data and the index.
+     * 
+     * @param index
+     * @param blob
+     */
     public PKCS15IndexedBlob(int index, byte[] blob) {
         super(index, blob);
     }
 
+    /**
+     * Parse a serialized blob.
+     * 
+     * @param file
+     * @return
+     * @throws PKCS15Exception
+     */
     public static PKCS15IndexedBlob create(byte[] file) throws PKCS15Exception {
         Sequence s = new Sequence();
         try {
@@ -51,6 +66,19 @@ public class PKCS15IndexedBlob extends IndexedBlob {
         return new PKCS15IndexedBlob(index, blob);
     }
 
+    /**
+     * Serialize and indexed blob.
+     * <p>
+     * The index is encoded as a 4-byte big-endian value
+     * {@code
+     * SEQUENCE (
+     *    index OCTETSTRING
+     *    blob  OCTETSTRING
+     *    )
+     * }
+     * 
+     * @return
+     */
     public byte[] encode() {
         return new Sequence(new Field(Util.toBytes(index)).encode(), new Field(blob).encode())
                 .encode();

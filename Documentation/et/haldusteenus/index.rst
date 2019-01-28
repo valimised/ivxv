@@ -23,6 +23,5 @@ IVXV kogumisteenuse haldusliidese kasutusjuhend
    kasutajad
    teenused
    e-urn
-   logiraamat
-
-.. vim: sts=3 sw=3 et:
+   seadistused
+   logi

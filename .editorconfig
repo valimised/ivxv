@@ -1,0 +1,44 @@
+# http://editorconfig.org
+
+root = true
+
+[*]
+trim_trailing_whitespace = true
+insert_final_newline = true
+charset = utf-8
+end_of_line = lf
+
+[*.{conf,html,ini,jinja,sql,py}]
+indent_style = space
+indent_size = 4
+
+[*.json]
+indent_style = space
+indent_size = 4
+insert_final_newline = false
+
+[Jenkinsfile]
+indent_style = space
+indent_size = 4
+
+[*.{css,js,pu,sh,yaml,yml}]
+indent_style = space
+indent_size = 2
+
+[*.{inc,rst}]
+indent_style = space
+indent_size = 3
+
+[Makefile]
+indent_style = tab
+
+[*.mk]
+indent_style = tab
+
+[**/debian/*{preinst,postinst,prerm,postrm}]
+indent_style = space
+indent_size = 4
+
+[**/debian/changelog]
+indent_style = space
+indent_size = 2

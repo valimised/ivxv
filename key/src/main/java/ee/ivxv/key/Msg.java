@@ -16,26 +16,26 @@ public enum Msg implements NameHolder {
     app_key,
 
     // Tools
-    tool_decrypt, tool_groupgen, tool_init, tool_util,
+    tool_decrypt, tool_groupgen, tool_init, tool_util, tool_testkey,
 
     // Common tool arguments
     arg_identifier("i"), arg_parties("n"), arg_threshold("m"), arg_out("o"), //
     arg_mod, arg_ec, arg_paramtype, arg_random_source("r"), arg_random_source_type, //
-    arg_random_source_path,
+    arg_random_source_path, arg_fastmode,
 
     // 'decrypt' tool arguments
     d_anonballotbox, d_anonballotbox_checksum, //
     d_questioncount, d_candidates, d_districts, d_recover, d_protocol, //
-    d_provable, //
+    d_provable, d_check_decodable, //
 
     // 'groupgen' tool arguments
-    g_length("l"),
+    g_length("l"), g_init_template,
 
     // 'init' tool arguments
     i_p, i_g, i_name, //
     i_desmedt("d"), i_genprotocol, i_signaturekeylen("s"), //
-    i_issuercn, i_signcn, i_signsn, i_enccn, i_encsn, i_skiptest, //
-    i_required_randomness, i_fastmode,
+    i_signcn, i_signsn, i_enccn, i_encsn, i_skiptest, //
+    i_required_randomness,
 
     // 'util' tool arguments
     u_listreaders, u_testkey,
@@ -51,7 +51,7 @@ public enum Msg implements NameHolder {
     m_abb_dist_verifying, m_abb_dist_ok, m_protocol_init, m_protocol_init_ok, //
     m_dec_start, m_dec_done, m_out_tally, m_out_proof, m_out_invalid, m_out_logs, //
     m_keys_saved, m_collecting_required_randomness, m_with_proof, m_without_proof, m_card_id, //
-    m_fastmode_disabled, m_fastmode_enabled;
+    m_fastmode_disabled, m_fastmode_enabled, m_storing_shares, m_generating_certificate;
 
 
     private final String shortName;

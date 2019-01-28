@@ -20,25 +20,8 @@ set -e
 
 case "$1" in
     configure)
-        # CONFIGURE ivxv-log USER
-        # add user account
-        if ! getent passwd ivxv-log > /dev/null; then
-            echo "# Adding user 'ivxv-log'"
-            adduser --quiet --shell=/bin/bash --system --ingroup ivxv ivxv-log
-        fi
-
-        # prepare ssh directory for user account
-        test -d ~ivxv-log/.ssh ||
-	    mkdir --parents ~ivxv-log/.ssh
-	chmod 700 ~ivxv-log/.ssh
-	test -e ~ivxv-log/.ssh/authorized_keys ||
-	    touch ~ivxv-log/.ssh/authorized_keys
-	chmod 600 ~ivxv-log/.ssh/authorized_keys
-	chown -R ivxv-log:ivxv ~ivxv-log/.ssh
-
-        # CONFIGURE RSYSLOG
         echo "# Restarting rsyslog log server"
-        systemctl restart rsyslog
+        deb-systemd-invoke restart rsyslog
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
@@ -56,5 +39,3 @@ esac
 #DEBHELPER#
 
 exit 0
-
-# vim:sts=4 sw=4 et:

@@ -19,7 +19,7 @@ package main
 
 import "text/template"
 
-var $var = template.Must(template.New("$var").Parse(header + \`
+var $var = template.Must(template.New("$var").Funcs(funcMap).Parse(header + \`
 HERE
 
 cat "$tmpl" >> "$go"

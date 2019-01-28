@@ -6,6 +6,7 @@ import ee.ivxv.common.math.ECGroupElement;
 import ee.ivxv.common.math.Group;
 import ee.ivxv.common.math.GroupElement;
 import ee.ivxv.common.math.MathException;
+import ee.ivxv.common.math.MathUtil;
 import ee.ivxv.common.math.ModPGroup;
 import ee.ivxv.common.math.ModPGroupElement;
 import ee.ivxv.common.math.ProductGroup;
@@ -13,10 +14,25 @@ import ee.ivxv.common.math.ProductGroupElement;
 import ee.ivxv.common.util.Util;
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Verificatum proof of a shuffle verifier.
+ * <p>
+ * See the Verificatum manual for implementing independent verifier for the explanation of the
+ * variables used in the verifier.
+ */
 public class Verifier {
-    private final ShuffleProof proof;
+    static final Logger log = LoggerFactory.getLogger(Verifier.class);
 
+    protected final ShuffleProof proof;
+
+    /**
+     * Initialize the verifier using proof of a shuffle.
+     * 
+     * @param proof
+     */
     public Verifier(ShuffleProof proof) {
         this.proof = proof;
     }
@@ -113,6 +129,15 @@ public class Verifier {
                 get_proof().get_PoSReply().get_kF(), get_proof().get_shuffled_ciphertexts());
     }
 
+    /**
+     * Verify the correctness of the shuffle.
+     * <p>
+     * Throws an exception specifying the reason for failed verification.
+     * 
+     * @return Boolean True if the proof verifies. If not, then an exception is thrown.
+     * @throws ShuffleException If the verification fails, denoting a reason.
+     * @throws MathException If computation fails.
+     */
     public boolean verify_all() throws ShuffleException, MathException {
         byte[] rho = compute_rho();
         GroupElement[] h = compute_h(rho);
@@ -141,19 +166,29 @@ public class Verifier {
         return true;
     }
 
-    public boolean verify_all(boolean throwexception) throws Exception {
+    /**
+     * Verify the correctness of the shuffle.
+     * <p>
+     * If {@literal throwexception} is false, then now exceptions are thrown during computation and
+     * verification.
+     * 
+     * @param throwexception Boolean in
+     * @return Boolean indicating the correctness of the shuffle.
+     */
+    public boolean verify_all(boolean throwexception) {
         try {
             return verify_all();
         } catch (ShuffleException | MathException e) {
             if (!throwexception) {
                 return false;
             }
-            throw e;
         }
+        return true;
     }
 
     public byte[] compute_rho(String sid, String auxsid, String version, int statdist,
             int vbitlenro, int ebitlenro, String prg, String pgroup, String rohash) {
+        log.debug("Compute rho");
         String fullsid = String.format("%s.%s", sid, auxsid);
         Node n = new Node(new ByteTree[] {new Leaf(version), new Leaf(fullsid),
                 new Leaf(Util.toBytes(statdist)), new Leaf(Util.toBytes(vbitlenro)),
@@ -171,6 +206,7 @@ public class Verifier {
         if (!(pk instanceof ProductGroupElement)) {
             throw new IllegalArgumentException("pk must be ProductGroupElement");
         }
+        log.debug("Compute RO seed");
         ByteTree[] nodes = new ByteTree[] {new Leaf(g), new Node(h), new Node(u),
                 new Node((ProductGroupElement) pk), new Node(DataParser.toArray(w).getElements()),
                 new Node(DataParser.toArray(w_prim).getElements()),};
@@ -186,6 +222,7 @@ public class Verifier {
     }
 
     public static BigInteger[] compute_e(byte[] s, int n_e, int N, String prg) {
+        log.debug("Compute e");
         PRNG gen = new PRNG(prg, s);
         BigInteger[] e = new BigInteger[N];
         BigInteger mask = BigInteger.ONE.shiftLeft(n_e);
@@ -203,6 +240,7 @@ public class Verifier {
         if (!(G_q instanceof ModPGroup)) {
             throw new IllegalArgumentException("Only ModPGroup supported");
         }
+        log.debug("Compute h");
         BigInteger TWO = BigInteger.valueOf(2);
         BigInteger p = ((ModPGroup) G_q).getOrder();
         int n_p = p.bitLength();
@@ -229,6 +267,7 @@ public class Verifier {
     public static BigInteger compute_v(byte[] rho, byte[] s, GroupElement A_prim, GroupElement[] B,
             GroupElement[] B_prim, GroupElement C_prim, GroupElement D_prim,
             ProductGroupElement F_prim, String rohash, int n_v) {
+        log.debug("Compute v");
         ByteTree[] nodes = new ByteTree[] {new Node(B), new Leaf(A_prim), new Node(B_prim),
                 new Leaf(C_prim), new Leaf(D_prim), new Node(F_prim)};
         Node n = new Node(new ByteTree[] {new Leaf(s), new Node(nodes),});
@@ -242,6 +281,7 @@ public class Verifier {
     }
 
     public static GroupElement compute_A(GroupElement[] u, BigInteger[] e) throws MathException {
+        log.debug("Compute A");
         GroupElement res = u[0].getGroup().getIdentity();
         for (int i = 0; i < u.length; i++) {
             GroupElement exped = u[i].scale(e[i]);
@@ -252,6 +292,7 @@ public class Verifier {
 
     public static GroupElement compute_C(GroupElement[] u, GroupElement[] h)
             throws MathException, ShuffleException {
+        log.debug("Compute C");
         if (u.length != h.length) {
             throw new ShuffleException("u and h length does not match");
         }
@@ -268,11 +309,12 @@ public class Verifier {
 
     public static GroupElement compute_D(GroupElement[] B, GroupElement[] h, BigInteger[] e, int N)
             throws ShuffleException, MathException {
+        log.debug("Compute D");
         BigInteger ep = BigInteger.ONE;
         BigInteger q = null;
         if (h[0] instanceof ModPGroupElement) {
             ModPGroup group = (ModPGroup) h[0].getGroup();
-            q = Util.safePrimeOrder(group.getOrder());
+            q = MathUtil.safePrimeOrder(group.getOrder());
         } else if (h[0] instanceof ECGroupElement) {
             q = h[0].getGroup().getOrder();
         } else {
@@ -289,6 +331,7 @@ public class Verifier {
     }
 
     public static GroupElement compute_F(GroupElement[] w, BigInteger[] e) throws MathException {
+        log.debug("Compute F");
         GroupElement res = w[0].getGroup().getIdentity();
         for (int i = 0; i < w.length; i++) {
             GroupElement exped = w[i].scale(e[i]);
@@ -300,6 +343,7 @@ public class Verifier {
     public static boolean verify_A(BigInteger v, GroupElement A, GroupElement A_prim,
             GroupElement g, GroupElement[] h, BigInteger k_A, BigInteger[] k_E)
             throws MathException {
+        log.debug("Verify A");
         GroupElement left = A.scale(v).op(A_prim);
         GroupElement right = h[0].getGroup().getIdentity();
         for (int i = 0; i < h.length; i++) {
@@ -312,6 +356,7 @@ public class Verifier {
     public static boolean verify_B(BigInteger v, GroupElement[] B, GroupElement[] B_prim,
             GroupElement g, BigInteger[] k_B, BigInteger[] k_E, GroupElement[] h)
             throws MathException {
+        log.debug("Verify B");
         boolean[] res = new boolean[B.length];
         GroupElement left = B[0].scale(v).op(B_prim[0]);
         GroupElement right = h[0].scale(k_E[0]).op(g.scale(k_B[0]));
@@ -330,6 +375,7 @@ public class Verifier {
 
     public static boolean verify_C(BigInteger v, GroupElement C, GroupElement C_prim,
             GroupElement g, BigInteger k_C) throws MathException {
+        log.debug("Verify C");
         GroupElement left = C.scale(v).op(C_prim);
         GroupElement right = g.scale(k_C);
         return left.equals(right);
@@ -337,6 +383,7 @@ public class Verifier {
 
     public static boolean verify_D(BigInteger v, GroupElement D, GroupElement D_prim,
             GroupElement g, BigInteger k_D) throws MathException {
+        log.debug("Verify D");
         GroupElement left = D.scale(v).op(D_prim);
         GroupElement right = g.scale(k_D);
         return left.equals(right);
@@ -345,6 +392,7 @@ public class Verifier {
     public static boolean verify_F(BigInteger v, GroupElement F, GroupElement F_prim,
             GroupElement pk, BigInteger[] k_E, ProductGroupElement k_F, GroupElement[] w_prim)
             throws MathException {
+        log.debug("Verify F");
         GroupElement left = F.scale(v).op(F_prim);
         GroupElement right = w_prim[0].getGroup().getIdentity();
         for (int i = 0; i < w_prim.length; i++) {

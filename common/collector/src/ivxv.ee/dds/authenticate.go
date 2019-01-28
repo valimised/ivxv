@@ -16,9 +16,10 @@ import (
 
 // https://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate
 type mobileAuthenticate struct {
-	// nolint: lll, the XML namespace forces us to use a long line.
 	XMLName              xml.Name `xml:"http://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl MobileAuthenticate"`
-	PhoneNo              string
+	IDCode               string   `xml:",omitempty"`
+	CountryCode          string
+	PhoneNo              string `xml:",omitempty"`
 	Language             string
 	ServiceName          string
 	MessageToDisplay     string
@@ -40,8 +41,22 @@ type mobileAuthenticateResponse struct {
 }
 
 // MobileAuthenticate starts a Mobile-ID authentication session.
-func (c *Client) MobileAuthenticate(ctx context.Context, phone string) (
+func (c *Client) MobileAuthenticate(ctx context.Context, idCode, phone string) (
 	sesscode, challengeID string, challenge []byte, cert *x509.Certificate, err error) {
+
+	// We cannot use a struct literal, because gen would report it
+	// as a duplicate error type.
+	var input InputError
+	switch {
+	case c.conf.IDCodeRequired && len(idCode) == 0:
+		input.Err = MobileAuthenticateNoIDCodeError{}
+		err = input
+		return
+	case c.conf.PhoneRequired && len(phone) == 0:
+		input.Err = MobileAuthenticateNoPhoneError{}
+		err = input
+		return
+	}
 
 	// Generate our part of the challenge to sign.
 	spBytes := make([]byte, 10)
@@ -53,6 +68,8 @@ func (c *Client) MobileAuthenticate(ctx context.Context, phone string) (
 
 	var resp mobileAuthenticateResponse
 	if err = soapRequest(ctx, c.conf.URL, mobileAuthenticate{
+		IDCode:               idCode,
+		CountryCode:          c.conf.CountryCode,
 		PhoneNo:              phone,
 		Language:             c.conf.Language,
 		ServiceName:          c.conf.ServiceName,

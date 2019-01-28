@@ -131,9 +131,8 @@ approach, the examples use the stored parameters file from the repository.
     key groupgen --conf ../examples/app-conf.bdoc --params \
     ../examples/key-app-conf-3-parties.bdoc
 
-  The application should display (the actual values differ)::
-
-    Zp(p=7714308592189717986218840932759665300259388772179838475553570421760647588928648139668265831789568076388443118361277912418352218030834963525256914386555943, q=3857154296094858993109420466379832650129694386089919237776785210880323794464324069834132915894784038194221559180638956209176109015417481762628457193277971, g=1320131981645001575383816722884941834282340771961541298839439470294413867893836077812664006160241399746686856405124801824622449176630605416180422631415563)
+  The application writes the group parameters into a file suitable for using in
+  initialization configuration.
 
 * Initialize key with an group of integers modulo a prime, with the key shared
   between three shareholders with a threshold of two shareholders required for
@@ -206,6 +205,7 @@ Sample configuration
   groupgen:
     paramtype: mod
     length: 2048
+    init_template: key.init.template.yaml
     random_source:
     - random_source_type: file
       random_source_path: key-app-conf-3-parties.bdoc
@@ -222,7 +222,6 @@ Sample configuration
     out: initout
     skiptest: true
     signaturekeylen: 2048
-    issuercn: TEST
     signcn: SIGNATURE
     signsn: 1
     enccn: ENCRYPTION
@@ -250,6 +249,7 @@ Sample configuration
     candidates: choices.bdoc
     districts: districts.bdoc
     provable: true
+    check_decodable: false
     out: decout
 
 Notes
@@ -264,8 +264,8 @@ Notably required when using Oracle JDK. Run the JVM with argument::
 
     -Dsun.security.smartcardio.library=/path/to/libpcsclite
 
-On Ubuntu 16.04 LTS the path for the libpcslite is
-`/lib/x86_64-linux-gnu/libpcsclite.so.1`
+On Ubuntu 18.04 LTS (Bionic Beaver) the path for the libpcslite is
+`/usr/lib/x86_64-linux-gnu/libpcsclite.so.1`
 
 Smart card support
 ~~~~~~~~~~~~~~~~~~
@@ -301,6 +301,16 @@ Some examples of reasons which can cause unrecoverable errors:
 * Windows Smart Card Service card autodetect card probing
 * incomplete insertion of smart card
 * insertion of wrong smart card into terminal
+
+Development mode
+~~~~~~~~~~~~~~~~
+
+When building the application in development mode (by setting the environment
+value `DEVELOPMENT`), then in-memory smart card implementations are used during
+running the application. For persistence, the cards filesystems are written into
+a JSON-encoded file. By default the location for the filesystems is
+`dummy_card_filesystems`, but the location can be overridden by setting the
+environment variable `DUMMY_CARDS_PATH` with a suitable path.
 
 Platform support
 ~~~~~~~~~~~~~~~~

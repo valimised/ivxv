@@ -1,0 +1,75 @@
+@startuml
+
+left to right direction
+
+package "Kogumisteenus" {
+    [Storage] as collector
+    [Log] as log
+    [Eligibility] as elig
+    [Verification] as verif
+    [Admin] as adminc
+
+
+interface "Valimise defineerimine" as i_define
+interface "Ümbrikute väljastamine" as i_export
+interface "Hääletamine" as i_vote
+interface "Kontrollimine" as i_verify
+interface "Valikute nimekiri" as i_cls
+interface "Käsurida" as i_localadmin
+interface "Kaughaldus" as i_remoteadmin
+interface "Monitooring" as i_monitor
+interface "Helpdesk" as i_helpdesk
+
+
+
+}
+
+elig -- collector
+verif -- collector
+
+verif ..> log
+elig ..> log
+collector ..> log
+
+package "Keskkonnateenused" {
+    [Registreerimisteenus] as tsa
+    [Autentimisteenus] as auth
+    [Allkirjateenus] as sign
+}
+
+[Nimekirjad] as voterlist
+[Varundamine] as backup
+
+
+collector ..> tsa
+
+i_vote ..> sign
+i_cls ..> auth
+
+interface "Varundamine" as i_backup
+interface "Nimekirjade uuendused" as i_voterlist
+
+elig -up- i_cls
+elig -up- i_vote
+verif -up- i_verify
+
+
+collector -down- i_localadmin
+log -down- i_helpdesk
+log -down- i_monitor
+adminc -down- i_remoteadmin
+
+
+
+adminc -down- i_define
+adminc -down- i_export
+
+
+voterlist -right- i_voterlist
+backup -right- i_backup
+
+
+collector .left.> i_backup
+elig .left.> i_voterlist
+
+@enduml

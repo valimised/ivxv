@@ -13,6 +13,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+/**
+ * ProtocolInformation represents Verificatum protocol information file.
+ */
 public class ProtocolInformation {
     private String version, sid, name, pgroup, prg, rohash, auxsid, type;
     private int statdist, width, ebitlenro, vbitlenro, keywidth;
@@ -23,6 +26,21 @@ public class ProtocolInformation {
     private static final String default_type = "shuffling";
     private static final int default_keywidth = 5;
 
+    /**
+     * Initialize ProtocolInformation from required values.
+     * 
+     * @param version
+     * @param sid
+     * @param name
+     * @param pgroup
+     * @param keywidth
+     * @param vbitlenro
+     * @param ebitlenro
+     * @param prg
+     * @param rohash
+     * @param width
+     * @param statdist
+     */
     public ProtocolInformation(String version, String sid, String name, String pgroup, int keywidth,
             int vbitlenro, int ebitlenro, String prg, String rohash, int width, int statdist) {
         this.version = version;

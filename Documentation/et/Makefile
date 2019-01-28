@@ -1,18 +1,20 @@
 DOCS :=
-DOCS := $(DOCS) uldsisukord
-DOCS := $(DOCS) kasutusmall
-DOCS := $(DOCS) protokollid
 DOCS := $(DOCS) arhitektuur
-DOCS := $(DOCS) regteenus
-DOCS := $(DOCS) votmerakendus
-DOCS := $(DOCS) seadistuste-koostejuhend
-DOCS := $(DOCS) systeemihalduri-juhend
 DOCS := $(DOCS) haldusteenus
 DOCS := $(DOCS) ivxvapi
+DOCS := $(DOCS) kasutusmall
+DOCS := $(DOCS) protokollid
+DOCS := $(DOCS) seadistuste-koostejuhend
+DOCS := $(DOCS) systeemihalduri-juhend
+DOCS := $(DOCS) uldsisukord
+DOCS := $(DOCS) votmerakendus
 
 # following docs are excluded from the release
+#DOCS := $(DOCS) entroopia
 #DOCS := $(DOCS) eriomadused
-#DOCS := $(DOCS) testimisplaan
+#DOCS := $(DOCS) formal
+#DOCS := $(DOCS) ivxv-pyapi
+#DOCS := $(DOCS) regteenus
 DESTDIR := _build
 
 HTMLDOCS  := $(DOCS:%=html-%)
@@ -37,8 +39,8 @@ pdf: $(PDFDOCS)
 .PHONY: $(PDFDOCS)
 $(PDFDOCS): pdf-%:
 	$(MAKE) -C $* latexpdf
-	mkdir -p $(DESTDIR)/pdf/$*
-	cp -ru $*/_build/latex/*.pdf $(DESTDIR)/pdf/$*
+	mkdir -p $(DESTDIR)/pdf
+	cp -ru $*/_build/latex/*.pdf $(DESTDIR)/pdf/
 
 .PHONY: clean
 clean: $(CLEANDOCS)

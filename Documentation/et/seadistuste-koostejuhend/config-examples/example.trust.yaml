@@ -1,0 +1,23 @@
+# Usaldusjuure seadistuse näide
+
+container:
+  bdoc:
+    bdocsize: 104857600  # 100 MiB
+    filesize: 104857600  # 100 MiB
+    roots:
+      - !container TEST_of_EE_Certification_Centre_Root_CA.pem
+    intermediates:
+      - !container TEST_of_ESTEID-SK_2011.pem
+      - !container TEST_of_ESTEID-SK_2015.pem
+    profile: TS
+    ocsp:
+      responders:
+        - !container TEST_of_SK_OCSP_RESPONDER_2011.pem
+    tsp:
+      signers:
+        - !container DEMO_of_SK_TSA_2014.pem
+      delaytime: 1
+
+authorizations:
+    - ORAV,IVAN,30809010001
+    - ROPKA,KIVIVALVUR,32608320001

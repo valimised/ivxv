@@ -1,3 +1,4 @@
 mixer:
-  protinfo: mixnet/ProtocolInformation.xml
+  protinfo: prot.xml
   proofdir: mixnet/
+  threaded: true

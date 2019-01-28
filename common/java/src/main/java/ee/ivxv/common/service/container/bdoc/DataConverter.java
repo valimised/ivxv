@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.digidoc4j.X509Cert;
 import org.digidoc4j.X509Cert.SubjectName;
-import org.digidoc4j.impl.bdoc.BDocSignature;
+import org.digidoc4j.impl.asic.AsicSignature;
 
 class DataConverter {
 
@@ -39,12 +39,23 @@ class DataConverter {
         Instant time = Stream.of(s.getTrustedSigningTime(), s.getClaimedSigningTime())
                 .filter(d -> d != null).findFirst().map(Date::toInstant).orElse(null);
         byte[] value = null;
-        if (s instanceof BDocSignature) {
+        if (s instanceof AsicSignature) {
             // The base64 representation of the value is the contents of <SignatureValue> tag.
-            value = ((BDocSignature) s).getOrigin().getSignatureValue();
+            value = ((AsicSignature) s).getOrigin().getSignatureValue();
+        }
+        Signature.Profile profile = null;
+        switch (s.getProfile()) {
+            case LT_TM:
+                profile = Signature.Profile.BDOC_TM;
+                break;
+            case LT:
+                profile = Signature.Profile.BDOC_TS;
+                break;
+            default:
+                profile = Signature.Profile.UNKNOWN;
         }
 
-        return new Signature(signer, time, value);
+        return new Signature(signer, time, profile, value);
     }
 
     private static Subject getSubject(X509Cert cert) {

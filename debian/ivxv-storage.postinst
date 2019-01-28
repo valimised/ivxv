@@ -24,17 +24,19 @@ case "$1" in
         # add user account
         if ! getent passwd ivxv-storage > /dev/null; then
             echo "# Adding user 'ivxv-storage'"
-            adduser --quiet --shell=/bin/bash --system --ingroup ivxv ivxv-storage
+            adduser --quiet --home /var/lib/ivxv/user/ivxv-storage \
+                --shell /bin/bash --system --ingroup ivxv ivxv-storage
         fi
 
         # prepare ssh directory for user account
         test -d ~ivxv-storage/.ssh ||
 	    mkdir --parents ~ivxv-storage/.ssh
 	chmod 700 ~ivxv-storage/.ssh
+	chown ivxv-storage:ivxv ~ivxv-storage/.ssh
 	test -e ~ivxv-storage/.ssh/authorized_keys ||
 	    touch ~ivxv-storage/.ssh/authorized_keys
 	chmod 600 ~ivxv-storage/.ssh/authorized_keys
-	chown -R ivxv-storage:ivxv ~ivxv-storage/.ssh
+	chown ivxv-storage:ivxv ~ivxv-storage/.ssh/authorized_keys
 
         # enable user to automatically start service
         loginctl enable-linger ivxv-storage
@@ -66,5 +68,3 @@ fi
 #DEBHELPER#
 
 exit 0
-
-# vim:sts=4 sw=4 et:

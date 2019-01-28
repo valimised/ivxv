@@ -21,23 +21,23 @@ type testWriter struct {
 }
 
 func (t testWriter) Debug(m string) error {
-	fmt.Fprint(t, "debug: ", m)
-	return nil
+	_, err := fmt.Fprint(t, "debug: ", m)
+	return err
 }
 
 func (t testWriter) Info(m string) error {
-	fmt.Fprint(t, "info: ", m)
-	return nil
+	_, err := fmt.Fprint(t, "info: ", m)
+	return err
 }
 
 func (t testWriter) Err(m string) error {
-	fmt.Fprint(t, "err: ", m)
-	return nil
+	_, err := fmt.Fprint(t, "err: ", m)
+	return err
 }
 
 func (t testWriter) Alert(m string) error {
-	fmt.Fprint(t, "alert: ", m)
-	return nil
+	_, err := fmt.Fprint(t, "alert: ", m)
+	return err
 }
 
 func (t testWriter) Close() error {

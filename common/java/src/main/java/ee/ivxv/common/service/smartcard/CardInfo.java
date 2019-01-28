@@ -4,18 +4,36 @@ import ee.ivxv.common.asn1.ASN1DecodingException;
 import ee.ivxv.common.asn1.Field;
 import ee.ivxv.common.asn1.Sequence;
 
+/**
+ * CardInfo is a class for storing the information about the card.
+ */
 public class CardInfo {
     private final String id;
     public final static byte[] IDENTIFIER = "CARDINFO".getBytes();
 
+    /**
+     * Initialize using card identifier.
+     * @param id
+     */
     public CardInfo(String id) {
         this.id = id;
     }
 
+    /**
+     * Get the card identifier.
+     * @return
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Parse CardInfo from serialized data.
+     * 
+     * @param file
+     * @return
+     * @throws SmartCardException
+     */
     public static CardInfo create(byte[] file) throws SmartCardException {
         Sequence s = new Sequence();
         try {
@@ -47,6 +65,15 @@ public class CardInfo {
         return new CardInfo(id);
     }
 
+    /**
+     * Serialize the instance.
+     * <p>
+     * Returns
+     * {@code
+     * SEQUENCE ( id GENERALSTRING )
+     * }
+     * @return
+     */
     public byte[] encode() {
         return new Sequence(new Field(id).encode()).encode();
     }

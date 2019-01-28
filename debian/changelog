@@ -1,3 +1,137 @@
+ivxv (1.4.1) bionic; urgency=medium
+
+  * Collector service:
+    * Set the modification time in Zip local file headers of exported votes
+    * Recommended ca-certificates for ivxv-dds and ivxv-voting
+    * Added container type ASiCE as an alias for BDOC
+      - Election configuration and voting must still use the canonical BDOC
+        name, ASiCE is only allowed as a configuration container extension
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Fri, 25 Jan 2019 15:46:05 +0200
+
+ivxv (1.4.0) bionic; urgency=medium
+
+  * Management service:
+    * Allow empty voters list
+    * Fixed replacing invalid election config in microservices
+    * Fixed using multiple external log servers
+    * Fixed package version upgrade
+    * Improved service initialization:
+      - Always initialize service if the first tech config is applied
+      - Fixed backup service initialization
+    * Added missing stats field to admin UI (age group 18-14)
+    * Added choice ID uniqueness check to config validator
+  * Collector service:
+    * Added support for UTF-8 byte order mark at the beginning of YAML files
+    * Added support for BDOC TS profile
+    * Added option for automatically retrying OCSP requests
+    * Added option for automatically retrying TSP requests
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Fri, 18 Jan 2019 16:31:14 +0200
+
+ivxv (1.3.0) bionic; urgency=medium
+
+  * Third minor release for 1.x
+  * Base system changed to Ubuntu 18.04 LTS (Bionic Beaver)
+  * Added service crash recovery procedures
+  * Management service:
+    * Raise error if reloading current config file
+    * Better stats error indication
+    * IVXV service status hints converted to background information messages
+    * Added utility to start and stop microservices
+  * Collector service:
+    * Added automatic pruning of deconfigured etcd cluster members on restart
+      of existing instances
+    * Unwrapped etcd logs from ivxv-storage JSON logs: they are now forwarded
+      to syslog unmodified and with the program name "etcd"
+    * Upgrade minimal Go version to 1.9.
+    * Fixed logging to multiple log servers
+    * Added "pnoee" identity type
+  * Improved service state indication in Management Interface.
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Mon, 09 Jul 2018 11:39:58 +0300
+
+ivxv (1.2.0) xenial; urgency=medium
+
+  * Second minor release for 1.x
+  * Updated Log Monitor version to 1.1
+  * Management service:
+    * Added backup service
+    * Added support to create ballot box which contains
+      the union of votes from storage and backup services
+    * Removed obsolete technical config parameters "stats.*"
+    * Improved command file loading and fixed validation issues
+    * Fixed permissions config file creation error while uploading user
+      permission command
+    * Fixed Agent Daemon issues while loading stats data
+    * Added Management Service event logging with log browsing support
+    * Simplified ivxv-status utility CLI arguments
+    * Added state files for some config files to track config applying process
+    * Added config validator utility ivxv-config-validate
+    * Use ED25519 algorithm instead of RSA to generate SSH keypair for
+      ivxv-admin user
+  * Management service user interface:
+    * Added configuration hints to service page
+    * Added indication page to watch config applying status and log
+    * Config upload form moved to config applying status page
+  * Collector service:
+    * Added support for CR and CR LF line endings in YAML files
+    * Rewrote BDOC XML parsing and canonicalization to be more strict
+    * Added size limits to DDS request fields
+    * Log transport protocol to Log Monitor changed to RELP (port 20514)
+    * Added support for prefixed filenames (e.g., prefix.trust.yaml instead of
+      trust.yaml) in configuration containers
+    * Moved configuration fields specified by the election organizer (the
+      voterlist, auth, identity, age, vote, dds and qualification sections)
+      from technical to election configuration
+    * Added automatic update of etcd cluster when adding or replacing members
+      * As a prerequisite, added bootstrap field to etcd storage configuration
+  * Documentation:
+    * Update BDOC XML templates in protocol specification to exclude empty
+      attributes and include an Id for the SignedProperties Reference
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Fri, 06 Jul 2018 13:55:49 +0300
+
+ivxv (1.1.0) xenial; urgency=medium
+
+  * First minor release for 1.x
+  * Updated Log Monitor version to 1.0.2j
+  * Switch etcd source from Ubuntu 17.04 to 17.10
+  * Management service:
+    * Added utility to remove pending list of voters
+    * Added support to load districts list
+    * Added support for stats filtering by district
+    * Fixed issues while loading non-UTF8 encoded voters list
+  * Collector service:
+    * Added support for configuring etcd backend timeouts through environment
+      variables
+    * Increased etcd storage client tolerance of leader failures
+    * Made TLS cipher suites configurable
+    * Replaced BDOC checktimemark option with profile
+    * Added support for requiring ID-code and/or phone number for DDS
+      authentication
+    * Added vote submission rate limiting
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Fri, 27 Apr 2018 16:13:32 +0300
+
+ivxv (1.0.2) xenial; urgency=medium
+
+  * Second hotfix release for 1.0
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Thu, 28 Sep 2017 16:12:57 +0300
+
+ivxv (1.0.1) xenial; urgency=medium
+
+  * First hotfix release for 1.0
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Tue, 26 Sep 2017 10:11:19 +0300
+
+ivxv (1.0) xenial; urgency=medium
+
+  * First official release
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Tue, 19 Sep 2017 14:32:27 +0300
+
 ivxv (0.9) xenial; urgency=medium
 
   * Release candidate for first official release

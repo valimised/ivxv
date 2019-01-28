@@ -24,35 +24,32 @@ type Controller struct {
 //
 // The configuration version is necessary for reporting status.
 func NewController(v *version.V, startfn, checkfn, stopfn func(context.Context) error) (
-	c *Controller, err error) {
+	*Controller, error) {
 
-	c = &Controller{
+	c := &Controller{
 		startfn: startfn,
 		checkfn: checkfn,
 		stopfn:  stopfn,
 	}
 
 	// Create a new status reporter for this controller.
+	var err error
 	if c.status, err = newStatus(v); err != nil {
 		return nil, NewControllerStatusError{Err: err}
 	}
-	return
+	return c, nil
 }
 
 // Control calls startfn and calls stopfn when ctx is cancelled.
-func (c *Controller) Control(ctx context.Context) (err error) {
-	if err = c.status.ready(); err != nil {
-		return ControlStatusReadyError{Err: err}
-	}
-
+func (c *Controller) Control(ctx context.Context) error {
 	// Start the service.
 	log.Log(ctx, StartingControlledService{})
-	if err = c.startfn(ctx); err != nil {
+	if err := c.startfn(ctx); err != nil {
 		return ControllerStartError{Err: err}
 	}
 	log.Log(ctx, ControlledServiceStarted{})
 
-	if err = c.status.serving(); err != nil {
+	if err := c.status.serving(); err != nil {
 		return ControlStatusServingError{Err: err}
 	}
 
@@ -66,7 +63,7 @@ poll:
 		case <-ctx.Done():
 			break poll
 		case <-sleep.C:
-			if err = c.checkfn(ctx); err != nil {
+			if err := c.checkfn(ctx); err != nil {
 				log.Error(ctx, ControllerCheckError{Err: err})
 				c.failed++
 
@@ -83,16 +80,15 @@ poll:
 		}
 	}
 
-	// If updating the status returns an error, then only log it. Returning
-	// a non-nil error will cause the service manager to restart the
-	// service, which we do not want if we did not have any prior errors.
-	if serr := c.status.stopping(); serr != nil {
+	// If updating the status returns an error, then only log it: do not
+	// skip the stop function.
+	if err := c.status.stopping(); err != nil {
 		log.Error(ctx, ControlStatusStoppingError{Err: err})
 	}
 
 	// Stop the service.
 	log.Log(ctx, StoppingControlledService{})
-	if err = c.stopfn(ctx); err != nil {
+	if err := c.stopfn(ctx); err != nil {
 		return ControllerStopError{Err: err}
 	}
 	log.Log(ctx, ControlledServiceStopped{})
@@ -100,11 +96,9 @@ poll:
 }
 
 // ControlAt waits until start and then calls Control.
-func (c *Controller) ControlAt(ctx context.Context, start time.Time) error { // nolint: dupl
-	// Ignore duplicate code from S.ServeAt: we want to keep them separate
-	// for a clearer API.
-	if err := c.status.ready(); err != nil {
-		return ControlAtStatusReadyError{Err: err}
+func (c *Controller) ControlAt(ctx context.Context, start time.Time) error {
+	if err := c.status.waiting(); err != nil {
+		return ControlAtStatusWaitingError{Err: err}
 	}
 	return waitStart(ctx, start, c.Control)
 }

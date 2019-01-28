@@ -4,7 +4,7 @@ IVXV Internet voting framework
 Collector management service - Web interface - Voting lists management page
 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="et">
 
 <head>
     <meta charset="utf-8">
@@ -17,20 +17,10 @@ Collector management service - Web interface - Voting lists management page
     <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <!-- MetisMenu CSS -->
     <link href="../vendor/metisMenu/metisMenu.min.css" rel="stylesheet">
-    <!-- DataTables CSS -->
-    <link href="../vendor/datatables-plugins/dataTables.bootstrap.css" rel="stylesheet">
-    <!-- DataTables Responsive CSS -->
-    <link href="../vendor/datatables-responsive/dataTables.responsive.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
     <!-- Custom Fonts -->
     <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
 </head>
 
 <body>
@@ -50,8 +40,8 @@ Collector management service - Web interface - Voting lists management page
             <ul class="nav navbar-top-links navbar-right">
                 <li class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                    <i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
-                </a>
+                        <i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
+                    </a>
                     <ul class="dropdown-menu dropdown-user" style="padding: 10px;">
                         <li><i class="fa fa-user fa-fw"></i> Kasutaja andmed</li>
                         <li>CN:&nbsp;<span id="user-cn"></span></li>
@@ -85,6 +75,9 @@ Collector management service - Web interface - Voting lists management page
                             <a href="ballot-box.html"><i class="fa fa-download fa-fw"></i> E-urn</a>
                         </li>
                         <li>
+                            <a href="config.html"><i class="fa fa-wrench fa-fw"></i> Seadistused</a>
+                        </li>
+                        <li>
                             <a href="log.html"><i class="fa fa-file-text fa-fw"></i> Logiraamat</a>
                         </li>
                         <li>
@@ -97,11 +90,16 @@ Collector management service - Web interface - Voting lists management page
             <!-- /.navbar-static-side -->
         </nav>
         <div id="page-wrapper">
+
             <div class="row">
                 <div class="col-lg-12">
                     <h1 class="page-header">Nimekirjad</h1>
                 </div>
+                <!-- /.col-lg-12 -->
             </div>
+            <!-- /.row -->
+
+            <!-- Data loading status -->
             <div class="row">
                 <div class="col-lg-12">
                     <div class="panel panel-default">
@@ -111,10 +109,15 @@ Collector management service - Web interface - Voting lists management page
                     </div>
                 </div>
             </div>
+            <!-- /.row -->
+
             <!-- Error message panel -->
             <div id="common-error-msg" class="row" style="display: none;">
                 <div class="col-lg-12">
                     <div class="panel panel-red">
+                        <div class="panel-heading">
+                            Viga!
+                        </div>
                         <div class="panel-body">
                             <p>Veateade</p>
                         </div>
@@ -123,8 +126,9 @@ Collector management service - Web interface - Voting lists management page
                 <!-- /.col-lg-12 -->
             </div>
             <!-- /.row -->
+
             <div class="row">
-                <div class="col-lg-7">
+                <div class="col-lg-6">
                     <div id="panel-choices-list" class="panel">
                         <div class="panel-heading">
                             Valikute nimekiri
@@ -146,11 +150,14 @@ Collector management service - Web interface - Voting lists management page
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-7">
+                <!-- /.col-lg-6 -->
+
+                <div class="col-lg-6">
                     <div id="panel-voters-list" class="panel">
                         <div class="panel-heading">
-                            Valijate nimekiri
+                            Valijate nimekirjad
                         </div>
+
                         <div class="panel-body">
                             <div class="row">
                                 <div id="panel-voters-list-data" class="col-lg-12">
@@ -160,14 +167,36 @@ Collector management service - Web interface - Voting lists management page
                                     </ul>
                                 </div>
                             </div>
+                            <button id="remove-voters-lists" onclick="removeVotersLists()">Eemalda rakendamata nimekirjad</button>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-7">
+                <!-- /.col-lg-6 -->
+
+                <div class="col-lg-6">
+                    <div id="panel-districts-list" class="panel">
+                        <div class="panel-heading">
+                            Ringkondade nimekiri
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div id="panel-districts-list-data" class="col-lg-12">
+                                    <ul class="list-group">
+                                        <li class="list-group-item"><strong>Ringkondade nimekiri:</strong> <span id="list-districts">-</span></li>
+                                        <li class="list-group-item"><strong>Ringkondade nimekirja seisund:</strong> <span id="list-districts-status">-</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.col-lg-6 -->
+
+                <div class="col-lg-6">
                     <div class="panel panel-info">
                         <div class="panel-heading">
                             <h4 class="panel-title">
-                            Nimekirjade rakendamine
+                            Nimekirjade üleslaadimine
                         </h4>
                         </div>
                         <div class="panel-body">
@@ -187,180 +216,47 @@ Collector management service - Web interface - Voting lists management page
                                     <select>
                                         <option id="choicesoption" value="choices">Valikute nimekiri</option>
                                         <option value="voters">Valijate nimekiri</option>
+                                        <option value="districts">Ringkondade nimekiri</option>
                                     </select>
                                 </div>
-                                <button id="file-upload-submit" class="btn btn-primary">Rakenda seadistused</button>
+                                <button id="file-upload-submit" class="btn btn-primary">Laadi nimekiri haldusteenusesse</button>
                             </form>
                         </div>
                     </div>
                 </div>
+                <!-- /.col-lg-6 -->
             </div>
+            <!-- /.row -->
+
         </div>
         <!-- /#page-wrapper -->
     </div>
     <!-- /#wrapper -->
+
     <!-- jQuery -->
     <script src="../vendor/jquery/jquery.min.js"></script>
     <!-- Bootstrap Core JavaScript -->
     <script src="../vendor/bootstrap/js/bootstrap.min.js"></script>
     <!-- Metis Menu Plugin JavaScript -->
     <script src="../vendor/metisMenu/metisMenu.min.js"></script>
-    <!-- DataTables JavaScript -->
-    <script src="../vendor/datatables/js/jquery.dataTables.min.js"></script>
-    <script src="../vendor/datatables-plugins/dataTables.bootstrap.min.js"></script>
-    <script src="../vendor/datatables-responsive/dataTables.responsive.js"></script>
     <!-- Custom Theme JavaScript -->
     <script src="../dist/js/sb-admin-2.js"></script>
     <!-- IVXV JavaScript -->
     <script src="../js/ivxv.js"></script>
+    <!-- Page related JavaScript -->
+    <script src="../js/lists.js"></script>
     <!-- Page-Level Scripts -->
     <script>
     $(document).ready(function() {
         getContextData();
+        loadPageData();
+        setInterval(loadPageData, 10000);
         reset_upload_form();
         // set handler for file uploads
         $('input[type=file]').on('change', prepareUpload);
         $('#config-upload-form').on('submit', uploadFiles);
     });
-
-    function loadPageData() {
-        var loadDate = new Date();
-        loadDate.setTime(Date.now());
-
-        $.getJSON('data/status.json', function(status) {
-                hideErrorMessage();
-
-                $('#list-voters-loaded').text(status['list']['voters-list-loaded']);
-                $('#list-voters-pending').text(status['list']['voters-list-pending']);
-                $('#list-choices').text(status['list']['choices'] ? status['list']['choices'] : '-');
-
-                if (!status['list']['choices']) {
-                    $('#list-choices-status').text('Laadimata');
-                    $('#panel-choices-list').attr('class', 'panel panel-red');
-                } else if (status['list']['choices'] && !status['list']['choices-loaded']) {
-                    $('#list-choices-status').text('Laaditud haldusteenusesse');
-                    $('#panel-choices-list').attr('class', 'panel panel-warning');
-                } else if (status['list']['choices'] === status['list']['choices-loaded']) {
-                    $('#list-choices-status').text('Rakendatud kogumisteenusele');
-                    $('#panel-choices-list').attr('class', 'panel panel-success');
-                    $('#choicesoption').hide();
-                    $('#drop').find('option[value="voters"]').prop('selected', true)
-                }
-
-                if (status['list']['voters-list-loaded'] === 0) {
-                    $('#panel-voters-list').attr('class', 'panel panel-red');
-                } else if (status['list']['voters-list-loaded'] !== 0 && status['list']['voters-list-pending'] === 0) {
-                    $('#panel-voters-list').attr('class', 'panel panel-success');
-
-                    $('#list-list').empty();
-                    for (var i = 0; i < status['list']['voters-list-loaded']; i++) {
-                        var iStr = i < 10 ? '0' + (i + 1) : (i + 1);
-                        var listStatus = status['list']['voters' + iStr] === status['list']['voters' + iStr + '-loaded'] ? 'LAADITUD' : 'OOTEL';
-                        $('#list-list').append(
-                            '<li class="list-group-item" style="padding-left:25px">' +
-                            (i + 1) + '. ' + listStatus + ': ' + status['list']['voters' + iStr] +
-                            '</li>'
-                        );
-                    }
-                } else {
-                    $('#panel-voters-list').attr('class', 'panel panel-warning');
-                }
-
-                var genDate = new Date();
-                genDate.setTime(Date.parse(status['meta']['time_generated']));
-                $('#loadstatus')
-                    .removeClass('text-danger')
-                    .addClass('text-info')
-                    .html('Andmete laadimise aeg: ' + formatTime(loadDate, 0) + '<br />' +
-                        'Andmete genereerimise aeg: ' + formatTime(genDate, 3));
-            })
-            .fail(function() {
-                $('#loadstatus')
-                    .removeClass('text-info')
-                    .addClass('text-danger')
-                    .html('Viga andmete laadimisel: ' + formatTime(loadDate, 0));
-                showErrorMessage('Viga seisundi laadimisel', true);
-            });
-        setTimeout(loadPageData, 10000);
-    }
-
-    // Reset upload form
-    function reset_upload_form() {
-        $('input[type=file]').val(null);
-        $('#file-upload-submit').attr('disabled', '');
-    }
-
-    // Variable to store uploaded files
-    var files;
-
-    // Grab the files and set them to our variable
-    function prepareUpload(event) {
-        files = event.target.files;
-        $('#file-upload-submit').attr('disabled', null);
-        $('#upload-message').hide();
-    }
-
-    // Catch the form submit and upload the files
-    function uploadFiles(event) {
-        $('#upload-message').hide()
-            .removeClass('alert-danger')
-            .removeClass('alert-danger')
-            .removeClass('alert-success');
-
-        event.stopPropagation(); // Stop stuff happening
-        event.preventDefault(); // Totally stop stuff happening
-        // Create a formdata object and add the files
-        var data = new FormData();
-        data.append('upload', files[0]);
-        data.append('type', $("#drop").find(":selected").val());
-
-        var form = $('#config-upload-form');
-        $.ajax({
-            url: form.attr('action'),
-            type: form.attr('method'),
-            data: data,
-            cache: false,
-            dataType: 'json',
-            processData: false, // Don't process the files
-            contentType: false, // Set content type to false as jQuery will tell the server its a query string request
-            success: function(data, textStatus, jqXHR) {
-                if (data.error === undefined) {
-                    // Success so call function to process the form
-                    console.log(jqXHR.responseJSON.message);
-                    if (jqXHR.responseJSON.message !== undefined) {
-                        $('#upload-message').html(jqXHR.responseJSON.message)
-                            .addClass('alert-success');
-                    } else {
-                        $('#upload-message').html(data)
-                            .addClass('alert-danger');
-                    }
-                    reset_upload_form();
-                } else {
-                    // Handle errors here
-                    console.log('ERRORS: ' + data.error);
-                    $('#upload-message').html('Tundmatu viga')
-                        .addClass('alert-danger');
-                }
-                $('#upload-message').show();
-                loadPageData();
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                // Handle errors here
-                if (jqXHR.responseJSON === undefined) {
-                    console.log(jqXHR);
-                    $('#upload-message').html((jqXHR.responseText));
-                } else {
-                    console.log(jqXHR.responseJSON.message);
-                    $('#upload-message').html(jqXHR.responseJSON.message)
-                }
-                $('#upload-message').addClass('alert-danger').show();
-            }
-        });
-    }
     </script>
 </body>
 
 </html>
-<!--
-vim:sts=4 sw=4 et:
--->

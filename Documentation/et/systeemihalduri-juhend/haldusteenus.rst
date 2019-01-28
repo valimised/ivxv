@@ -13,23 +13,24 @@ Haldusteenuse funktsioonid on:
 
 #. Kogumisteenuse alamteenuste haldamine:
 
-   #. Seadistuste ja valimsnimekirjade laadimine;
+   #. Seadistuste ja valimisnimekirjade laadimine;
 
    #. Alamteenuste paigaldus selleks ettevalmistatud masinatesse;
 
    #. Alamteenustele seadistuste ja nimekirjade rakendamine;
 
-#. E-urni allalaadimine töötlemiseks;
+#. E-urni koostamine töötlemiseks;
 
 #. Valimiste üldstatistika jälgimine;
 
-#. E-urni korrapärane varundamine;
+#. E-urni ja logide korrapärane varundamine;
 
 #. Kogumisteenuse seisundi seire;
 
-Haldusteenus suhtleb hallatavate teenustega üle SSH-kanali. Suhtluse algatab
-alati haldusteenus. Usaldus teenusmasinate vastu luuakse süsteemihalduri abiga
-pärast teenuseid majutavate masinate paigaldamist.
+Haldusteenus suhtleb hallatavate teenustega üle `SSH
+<https://en.wikipedia.org/wiki/Secure_Shell>`_-kanali. Suhtluse algatab alati
+haldusteenus. Usaldus teenusmasinate vastu luuakse süsteemihalduri abiga pärast
+teenuseid majutavate masinate paigaldamist.
 
 Teenust majutava masina paigaldamise järel loob haldur haldusteenusele
 ligipääsu teenusmasina juurkontole, et haldusteenusel oleks võimalik teenuse
@@ -48,10 +49,15 @@ Haldusteenuse kasutajaliides koosneb kahest osast:
 #. Graafiline kasutajaliides on veebipõhine liides, mille funktsionaalsuse
    tagavad käsureautiliidid.
 
+   .. seealso::
+
+      Graafilise kasutajaliidese kasutusjuhend asub dokumendis
+      ``IVXV kogumisteenuse haldusliidese kasutusjuhend``.
+
 Lisaks töötavad deemonprotsessid:
 
 #. Veebiserver graafilise kasutajaliidese jaoks;
 
-#. Agentdeemon teenuste seisundi jälgimiseks.
+#. Haldusdeemon veebiserveri poolt vahendatud päringute käivitamiseks;
 
-.. vim: sts=3 sw=3 et:
+#. Agentdeemon teenuste seisundi jälgimiseks.

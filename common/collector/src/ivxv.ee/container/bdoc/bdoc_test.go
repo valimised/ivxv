@@ -50,22 +50,32 @@ func TestOpen(t *testing.T) {
 	tests := []struct {
 		name              string
 		signers           []string
-		checkTM           bool
+		profile           Profile
 		expectedFailure   bool
 		expectedFileCount int
 	}{
+		// TS signatures
+		{"TS", []string{"JÕEORG,JAAK-KRISTJAN,38001085718"}, BES, false, 1},
+		{"TS", []string{"JÕEORG,JAAK-KRISTJAN,38001085718"}, TM, true, 1},
+		{"TS", []string{"JÕEORG,JAAK-KRISTJAN,38001085718"}, TS, false, 1},
 		// TM signatures
-		{"EID", []string{"MÄNNIK,MARI-LIIS,47101010033"}, true, false, 1},
-		{"MID", []string{"O’CONNEŽ-ŠUSLIK,MARY ÄNN,11412090004"}, true, false, 1},
+		{"EID", []string{"MÄNNIK,MARI-LIIS,47101010033"}, TM, false, 1},
+		{"MID", []string{"O’CONNEŽ-ŠUSLIK,MARY ÄNN,11412090004"}, TM, false, 1},
 		{
 			"MultipleSigners",
 			[]string{"MÄNNIK,MARI-LIIS,47101010033", "ŽAIKOVSKI,IGOR,37101010021"},
-			true, false, 1,
+			TM, false, 1,
 		},
-		{"MultipleFiles", []string{"ŽAIKOVSKI,IGOR,37101010021"}, true, false, 2},
+		{"MultipleFiles", []string{"ŽAIKOVSKI,IGOR,37101010021"}, TM, false, 2},
+		{"EID", []string{"MÄNNIK,MARI-LIIS,47101010033"}, TS, true, 1},
 		// BES signatures
-		{"CheckOCSP", []string{"ŽAIKOVSKI,IGOR,37101010021"}, true, true, 1},
-		{"CheckOCSP", []string{"ŽAIKOVSKI,IGOR,37101010021"}, false, false, 1},
+		{"CheckOCSP", []string{"ŽAIKOVSKI,IGOR,37101010021"}, BES, false, 1},
+		{"CheckOCSP", []string{"ŽAIKOVSKI,IGOR,37101010021"}, TM, true, 1},
+		{"CheckOCSP", []string{"ŽAIKOVSKI,IGOR,37101010021"}, TS, true, 1},
+		// Missing files
+		{"NoManifest", nil, BES, true, 1},
+		{"NoSignatures", nil, BES, true, 1},
+		{"NoFiles", []string{"ŽAIKOVSKI,IGOR,37101010021"}, BES, true, 0},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -77,7 +87,7 @@ func TestOpen(t *testing.T) {
 			}
 			defer file.Close() // nolint: errcheck, ignore close failure of read-only fd.
 
-			testOpener.checkTM = test.checkTM
+			testOpener.profile = test.profile
 			bdoc, err := testOpener.Open(file)
 			if test.expectedFailure && err == nil {
 				t.Fatal("Expected failure verifying BDOC")

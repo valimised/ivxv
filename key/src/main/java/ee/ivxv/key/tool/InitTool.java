@@ -9,9 +9,13 @@ import ee.ivxv.common.crypto.elgamal.ElGamalPublicKey;
 import ee.ivxv.common.crypto.rnd.Rnd;
 import ee.ivxv.common.math.ECGroup;
 import ee.ivxv.common.math.ECGroupElement;
+import ee.ivxv.common.math.Group.Decodable;
 import ee.ivxv.common.math.ModPGroup;
 import ee.ivxv.common.math.ModPGroupElement;
+import ee.ivxv.common.service.smartcard.Card;
 import ee.ivxv.common.service.smartcard.Cards;
+import ee.ivxv.common.service.smartcard.IndexedBlob;
+import ee.ivxv.common.service.smartcard.SmartCardException;
 import ee.ivxv.common.util.I18nConsole;
 import ee.ivxv.common.util.Util;
 import ee.ivxv.key.KeyContext;
@@ -30,7 +34,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.smartcardio.CardException;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -41,14 +47,18 @@ import org.bouncycastle.operator.ContentSigner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * InitTool is a tool for generating ElGamal encryption key pair and RSA signing key pair and
+ * storing them on card tokens.
+ */
 public class InitTool implements Tool.Runner<InitArgs> {
-
     private static final Logger log = LoggerFactory.getLogger(InitTool.class);
 
-    static final Path ENC_CERT_PATH = Paths.get("enc.pem");
-    static final Path ENC_KEY_DER_PATH = Paths.get("pub.der");
-    static final Path ENC_KEY_PEM_PATH = Paths.get("pub.pem");
-    static final Path SIGN_CERT_PATH = Paths.get("sign.pem");
+    static final String ENC_CERT_TMPL = "enc.pem";
+    static final String ENC_KEY_DER_TMPL = "pub.der";
+    static final String ENC_KEY_PEM_TMPL = "pub.pem";
+    static final String SIGN_CERT_TMPL = "sign.pem";
+
     static final byte[] AID = new byte[] {0x01};
     static final byte[] DEC_SHARE_NAME = "DEC".getBytes();
     static final byte[] SIGN_SHARE_NAME = "SIGN".getBytes();
@@ -68,6 +78,11 @@ public class InitTool implements Tool.Runner<InitArgs> {
         Rnd rnd = null;
         try {
             rnd = RandomSourceArg.combineFromArgument(args.random);
+        } catch (IOException e) {
+            log.debug("Could not initialize random sources:", e);
+            return false;
+        }
+        try {
             if (args.desmedt.isSet()) {
                 desmedtGenProtocol(args, rnd, params);
             }
@@ -78,9 +93,11 @@ public class InitTool implements Tool.Runner<InitArgs> {
     }
 
     private void desmedtGenProtocol(InitArgs args, Rnd rnd, ElGamalParameters params)
-            throws IOException, ProtocolException, CardException {
+            throws IOException, ProtocolException, CardException, SmartCardException {
         // PREPARE FOR KEYPAIR GENERATION
         ThresholdParameters tparams = new ThresholdParameters(args.dn.value(), args.dm.value());
+        byte[][] encshares = new byte[tparams.getParties()][];
+        byte[][] signshares = new byte[tparams.getParties()][];
         Cards cards = UtilTool.listCards(ctx, tparams);
         boolean isFastMode =
                 args.enableFastMode.value() && cards.enableFastMode(tparams.getParties());
@@ -96,37 +113,65 @@ public class InitTool implements Tool.Runner<InitArgs> {
         // GENERATE ENCRYPTION KEYPAIR
         console.println(Msg.m_generate_decryption_key);
         DesmedtGeneration gen =
-                new DesmedtGeneration(cards, params, tparams, rnd, AID, DEC_SHARE_NAME);
+                new DesmedtGeneration(cards, params, tparams, rnd, AID, DEC_SHARE_NAME, encshares);
         ElGamalPublicKey pub = new ElGamalPublicKey(gen.generateKey());
 
         // GENERATE SIGNATURE KEYPAIR
         console.println(Msg.m_generate_signature_key);
-        ShoupGeneration shoupGen =
-                new ShoupGeneration(cards, args.slen.value(), tparams, rnd, AID, SIGN_SHARE_NAME);
+        ShoupGeneration shoupGen = new ShoupGeneration(cards, args.slen.value(), tparams, rnd, AID,
+                SIGN_SHARE_NAME, signshares);
+
         RSAPublicKey rsaPub = SignatureUtil.RSA.bytesToRSAPublicKey(shoupGen.generateKey());
 
-        // GENERATE CERTIFICATES FOR BOTH KEYPAIRS
-        generateAndWriteCert(args, cards, tparams, rnd, rsaPub.getEncoded(), SIGN_CERT_PATH,
-                args.issuerCN.value(), args.signCN.value(), args.signSN.value());
-        generateAndWriteCert(args, cards, tparams, rnd, pub.getBytes(), ENC_CERT_PATH,
-                args.issuerCN.value(), args.signCN.value(), args.signSN.value());
-        console.println(Msg.m_certificates_generated, SIGN_CERT_PATH, ENC_CERT_PATH);
+        console.println(Msg.m_storing_shares);
+        for (int i = 0; i < encshares.length; i++) {
+            Card card = cards.getCard(i);
+            card.storeIndexedBlob(AID, DEC_SHARE_NAME, encshares[i], i + 1);
+            card.storeIndexedBlob(AID, SIGN_SHARE_NAME, signshares[i], i + 1);
+        }
 
-        writeOutEncryptionKey(pub, args.outputPath.value());
-        console.println(Msg.m_keys_saved, ENC_KEY_DER_PATH, ENC_KEY_PEM_PATH);
+        console.println(Msg.m_generating_certificate);
+        // GENERATE CERTIFICATES FOR BOTH KEYPAIRS
+        Set<IndexedBlob> signBlobs = new HashSet<>();
+        for (int i = 0; i < tparams.getThreshold(); i++) {
+            Card card;
+            if (ctx.card.isPluggableService()) {
+                card = ctx.card.createCard("-1");
+                cards.initUnprocessedCard(card);
+            } else {
+                card = cards.getCard(i);
+            }
+            IndexedBlob ib = card.getIndexedBlob(AID, SIGN_SHARE_NAME);
+            if (ib.getIndex() < 1 || ib.getIndex() > tparams.getParties()) {
+                throw new ProtocolException("Indexed blob index mismatch");
+            }
+            signBlobs.add(ib);
+        }
+        Path signCertPath = sanitizeFilename(args.identifier.value(), SIGN_CERT_TMPL);
+        Path encCertPath = sanitizeFilename(args.identifier.value(), ENC_CERT_TMPL);
+        generateAndWriteCert(args, signBlobs, tparams, rnd, rsaPub.getEncoded(), signCertPath,
+                args.signCN.value(), args.signCN.value(), args.signSN.value());
+        generateAndWriteCert(args, signBlobs, tparams, rnd, pub.getBytes(), encCertPath,
+                args.signCN.value(), args.encCN.value(), args.encSN.value());
+        console.println(Msg.m_certificates_generated, signCertPath, encCertPath);
+
+        Path encKeyDerPath = sanitizeFilename(args.identifier.value(), ENC_KEY_DER_TMPL);
+        Path encKeyPemPath = sanitizeFilename(args.identifier.value(), ENC_KEY_PEM_TMPL);
+        writeOutEncryptionKey(pub, args.outputPath.value(), encKeyDerPath, encKeyPemPath);
+        console.println(Msg.m_keys_saved, encKeyDerPath, encKeyPemPath);
 
         if (!args.skipTests.value()) {
             // TEST THAT THE GENERATED KEY SUCCESSFULLY SIGNS
-            UtilTool.allTests(console, log, cards, tparams, rnd, pub, rsaPub);
+            TestKeyTool.allTests(console, log, ctx.card, tparams, rnd, pub, rsaPub);
         }
     }
 
-    private void generateAndWriteCert(InitArgs args, Cards cards, ThresholdParameters tparams,
+    private void generateAndWriteCert(InitArgs args, Set<IndexedBlob> blobs,
+            ThresholdParameters tparams,
             Rnd rnd, byte[] publicKey, Path path, String issuerCN, String cn, BigInteger sn)
             throws ProtocolException, IOException {
-        List<Cards> quorums = cards.getQuorumList(tparams.getThreshold());
         ShoupSigning shoupSign =
-                new ShoupSigning(quorums.get(0), tparams, AID, SIGN_SHARE_NAME, rnd);
+                new ShoupSigning(blobs, tparams, rnd);
         X509CertificateHolder certHolder = genCert(shoupSign,
                 SubjectPublicKeyInfo.getInstance(ASN1Sequence.getInstance(publicKey)), issuerCN, cn,
                 sn);
@@ -141,8 +186,11 @@ public class InitTool implements Tool.Runner<InitArgs> {
             BigInteger p = args.groupP.value();
             BigInteger g = args.groupG.value();
 
-            ModPGroup group = new ModPGroup(p);
+            ModPGroup group = new ModPGroup(p, true);
             ModPGroupElement groupG = new ModPGroupElement(group, g);
+            if (group.isDecodable(groupG) != Decodable.VALID) {
+                throw new IllegalArgumentException("Invalid generator");
+            }
             params = new ElGamalParameters(group, groupG, electionId);
         } else {
             ECGroup group = new ECGroup(args.curveName.value());
@@ -171,10 +219,20 @@ public class InitTool implements Tool.Runner<InitArgs> {
         Files.write(path, Util.toBytes(out));
     }
 
-    private void writeOutEncryptionKey(ElGamalPublicKey key, Path path) throws IOException {
-        Files.write(path.resolve(ENC_KEY_PEM_PATH),
-                Util.encodePublicKey(key.getBytes()).getBytes());
-        Files.write(path.resolve(ENC_KEY_DER_PATH), key.getBytes());
+    private void writeOutEncryptionKey(ElGamalPublicKey key, Path dir, Path der, Path pem)
+            throws IOException {
+        Files.write(dir.resolve(pem), Util.encodePublicKey(key.getBytes()).getBytes());
+        Files.write(dir.resolve(der), key.getBytes());
+    }
+
+    protected static Path sanitizeFilename(String identifier, String name) {
+        // this pattern matches anything which is not:
+        // * lower case letters
+        // * upper case letters
+        // * digits
+        // * symbols '-' and '_'
+        String exclude = "[^a-zA-Z0-9-_]";
+        return Paths.get(identifier.replaceAll(exclude, "_") + "-" + name);
     }
 
     public static class InitArgs extends Args {
@@ -183,10 +241,9 @@ public class InitTool implements Tool.Runner<InitArgs> {
         Arg<Boolean> skipTests = Arg.aFlag(Msg.i_skiptest);
         Arg<List<RandomSourceArg.RndListEntry>> random = RandomSourceArg.getArgument();
         Arg<Integer> requiredRandomness = Arg.anInt(Msg.i_required_randomness).setDefault(128);
-        Arg<Boolean> enableFastMode = Arg.aFlag(Msg.i_fastmode).setDefault(true);
+        Arg<Boolean> enableFastMode = Arg.aFlag(Msg.arg_fastmode).setDefault(true);
 
         Arg<Integer> slen = Arg.anInt(Msg.i_signaturekeylen);
-        Arg<String> issuerCN = Arg.aString(Msg.i_issuercn);
         Arg<String> signCN = Arg.aString(Msg.i_signcn);
         Arg<BigInteger> signSN = Arg.aBigInt(Msg.i_signsn);
         Arg<String> encCN = Arg.aString(Msg.i_enccn);
@@ -219,7 +276,6 @@ public class InitTool implements Tool.Runner<InitArgs> {
             args.add(enableFastMode);
             args.add(random);
             args.add(slen);
-            args.add(issuerCN);
             args.add(signCN);
             args.add(signSN);
             args.add(encCN);

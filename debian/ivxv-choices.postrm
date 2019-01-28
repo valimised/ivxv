@@ -22,18 +22,29 @@ set -e
 case "$1" in
     remove)
         # stop ivxv-choices service
-        systemctl stop "ivxv-choices@*service"
+        deb-systemd-invoke stop "ivxv-choices@*service"
     ;;
 
     purge)
-        # REMOVE ivxv-choices USER
-        if getent passwd ivxv-choices > /dev/null; then
-            loginctl terminate-user ivxv-choices
-            USER_HOME_DIR="$(getent passwd ivxv-choices | cut -d: -f6)"
+        # Remove user account
+        USER_ACCOUNT="ivxv-choices"
+        if getent passwd "${USER_ACCOUNT}" > /dev/null; then
+            # terminate user sessions
+            loginctl terminate-user "${USER_ACCOUNT}"
+
+            # kill user processes
+            if pgrep --count --uid "${USER_ACCOUNT}" > /dev/null ; then
+                pkill --uid "${USER_ACCOUNT}" || true
+                sleep 1
+                pkill --signal KILL --uid "${USER_ACCOUNT}" || true
+                sleep 1
+            fi
+
+            USER_HOME_DIR="$(getent passwd ${USER_ACCOUNT} | cut -d: -f6)"
             # remove user home directory using local hack
             # to avoid dependency of perl-modules
             # that is required for use deluser --remove-home option.
-            deluser --system ivxv-choices
+            deluser --system "${USER_ACCOUNT}"
             rm -rf ${USER_HOME_DIR}
         fi
     ;;
@@ -58,5 +69,3 @@ fi
 #DEBHELPER#
 
 exit 0
-
-# vim:sts=4 sw=4 et:

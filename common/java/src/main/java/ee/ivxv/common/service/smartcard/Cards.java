@@ -2,7 +2,10 @@ package ee.ivxv.common.service.smartcard;
 
 import ee.ivxv.common.util.I18nConsole;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 
@@ -16,13 +19,33 @@ public abstract class Cards {
     private final CardService cardService;
     private final I18nConsole console;
     protected final List<Card> cards = new ArrayList<>();
+    private final Set<String> processedCardIds = new HashSet<>();
 
+    /**
+     * Initialize using CardService and console.
+     * 
+     * @param cardService
+     * @param console
+     */
     public Cards(CardService cardService, I18nConsole console) {
         this.cardService = cardService;
         this.console = console;
     }
 
+    /**
+     * Enable fast mode if possible.
+     * <p>
+     * In fast mode, the user is not asked to insert the card terminal identifiers and they are
+     * assigned automatically.
+     * 
+     * @param requiredCardCount Number of required cards
+     * @return Boolean indicating if fast mode was enabled.
+     * @throws CardException
+     */
     public boolean enableFastMode(int requiredCardCount) throws CardException {
+        if (!cardService.isPluggableService()) {
+            return true;
+        }
         if (cards.size() != requiredCardCount) {
             return false;
         }
@@ -31,26 +54,68 @@ public abstract class Cards {
                 return false;
             }
         }
-        if (TerminalUtil.getTerminalCount() != requiredCardCount) {
-            return false;
-        }
         if (TerminalUtil.getCardCount() != requiredCardCount) {
             return false;
         }
-        for (int i = 0; i < requiredCardCount; i++) {
-            cards.get(i).setTerminal(i);
+        Iterator<Card> cardIterator = cards.iterator();
+        List<CardTerminal> terminalList = TerminalUtil.getTerminals();
+        for (int i = 0; i < terminalList.size(); i++) {
+            if (terminalList.get(i).isCardPresent()) {
+                cardIterator.next().setTerminal(i);
+            }
         }
         return true;
     }
 
+    /**
+     * Add card.
+     * 
+     * @param id
+     */
     public void addCard(String id) {
         cards.add(cardService.createCard(id));
     }
 
+    /**
+     * Get list of all cards
+     * 
+     * @return
+     */
     public List<Card> getCardList() {
         return cards;
     }
 
+    public void initUnprocessedCard(Card card) throws SmartCardException, CardException {
+        List<CardTerminal> terminalList = TerminalUtil.getTerminals();
+        while (true) {
+            for (int i = 0; i < terminalList.size(); i++) {
+                CardTerminal terminal = terminalList.get(i);
+                if (!terminal.isCardPresent()) {
+                    continue;
+                }
+                card.setTerminal(i);
+                card.initialize();
+                String id = card.getCardInfo().getId();
+                if (!processedCardIds.contains(id)) {
+                    processedCardIds.add(id);
+                    console.println(Msg.inserted_card_id, id);
+                    return;
+                } else {
+                    card.close();
+                }
+            }
+            console.println(Msg.insert_unprocessed_card);
+            console.console.readln();
+        }
+    }
+
+    /**
+     * Get card with specified index
+     * 
+     * @param index
+     * @return
+     * @throws SmartCardException
+     */
     public Card getCard(int index) throws SmartCardException {
         Card card = cards.get(index);
         int termNo = card.getTerminal();
@@ -115,8 +180,8 @@ public abstract class Cards {
         }
     }
 
-    private void waitUntilCardRemoved(CardTerminal terminal, Card card, String currentCard, int termNo)
-            throws CardException, SmartCardException {
+    private void waitUntilCardRemoved(CardTerminal terminal, Card card, String currentCard,
+            int termNo) throws CardException, SmartCardException {
         if (terminal.isCardPresent()) {
             console.println(Msg.remove_card_indexed, currentCard, termNo);
         }
@@ -163,48 +228,5 @@ public abstract class Cards {
 
     public int count() {
         return cards.size();
-    }
-
-    /**
-     * <pre>
-     * {@literal
-     * quorumSize == count():
-     *  result list size is 1 and contains the object this was called on
-     * quorumSize < count():
-     *  creates 3 quorums such that all cards are at least in one quorum
-     *  but none are in every quorum.
-     *  1st quorum: first n cards among all cards
-     *  2nd quorum: last n cards among all cards
-     *  3rd quorum: first n-1 cards and the last card among all cards
-     *  where n is parameter quorumSize.
-     *  }
-     * </pre>
-     *
-     * @param quorumSize number of cards in a single quorum
-     * @throws IllegalArgumentException if {@code quorumSize > count()}
-     */
-    public List<Cards> getQuorumList(int quorumSize) {
-        if (quorumSize > count()) {
-            throw new IllegalArgumentException("Quorum size has to smaller than total card count");
-        }
-        List<Cards> res = new ArrayList<>();
-        if (quorumSize == count()) {
-            res.add(this);
-        } else {
-            Cards q1 = cardService.createCards();
-            q1.cards.addAll(cards.subList(0, quorumSize));
-
-            Cards q2 = cardService.createCards();
-            q2.cards.addAll(cards.subList(count() - quorumSize, count()));
-
-            Cards q3 = cardService.createCards();
-            q3.cards.addAll(cards.subList(0, quorumSize - 1));
-            q3.cards.add(cards.get(cards.size() - 1));
-
-            res.add(q1);
-            res.add(q2);
-            res.add(q3);
-        }
-        return res;
     }
 }

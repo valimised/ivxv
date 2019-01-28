@@ -5,8 +5,9 @@ init:
       p: 310066237395720555943163764968100786558212708187547767581017497245...
       g: 458151531152658413650017524889336760758622216128148652402856928435...
   out: initout
+  skiptest: true
+  fastmode: true
   signaturekeylen: 2048
-  issuercn: TEST
   signcn: SIGNATURE
   signsn: 1
   enccn: ENCRYPTION

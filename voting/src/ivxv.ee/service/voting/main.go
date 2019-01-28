@@ -87,6 +87,15 @@ func (r *RPC) Vote(args Args, resp *Response) error {
 		return server.ErrUnauthenticated
 	}
 
+	// Apply rate limiting to vote submissions if enabled.
+	submitted := time.Now()
+	if r.election.Voting.RateLimitMinutes > 0 {
+		if err := r.ratelimit(args.Ctx, auther, submitted); err != nil {
+			// Errors have already been logged by ratelimit.
+			return err
+		}
+	}
+
 	// Verify the vote container and get the signer.
 	votec, signer, version, err := r.verify(args.Ctx, args.Choices, args.Type, args.Vote)
 	if votec != nil {
@@ -118,9 +127,8 @@ func (r *RPC) Vote(args Args, resp *Response) error {
 	}
 	log.Log(args.Ctx, VoteID{VoteID: resp.VoteID})
 
-	// Store the vote identifier, current time, vote container, voter
+	// Store the vote identifier, submission time, vote container, voter
 	// identity, and voter list version.
-	submitted := time.Now()
 	if err = r.storage.StoreVote(args.Ctx, storage.StoredVote{
 		VoteID:   resp.VoteID,
 		Time:     submitted,
@@ -196,15 +204,74 @@ func (r *RPC) Vote(args Args, resp *Response) error {
 	return nil
 }
 
+// ratelimit applies rate limiting to vote submissions by the same voter.
+func (r *RPC) ratelimit(ctx context.Context, voter string, submitted time.Time) error {
+	start := r.election.Voting.RateLimitStart
+	minutes := time.Duration(r.election.Voting.RateLimitMinutes) * time.Minute
+
+	// If the vote submission statistics changed between retrieving and
+	// attempting to update, then that means that there was another
+	// concurrent voting session for this voter that got there first. If
+	// this happens, then try from the beginning, but still use the same
+	// submission time.
+	for {
+		submissions, last, err := r.storage.GetVoteStats(ctx, voter)
+		if err != nil {
+			log.Error(ctx, GetVoteStatsError{Err: log.Alert(err)})
+			return server.ErrInternal
+		}
+
+		// Check if rate limiting should be applied to this voter.
+		if submissions >= start && submitted.Before(last.Add(minutes)) {
+			log.Error(ctx, RateLimitAppliedError{
+				Submissions: submissions,
+				Last:        last,
+				Now:         submitted,
+			})
+			return server.ErrVotingRateLimit
+		}
+
+		// Store the latter time of last and submitted as the
+		// timestamp: this way we do not rewind the timestamp of the
+		// last vote in case a vote submitted before gets processed
+		// later.
+		timestamp := submitted
+		if last.After(timestamp) {
+			timestamp = last
+		}
+
+		// Only update statistics if the rate limit was not applied: do
+		// not to refresh the timeout if a new vote came too early.
+		if err = r.storage.SetVoteStats(ctx, voter,
+			submissions, last, timestamp); err != nil {
+
+			if errors.CausedBy(err, new(storage.UnexpectedValueError)) != nil {
+				log.Log(ctx, ConcurrentVotingWarning{Err: err})
+				continue
+			}
+			log.Error(ctx, SetVoteStatsError{Err: log.Alert(err)})
+			return server.ErrInternal
+		}
+		return nil
+	}
+}
+
 // verify verifies the vote container, verifies voter eligibility and choice
 // list used, and checks that the contents of the container are sane. It
 // returns the vote container, voter identifier, and version of the voter list
 // used for eligibility checks.
-func (r *RPC) verify(ctx context.Context, choices string, t container.Type, container []byte) (
+func (r *RPC) verify(ctx context.Context, choices string, t container.Type, containerb []byte) (
 	votec container.Container, identity, version string, err error) {
 
+	// As a special case, disallow the ASiCE alias of BDOC for voting.
+	if t == container.ASiCE {
+		log.Error(ctx, ASiCEVoteNotAllowedError{})
+		err = server.ErrBadRequest
+		return
+	}
+
 	// Open the container.
-	votec, err = r.container.Open(t, bytes.NewReader(container))
+	votec, err = r.container.Open(t, bytes.NewReader(containerb))
 	if err != nil {
 		log.Error(ctx, OpenContainerError{Err: err})
 		votec = nil // Ensure we do not have a half-initialized container.
@@ -233,7 +300,7 @@ func (r *RPC) verify(ctx context.Context, choices string, t container.Type, cont
 	version = "N/A" // Mock voter list version used when the voter list is ignored.
 	if !r.skipEligible {
 		if version, err = r.storage.EligibleVoter(ctx, identity, choices); err != nil {
-			if errors.CausedBy(err, new(storage.EligibleVoterChoicesError)) != nil {
+			if errors.CausedBy(err, new(storage.NotExistError)) != nil {
 				log.Error(ctx, IneligibleVoterError{Err: err})
 				err = server.ErrIneligible
 				return
@@ -295,72 +362,83 @@ func votemain() (code int) {
 	rpc := &RPC{election: c.Conf.Election, storage: c.Storage}
 
 	var start, stop time.Time
+	var authConf server.AuthConf
 	var err error
-	if c.Conf.Election != nil {
+	if elec := c.Conf.Election; elec != nil {
 		// Check election configuration time values.
-		if start, err = c.Conf.Election.ServiceStartTime(); err != nil {
+		if start, err = elec.ServiceStartTime(); err != nil {
 			return c.Error(exit.Config, ServiceStartTimeError{Err: err},
 				"bad service start time:", err)
 		}
 
-		if rpc.start, err = c.Conf.Election.ElectionStartTime(); err != nil {
+		if rpc.start, err = elec.ElectionStartTime(); err != nil {
 			return c.Error(exit.Config, ElectionStartTimeError{Err: err},
 				"bad election start time:", err)
 		}
 
-		if stop, err = c.Conf.Election.ServiceStopTime(); err != nil {
+		if stop, err = elec.ServiceStopTime(); err != nil {
 			return c.Error(exit.Config, StopTimeError{Err: err},
 				"bad service stop time:", err)
 		}
 
 		// Skip voter eligibility if we are told to ignore it.
-		rpc.skipEligible = len(c.Conf.Election.IgnoreVoterList) > 0
-	}
+		rpc.skipEligible = len(elec.IgnoreVoterList) > 0
 
-	var s *server.S
-	if tech := c.Conf.Technical; tech != nil {
+		// Check voting rate limit values. Non-zero start indicates
+		// that rate limiting is desired, but zero minutes disables it.
+		if elec.Voting.RateLimitStart > 0 && elec.Voting.RateLimitMinutes == 0 {
+			return c.Error(exit.Config, RateLimitError{},
+				"voting rate limit start set, but minutes is 0")
+		}
+
+		// Parse client-authentication configuration.
+		if authConf, err = server.NewAuthConf(
+			elec.Auth, elec.Identity, &elec.Age); err != nil {
+
+			return c.Error(exit.Config, ServerAuthConfError{Err: err},
+				"failed to configure client authentication:", err)
+		}
+
 		// Configure supported ballot container parsers for this
 		// election.
-		if rpc.container, err = container.Configure(tech.Vote); err != nil {
+		if rpc.container, err = container.Configure(elec.Vote); err != nil {
 			return c.Error(exit.Config, ContainerConfError{Err: err},
 				"failed to configure container parsers:", err)
 		}
 
-		// Get the voter identifier.
-		if rpc.identify, err = identity.Get(tech.Identity); err != nil {
-			return c.Error(exit.Config, IdentityConfError{Err: err},
-				"failed to get voter identifier:", err)
-		}
+		// Store the voter identifier for signer identification.
+		rpc.identify = authConf.Identity
 
 		// Configure vote qualifiers.
-		if rpc.q11n, err = q11n.Configure(tech.Qualification,
+		if rpc.q11n, err = q11n.Configure(elec.Qualification,
 			conf.Sensitive(c.Service.ID)); err != nil {
 
 			return c.Error(exit.Config, QualificationConfError{Err: err},
 				"failed to configure vote qualifiers:", err)
 		}
+	}
 
+	var s *server.S
+	if c.Conf.Technical != nil {
 		// Configure a new server with the service instance
 		// configuration and the RPC handler instance.
+		cert, key := conf.TLS(conf.Sensitive(c.Service.ID))
 		if s, err = server.New(&server.Conf{
-			Sensitive: conf.Sensitive(c.Service.ID),
-			Address:   c.Service.Address,
-			End:       stop,
-			Filter:    &c.Conf.Technical.Filter,
-			Version:   &c.Conf.Version,
+			CertPath: cert,
+			KeyPath:  key,
+			Address:  c.Service.Address,
+			End:      stop,
+			Filter:   &c.Conf.Technical.Filter,
+			Version:  &c.Conf.Version,
 		}, rpc); err != nil {
 			return c.Error(exit.Config, ServerConfError{Err: err},
 				"failed to configure server:", err)
-		}
-		if err = s.WithAuth(tech.Auth, tech.Identity, &tech.Age); err != nil {
-			return c.Error(exit.Config, ServerAuthConfError{Err: err},
-				"failed to configure client authentication:", err)
 		}
 	}
 
 	// Start listening for incoming connections during the voting period.
 	if c.Until >= command.Execute {
-		if err = s.ServeAt(c.Ctx, start); err != nil {
+		if err = s.WithAuth(authConf).ServeAt(c.Ctx, start); err != nil {
 			return c.Error(exit.Unavailable, ServeError{Err: err},
 				"failed to serve voting service:", err)
 		}

@@ -16,17 +16,22 @@ kontrollid viib läbi kontrollrakendus.
 Kontrollid kogumisteenuses
 --------------------------
 
-Valijarakendus saadab kogumisteenusele allkirjastatud hääle koosseisus
+Valijarakendus saadab kogumisteenusele allkirjastatud hääle koosseisus:
 
-#. krüpteeritud sedeli
-#. valija allkirja krüpteeritud sedelil
-#. valija allkirjastamissertifikaadi
+#. krüpteeritud sedeli;
+
+#. valija allkirja krüpteeritud sedelil;
+
+#. valija allkirjastamissertifikaadi.
 
 Kogumisteenus viib läbi minimaalselt järgmised kontrollid:
 
-#. hääle allkirjastaja on valijate nimekirjas,
-#. allkirjastatud hääl on esitatud korrektses konteinervormingus,
-#. digitaalallkiri krüpteeritud sedelil on korrektne,
+#. hääle allkirjastaja on valijate nimekirjas;
+
+#. allkirjastatud hääl on esitatud korrektses konteinervormingus;
+
+#. digitaalallkiri krüpteeritud sedelil on korrektne;
+
 #. hääle allkirjastaja sertifikaat on kehtiv hääle vastuvõtmise ajahetkel.
 
 Hääle allkirjastaja sertifikaadi kehtivuse kontrolliks teeb kogumisteenus
@@ -35,7 +40,7 @@ kehtivuskinnitusteenuse vastust sertifikaadi oleku kohta ning lisab selle
 vastuse häält kvalifitseerivate elementide hulka.
 
 Kogumisteenus registreerib hääle talletamise fakti välises
-registreerimisteenuses allkirjastades registreerimispäringu ning talletades
+registreerimisteenuses, allkirjastades registreerimispäringu ning talletades
 registreerimisteenuse poolt allkirjastatud registreerimistõendi häält
 kvalifitseerivate elementide hulka.
 
@@ -64,8 +69,7 @@ Valijarakendus viib läbi minimaalselt järgmised kontrollid:
    moodustatud päring oli kogumisteenuse poolt signeeritud ning viitas
    korrektselt allkirjastatud häälele. Valijarakendus kontrollib, et
    registreerimisteenuse vastus on allkirjastatud õige registreerimisteenuse
-   osutaja poolt ning selles sisaldub kogumisteenuse poolt allkirjastatud
-   päring.
+   osutaja poolt ning sisaldab kogumisteenuse poolt allkirjastatud päringut.
 
 Kui hääle kvalifitseerimiseks vajalike elementide kontroll ei õnnestu, siis
 teavitab valijarakendus sellest kasutajat.
@@ -76,40 +80,50 @@ Kontrollid kontrollrakenduses
 
 Kontrollrakendus saab valijarakendusest järgmise info:
 
-#. Krüpteeritud sedeli moodustamisel kasutatud juhuslikkuse
-#. Allkirjastatud hääle unikaalse identifikaatori kogumisteenuses
+#. Krüpteeritud sedeli moodustamisel kasutatud juhuslikkuse;
+
+#. Allkirjastatud hääle unikaalse identifikaatori kogumisteenuses.
 
 Kontrollrakendus kasutab hääle unikaalset identifikaatorit kogumisteenusest
 järgmise info saamiseks:
 
-#. krüpteeritud sedel,
-#. valija allkiri krüpteeritud sedelil,
-#. valija allkirjastamissertifikaat,
-#. häält kvalifitseerivad elemendid, kaasaarvatud kehtivuskinnitus ja
-   registreerimistõend
+#. krüpteeritud sedel;
+
+#. valija allkiri krüpteeritud sedelil;
+
+#. valija allkirjastamissertifikaat;
+
+#. häält kvalifitseerivad elemendid, kaasa arvatud kehtivuskinnitus ja
+   registreerimistõend.
 
 Kontrollrakendus teostab järgmised kontrollid:
 
-#. allkirjastatud hääl on esitatud korrektses konteinervormingus,
-#. digitaalallkiri krüpteeritud sedelil on korrektne,
+#. allkirjastatud hääl on esitatud korrektses konteinervormingus;
+
+#. digitaalallkiri krüpteeritud sedelil on korrektne;
+
 #. hääle allkirjastaja sertifikaat on kehtiv hääle vastuvõtmise ajahetkel, mida
-   kinnitab korrektne kehtivuskinnitus,
+   kinnitab korrektne kehtivuskinnitus;
+
 #. hääl on korrektselt registreeritud õiges registreerimisteenuses.
 
 Nende kontrollide teostamise järel kuvab kontrollrakendus hääle allkirjastanud
 isiku andmeid.
 
 Täiendavalt kasutab kontrollrakendus krüpteeritud sedeli moodustamisel kasutatud
-juhuslikkust krüpteeritud sedeli dekrüpteerimiseks. NB! Ühe hääle krüpteerimisel
-kasutatud juhuslikkust saab kasutada ainult selle hääle dekrüpteerimiseks. Mitme
-erineva hääle dekrüpteerimiseks läheb vaja häälte salastamise võtme
-privaatkomponenti.
+juhuslikkust krüpteeritud sedeli dekrüpteerimiseks.
+
+.. attention::
+
+   Ühe hääle krüpteerimisel kasutatud juhuslikkust saab kasutada ainult selle
+   hääle dekrüpteerimiseks. Mitme erineva hääle dekrüpteerimiseks läheb vaja
+   häälte salastamise võtme privaatkomponenti.
 
 Kontrollrakendus veendub, et dekrüpteerimisel saadud avatekst vastab avakujul
 tahteavalduse vorminõuetele.
 
 Kontrollrakendus kuvab vorminõuetele vastava tahteavalduse võimaldamaks
-kontrollijal selle tahteavalduse korrektsuses veenduda.
+kontrollijal veenduda selle tahteavalduse korrektsuses.
 
 
 Kontrollid töötlemisrakenduses
@@ -123,8 +137,10 @@ etappi, mille tulemusena hääl võib jõuda lugemisele.
 
 Töötlemisrakenduse sisendiks on:
 
-#. Loend registreerimisteenuse poolt vastuvõetud registreerimispäringutest
-#. Loend kogumisteenuses rakendatud valijanimekirjadest
+#. Loend registreerimisteenuse poolt vastuvõetud registreerimispäringutest;
+
+#. Loend kogumisteenuses rakendatud valijanimekirjadest;
+
 #. Kogumisteenuse poolt üle antud e-urn, mis sisaldab iga hääle kohta
    krüpteeritud sedelit, valija allkirja krüpteeritud sedelil, valija
    allkirjastamissertifikaati, sertifikaadi kehtivuskinnitust ning
@@ -134,17 +150,22 @@ Töötlemisrakendus kontrollib registreerimisteenuse ja kogumisteenuse kooskõla
 ning väljastab erinevused:
 
 #. Hääled, mille kohta on olemas registreerimispäring kogumisteenuses, kuid
-   vastus ei ole jõudnud kogumisteenusesse
+   vastus ei ole jõudnud kogumisteenusesse;
+
 #. Hääled, mille kohta on olemas registreerimispäring registreerimisteenuses,
-   kuid mida kogumisteenus ei ole üle andnud
+   kuid mida kogumisteenus ei ole üle andnud.
 
 Töötlemisrakendus kontrollib iga üksikut häält:
 
-#. hääle allkirjastaja oli valijate nimekirjas,
-#. allkirjastatud hääl on esitatud korrektses konteinervormingus,
-#. digitaalallkiri krüpteeritud sedelil on korrektne,
+#. hääle allkirjastaja oli valijate nimekirjas;
+
+#. allkirjastatud hääl on esitatud korrektses konteinervormingus;
+
+#. digitaalallkiri krüpteeritud sedelil on korrektne;
+
 #. hääle allkirjastaja sertifikaat on kehtiv hääle vastuvõtmise ajahetkel, mida
-   kinnitab korrektne kehtivuskinnitus,
+   kinnitab korrektne kehtivuskinnitus;
+
 #. hääl on korrektselt registreeritud õiges registreerimisteenuses.
 
 Töötlemisrakendus otsustab, milline valija häältest oli viimane ning liigub
@@ -153,5 +174,3 @@ täidab hääle talletamise aja fikseerimise rolli ning selle elemendi põhjal
 moodustatakse üksikute häälte ajaline järgnevus. Olenevalt IVXV profiilist võib
 see element olla kehtivuskinnituse koosseisus (BDOC-TM), eraldi ajatemplina
 (BDOC-TS) või registreerimistõendi koosseisus (BDOC-TS).
-
-.. vim: sts=3 sw=3 et:

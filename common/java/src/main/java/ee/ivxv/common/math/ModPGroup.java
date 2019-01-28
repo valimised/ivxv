@@ -3,20 +3,38 @@ package ee.ivxv.common.math;
 import ee.ivxv.common.asn1.ASN1DecodingException;
 import ee.ivxv.common.asn1.Field;
 import ee.ivxv.common.crypto.Plaintext;
-import ee.ivxv.common.util.Util;
+import ee.ivxv.common.crypto.rnd.Rnd;
+import java.io.IOException;
 import java.math.BigInteger;
 
+/**
+ * Group of integers modulo a safe prime.
+ */
 public class ModPGroup extends Group {
     private final BigInteger p;
     private BigInteger q;
     private final ModPGroupElement one;
 
+    /**
+     * Initialize group using a safe prime modulus.
+     * <p>
+     * This constructor does not verify that modulus is a safe prime.
+     * 
+     * @param p
+     */
     public ModPGroup(BigInteger p) {
         // we assume p=2*q+1 with q prime
         this(p, false);
     }
 
-    public ModPGroup(BigInteger p, boolean verify) {
+    /**
+     * Initialize group using a safe prime modulus and verify that the modulus is a safe prime.
+     * 
+     * @param p
+     * @param verify
+     * @throws IllegalArgumentException When modulus is not safe prime.
+     */
+    public ModPGroup(BigInteger p, boolean verify) throws IllegalArgumentException {
         if (verify) {
             if (!p.isProbablePrime(80)) {
                 throw new IllegalArgumentException(
@@ -27,7 +45,15 @@ public class ModPGroup extends Group {
         this.one = new ModPGroupElement(this, BigInteger.ONE);
     }
 
-    public ModPGroup(byte[] data) {
+    /**
+     * Initialize group using serialized group.
+     * 
+     * @see #getBytes()
+     * 
+     * @param data
+     * @throws IllegalArgumentException When can not parse
+     */
+    public ModPGroup(byte[] data) throws IllegalArgumentException {
         Field f = new Field();
         try {
             f.readFromBytes(data);
@@ -42,9 +68,64 @@ public class ModPGroup extends Group {
         this.one = new ModPGroupElement(this, BigInteger.ONE);
     }
 
+    /**
+     * Generate a safe prime and initialize the group.
+     * <p>
+     * Use the random source for obtaining modulus candidates. The tries argument defines the number
+     * of tries to repeat. When tries is set to 0, then test candidate values until a suitable
+     * modulus is found.
+     * 
+     * @param len
+     * @param rnd
+     * @param tries
+     * @throws IllegalArgumentException When len is not a positive value.
+     * @throws IOException When exception during a read from random source.
+     * @throws MathException When couldn't find a safe prime within tries
+     */
+    public ModPGroup(int len, Rnd rnd, int tries)
+            throws IllegalArgumentException, IOException, MathException {
+        int sglen = len - 1;
+        BigInteger bigTwo = new BigInteger("2");
+        BigInteger genp, genq;
+
+        // For performance reasons, we first test primes lightly.
+        // If both pass, test them thoroughly.
+        for (int i = 0; tries == 0 || i < tries; i++) {
+            genq = IntegerConstructor.construct(rnd, bigTwo.pow(sglen).subtract(BigInteger.ONE));
+            if (!genq.isProbablePrime(2)) {
+                continue;
+            }
+            genp = genq.multiply(bigTwo).add(BigInteger.ONE);
+            if (genp.bitLength() != len || !genp.isProbablePrime(2)) {
+                continue;
+            }
+            if (genp.isProbablePrime(80) && genq.isProbablePrime(80)) {
+                p = genp;
+                q = genq;
+                one = new ModPGroupElement(this, BigInteger.ONE);
+                return;
+            }
+        }
+        throw new MathException("Could not generate group parameters during tries");
+    }
+
     @Override
     public GroupElement getElement(byte[] data) throws IllegalArgumentException {
         return new ModPGroupElement(this, data);
+    }
+
+    /**
+     * Sample a random element from the group.
+     * 
+     * @param rnd
+     * @return
+     * @throws IOException
+     */
+    public ModPGroupElement getRandomElement(Rnd rnd) throws IOException {
+        BigInteger template = IntegerConstructor.construct(rnd, getOrder());
+        // square the value to make sure it is quadratic residue
+        template = template.modPow(BigInteger.valueOf(2), getOrder());
+        return new ModPGroupElement(this, template);
     }
 
     @Override
@@ -64,7 +145,7 @@ public class ModPGroup extends Group {
 
     private BigInteger getMultiplicativeGroupOrder() {
         if (this.q == null) {
-            this.q = Util.safePrimeOrder(this.p);
+            this.q = MathUtil.safePrimeOrder(this.p);
         }
         return this.q;
     }
@@ -104,7 +185,18 @@ public class ModPGroup extends Group {
         return MathUtil.legendre(e, getOrder());
     }
 
-    // encode message as quadratic residue so we wouldn't leak any bits
+    /**
+     * Encode the message as a quadratic residue.
+     * <p>
+     * If the value is quadratic residue, then return the message encoded as integer. Otherwise,
+     * return modulus-msg encoded as integer.
+     * 
+     * @param msg
+     * @return
+     * @throws IllegalArgumentException is value is not less than half the order size or greater
+     *         than 0
+     * @throws MathException When computation fails.
+     */
     @Override
     public GroupElement encode(Plaintext msg) throws IllegalArgumentException, MathException {
         BigInteger m = msg.toBigInteger();
@@ -126,27 +218,34 @@ public class ModPGroup extends Group {
     }
 
     @Override
-    public Plaintext decode(GroupElement el) throws IllegalArgumentException {
-        return decode(el, false);
-    }
-
-    public Plaintext decode(GroupElement el, boolean nocheck) throws IllegalArgumentException {
+    public Decodable isDecodable(GroupElement el) {
         if (!isGroupElement(el)) {
-            throw new IllegalArgumentException("Group element is not from this group");
+            return Decodable.INVALID_GROUP;
         }
         BigInteger e = ((ModPGroupElement) el).getValue();
-        if (!nocheck) {
-            if (e.compareTo(BigInteger.ZERO) <= 0) {
-                throw new IllegalArgumentException("Can not decode non-positive integer");
-            }
-            if (e.compareTo(getOrder()) > 0) {
-                throw new IllegalArgumentException(
-                        "Can not decode integer larger than group order");
-            }
-            if (legendre(e) != 1) {
-                throw new IllegalArgumentException("Decodable integer is not a quadratic residue");
-            }
+        if (e.compareTo(BigInteger.ZERO) <= 0) {
+            return Decodable.INVALID_RANGE;
         }
+        if (e.compareTo(getOrder()) > 0) {
+            return Decodable.INVALID_RANGE;
+        }
+        if (legendre(e) != 1) {
+            return Decodable.INVALID_QR;
+        }
+        return Decodable.VALID;
+    }
+
+    /**
+     * Decode group element as a message.
+     * <p>
+     * If the value is larger than order/2, then return order-el.
+     * 
+     * @param el
+     * @return
+     */
+    @Override
+    public Plaintext decode(GroupElement el) {
+        BigInteger e = ((ModPGroupElement) el).getValue();
         BigInteger decoded =
                 e.compareTo(getMultiplicativeGroupOrder()) > 0 ? getOrder().subtract(e) : e;
         return new Plaintext(decoded, msgBits(), true);
@@ -157,6 +256,13 @@ public class ModPGroup extends Group {
         return this.equals(el.getGroup());
     }
 
+    /**
+     * Serialize group.
+     * <p>
+     * Returns group modulus as ASN1 INTEGER
+     * 
+     * @return
+     */
     @Override
     public byte[] getBytes() {
         return new Field(getOrder()).encode();

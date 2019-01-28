@@ -1,0 +1,50 @@
+@startuml
+
+Title Collector service subservice status diagram
+
+skinparam state {
+  BackgroundColor<<OK>> LightGreen
+  BackgroundColor<<Invalid>> LightCoral
+}
+
+state "Not installed" as Notinstalled
+state Installed
+state Configured <<OK>>
+state Failure <<Invalid>>
+state Removed
+
+Notinstalled : The service has been specified in the technical
+Notinstalled : configuration, but the service software is not
+Notinstalled : installed or the technical configuration has
+Notinstalled : not been applied to the service
+
+Installed : The service software has been installed and the
+Installed : status of the settings applied to the service is:
+Installed : - the trust root settings have been applied;
+Installed : - the technical settings have been applied;
+Installed : - the election settings have not been applied.
+
+Configured : The service is operational
+
+Failure : Service is not operational
+
+Removed : The service has been removed
+Removed : from the collector service
+
+[*] --> Notinstalled
+
+Notinstalled --> Installed : The administration service \n installs the service software \n  and applies the trust root \n  and technical configuration
+
+Installed --> Configured : The administration service \n applies election settings \n to the service
+Installed --> Removed : The service is \n removed from collector service
+
+Configured --> Failure : The administration service \n loses connection \n with the service
+Configured --> Removed : The service is \n removed from collector service
+
+Failure --> Configured : The configured \n service failure \n is eliminated
+Failure --> Removed : The service is \n removed from collector service
+Failure --> [*] : Voting period \n ends
+
+Configured --> [*] : Voting period \n ends
+
+@enduml

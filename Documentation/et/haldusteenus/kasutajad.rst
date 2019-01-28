@@ -16,7 +16,7 @@ andmeid sordituna kasutaja ID-kaardi üldnime (CN - *Common Name*) järgi:
 
 #. Üldnimi;
 
-#. Kasutaja rollid;
+#. Kasutaja rollid.
 
 Kasutaja volituste laadimise vorm
 ---------------------------------
@@ -24,5 +24,3 @@ Kasutaja volituste laadimise vorm
 Kasutaja volituste laadimiseks kogumisteenusesse on lehe allosas laadimisvorm.
 Laadida on lubatud ainult volitatud kasutajate poolt digitaaltelt signeeritud
 volitusi.
-
-.. vim: sts=3 sw=3 et:

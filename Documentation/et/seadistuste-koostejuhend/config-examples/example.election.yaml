@@ -1,0 +1,87 @@
+# Valimiste seadistuse näide
+
+identifier: TESTCONF
+questions:
+  - TESTQUESTION
+
+period:
+  servicestart:  2017-01-16T08:50:00+02:00
+  electionstart: 2017-01-16T09:00:00+02:00
+  electionstop:  2017-01-18T19:00:00+02:00
+  servicestop:   2017-01-18T19:15:00+02:00
+
+voting:
+  ratelimitstart:   50
+  ratelimitminutes:  5
+
+verification:
+  count:    3
+  minutes: 30
+
+voterlist:
+  key: !container rr_pub.key
+
+auth:
+  ticket:
+  tls:
+    roots:
+      - !container TEST_of_EE_Certification_Centre_Root_CA.pem
+    intermediates:
+      - !container TEST_of_ESTEID-SK_2011.pem
+      - !container TEST_of_ESTEID-SK_2015.pem
+    ocsp:
+      url: http://demo.sk.ee/ocsp
+      responders:
+        - !container TEST_of_SK_OCSP_RESPONDER_2011.pem
+      retry: 2
+
+identity: pnoee
+
+age:
+  method:   estpic
+  timezone: Europe/Tallinn
+  limit:    18
+
+vote:
+  bdoc:
+    bdocsize: 32768  # 32 KiB
+    filesize: 32768  # 32 KiB
+    roots:
+      - !container TEST_of_EE_Certification_Centre_Root_CA.pem
+    intermediates:
+      - !container TEST_of_ESTEID-SK_2011.pem
+      - !container TEST_of_ESTEID-SK_2015.pem
+    profile: BES
+
+dds:
+  url: https://tsp.demo.sk.ee/v2/
+  countrycode: EE
+  language:    EST
+  servicename: Testimine
+  authmessage: Mobiil-ID autentimise testimine.
+  signmessage: Mobiil-ID allkirjastamise testimine.
+  idcoderequired: true
+  phonerequired:  true
+  roots:
+    - !container TEST_of_EE_Certification_Centre_Root_CA.pem
+  intermediates:
+    - !container TEST_of_ESTEID-SK_2011.pem
+    - !container TEST_of_ESTEID-SK_2015.pem
+  ocsp:
+    responders:
+      - !container TEST_of_SK_OCSP_RESPONDER_2011.pem
+
+qualification:
+  - protocol: ocsptm
+    conf:
+      url: http://demo.sk.ee/ocsp
+      responders:
+        - !container TEST_of_SK_OCSP_RESPONDER_2011.pem
+      retry: 2
+  - protocol: tspreg
+    conf:
+      url: http://demo.sk.ee/tsa
+      signers:
+        - !container DEMO_of_SK_TSA_2014.pem
+      delaytime: 1
+      retry: 2

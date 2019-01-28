@@ -11,6 +11,12 @@ public class RO {
     private MessageDigest cleanhash;
     private byte[] seed;
 
+    /**
+     * Initialize RO using a hashname and a seed.
+     * 
+     * @param hashname Hash function to use.
+     * @param seed Seed bytes.
+     */
     RO(String hashname, byte[] seed) {
         this.hashname = hashname;
         this.seed = seed.clone();

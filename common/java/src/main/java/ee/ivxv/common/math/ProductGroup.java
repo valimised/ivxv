@@ -8,16 +8,30 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ProductGroup is a direct product of several groups.
+ */
 public class ProductGroup extends Group {
     private static final String NAME_MODP = "ModPGroup";
     private static final String NAME_EC = "EllipticCurve";
 
     private final Group[] groups;
 
+    /**
+     * Initialize using groups.
+     * 
+     * @param groups
+     */
     public ProductGroup(Group... groups) {
         this.groups = groups;
     }
 
+    /**
+     * Initialize using a group with multiplicity.
+     * 
+     * @param group
+     * @param multiplicity
+     */
     public ProductGroup(Group group, int multiplicity) {
         this.groups = new Group[multiplicity];
         for (int i = 0; i < multiplicity; i++) {
@@ -25,7 +39,13 @@ public class ProductGroup extends Group {
         }
     }
 
-    public ProductGroup(byte[] data) {
+    /**
+     * Initialize from serialized value.
+     * 
+     * @param data
+     * @throws IllegalArgumentException When can not parse.
+     */
+    public ProductGroup(byte[] data) throws IllegalArgumentException {
         Sequence s = new Sequence();
         try {
             s.readFromBytes(data);
@@ -126,6 +146,12 @@ public class ProductGroup extends Group {
     }
 
     @Override
+    public Decodable isDecodable(GroupElement el) {
+        // this method does not make sense
+        throw new RuntimeException("Invalid use of ProductGroup");
+    }
+
+    @Override
     public Plaintext decode(GroupElement msg) {
         // this method does not make sense
         throw new RuntimeException("Invalid use of ProductGroup");
@@ -136,6 +162,13 @@ public class ProductGroup extends Group {
         return this.equals(el.getGroup());
     }
 
+    /**
+     * Serialize the value
+     * <p>
+     * Returns ASN1 SEQUENCE of serialized values of the underlying groups.
+     * 
+     * @return
+     */
     @Override
     public byte[] getBytes() {
         byte[][] encoded = new byte[groups.length][];
@@ -186,10 +219,20 @@ public class ProductGroup extends Group {
         return ret;
     }
 
+    /**
+     * Get the number of groups in the ProductGroup.
+     * 
+     * @return
+     */
     public int getLength() {
         return groups.length;
     }
 
+    /**
+     * Get the groups used to construct the ProductGroup.
+     * 
+     * @return
+     */
     public Group[] getGroups() {
         return this.groups;
     }

@@ -1,0 +1,114 @@
+@startuml
+
+
+!ifdef PHASE_1
+    !define PHASE_VOTE
+    !define PHASE_VOTER
+    !define PHASE_COLLECT
+    !define PHASE_REG
+!endif
+
+!ifdef PHASE_2
+    !define PHASE_VERIFY
+    !define PHASE_VOTER
+    !define PHASE_COLLECT
+!endif
+
+!ifdef PHASE_3
+    !define PHASE_COLLECT
+    !define PHASE_REG
+    !define PHASE_PROC
+!endif
+
+
+
+!ifdef PHASE_VOTER
+actor "Hääletaja" as a_voter
+!endif
+
+!ifdef PHASE_VOTE
+participant "Valijarakendus" as p_vota
+!endif
+
+!ifdef PHASE_VERIFY
+participant "Kontrollrakendus" as p_vera
+!endif
+
+!ifdef PHASE_COLLECT
+box "Online (RIA)"
+    participant Kogumisteenus as p_collect
+end box
+!endif
+
+!ifdef PHASE_REG
+box "Registreerimisteenus (SK)"
+participant Registreerimisteenus as p_reg
+end box
+!endif
+
+!ifdef PHASE_PROC
+box "Offline (RVT)"
+  participant Töötlemisrakendus as p_processor
+end box
+!endif
+
+
+!ifdef PHASE_1
+
+== Hääletaja hääletab ==
+
+a_voter --> p_vota: ballot_v, key_v
+
+p_vota -> p_collect: vote_v = Sign(key_v, Enc(ballot_v))
+
+p_collect -> p_reg: korraldus_v = Sign(key_k, (v_id, Hash(vote_v)))
+
+p_reg -> p_reg: VerifyAndStore(korraldus_v, cert_k)
+
+p_reg -> p_collect: kinnitus_v = Sign(key_r, Hash(korraldus_v))
+
+p_collect -> p_collect: VerifyAndStore(kinnitus_v, cert_r)
+
+p_collect -> p_vota: v_id, korraldus_v, kinnitus_v
+
+p_vota -> p_vota: Verify(korraldus_v, cert_k)
+p_vota -> p_vota: Verify(kinnitus_v, cert_r)
+p_vota -> p_vota: Verify(kinnitus_v, korraldus_v, vote_v)
+p_vota --> a_voter: v_id
+
+!endif
+
+
+!ifdef PHASE_2
+
+== Hääletaja kontrollib häält ==
+
+a_voter --> p_vera: v_id
+
+p_vera -> p_collect: v_id
+
+p_collect -> p_vera: vote_v, korraldus_v, kinnitus_v
+
+p_vera -> p_vera: Verify(korraldus_v, cert_k)
+p_vera -> p_vera: Verify(kinnitus_v, cert_r)
+p_vera -> p_vera: Verify(kinnitus_v, korraldus_v, vote_v)
+p_vera --> a_voter: ballot_v
+
+!endif
+
+
+!ifdef PHASE_3
+
+== Teenused annavad andmed üle ==
+
+p_collect -> p_processor: (v_id, vote_i, korraldus_i, kinnitus_i)
+p_reg -> p_processor: (v_id, Hash(vote_i), korraldus_i)
+
+
+== Töötleja kontrollib teenuste vaateid ==
+
+!endif
+
+
+
+@enduml

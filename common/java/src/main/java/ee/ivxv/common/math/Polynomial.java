@@ -4,16 +4,35 @@ import ee.ivxv.common.crypto.rnd.Rnd;
 import java.io.IOException;
 import java.math.BigInteger;
 
+/**
+ * Polynomial holds and evaluates polynomials over integers modulo a value.
+ */
 public class Polynomial {
     private final BigInteger[] coefs;
     private final BigInteger modulus;
 
+    /**
+     * Initialize using a modulus and coefficients.
+     * 
+     * @param modulus
+     * @param coefs
+     * @throws IllegalArgumentException
+     */
     public Polynomial(BigInteger modulus, BigInteger[] coefs) throws IllegalArgumentException {
         verifyModulus(modulus);
         this.modulus = modulus;
         this.coefs = coefs;
     }
 
+    /**
+     * Generate a random polynomial.
+     * 
+     * @param degree
+     * @param modulus
+     * @param rnd
+     * @throws IllegalArgumentException When modulus is not positive
+     * @throws IOException When reading from random source fails.
+     */
     public Polynomial(int degree, BigInteger modulus, Rnd rnd)
             throws IllegalArgumentException, IOException {
         if (degree < 0) {
@@ -27,6 +46,16 @@ public class Polynomial {
         }
     }
 
+    /**
+     * Generate a random polynomial with defined free coefficient.
+     * 
+     * @param degree
+     * @param modulus
+     * @param free
+     * @param rnd
+     * @throws IllegalArgumentException
+     * @throws IOException
+     */
     public Polynomial(int degree, BigInteger modulus, BigInteger free, Rnd rnd)
             throws IllegalArgumentException, IOException {
         if (degree < 0) {
@@ -48,6 +77,12 @@ public class Polynomial {
         }
     }
 
+    /**
+     * Evaluate the polynomial at a value and return the result
+     * 
+     * @param arg
+     * @return
+     */
     public BigInteger evaluate(BigInteger arg) {
         BigInteger res = BigInteger.ZERO;
         for (int i = 0; i < this.coefs.length; i++) {
@@ -56,6 +91,12 @@ public class Polynomial {
         return res;
     }
 
+    /**
+     * Evaluate the polynomial at a value and return the result.
+     * 
+     * @param arg
+     * @return
+     */
     public BigInteger evaluate(int arg) {
         return evaluate(BigInteger.valueOf(arg));
     }

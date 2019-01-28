@@ -7,11 +7,21 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * JSON serializable structure for holding the tally of the votes.
+ */
 public class Tally {
     public static final String INVALID_VOTE_ID = "invalid";
     private final String election;
     private final Map<String, Map<String, Map<String, Integer>>> byStation = new HashMap<>();
 
+    /**
+     * Initialize using values.
+     * 
+     * @param election Election identifier.
+     * @param candidates List of candidates.
+     * @param districts List of districts.
+     */
     public Tally(String election, CandidateList candidates, DistrictList districts) {
         this.election = election;
         init(candidates, districts);
@@ -35,6 +45,11 @@ public class Tally {
         });
     }
 
+    /**
+     * Get the election identifier.
+     * 
+     * @return
+     */
     public String getElection() {
         return election;
     }

@@ -1,17 +1,19 @@
 ..  IVXV kogumisteenuse haldusteenuse kirjeldus
 
+.. _app-key:
+
 Võtmerakendus
 =============
 
-Võtmerakendus koosneb tööriistadest *groupgen*, *init*, *decrypt* ja *util*.
-Kõigi tööriistade kasutamine eeldab allkirjastatud usaldusjuure ja konkreetse
-tööriista seadistuste olemasolu. Alljärgnevalt kirjeldame konkreetsete
-tööriistade seadistusi.
+Võtmerakendus `key` koosneb tööriistadest *groupgen*, *init*, *testkey*,
+*decrypt* ja *util*. Kõigi tööriistade kasutamine eeldab allkirjastatud
+usaldusjuure ja konkreetse tööriista seadistuste olemasolu. Alljärgnevalt
+kirjeldame konkreetsete tööriistade seadistusi.
 
 .. _key-groupgen:
 
-Häälte salastamise võtme spetsifikatsiooni genereerimine (VALIKULINE)
----------------------------------------------------------------------
+Häälte salastamise võtme spetsifikatsiooni genereerimine
+--------------------------------------------------------------------------------
 
 Häälte salastamise võtme spetsifikatsioon genereeritakse kasutades tööriista
 *groupgen*. Võtmerakendus kasutab ElGamal'i krüptosüsteemi. Vastavalt aluseks
@@ -19,27 +21,26 @@ olevale rühmale tuleb valida turvaparameeter, mis on hiljem aluseks rühma ja
 võtme genereerimisele.
 
 Võtmespetsifikatsiooni genereerimine on ajaliselt mahukas tegevus, mis võib
-olenevalt riistvarast kesta tunde. Ühekordselt genereeritud rühm on
-mitmekordselt kasutatav.
+olenevalt riistvarast kesta tunde. Ühekordselt genereeritud rühm on kasutatav
+mitmetel valimistel.
 
 :groupgen.paramtype: ElGamal'i krüptosüsteemi töö aluseks oleva rühma
                      tüüp. Toetatud väärtused:
 
                      #. mod - jäägiklassiring Zp
+                     #. ec  - elliptkõverad
 
 :groupgen.length: ElGamal'i krüptosüsteemi töö aluseks olevat rühma iseloomustav
                   turvaparameeter. Jäägiklassiringide korral on sobiv väärtus
-                  2048, mis on samaväärne 2048 bitise RSA turvalisusega.
+                  3072. Elliptkõveraid kasutades on toetatud kõver P-384, mille
+                  kasutamiseks tuleb sisestada väärtus 384.
 
+:groupgen.init_template: Asukoht, kuhu kirjutatakse rühma parameetrid. Väljund
+                         sobib kasutamiseks võtme genereerimise seadistuse
+                         koostamisel.
 
 :groupgen.random_source: Juhuarvugeneraatori sisendiks kasutatavate allikate
-                         loetelu.
-
-:groupgen.random_source.random_source_type: Juhuarvugeneraatori allika tüüp.
-
-:groupgen.random_source.random_source_path: Juhuarvugeneraatori allika
-                                            seadistatav asukoht.  Argument on
-                                            valikuline sõltuvalt allika tüübist.
+                         loetelu. Vaata ka :numref:`random-gen`.
 
 
 :file:`key.groupgen.yaml`:
@@ -66,11 +67,15 @@ haldurit, vastasel juhul ei ole dekrüpteerimine võimalik.
        Võtmerakenduse tööriista *init* väljundkataloog. Sellesse kataloogi
        tekivad
 
-       #. PEM vormingus allkirjavõtme sertifikaat
-       #. PEM vormingus krüpteerimisvõtme sertifikaat
-       #. PEM vormingus krüpteerimisvõti
+       #. PEM vormingus allkirjavõtme sertifikaat (sign.pem)
+       #. PEM vormingus krüpteerimisvõtme sertifikaat (enc.pem)
+       #. PEM vormingus krüpteerimisvõti (pub.pem)
+       #. DER vormingus krüpteerimisvõti (pub.der)
 
 :init.skiptest: Võtmeosakute kontrolltestide vahelejätmine.
+
+:init.fastmode: Kaartidele automaatne terminalide määramine. Vaikimise väärtus
+                on tõene.
 
 ----
 
@@ -89,25 +94,26 @@ haldurit, vastasel juhul ei ole dekrüpteerimine võimalik.
 
 :init.signaturekeylen: Võtmerakenduse poolt genereeritava allkirjastamise võtme
                        pikkus.
-:init.issuercn:
-:init.signcn:
-:init.signsn:
-:init.enccn:
-:init.encsn: Võtmerakenduse poolt loodavate sertifikaatide DN väärtused.
+
+:init.signcn: Võtmerakenduse poolt loodava allkirjastamise sertifikaadi subjekti
+              nimi (väli *CN*).
+
+:init.signsn: Võtmerakenduse poolt loodava allkirjastamise sertifikaadi
+              järjekorranumber.
+
+:init.enccn: Võtmerakenduse poolt loodava krüpteerimise sertifikaadi subjekti
+             nimi (väli *CN*).
+
+:init.encsn: Võtmerakenduse poolt loodava krüpteerimise sertifikaadi
+             järjekorranumber.
 
 ----
 
-:init.required_randomness: Juhuslikkuse allikatest loetava kohustuslik suurus
-                           baitides.
+:init.required_randomness: Juhuslikkuse allikatest loetava entroopia kohustuslik
+                           hulk baitides.
 
 :init.random_source: Juhuarvugeneraatori sisendiks kasutatavate allikate
-                     loetelu.
-
-:init.random_source.random_source_type: Juhuarvugeneraatori allika tüüp.
-
-:init.random_source.random_source_path: Juhuarvugeneraatori allika seadistatav
-                                        asukoht. Argument on valikuline
-                                        sõltuvalt allika tüübist.
+                     loetelu. Vaata ka :numref:`random-gen`.
 
 ----
 
@@ -135,9 +141,41 @@ haldurit, vastasel juhul ei ole dekrüpteerimine võimalik.
    :language: yaml
    :linenos:
 
+
+
+.. _key-testkey:
+
+Häälte salastamise võtme testimine
+----------------------------------
+
+Häälte salastamise võtme testimine kontrollib võtme rekonstrueerimise võimekust
+selliselt, et iga osak osaleb vähemalt kahes kvoorumis. Testimiseks on vajalik
+kõigi osakute osalemine.
+
+:testkey.identifier: Valimise unikaalne identifikaator.
+
+:testkey.out: Krüpteerimise avaliku võtme asukoha kataloog.
+
+:testkey.threshold: Testimiseks kasutatav lävi, sama mis võtme loomisel
+                    spetsifitseeritud.
+
+:testkey.parties: Testimiseks kasutatav osapoolte arv, sama mis võtme loomisel
+                  spetsifitseeritud.
+
+:testkey.fastmode: Kaartidele automaatne terminalide määramine. Vaikimise
+                   väärtus on tõene.
+
+
+:file:`key.testkey.yaml`:
+
+.. literalinclude:: config-examples/key.testkey.yaml
+   :language: yaml
+   :linenos:
+
+
 .. _key-decrypt:
 
-Elektrooniliste häälte dekrüpteerimine
+E-häälte dekrüpteerimine
 --------------------------------------
 
 Elektrooniliste häälte dekrüpteerimiseks kasutatakse võtmerakenduse tööriista
@@ -159,20 +197,13 @@ dekrüpteerimine võimalik.
       Algoritmi Desmedt korral genereeritakse võti usaldatava osakujagaja poolt
       ehk võtmerakenduse mälus. Privaatvõtme osakud talletatakse kiipkaartidel.
 
-      Täiendavalt tuleb määrata läviskeemi osaliste arv ja minimaalne kvoorum.
-
-      Kaartide arv 7 - võimalikud kvoorumid 1,2,3,4 - soovitatav kvoorum 4
-      Kaartide arv 8 - võimalikud kvoorumid 1,2,3,4 - soovitatav kvoorum 4
-      Kaartide arv 9 - võimalikud kvoorumid 1,2,3,4,5 - soovitatav kvoorum 5
-
 :decrypt.protocol.recover.threshold:
 
-      Läviskeemi M väärtus - kvoorum.
+      Läviskeemi M väärtus - kvoorum, mis spetsifitseeriti võtme loomisel.
 
 :decrypt.protocol.recover.parties:
 
-      Läviskeemi N väärtus.
-
+      Läviskeemi N väärtus, mis spetsifitseeriti võtme loomisel.
 
 ----
 
@@ -202,6 +233,13 @@ dekrüpteerimine võimalik.
       Valikuline korrektse dekrüpteerimise tõestuse väljastamine. Vaikimisi
       väärtus on tõene.
 
+:decrypt.check_decodable:
+
+      Krüptogrammide korrektsuse kontrollimine enne dekrüpteerimist. Juhul kui
+      krüptogrammide sisend ei tule usaldatud allikast, siis tuleb kontrollida
+      krüptogrammide korrektsust. Usaldatud allikad on töötlemisrakendus ning
+      miksija. Vaikimisi väärus on väär.
+
 :decrypt.out:
 
       Võtmerakenduse tööriista *decrypt* väljundkataloog. Eduka dekrüpteerimise
@@ -220,21 +258,26 @@ dekrüpteerimine võimalik.
    :linenos:
 
 
-Täiendavad tööriistad
----------------------
+Pärast dekrüpteerimist on võimalik kontrollida väljastatud elektroonilise
+hääletamise tulemuse signatuuri korrektsust. Selleks tuleb teha järgnevad
+sammud:
+
+1. Eraldada allkirja kontrollimise võti allkirjastamise sertifikaadist::
+
+    openssl x509 -in initout/sign.pem -noout -pubkey > sign.pub
+
+2. Kontrollida hääletamise tulemuse allkirja::
+
+    openssl dgst -sha256 -sigopt rsa_padding_mode:pss -sigopt \
+    rsa_pss_saltlen:32 -sigopt rsa_mgf1_md:sha256 -verify sign.pub \
+    -signature decout/TESTCONF.tally.signature decout/TESTCONF.tally
+
+Korrektse allkirja korral kuvatakse väärtust `Verified OK`.
+
+Võtmerakenduse täiendavad tööriistad
+------------------------------------
 
 :util.listreaders: Loetle ühendatud kaardilugejad.
-
-----
-
-:util.testkey: Alamargumentide seadistuse korral viiakse läbi võtmeosakute
-               kooskõlalisuse ja korrasoleku testimine.
-
-:util.testkey.out: Krüpteerimise avaliku võtme asukoha kataloog.
-
-:util.testkey.threshold: Testimiseks kasutatav lävi.
-
-:util.testkey.parties: Testimiseks kasutatav osapoolte arv.
 
 :file:`key.util.yaml`:
 
@@ -243,4 +286,110 @@ Täiendavad tööriistad
    :linenos:
 
 
-.. vim: sts=3 sw=3 et:
+.. _random-gen:
+
+Juhuarvude genereerimine võtmerakenduses
+----------------------------------------
+
+Võtmerakenduse tööriistad *groupgen* ja *init* vajavad oma tööks juhuarve, mille
+genereerimiseks on võimalik kasutada erinevaid entroopiaallikaid, mis
+võtmerakenduse poolt üheks allikaks kombineeritakse.
+
+Kombineerimisel on oluline, et säiliks sisendite sõltumatus, st. kombineeritud
+väljund ei tohi olla kehvem ühestki sisendist. IVXV raamistikus toimub entroopia
+kombineerimine SHAKE-256 muutuva väljundipikkusega räsifunktsiooni abil (XOF),
+kasutades skeemi nagu on kirjeldatud [BDPA10]_.
+
+Lõpliku pikkusega entroopiaallika kasutamisel loetakse kogu väärtus ning antakse
+see SHAKE-256 sisendiks. Piiramata pikkusega allika lisamisel salvestatakse
+selle viide kombineerija mällu.
+
+Pärides kombineerijast töödeldud juhuslikkust, loetakse kõigepealt igast
+salvestatud entroopia allikast sama palju baite ning antakse see SHAKE-256
+sisendiks. Seejärel kopeeritakse SHAKE-256 isend, muudetakse kopeeritud
+SHAKE-256 režiim lugemisele ning loetakse nõutud baitide jagu väljundit.
+
+
+:random_source: Juhuarvugeneraatori sisendiks kasutatavate allikate loetelu.
+
+:random_source.random_source_type: Juhuarvugeneraatori allika tüüp.
+
+:random_source.random_source_path: Juhuarvugeneraatori allika seadistatav
+                                   asukoht. Argument on valikuline sõltuvalt
+                                   allika tüübist.
+
+----
+
+:random_source_type\: file: Entroopia lugemine failist.
+
+:random_source_path\: `randomness_file`: Kasutatav fail.
+
+----
+
+:random_source_type\: system: Operatsioonisüsteemi poolt pakutav
+                              entroopiaallikas (Linuxil `/dev/urandom`).
+
+----
+
+:random_source_type\: DPRNG: Deterministlik pseudojuhuslik generaator (DPRNG) on
+                             mõeldud baidijadade genereerimiseks, kasutades
+                             etteantud seemneväärtust. Sama seemneväärtuse
+                             korral genereerib meetod alati sama jada.
+:random_source_path\: `seed_file`: DPRNG seemneväärtus saadakse viidatud faili
+                                   SHA256 räsides.
+
+----
+
+:random_source_type\: stream: Entroopia lugemine voogseadmelt.
+
+:random_source_path\: `/dev/urandom`: Kasutatav seade.
+
+----
+
+:random_source_type\: user: Välise programmi käest üle sokli juhuslikkust hankiv
+                            entroopiaallikas. Kasutusel on IVXV-spetsiifiline
+                            protokoll.
+
+:random_source_path\: `user_entropy.exe`: Tee programmini, mis tuleb
+                                          juhuslikkuse hankimiseks käivitada.
+
+
+Entroopiaallikate kombineerimine kirjeldatud viisil võimaldab realiseerida
+erinevaid juhuarvude genereerimise stsenaariumeid. Näiteks häälte salastamise
+võtme genereerimise korral on vaja tagada võtme konfidentsiaalsus ning olla
+kindel, et genereerimisprotsess ei ole hiljem korratav. Näitekonfiguratsioon
+kasutab välist programmi kasutaja sisendi lugemiseks ning süsteemset
+juhuarvugeneraatorit:
+
+:file:`rnd.init.yaml`:
+
+.. literalinclude:: config-examples/rnd.init.yaml
+   :language: yaml
+   :linenos:
+
+
+Rakendus käivitatakse mitmelõimelisena::
+
+  $ key init --conf usaldusjuur.asice --params rnd.init.asice
+
+Häälte salastamise võtme spetsifikatsioon on erinevalt häälte salastamise
+võtmest avalik ning selle genereerimisel kasutatud juhuslikkuse võib samuti teha
+avalikuks. Näitekonfiguratsioon kasutab DPRNG'd avaliku seemnefailiga.
+
+:file:`rnd.groupgen.yaml`:
+
+.. literalinclude:: config-examples/rnd.groupgen.yaml
+   :language: yaml
+   :linenos:
+
+Kui eesmärk on genereerimisprotsessi korratavus, tuleb rakendus käivitada
+ühelõimelisena::
+
+  $ key groupgen --conf usaldusjuur.asice --params rnd.groupgen.asice --threads 1
+
+
+
+.. [BDPA10] Guido Bertoni, Joan Daemen, Michaël Peeters, Gilles Van Assche:
+   Sponge-Based Pseudo-Random Number Generators. CHES 2010: 33-47
+
+

@@ -1,0 +1,7 @@
+groupgen:
+
+  [...]
+
+  random_source:
+    - random_source_type: DPRNG
+      random_source_path: public_seed_file

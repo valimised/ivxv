@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"io"
 	"testing"
-
-	"ivxv.ee/safereader"
 )
 
 // testReader only implements io.Reader.
@@ -57,10 +55,9 @@ func TestToReaderAt(t *testing.T) {
 		{"ReadAtSizer", testReadAtSizer{newReaderAt(data)}},
 	}
 
-	sr := safereader.New(uint64(len(data)))
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			ratc, size, err := toReaderAt(test.reader, sr)
+			ratc, size, err := toReaderAt(test.reader, int64(len(data)))
 			if err != nil {
 				t.Fatal("toReaderAt error:", err)
 			}

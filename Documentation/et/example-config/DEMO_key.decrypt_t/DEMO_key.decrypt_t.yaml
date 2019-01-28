@@ -1,0 +1,31 @@
+util:
+  listreaders: true
+
+testkey:
+    identifier: DEMO
+    out: initout
+    threshold: 5
+    parties: 9
+# Kaartidele automaatne terminalide määramine. Vaikimise väärtus on tõene.
+    fastmode: true
+
+decrypt:
+# Valimise unikaalne identifikaator.
+  identifier: DEMO
+# Küsimuste arv anonüümistatud e-urnis. Vaikimisi väärtus on 1.
+  questioncount: 1
+  protocol:
+    recover:
+      threshold: 5
+      parties: 9
+# decrypt.anonballotbox Töötlemisrakenduse või miksimisrakenduse poolt loodud e-urn anonüümistatud häältega.
+  anonballotbox: DEMO_shuffled.json
+  anonballotbox_checksum: DEMO_shuffled.json.sha256sum.bdoc
+  candidates: DEMO_valikud.bdoc
+  districts: DEMO_jaoskonnad.bdoc
+# Krüptogrammide korrektsuse kontrollimine enne dekrüpteerimist. Juhul kui krüptogrammide sisend ei tule usaldatud allikast, siis tuleb kontrollida krüptogrammide korrektsust.
+# Usaldatud allikad on töötlemisrakendus ning miksija. Vaikimisi väärus on väär.
+  check_decodable: false
+# decrypt.provable Valikuline korrektse dekrüpteerimise tõestuse väljastamine. Vaikimisi väärtus on tõene.
+  provable: true
+  out: DEMO_decout_true

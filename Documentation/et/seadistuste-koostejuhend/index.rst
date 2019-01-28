@@ -13,15 +13,15 @@ IVXV seadistuste koostamise juhend
 
 .. toctree::
    :maxdepth: 2
+   :numbered:
 
    annotatsioon
    ylevaade
-   usaldusjuur
+   rakendused
    votmerakendus
-   valijarakendus
-   kontrollrakendus
-   kogumisteenus
    tootlemisrakendus
    auditirakendus
-
-.. vim: sts=3 sw=3 et:
+   kogumisteenus
+   valijarakendus
+   kontrollrakendus
+   mixnet

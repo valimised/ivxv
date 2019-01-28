@@ -20,6 +20,7 @@ import (
 	"ivxv.ee/conf"
 	"ivxv.ee/dds"
 	"ivxv.ee/errors"
+	"ivxv.ee/identity"
 	"ivxv.ee/log"
 	"ivxv.ee/server"
 	//ivxv:modules container
@@ -99,7 +100,8 @@ func (r *RPC) startCleaner(ctx context.Context) {
 // AuthArgs are the arguments provided to a call of RPC.Authenticate.
 type AuthArgs struct {
 	server.Header
-	PhoneNo string
+	IDCode  string `size:"11"`
+	PhoneNo string `size:"20"`
 }
 
 // AuthResponse is the response returned by RPC.Authenticate.
@@ -124,7 +126,7 @@ func (r *RPC) Authenticate(args AuthArgs, resp *AuthResponse) (err error) {
 
 	sess := session{created: time.Now()}
 	resp.SessionCode, resp.ChallengeID, sess.challenge, sess.cert, err =
-		r.dds.MobileAuthenticate(args.Ctx, args.PhoneNo)
+		r.dds.MobileAuthenticate(args.Ctx, args.IDCode, args.PhoneNo)
 	// nolint: dupl, ignore duplicate error handling code, this is small
 	// enough to not warrant deduplication.
 	if err != nil {
@@ -155,7 +157,7 @@ func (r *RPC) Authenticate(args AuthArgs, resp *AuthResponse) (err error) {
 // AuthStatusArgs are the arguments provided to a call of RPC.AuthenticateStatus.
 type AuthStatusArgs struct {
 	server.Header
-	SessionCode string
+	SessionCode string `size:"32"`
 }
 
 // AuthStatusResponse is the response returned by RPC.AuthenticateStatus.
@@ -253,8 +255,7 @@ func findName(name *pkix.Name, oid asn1.ObjectIdentifier) string {
 // CertificateArgs are the arguments provided to a call of RPC.GetCertificate.
 type CertificateArgs struct {
 	server.Header
-	IDCode  string
-	PhoneNo string
+	PhoneNo string `size:"20"`
 }
 
 // CertificateResponse is the response returned by RPC.GetCertificate.
@@ -266,9 +267,17 @@ type CertificateResponse struct {
 // GetCertificate is the remote procedure call performed by clients to get the
 // Mobile-ID signing certificate that will be used to sign the vote.
 func (r *RPC) GetCertificate(args CertificateArgs, resp *CertificateResponse) error {
-	log.Log(args.Ctx, GetCertificateReq{IDCode: args.IDCode, PhoneNo: args.PhoneNo})
+	log.Log(args.Ctx, GetCertificateReq{PhoneNo: args.PhoneNo})
 
-	c, err := r.dds.GetMobileCertificate(args.Ctx, args.IDCode, args.PhoneNo)
+	// Get the voter serial number. If empty, then the request is not
+	// authenticated.
+	identity := server.VoterIdentity(args.Ctx)
+	if len(identity) == 0 {
+		log.Error(args.Ctx, UnauthenticatedGetCertificateError{})
+		return server.ErrUnauthenticated
+	}
+
+	c, err := r.dds.GetMobileCertificate(args.Ctx, identity, args.PhoneNo)
 	// nolint: dupl, ignore duplicate error handling code, this is small
 	// enough to not warrant deduplication.
 	if err != nil {
@@ -291,9 +300,8 @@ func (r *RPC) GetCertificate(args CertificateArgs, resp *CertificateResponse) er
 // SignArgs are the arguments provided to a call of RPC.Sign.
 type SignArgs struct {
 	server.Header
-	IDCode  string
-	PhoneNo string
-	Hash    []byte // SHA-256 hash of the data to sign.
+	PhoneNo string `size:"20"`
+	Hash    []byte `size:"32"` // SHA-256 hash of the data to sign.
 }
 
 // SignResponse is the response returned by RPC.Sign.
@@ -306,14 +314,18 @@ type SignResponse struct {
 // Sign is the remote procedure call performed by clients to start a Mobile-ID
 // signing session.
 func (r *RPC) Sign(args SignArgs, resp *SignResponse) (err error) {
-	log.Log(args.Ctx, SignReq{
-		IDCode:  args.IDCode,
-		PhoneNo: args.PhoneNo,
-		Hash:    args.Hash,
-	})
+	log.Log(args.Ctx, SignReq{PhoneNo: args.PhoneNo, Hash: args.Hash})
+
+	// Get the voter serial number. If empty, then the request is not
+	// authenticated.
+	identity := server.VoterIdentity(args.Ctx)
+	if len(identity) == 0 {
+		log.Error(args.Ctx, UnauthenticatedSignError{})
+		return server.ErrUnauthenticated
+	}
 
 	resp.SessionCode, resp.ChallengeID, err = r.dds.MobileSignHash(
-		args.Ctx, args.IDCode, args.PhoneNo, args.Hash)
+		args.Ctx, identity, args.PhoneNo, args.Hash)
 	// nolint: dupl, ignore duplicate error handling code, this is small
 	// enough to not warrant deduplication.
 	if err != nil {
@@ -335,7 +347,7 @@ func (r *RPC) Sign(args SignArgs, resp *SignResponse) (err error) {
 // SignStatusArgs are the arguments provided to a call of RPC.SignStatus.
 type SignStatusArgs struct {
 	server.Header
-	SessionCode string
+	SessionCode string `size:"32"`
 }
 
 // SignStatusResponse is the response returned by RPC.SignStatus.
@@ -391,6 +403,7 @@ func ddsmain() (code int) {
 	rpc.startCleaner(c.Ctx)
 
 	var start, stop time.Time
+	var authConf server.AuthConf
 	var err error
 	if c.Conf.Election != nil {
 		// Check election configuration time values.
@@ -408,19 +421,17 @@ func ddsmain() (code int) {
 			return c.Error(exit.Config, ServiceStopTimeError{Err: err},
 				"bad service stop time:", err)
 		}
-	}
 
-	var s *server.S
-	if tech := c.Conf.Technical; tech != nil {
 		// Configure the DigiDocService client.
-		if rpc.dds, err = dds.New(&tech.DDS); err != nil {
+		if rpc.dds, err = dds.New(&c.Conf.Election.DDS); err != nil {
 			return c.Error(exit.Config, DDSConfError{Err: err},
 				"failed to configure DigiDocService client:", err)
 		}
 
 		// Configure the ticket manager for issuing authentication
 		// tickets.
-		if _, ok := tech.Auth[auth.Ticket]; !ok {
+		ticketConf, ok := c.Conf.Election.Auth[auth.Ticket]
+		if !ok {
 			return c.Error(exit.Config, TicketAuthError{},
 				"ticket authentication is mandatory for dds")
 		}
@@ -429,14 +440,30 @@ func ddsmain() (code int) {
 				"failed to configure ticket manager:", err)
 		}
 
+		// Parse configuration for authenticating with tickets issued
+		// by this server. Also, require serial number identities
+		// regardless of configuration, since those are the ones used
+		// by Mobile-ID.
+		if authConf, err = server.NewAuthConf(auth.Conf{auth.Ticket: ticketConf},
+			identity.SerialNumber, nil); err != nil {
+
+			return c.Error(exit.Config, ServerAuthConfError{Err: err},
+				"failed to configure client authentication:", err)
+		}
+	}
+
+	var s *server.S
+	if c.Conf.Technical != nil {
 		// Configure a new server with the service instance
 		// configuration and the RPC handler instance.
+		cert, key := conf.TLS(conf.Sensitive(c.Service.ID))
 		if s, err = server.New(&server.Conf{
-			Sensitive: conf.Sensitive(c.Service.ID),
-			Address:   c.Service.Address,
-			End:       stop,
-			Filter:    &c.Conf.Technical.Filter,
-			Version:   &c.Conf.Version,
+			CertPath: cert,
+			KeyPath:  key,
+			Address:  c.Service.Address,
+			End:      stop,
+			Filter:   &c.Conf.Technical.Filter,
+			Version:  &c.Conf.Version,
 		}, rpc); err != nil {
 			return c.Error(exit.Config, ServerConfError{Err: err},
 				"failed to configure server:", err)
@@ -445,7 +472,7 @@ func ddsmain() (code int) {
 
 	// Start listening for incoming connections during the voting period.
 	if c.Until >= command.Execute {
-		if err = s.ServeAt(c.Ctx, start); err != nil {
+		if err = s.WithAuth(authConf).ServeAt(c.Ctx, start); err != nil {
 			return c.Error(exit.Unavailable, ServeError{Err: err},
 				"failed to serve dds service:", err)
 		}

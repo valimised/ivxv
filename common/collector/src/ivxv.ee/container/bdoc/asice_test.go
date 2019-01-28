@@ -130,7 +130,11 @@ func TestReadManifest(t *testing.T) {
 			new(SignatureInManifestError)},
 
 		{"missing", `<manifest:manifest
-				xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0"/>`,
+				xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">
+				<manifest:file-entry
+					manifest:full-path="/"
+					manifest:media-type="application/vnd.etsi.asic-e+zip"/>
+			</manifest:manifest>`, // Must include at least one entry.
 			map[string]*asiceFile{"foo": {name: "foo"}},
 			new(MissingManifestEntryError)},
 

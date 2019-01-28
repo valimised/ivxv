@@ -3,7 +3,7 @@ package ee.ivxv.common.crypto.rnd;
 import java.io.IOException;
 
 /**
- * {@link Rnd} interface defines the methods required from any random bytes source.
+ * Define the methods required from any random bytes source.
  */
 public interface Rnd {
     /**

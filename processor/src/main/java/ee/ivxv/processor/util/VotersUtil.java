@@ -1,7 +1,5 @@
 package ee.ivxv.processor.util;
 
-import static ee.ivxv.common.util.Util.CHARSET;
-
 import ee.ivxv.common.crypto.CryptoUtil.PublicKeyHolder;
 import ee.ivxv.common.crypto.hash.HashFunction;
 import ee.ivxv.common.crypto.hash.HashType;
@@ -13,6 +11,7 @@ import ee.ivxv.common.model.VoterList;
 import ee.ivxv.common.service.i18n.MessageException;
 import ee.ivxv.common.util.Util;
 import ee.ivxv.processor.Msg;
+import ee.ivxv.processor.util.DistrictsMapper.LocationPair;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,8 +33,9 @@ public class VotersUtil {
 
     private static final String SEPARATOR = "\t";
 
-    public static Loader getLoader(PublicKeyHolder key, DistrictList dl, Reporter reporter) {
-        return new Loader(key, dl, reporter);
+    public static Loader getLoader(PublicKeyHolder key, DistrictList dl, DistrictsMapper mapper,
+            Reporter reporter) {
+        return new Loader(key, dl, mapper, reporter);
     }
 
     /**
@@ -76,58 +76,18 @@ public class VotersUtil {
         return s;
     }
 
-    /*-
-    valija = isikukood TAB nimi TAB tegevus TAB jaoskond TAB rea-number-voi-tyhi TAB pohjus-voi-tyhi LF
-    
-    isikukood = 11*11DIGIT
-    nimi = 1*100UTF-8-CHAR
-    tegevus = "lisamine" | "kustutamine"
-    
-    jaoskond = jaoskonna-ehak-kood TAB jaoskonna-number-omavalitsuses TAB ringkond
-    jaoskonna-ehak-kood = ehak-kood
-    jaoskonna-number-omavalitsuses = 1*10 DIGIT
-    
-    ringkond = ringkonna-ehak-kood TAB ringkonna-number-omavalitsuses
-    ringkonna-ehak-kood = ehak-kood
-    ringkonna-number-omavalitsuses = 1*10DIGIT
-    
-    ehak-kood = 1*10DIGIT
-    
-    rea-number-voi-tyhi = "" | rea-number
-    rea-number = 1*11DIGIT
-    pohjus-voi-tyhi = “” | pohjus
-    pohjus = “tokend” | “jaoskonna vahetus” | “muu”
-     */
-    static Voter parseVoter(String csv) {
-        String[] r = csv.split(SEPARATOR, 9);
-
-        if (r.length != 9) {
-            throw new MessageException(Msg.e_vl_invalid_voter_row, csv);
-        }
-        LName region = new LName(r[5], r[6]);
-        LName station = new LName(r[3], r[4]);
-
-        Long rowNumber = null;
-        try {
-            rowNumber = r[7] == null || r[7].isEmpty() ? null : Long.parseLong(r[7]);
-        } catch (Exception e) {
-            throw new MessageException(Msg.e_vl_invalid_row_number, r[7], csv);
-        }
-
-        // Ignoring r[8] ("pohjus")
-        return new Voter(r[0], r[1], r[2], region, station, rowNumber);
-    }
-
     public static class Loader {
 
         private final PublicKeyHolder key;
         private final DistrictList dl;
+        private final DistrictsMapper mapper;
         private final Reporter rep;
         private VoterList current;
 
-        Loader(PublicKeyHolder key, DistrictList dl, Reporter rep) {
+        Loader(PublicKeyHolder key, DistrictList dl, DistrictsMapper mapper, Reporter rep) {
             this.key = key;
             this.dl = dl;
+            this.mapper = mapper;
             this.rep = rep;
         }
 
@@ -182,7 +142,7 @@ public class VotersUtil {
         tüüp = "algne" | "muudatused"
          */
         VoterList readVoterList(String hash, String name, InputStream in) throws Exception {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(in, CHARSET))) {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(in, Util.CHARSET))) {
                 String version = readHeaderRow(br.readLine());
                 String electionId = readHeaderRow(br.readLine());
                 String type = readHeaderRow(br.readLine());
@@ -196,6 +156,49 @@ public class VotersUtil {
 
                 return vl;
             }
+        }
+
+        /*-
+        valija = isikukood TAB nimi TAB tegevus TAB jaoskond TAB rea-number-voi-tyhi TAB pohjus-voi-tyhi LF
+        
+        isikukood = 11*11DIGIT
+        nimi = 1*100UTF-8-CHAR
+        tegevus = "lisamine" | "kustutamine"
+        
+        jaoskond = jaoskonna-ehak-kood TAB jaoskonna-number-omavalitsuses TAB ringkond
+        jaoskonna-ehak-kood = ehak-kood
+        jaoskonna-number-omavalitsuses = 1*10 DIGIT
+        
+        ringkond = ringkonna-ehak-kood TAB ringkonna-number-omavalitsuses
+        ringkonna-ehak-kood = ehak-kood
+        ringkonna-number-omavalitsuses = 1*10DIGIT
+        
+        ehak-kood = 1*10DIGIT
+        
+        rea-number-voi-tyhi = "" | rea-number
+        rea-number = 1*11DIGIT
+        pohjus-voi-tyhi = “” | pohjus
+        pohjus = “tokend” | “jaoskonna vahetus” | “muu”
+         */
+        Voter parseVoter(String csv) {
+            String[] r = csv.split(SEPARATOR, -1);
+
+            if (r.length != 9) {
+                throw new MessageException(Msg.e_vl_invalid_voter_row, csv);
+            }
+            LName district = new LName(r[5], r[6]);
+            LName station = new LName(r[3], r[4]);
+            LocationPair res = mapper.get(district.getId(), station.getId());
+
+            Long rowNumber = null;
+            try {
+                rowNumber = r[7] == null || r[7].isEmpty() ? null : Long.parseLong(r[7]);
+            } catch (Exception e) {
+                throw new MessageException(Msg.e_vl_invalid_row_number, r[7], csv);
+            }
+
+            // Ignoring r[8] ("pohjus")
+            return new Voter(r[0], r[1], r[2], res.district, res.station, rowNumber);
         }
 
         void validate(VoterList vl) {

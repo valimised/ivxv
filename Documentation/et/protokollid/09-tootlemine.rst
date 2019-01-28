@@ -24,7 +24,7 @@ E-hääletanute nimekiri
 ----------------------
 
 E-hääletanute nimekiri on pärast e-hääletamise lõppu väljastatav nimekiri
-e-hääletanud isikutest, sorteerituna valimisjaoskondade kaupa. Dokument
+e-hääletanud isikutest, sordituna valimisjaoskondade kaupa. Dokument
 genereeritakse töötlemisrakenduse poolt.
 
 .. literalinclude:: schema/ivxv.voterlist.schema
@@ -73,12 +73,11 @@ kuuluvate andmetega.
 
 Faili vorming on Zip64 konteiner.
 
-Valija-spetsiifilised kaustad asuvad vahetult juurkausta all,
-fikseeritud nimega ülemkausta pakis ei ole.
+Valija-spetsiifilised kaustad asuvad vahetult juurkausta `votes` all.
 
 Faili sisu:
 
-* :file:`<voter id>/`
+* :file:`votes/<voter id>/`
 
  * :file:`<timestamp>.version`
 
@@ -131,9 +130,24 @@ kus:
    BDOC-konteineris olev vastava nimega fail;
 
  * ``<timestamp>.<qualifier>`` - häält kvalifitseeriva protokolli päringu
-   vastus; neid võib esineda mitu, aga iga iga protokolli kohta maksimaalselt
+   vastus; neid võib esineda mitu, aga iga protokolli kohta maksimaalselt
    üks.
 
 
+Anonüümistatud e-urn
+--------------------
 
-.. vim: sts=3 sw=3 et:
+Valimisringkondade ja jaoskondade järgi grupeeritud krüpteeritud hääled.
+Anonüümistatud e-urnis puudub informatsioon valijate kohta.
+
+Anonüümistatud e-urn on töötlemisrakenduse väljund ning võtmerakenduse
+dekrüpteerimise tööriista sisend.
+
+.. literalinclude:: schema/ivxv.anon-bb.schema
+   :language: json
+   :linenos:
+
+Näide:
+
+.. literalinclude:: schema/ivxv.anon-bb.schema.example
+   :language: json

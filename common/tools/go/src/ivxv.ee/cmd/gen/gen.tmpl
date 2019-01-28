@@ -4,8 +4,7 @@ package {{.Package.Name}}
 import "fmt"
 
 {{range .Literals}}
-// {{.Name}} is auto-generated from {{.Pos}}.
-// nolint: lll
+// {{.Name}} is auto-generated from {{base .Pos.String}}.
 type {{.Name}} struct {
 	{{range .Fields}}
 	{{.}} {{if eq . "Err"}}error{{else}}interface{}{{end}}
@@ -24,9 +23,9 @@ func (x {{$name}}) Cause() error { return x.Err }
 func (x {{.Name}}) Error() string {
 	return fmt.Sprint(x.EntryID(), "{",
 		{{- range $i, $e := .Fields -}}
-		{{- if gt $i 0}}", ",{{end -}}
+		{{- if gt $i 0}}", ",{{end}}
 		"{{.}}:", x.{{.}},
 		{{- end -}}
-	"}") // nolint: lll
+		"}")
 }
 {{end}}

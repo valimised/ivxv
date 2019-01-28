@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # import: import statement generator for IVXV modules.
 #
 # import currently assumes that all sub-packages of a package are its modules.
@@ -98,7 +98,7 @@ list_modules () {
 
 	local modules
 	for parent in "$@"; do
-		modules=$(go list -f '{{.ImportPath}}:{{.Dir}}' "ivxv.ee/$parent/...")
+		modules=$(${GO:-go} list -f '{{.ImportPath}}:{{.Dir}}' "ivxv.ee/$parent/...")
 		echo "$modules" | grep -v "^ivxv.ee/$parent:"
 	done
 }
@@ -167,6 +167,7 @@ import (
 $(for module in "$@"; do echo "$module" | sed 's/\(.*\)/\t_ "\1"/'; done)
 )
 HERE
+	${GO:-go} fmt "$path" > /dev/null
 }
 
 # create_imports takes a package name, source directory, and list of modules
@@ -180,7 +181,7 @@ create_imports () {
 	create_import "$dir/$developmentfile" "$name" "true"  $(dev_modules "true"  "$@")
 }
 
-for pkg in $(go list -f '{{.Name}}:{{.ImportPath}}:{{.Dir}}' "$@"); do
+for pkg in $(${GO:-go} list -f '{{.Name}}:{{.ImportPath}}:{{.Dir}}' "$@"); do
 	name=$(echo "$pkg" | cut -d: -f 1)
 	import=$(echo "$pkg" | cut -d: -f 2)
 	dir=$(echo "$pkg" | cut -d: -f 3)

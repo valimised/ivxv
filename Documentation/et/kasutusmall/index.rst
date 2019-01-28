@@ -18,6 +18,3 @@ IVXV kasutusmallid
    sissejuhatus
    tegijad
    kasutusmallid
-
-
-.. vim: sts=3 sw=3 et:

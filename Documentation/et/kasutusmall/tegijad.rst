@@ -113,5 +113,3 @@ Registreerimisteenus
 --------------------
 
 *Registreerimisteenus* on teenus, mille abil Kogumisteenus peab registreerima kõik Valijarakendustelt saadud hääled. Pärast hääletamisperioodi lõppu edastab teenuseosutaja info registreeritud häälte kohta Töötlejale.
-
-.. vim: sts=3 sw=3 et:

@@ -964,5 +964,3 @@ Laiendid
 Järeltingimus
 '''''''''''''
 Tühistatud hääled ei lähe lugemisele, ennistatud hääled lähevad lugemisele.
-
-.. vim: sts=3 sw=3 et:

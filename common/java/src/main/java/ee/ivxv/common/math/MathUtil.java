@@ -1,13 +1,27 @@
 package ee.ivxv.common.math;
 
-import ee.ivxv.common.util.Util;
 import java.math.BigInteger;
 
+/**
+ * Math helper methods.
+ */
 public class MathUtil {
+    /**
+     * Compute factorial
+     * 
+     * @param f
+     * @return f!
+     */
     public static BigInteger factorial(int f) {
         return factorial(BigInteger.valueOf(f));
     }
 
+    /**
+     * Compute factorial.
+     * 
+     * @param f
+     * @return f!
+     */
     public static BigInteger factorial(BigInteger f) {
         if (f.compareTo(BigInteger.ONE) <= 0) {
             return BigInteger.ONE;
@@ -19,7 +33,13 @@ public class MathUtil {
         }
         return res;
     }
-    
+
+    /**
+     * Find greatest common denominator of values
+     * 
+     * @param v
+     * @return
+     */
     public static BigInteger gcd(BigInteger... v) {
         if (v.length == 0) {
             return BigInteger.ZERO;
@@ -32,7 +52,13 @@ public class MathUtil {
         }
         return res;
     }
-    
+
+    /**
+     * Find least common multiple of values.
+     * 
+     * @param v
+     * @return
+     */
     public static BigInteger lcm(BigInteger... v) {
         if (v.length == 0) {
             return BigInteger.ZERO;
@@ -47,6 +73,16 @@ public class MathUtil {
         return res;
     }
 
+    /**
+     * Perform extended Euclidian algorithm for a and b and output Bezout coefficients
+     * <p>
+     * See {@link https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Pseudocode}. Finds s
+     * and t such that a*s + b*t = gcd(a,b).
+     * 
+     * @param a
+     * @param b
+     * @return Array of two integers
+     */
     public static BigInteger[] extendedEuclidean(BigInteger a, BigInteger b) {
         /*-
          * https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Pseudocode
@@ -88,13 +124,27 @@ public class MathUtil {
         return new BigInteger[] {old_s, old_t};
     }
 
+    /**
+     * Compute Euler's phi for product of prime arguments.
+     * 
+     * @param p
+     * @param q
+     * @return
+     */
     public static BigInteger phiSemiprime(BigInteger p, BigInteger q) {
         // compute Euler's phi for p*q. We assume that p, q prime.
         return p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
     }
 
+    /**
+     * Compute the Legendre symbol of of modulo p
+     * 
+     * @param e
+     * @param p
+     * @return
+     */
     public static int legendre(BigInteger e, BigInteger p) {
-        BigInteger q = Util.safePrimeOrder(p);
+        BigInteger q = safePrimeOrder(p);
         BigInteger big = e.modPow(q, p);
         if (big.compareTo(BigInteger.ONE) == 0) {
             return 1;
@@ -109,8 +159,26 @@ public class MathUtil {
         return 1;
     }
 
+    /**
+     * Compute short Weierstrass curve equation f(x) = x^3 - 3x + b
+     * 
+     * @param a
+     * @param b
+     * @param x
+     * @param p
+     * @return
+     */
     public BigInteger weierstrass(BigInteger a, BigInteger b, BigInteger x, BigInteger p) {
         BigInteger res = x.modPow(BigInteger.valueOf(2), p).add(a).multiply(x).mod(p).add(b).mod(p);
         return res;
+    }
+
+    /**
+     * Compute the value (p-1)/2
+     * @param p
+     * @return
+     */
+    public static BigInteger safePrimeOrder(BigInteger p) {
+        return p.subtract(BigInteger.ONE).divide(BigInteger.valueOf(2));
     }
 }

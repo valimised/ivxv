@@ -9,6 +9,7 @@ import ee.ivxv.common.service.container.InvalidContainerException;
 import ee.ivxv.common.service.i18n.MessageException;
 import ee.ivxv.common.util.ContainerHelper;
 import ee.ivxv.common.util.I18nConsole;
+import ee.ivxv.common.util.log.PerformanceLog;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -81,8 +82,11 @@ public class AppRunner<T extends AppContext<?>> {
 
     public boolean run(String[] args) {
         boolean result = false;
+        long t = System.currentTimeMillis();
 
-        try (MDC.MDCCloseable mdc = MDC.putCloseable(SESSION_ID, ictx.sessionId)) {
+        try {
+            MDC.put(SESSION_ID, ictx.sessionId);
+            PerformanceLog.log.info("STARTING application '{}'", app.name.getName());
             LocaleConfLoader.load(ictx.locale);
 
             if (ContextFactory.get().isTestMode()) {
@@ -111,6 +115,9 @@ public class AppRunner<T extends AppContext<?>> {
             } catch (Throwable e) {
                 errorHandler.handleThrowable(e);
             }
+            PerformanceLog.log.info("FINISHED application '{}', TIME: {} ms, SUCCESS: {}",
+                    app.name.getName(), (System.currentTimeMillis() - t), result);
+            MDC.remove(SESSION_ID);
         }
         return result;
     }
@@ -140,6 +147,9 @@ public class AppRunner<T extends AppContext<?>> {
             appHelper.showToolHelp(tool);
             return true;
         }
+
+        PerformanceLog.log.info("Starting tool '{}', app-threads: {}, container-threads: {}",
+                tool.name.getName(), cargs.threads.value(), cargs.ct.value());
 
         return runTool(tool);
     }

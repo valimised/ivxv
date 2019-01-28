@@ -32,14 +32,15 @@ Kuvatavad andmed on järgmised:
 
    #. Soo kaupa;
 
-   #. Operatsioonisüsteemi kaupa;
-
    #. Vanusegrugi kaupa;
 
    #. Autentimisvahendi kaupa;
+
+   #. Operatsioonisüsteemi kaupa;
 
    #. Riigi kaupa (vastavalt hääletaja IP-aadressile).
 
 #. Korduvhääletamiste statistika.
 
-.. vim: sts=3 sw=3 et:
+Statistikat on võimalik filtreerida ringkondade ja jaoskondade kaupa (juhul,
+kui ringkondade nimekiri on laaditud haldusteenusesse).

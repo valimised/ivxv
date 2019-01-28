@@ -4,6 +4,7 @@ import ee.ivxv.common.M;
 import ee.ivxv.common.cli.Arg;
 import ee.ivxv.common.cli.Args;
 import ee.ivxv.common.cli.Tool;
+import ee.ivxv.common.crypto.CorrectnessUtil.CiphertextCorrectness;
 import ee.ivxv.common.crypto.rnd.NativeRnd;
 import ee.ivxv.common.model.AnonymousBallotBox;
 import ee.ivxv.common.model.CandidateList;
@@ -13,13 +14,16 @@ import ee.ivxv.common.model.IBallotBox;
 import ee.ivxv.common.service.bbox.impl.BboxHelperImpl;
 import ee.ivxv.common.service.i18n.MessageException;
 import ee.ivxv.common.service.report.Reporter;
+import ee.ivxv.common.service.smartcard.Card;
 import ee.ivxv.common.service.smartcard.Cards;
+import ee.ivxv.common.service.smartcard.IndexedBlob;
 import ee.ivxv.common.util.I18nConsole;
 import ee.ivxv.common.util.ToolHelper;
 import ee.ivxv.key.KeyContext;
 import ee.ivxv.key.Msg;
 import ee.ivxv.key.model.Vote;
 import ee.ivxv.key.protocol.DecryptionProtocol;
+import ee.ivxv.key.protocol.ProtocolException;
 import ee.ivxv.key.protocol.SigningProtocol;
 import ee.ivxv.key.protocol.ThresholdParameters;
 import ee.ivxv.key.protocol.decryption.recover.RecoverDecryption;
@@ -28,6 +32,8 @@ import ee.ivxv.key.tool.DecryptTool.DecryptArgs;
 import ee.ivxv.key.util.ElectionResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
@@ -41,6 +47,9 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * DecryptTool is a tool for decrypting the encrypted ballots.
+ */
 public class DecryptTool implements Tool.Runner<DecryptArgs> {
 
     static final Logger log = LoggerFactory.getLogger(DecryptTool.class);
@@ -83,15 +92,39 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
         if (args.recover.isSet()) {
             ThresholdParameters tparams = new ThresholdParameters(args.dn.value(), args.dm.value());
             byte[] aid = new byte[] {0x01};
-            byte[] shareName = new byte[] {0x44, 0x45, 0x43};
-            Cards cards = ctx.card.createCards();
-            for (int i = 0; i < tparams.getThreshold(); i++) {
-                cards.addCard(String.valueOf(i));
-            }
-            dec = new RecoverDecryption(cards, tparams, aid, shareName, args.doProvable.value());
-
+            byte[] decShareName = new byte[] {0x44, 0x45, 0x43};
             byte[] signShareName = new byte[] {0x53, 0x49, 0x47, 0x4E};
-            signer = new ShoupSigning(cards, tparams, aid, signShareName, new NativeRnd());
+            Cards cards = ctx.card.createCards();
+            if (!ctx.card.isPluggableService()) {
+                for (int i = 0; i < tparams.getParties(); i++) {
+                    cards.addCard(String.valueOf(i));
+                }
+            }
+            Set<IndexedBlob> decBlobs = new HashSet<>();
+            Set<IndexedBlob> signBlobs = new HashSet<>();
+            for (int i = 0; i < tparams.getThreshold(); i++) {
+                Card card;
+                if (ctx.card.isPluggableService()) {
+                    card = ctx.card.createCard("-1");
+                    cards.initUnprocessedCard(card);
+                } else {
+                    card = cards.getCard(i);
+                }
+                IndexedBlob ib = card.getIndexedBlob(aid, decShareName);
+                if (ib.getIndex() < 1 || ib.getIndex() > tparams.getParties()) {
+                    throw new ProtocolException("Indexed blob index mismatch");
+                }
+                decBlobs.add(ib);
+
+                ib = card.getIndexedBlob(aid, signShareName);
+                if (ib.getIndex() < 1 || ib.getIndex() > tparams.getParties()) {
+                    throw new ProtocolException("Indexed blob index mismatch");
+                }
+                signBlobs.add(ib);
+            }
+
+            dec = new RecoverDecryption(decBlobs, tparams, args.doProvable.value());
+            signer = new ShoupSigning(signBlobs, tparams, new NativeRnd());
         }
         console.println(Msg.m_protocol_init_ok);
 
@@ -99,7 +132,7 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
         console.println(Msg.m_dec_start);
         Path out = args.outputPath.value();
         ElectionResult result = processVotes(abb, dec, candidates, districts,
-                args.doProvable.value(), ctx.args.threads.value());
+                args.doProvable.value(), args.checkDecodable.value(), ctx.args.threads.value());
         console.println(Msg.m_dec_done);
 
         console.println();
@@ -117,18 +150,14 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
         console.println(Msg.m_out_invalid);
         result.outputInvalid(out);
 
-        console.println(Msg.m_out_logs);
-        ctx.reporter.writeRecords(out, args.identifier.value(), Reporter.LogType.LOG4, result.log4);
-        ctx.reporter.writeRecords(out, args.identifier.value(), Reporter.LogType.LOG5, result.log5);
-
         console.println(M.m_out_done);
 
         return true;
     }
 
     private ElectionResult processVotes(AnonymousBallotBox abb, DecryptionProtocol dec,
-            CandidateList candidates, DistrictList districts, boolean withProof, int threadCount)
-            throws Exception {
+            CandidateList candidates, DistrictList districts, boolean withProof,
+            boolean checkDecodable, int threadCount) throws Exception {
         ElectionResult result =
                 new ElectionResult(abb.getElection(), candidates, districts, withProof);
         // WorkerFactory consumer = new WorkerFactory(getDecConsumer(dec, result));
@@ -144,8 +173,8 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
                     TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(threadCount * 2));
         }
 
-        WorkManager manager =
-                new WorkManager(abb, getDecConsumer(dec, result), decExecutor, result);
+        WorkManager manager = new WorkManager(abb, getDecConsumer(dec, result, checkDecodable),
+                decExecutor, result);
         ioCompService.submit(manager);
         ioCompService
                 .submit(result.getResultWorker(abb.getNumberOfBallots(), console, ctx.reporter));
@@ -162,10 +191,26 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
         return result;
     }
 
-    private Consumer<Vote> getDecConsumer(DecryptionProtocol dec, ElectionResult result) {
+    private Consumer<Vote> getDecConsumer(DecryptionProtocol dec, ElectionResult result,
+            boolean checkDecodable) {
         return (vote) -> {
+            byte[] msg = vote.getVote();
+            boolean isCorrect = true;
+            if (checkDecodable) {
+                try {
+                    if (dec.checkCorrectness(msg) != CiphertextCorrectness.VALID) {
+                        log.warn("Non-decodable ciphertext");
+                        isCorrect = false;
+                    }
+                } catch (ProtocolException e) {
+                    log.warn("Could not check correctness", e);
+                    isCorrect = false;
+                }
+            }
             try {
-                vote.setProof(dec.decryptMessage(vote.getVote()));
+                if (isCorrect) {
+                    vote.setProof(dec.decryptMessage(msg));
+                }
             } catch (Exception e) {
                 log.warn("Couldn't decrypt vote", e);
                 // console.println(M.e_decryption_error, vote);
@@ -197,6 +242,7 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
         Arg<Path> districts = Arg.aPath(Msg.d_districts, true, false);
         Arg<Path> outputPath = Arg.aPath(Msg.arg_out, false, null);
         Arg<Boolean> doProvable = Arg.aFlag(Msg.d_provable).setDefault(true);
+        Arg<Boolean> checkDecodable = Arg.aFlag(Msg.d_check_decodable).setDefault(false);
 
         // protocols
 
@@ -216,6 +262,7 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
             args.add(districts);
             args.add(outputPath);
             args.add(doProvable);
+            args.add(checkDecodable);
             args.add(protocol);
         }
     }

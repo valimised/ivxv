@@ -2,5 +2,5 @@
 
 # /etc/sudoers.d/ivxv
 
-# allow ivxv-admin user to execute ivxv-admin-helper srcipt
-ivxv-admin      ALL = (ALL)NOPASSWD: /usr/bin/ivxv-admin-helper
+# allow ivxv-admin user to execute ivxv-admin-sudo srcipt
+ivxv-admin      ALL = (ALL)NOPASSWD: /usr/bin/ivxv-admin-sudo

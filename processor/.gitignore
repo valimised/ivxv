@@ -4,3 +4,5 @@
 .project
 build/
 /log/
+.settings/
+/bin/

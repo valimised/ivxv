@@ -1,0 +1,32 @@
+
+@startuml
+
+title "Võtmerakendus"
+
+    usecase (Verifitseerimiskonfiguratsiooni import)
+    usecase (Kandidaatide ja ringkondade nimekirja import)
+    usecase (Krüpteeritud häälte import)
+    usecase (E-häälte dekrüpteerimine)
+    usecase (E-häälte kokkulugemine)
+    usecase (Sisendinfo verifitseerimine)
+    usecase (Väljundinfo signeerimine)
+    usecase (E-hääletamise tulemuste eksport)
+    usecase (Kehtetute sedelite loendi eksport)
+    usecase (Dekrüptimistõestuse eksport)
+    usecase (Tegevuslogi eksport)
+    usecase (Hääle olekulogi)
+
+    usecase (Võtmepaari genereerimine)
+    usecase (Juhuslikkuse lisamine)
+    usecase (Juhuslikkuse mõõtmine)
+    usecase (Sertifikaadi allkirjastamine)
+    usecase (Privaatvõtme aktiveerimine)
+    usecase (Privaatvõtme ja koopiate hävitamine)
+
+@enduml
+
+
+' Rakenduse konfigureerimine
+' Võtme genereerimine
+' Sertifikaadi väljastamine
+' Hääletamistulemuse väljastamine

@@ -3,8 +3,8 @@ package main
 import (
 	"bufio"
 	"context"
-	"errors"
 	"io"
+	"log/syslog"
 	"regexp"
 
 	"ivxv.ee/log"
@@ -13,8 +13,26 @@ import (
 // Prefix used by github.com/coreos/pkg/capnslog.PrettyFormatter.
 var re = regexp.MustCompile(`^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d{6} ([CEWNIDT]) \| (.+)$`)
 
-func logger(ctx context.Context, r io.ReadCloser) {
+type logger struct {
+	*syslog.Writer
+}
+
+func newLogger() (logger, error) {
+	// Same facility as used in ivxv.ee/log.
+	w, err := syslog.New(syslog.LOG_LOCAL0, "etcd")
+	if err != nil {
+		return logger{nil}, EtcdSyslogError{Err: err}
+	}
+	return logger{w}, nil
+}
+
+func (l logger) log(ctx context.Context, r io.ReadCloser) {
 	defer r.Close() // nolint: errcheck, PipeReader.Close always returns nil.
+	defer func() {
+		if err := l.Close(); err != nil {
+			log.Error(ctx, EtcdSyslogCloseError{Err: err})
+		}
+	}()
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
@@ -28,16 +46,29 @@ func logger(ctx context.Context, r io.ReadCloser) {
 		level := matches[1]
 		msg := matches[2]
 
+		var err error
 		switch level {
-		case "C", "E", "W":
-			// All etcd errors trigger an alert.
-			log.Error(ctx, EtcdError{Err: log.Alert(errors.New(msg))})
-		case "N", "I":
-			log.Log(ctx, EtcdLog{Message: msg})
+		case "C":
+			err = l.Crit(msg)
+		case "E":
+			err = l.Err(msg)
+		case "W":
+			err = l.Warning(msg)
+		case "N":
+			err = l.Notice(msg)
+		case "I":
+			err = l.Info(msg)
 		case "D", "T":
-			log.Debug(ctx, EtcdDebug{Message: msg})
+			err = l.Debug(msg)
 		default:
 			panic("regexp submatch unexpected value: " + level)
+		}
+		if err != nil {
+			log.Error(ctx, EtcdLogError{
+				Level:   level,
+				Message: msg,
+				Err:     log.Alert(err),
+			})
 		}
 	}
 	// We are reading from a PipeReader and are not using CloseWithError,

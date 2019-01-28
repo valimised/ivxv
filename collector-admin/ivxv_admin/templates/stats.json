@@ -1,29 +1,36 @@
 {
   "data": {
-    "age_group_0-24": 0,
-    "age_group_25-29": 0,
-    "age_group_30-34": 0,
-    "age_group_35-39": 0,
-    "age_group_40-44": 0,
-    "age_group_45-49": 0,
-    "age_group_50-54": 0,
-    "age_group_55-59": 0,
-    "age_group_60plus": 0,
-    "authentication-methods": [ [ "UNKNOWN", 0 ] ],
-    "operating-systems": [ [ "UNKNOWN", 0 ] ],
-    "revoters-2-times": 0,
-    "revoters-3-times": 0,
-    "revoters-more-than-3-times": 0,
-    "revotes-from-changed-ip": 0,
-    "revotes-parallel": 0,
-    "revotes-with-different-card": 0,
-    "top-10-revoters": [ [ "UNKNOWN", 0 ] ],
-    "total-checkers": 0,
-    "total-voters": 0,
-    "total-votes-checked": 0,
-    "total-votes-collected": 0,
-    "voters-by-country": [ [ "UNKNOWN", 0 ] ],
-    "voters-females": 0,
-    "voters-males": 0
-  }
+    "TOTAL": {
+      "age_group_16-17": 0,
+      "age_group_18-24": 0,
+      "age_group_25-34": 0,
+      "age_group_35-44": 0,
+      "age_group_45-54": 0,
+      "age_group_55-64": 0,
+      "age_group_65-74": 0,
+      "age_group_75plus": 0,
+      "authentication-methods": [],
+      "operating-systems": [],
+      "revoters-2-times": 0,
+      "revoters-3-times": 0,
+      "revoters-more-than-3-times": 0,
+      "revoters-total": 0,
+      "revotes-from-changed-ip": 0,
+      "revotes-parallel": 0,
+      "revotes-with-different-card": 0,
+      "top-10-revoters": [],
+      "total-checkers": 0,
+      "total-voters": 0,
+      "total-votes-checked": 0,
+      "total-votes-collected": 0,
+      "voters-by-country": [],
+      "voters-females": 0,
+      "voters-males": 0
+    }
+  },
+  "meta": {
+    "generator": "IVXV Management Service Agent Daemon",
+    "time_generated": "2017-09-01T00:00:00"
+  },
+  "error": "IVXV Agent Daemon has not generated statistics. This is a default placeholder stats file from IVXV Collector Management Service package"
 }

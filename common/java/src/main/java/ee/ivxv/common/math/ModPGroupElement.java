@@ -4,16 +4,35 @@ import ee.ivxv.common.asn1.ASN1DecodingException;
 import ee.ivxv.common.asn1.Field;
 import java.math.BigInteger;
 
+/**
+ * ModPGroupElement is an integer modulo a safe prime.
+ */
 public class ModPGroupElement extends GroupElement {
     private final ModPGroup group;
     private final BigInteger value;
     private BigInteger order;
 
+    /**
+     * Initialize using group and integer value.
+     * 
+     * @param group
+     * @param value
+     * @throws IllegalArgumentException
+     */
     public ModPGroupElement(ModPGroup group, BigInteger value) throws IllegalArgumentException {
         this.group = group;
         this.value = value;
     }
 
+    /**
+     * Initialize using group and serialized value.
+     * 
+     * @see #getBytes()
+     * 
+     * @param group
+     * @param data
+     * @throws IllegalArgumentException
+     */
     public ModPGroupElement(ModPGroup group, byte[] data) throws IllegalArgumentException {
         Field f = new Field();
         try {
@@ -55,6 +74,13 @@ public class ModPGroupElement extends GroupElement {
         throw new MathException("Invalid group parameters");
     }
 
+    /**
+     * Multiply this value with other.
+     * 
+     * @param other
+     * @return
+     * @throws MathException When other element is from different group.
+     */
     @Override
     public GroupElement op(GroupElement other) throws MathException {
         if (!this.group.equals(other.getGroup())) {
@@ -65,6 +91,12 @@ public class ModPGroupElement extends GroupElement {
                 this.getValue().multiply(o.getValue()).mod(this.group.getOrder()));
     }
 
+    /**
+     * Exponentiate the value.
+     * 
+     * @param factor
+     * @return
+     */
     @Override
     public GroupElement scale(BigInteger factor) {
         try {
@@ -79,6 +111,11 @@ public class ModPGroupElement extends GroupElement {
         return null;
     }
 
+    /**
+     * Find the modular inverse of the value.
+     * 
+     * @return
+     */
     @Override
     public GroupElement inverse() {
         try {
@@ -110,10 +147,22 @@ public class ModPGroupElement extends GroupElement {
         return this.group.hashCode() ^ this.getValue().hashCode();
     }
 
+    /**
+     * Get the integer value of the element.
+     * 
+     * @return
+     */
     public BigInteger getValue() {
         return this.value;
     }
 
+    /**
+     * Serialize the value
+     * <p>
+     * Returns the element as ASN1 INTEGER
+     *
+     * @return
+     */
     @Override
     public byte[] getBytes() {
         return new Field(value).encode();

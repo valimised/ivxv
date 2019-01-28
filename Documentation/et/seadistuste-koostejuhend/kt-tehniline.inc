@@ -1,185 +1,22 @@
 ..  IVXV seadistuste koostamise juhend
 
-.. _kt-tehniline-seadistus:
+.. _kt-technical:
 
-Tehniline seadistus
--------------------
+Kogumisteenuse tehnilise seadistususe koostamine
+------------------------------------------------
 
 Tehniline seadistus määrab kogumisteenuse tehnilised parameetrid. Sama tehnilist
 seadistust peaks olema võimalik kasutada erinevate valimiste seadistustega [#]_.
 
 .. [#] Aga mitte samaaegselt: kogumisteenus toetab ainult ühte valimist.
 
-Seadistusfaili nimi peab alati olema :file:`technical.yaml`.
+Tehnilise seadistuse koostab kogumisteenuse osutaja.
 
-Tehnilises seadistuses on laienduste seadistamiseks kaks erinevat lähenemist:
-
-1. Kui sama funktsionaalsust saavad korraga pakkuda mitu laiendust, siis igaüks
-   saab oma alambloki ning laiendus on seadistatud, kui blokk ei ole tühi. Näiteks
-   ``container``, kus ``container.bdoc`` on vaid üks võimalikest allkirjade
-   kontrollimise laiendustest ning saab töötada rööbiti teiste ``container.*``
-   laiendustega.
-
-2. Kui sama funktsionaalsust saab pakkuda korraga ainult üks laiendus, siis
-   laienduse nimi tuuakse eraldi välja ning tema seadistus pannakse alamblokki.
-   Näiteks ``storage``, kus saab korraga kasutada ainult ühte talletusprotokolli.
-   ``storage.protocol`` määrab laienduse ning seadistus läheb ``storage.conf`` blokki.
-   Sellise struktuuriga saab korraga seadistada ainult ühe laienduse.
-
-.. todo::
-
-   Tehnilistesse seadistustesse on vaja lisada:
-
-   * Varunduse ajastused (väike näitekonf on haldusteenuse dokumentatsioonis)
-
-   * Varundamiseks vajalike pääsude kirjeldamine (varundusteenus on
-     kogumisteenuse jaoks väline teenus)
-
-     Talletusteenus peab saama varundusteenusesse kirjutada
-
-   * E-urni väljastamiseks vajalike pääsude kirjeldamine
-
-     Haldusteenus peab saama varundusteenusest lugeda
+Seadistusfaili nimi peab alati lõppema stringiga :file:`technical.yaml`.
+Failinime võimalik eesliide peab alati lõppema punktiga.
 
 :debug:
         Tõeväärtus, kas logidesse kirjutatakse silumisteateid.
-
-        Määrab kogumisteenuse osutaja.
-
-----
-
-:voterlist:
-        Kohustuslik väli.
-        Valijate nimekirjade kontrollimise parameetrid.
-
-:voterlist.key:
-        Kohustuslik väli.
-        RSA-võtmepaari avalik võti valijate nimekirjade allkirja
-        kontrollimiseks.
-
-        Määrab Korraldaja.
-
-----
-
-:auth:
-        Kohustuslik väli.
-        Alamblokk, mis sisaldab valija tuvastamise seadistust.
-
-        Kõik valija tuvastamise parameetrid määrab Korraldaja.
-
-:auth.ticket:
-        Alamblokk, mis sisaldab piletipõhise valija tuvastamise seadistust.
-
-        Piletipõhist valija tuvastamist kasutatakse Mobiil-ID puhul, kus
-        ``dds`` teenus tuvastab valija ning väljastab talle pileti, millega
-        teistele teenustele ennast tuvastada.
-
-        See alamblokk on tühi, aga tema olemasolek või puudumine määrab, kas
-        piletipõhine valija tuvastus on lubatud või ei.
-
-:auth.tls:
-        Alamblokk, mis sisaldab TLS-põhise valija tuvastamise seadistust.
-
-        TLS-põhist valijatuvastust kasutatakse ID-kaardi puhul.
-
-:auth.tls.roots:
-        Kohustuslik väli.
-        Valija TLS-klientsertifikaatide usaldusjuured.
-
-:auth.tls.intermediates:
-        Valija TLS-klientsertifikaatide vahesertifikaadid. TLS-autentimiseks
-        peab nende sertifikaatide abil olema võimalik luua ahel valija
-        klientsertifikaadist usaldusjuureni.
-
-:auth.tls.ocsp:
-        Alamblokk, mis sisaldab valija TLS-klientsertifikaatide oleku
-        kontrollimise seadistust. Selle bloki puudumisel valija sertifikaatide
-        kehtivust ei kontrollita välisest kehtivuskinnitusteenusest.
-
-:auth.tls.ocsp.url:
-        Kohustuslik väli.
-        Valija TLS-klientsertifikaatide kehtivuskinnitusteenuse aadress.
-
-:auth.tls.ocsp.responders:
-        Valija TLS-klientsertifikaatide kehtivuskinnitusteenuse responderi
-        sertifikaadid. Kui nende hulgast responderi sertifikaati ei leita, siis
-        otsitakse vastuses olevate sertifikaatide hulgast selline, mis on antud
-        välja sama väljastaja poolt, mis kontrollitav sertifikaat, ning on
-        lubatud OCSP vastuste signeerimiseks.
-
-:identity:
-        Tuvastatud valija X.500 eraldusnimest unikaalse identifikaatori
-        tuletamise meetod. Hetkel toetatud valikud ``commonname`` ja
-        ``serialnumber``.
-
-        Eesti elektrooniliste isikut tõendavate dokumentide korral on esimese
-        valiku puhul identifikaator kujul "PERENIMI,EESNIMI,ISIKUKOOD" ning
-        teise puhul "ISIKUKOOD".
-
-----
-
-:age:
-        Alamblokk, mis sisaldab valija vanuse kontrolli seadistust. Kui see
-        blokk puudub, siis valija vanust ei kontrollita.
-
-        Kõik valija vanuse kontrollimise parameetrid määrab Korraldaja.
-
-:age.method:
-        Kohustuslik väli.
-        Valija sünniaja tuvastamiseks kasutatav meetod. Hetkel toetatud ainult
-        ``estpic``, mis eeldab, et valija unikaalne identifikaator on Eesti
-        isikukood ning eraldab sealt sünniaja.
-
-:age.timezone:
-        Kohustuslik väli.
-        IANA ajavööndi nimi, milles valija vanus arvutatakse ehk millises
-        ajavööndis peab valija olema valimisealine.
-
-:age.limit:
-        Kohustuslik väli.
-        Valija peab olema vähemalt nii vana, et hääletada. Kui väärtus on 0,
-        siis valija vanust ei kontrollita.
-
-----
-
-:vote:
-        Kohustuslik väli.
-        Alamblokk, mis sisaldab häälte allkirjade kontrollimise seadistust.
-
-:vote.bdoc:
-        Alamblokk, mis sisaldab häälte BDOC-allkirjade kontrollimise seadistust.
-
-        Kõik BDOC-allkirjade kontrollimise parameetrid määrab Korraldaja.
-
-:vote.bdoc.bdocsize:
-        Kohustuslik väli.
-        BDOC konteineri maksimaalne lubatud suurus baitides.
-
-:vote.bdoc.filesize:
-        Kohustuslik väli.
-        BDOC konteineris olevate failide maksimaalne lubatud hõrendatud suurus
-        baitides.
-
-:vote.bdoc.roots:
-        Kohustuslik väli.
-        Häälte allkirjastajate sertifikaatide usaldusjuured.
-
-:vote.bdoc.intermediates:
-        Häälte allkirjastajate sertifikaatide vahesertifikaadid.
-        Hääle arvesseminekuks peab nende sertifikaatide abil olema võimalik
-        luua ahel allkirjastaja sertifikaadist usaldusjuureni.
-
-:vote.bdoc.checktimemark:
-        Kohustuslik väli.
-        Tõeväärtus, kas häälte allkirjadel peavad olema BDOC spetsifikatsiooni
-        jaotises 6.1 kirjeldatud ajamärgid. Kui tõene, siis ilma ajamärkideta
-        hääli vastu ei võeta. Kui väär, siis ajamärgid on lubatud, aga neid ei
-        kontrollita.
-
-        See peaks olema väär, kuna kõikide allkirjastamisvahendite puhul ei ole
-        sissetuleval häälel ajamärki (nt Eesti ID-kaart). Ajamärgid ei ole siin
-        kohustuslikud, kuna kogumisteenus küsib allkirjastaja sertifikaadile ise
-        kehtivuskinnituse.
 
 ----
 
@@ -194,6 +31,24 @@ Tehnilises seadistuses on laienduste seadistamiseks kaks erinevat lähenemist:
 :filter.tls.handshaketimeout:
         Kohustuslik väli.
         Maksimaalne aeg sekundites TLS-kätluse läbiviimiseks.
+
+:filter.tls.ciphersuites:
+        Kohustuslik väli.
+        TLS-protokollis rakendamiseks lubatud šifrikomplektid. Hetkel toetatud
+        valikud on::
+
+            TLS_RSA_WITH_AES_128_CBC_SHA
+            TLS_RSA_WITH_AES_256_CBC_SHA
+            TLS_RSA_WITH_AES_128_GCM_SHA256
+            TLS_RSA_WITH_AES_256_GCM_SHA384
+            TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+            TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+            TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+            TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+            TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+            TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+            TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+            TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
 
 :filter.codec:
         Kohustuslik väli.
@@ -247,6 +102,9 @@ Tehnilises seadistuses on laienduste seadistamiseks kaks erinevat lähenemist:
 :network.*.services.log:
         Loetelu, mis sisaldab logikogumisteenuste isendite seadistust.
 
+:network.*.services.backup:
+        Varundusteenuse isendi seadistus.
+
 :network.*.services.*.id:
         Kohustuslik väli.
         Mikroteenuse isendi identifikaator.
@@ -276,19 +134,17 @@ Tehnilises seadistuses on laienduste seadistamiseks kaks erinevat lähenemist:
 
 :logging:
         Alamblokk, mis sisaldab loetelu mikroteenuste kauglogimise serveritest.
+        Siin blokis kirjeldatakse logiseire teenus (loetelus esimene),
+        vajadusel ka täiendavad serverid. Logimine toimub üle RELP protokolli.
 
-        Kõik logiserverite parameetrid määrab Korraldaja.
+        Kõik logiserverite parameetrid määrab kogumisteenuse osutaja.
 
 :logging.address:
         Kohustuslik väli.
-        Logiserveri aadress (ip-aadress või hostinimi).
+        Logiserveri aadress (IP-aadress või hostinimi).
 
 :logging.port:
-        Logiserveri port (täisarv, vaikimisi 514).
-
-:logging.protocol:
-        Kohustuslik väli.
-        Logiserverisse logimise protokoll (*udp* või *tcp*, vaikimisi *udp*).
+        Logiserveri port (täisarv, vaikimisi *20514*).
 
 ----
 
@@ -325,119 +181,30 @@ Tehnilises seadistuses on laienduste seadistamiseks kaks erinevat lähenemist:
 
         Maksimaalne aeg sekundites ühe talletusoperatsiooni teostamiseks.
 
-----
-
-:dds:
-        Alamblokk, mis sisaldab Mobiil-ID teenusepakkuja seadistust.
-
-        Kõik Mobiil-ID teenusepakkuja parameetrid määrab Korraldaja.
-
-:dds.url:
+:storage.conf.bootstrap:
         Kohustuslik väli.
-        Mobiil-ID teenusepakkuja asukoht.
+        Kasutatakse ainult juhul kui ``storage.protocol`` on ``etcd``.
 
-:dds.language:
-        Kohustuslik väli.
-        Mobiil-ID kasutajale kuvatavate sõnumite keel. Võimalikud väärtused
-        ``EST``, ``ENG``, ``RUS`` ja ``LIT``.
+        Loetelu nende talletusteenuste identifikaatoritest, mis on osa algsest
+        etcd klastrist. Vajalik, et talletusteenuse isend teaks esmasel
+        käivitumisel, kas see loob uut klastrit või liitub olemasolevaga.
 
-:dds.servicename:
-        Kohustuslik väli.
-        Mobiil-ID teenusepakkujaga kokkulepitud teenusenimi.
-
-:dds.authmessage:
-        Kohustuslik väli.
-        Sõnum, mida Mobiil-ID kasutajale kuvada autentimise käigus.
-
-:dds.signmessage:
-        Kohustuslik väli.
-        Sõnum, mida Mobiil-ID kasutajale kuvada allkirjastamise käigus.
-
-:dds.roots:
-        Kohustuslik väli.
-        Mobiil-ID sertifikaatide usaldusjuured.
-
-:dds.intermediates:
-        Mobiil-ID sertifikaatide vahesertifikaadid. Mobiil-ID autentimiseks
-        peab nende sertifikaatide abil olema võimalik luua ahel Mobiil-ID
-        sertifikaadist usaldusjuureni.
-
-:dds.ocsp.responders:
-        Mobiil-ID sertifikaatide OCSP responderi sertifikaadid. Kui nende
-        hulgast responderi sertifikaati ei leita, siis otsitakse vastuses
-        olevate sertifikaatide hulgast selline, mis on antud välja sama
-        väljastaja poolt, mis kontrollitav sertifikaat, ning on lubatud OCSP
-        vastuste signeerimiseks.
+        Esmases tehnilises seadistuses peab loetelu kattuma ``network`` blokis
+        loetletud talletusteenuste identifikaatoritega. Hiljem teenuseid
+        lisades või eemaldades ei tohi ``storage.conf.bootstrap`` väärtust
+        uuendada.
 
 ----
 
-:qualification:
-        Loetelu välistest kvalifitseerivatest päringutest, mis tehakse iga
-        hääle kohta, koos seadistustega.
+:backup:
+        Varunduse parameetrid.
 
-        Siin on kasutatud loetelu protokoll ja seadistus blokkidest selle
-        asemel, et anda igale protokollile oma blokk, kuna kvalifitseerivate
-        päringute järjekord on oluline ning seadistatav.
+        Loetelu varundmise kellaaegadest vormingus HH:MM.
 
-        Kõik kvalifitseerivate päringute parameetrid määrab Korraldaja.
+:file:`example.technical.yaml`:
 
-:qualification.*.protocol:
-        Kohustuslik väli.
-        Kvalifitseeriva päringu protokoll. Hetkel toetatud ``ocsp``,
-        ``ocsptm``, ``tsp`` ja ``tspreg``.
-
-:qualification.*.conf:
-        Kohustuslik väli.
-        Kvalifitseeriva päringu protokolli seadistus. Sisu sõltub
-        ``qualification.*.protocol`` parameetri väärtusest.
-
-:qualification.*.conf.url:
-        Kohustuslik väli.
-        Aadress, kuhu kvalifitseeriv päring tehakse.
-
-:qualification.*.conf.responders:
-        Kasutatakse ainult juhul kui ``qualification.*.protocol`` on ``ocsp``
-        või ``ocsptm``.
-
-        OCSP reponderi sertifikaadid. Kui nende hulgast responderi sertifikaati
-        ei leita, siis otsitakse vastuses olevate sertifikaatide hulgast
-        selline, mis on antud välja sama väljastaja poolt, mis kontrollitav
-        sertifikaat, ning on lubatud OCSP vastuste signeerimiseks.
-
-:qualification.*.conf.signers:
-        Kohustuslik väli.
-        Kasutatakse ainult juhul kui ``qualification.*.protocol`` on ``tsp``
-        või ``tspreg``.
-
-        Ajatempliteenuseteenuse vastuse allkirjastamise sertifikaadid.
-
-:qualification.*.conf.delaytime:
-        Kohustuslik väli.
-        Kasutatakse ainult juhul kui ``qualification.*.protocol`` on ``tsp``
-        või ``tspreg``.
-
-        Maksimaalne ajanihe ajatempli loomise ja allkirjastamise vahel
-        sekundites.
-
-----
-
-:stats:
-        E-hääletuse statistika laadimise parameetrid.
-
-        Kõik statistika laadimise parameetrid määrab Korraldaja.
-
-:stats.url:
-        Kohustuslik väli.
-        E-hääletuse statistika laadimise URL.
-
-:stats.tlscert:
-        Kohustuslik väli.
-        E-hääletuse statistika laadimise serveri TLS-sertifikaat.
-
-:file:`technical.yaml`:
-
-.. literalinclude:: config-examples/technical.yaml
+.. literalinclude:: config-examples/example.technical.yaml
    :language: yaml
    :linenos:
 
-.. vim: sts=3 sw=3 et syntax=rst:
+.. vim:syntax=rst:

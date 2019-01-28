@@ -18,5 +18,4 @@ IVXV API
    stiilireeglid
    ivxvgoapi
    ivxvjavaapi
-
-.. vim: sts=3 sw=3 et:
+   translate

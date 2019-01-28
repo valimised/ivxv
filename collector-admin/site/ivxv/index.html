@@ -4,7 +4,7 @@ IVXV Internet voting framework
 Collector management service - Web interface - Index (overview) page
 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="et">
 
 <head>
     <meta charset="utf-8">
@@ -21,12 +21,6 @@ Collector management service - Web interface - Index (overview) page
     <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
     <!-- Custom Fonts -->
     <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
 </head>
 
 <body>
@@ -46,8 +40,8 @@ Collector management service - Web interface - Index (overview) page
             <ul class="nav navbar-top-links navbar-right">
                 <li class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                    <i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
-                </a>
+                        <i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
+                    </a>
                     <ul class="dropdown-menu dropdown-user" style="padding: 10px;">
                         <li><i class="fa fa-user fa-fw"></i> Kasutaja andmed</li>
                         <li>CN:&nbsp;<span id="user-cn"></span></li>
@@ -81,6 +75,9 @@ Collector management service - Web interface - Index (overview) page
                             <a href="ballot-box.html"><i class="fa fa-download fa-fw"></i> E-urn</a>
                         </li>
                         <li>
+                            <a href="config.html"><i class="fa fa-wrench fa-fw"></i> Seadistused</a>
+                        </li>
+                        <li>
                             <a href="log.html"><i class="fa fa-file-text fa-fw"></i> Logiraamat</a>
                         </li>
                         <li>
@@ -93,11 +90,16 @@ Collector management service - Web interface - Index (overview) page
             <!-- /.navbar-static-side -->
         </nav>
         <div id="page-wrapper">
+
             <div class="row">
                 <div class="col-lg-12">
                     <h1 class="page-header">Kogumisteenuse üldseisund</h1>
                 </div>
+                <!-- /.col-lg-12 -->
             </div>
+            <!-- /.row -->
+
+            <!-- Data loading status -->
             <div class="row">
                 <div class="col-lg-12">
                     <div class="panel panel-default">
@@ -107,16 +109,24 @@ Collector management service - Web interface - Index (overview) page
                     </div>
                 </div>
             </div>
+            <!-- /.row -->
+
             <!-- Error message panel -->
             <div id="common-error-msg" class="row" style="display: none;">
                 <div class="col-lg-12">
                     <div class="panel panel-red">
+                        <div class="panel-heading">
+                            Viga!
+                        </div>
                         <div class="panel-body">
                             <p>Veateade</p>
                         </div>
                     </div>
                 </div>
+                <!-- /.col-lg-12 -->
             </div>
+            <!-- /.row -->
+
             <div class="row">
                 <div id="electionid" style="display: none" class="col-lg-3 col-md-6">
                     <div class="panel panel-primary">
@@ -124,25 +134,27 @@ Collector management service - Web interface - Index (overview) page
                             <div class="row">
                                 <div class="col-xs-12">
                                     <div>Valimiste identifikaator:</div>
-                                    <div id="voting-id" class="fa-2x">&nbsp;</div>
+                                    <div id="election-id" class="fa-2x">&nbsp;</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <!-- /.col-lg-3 -->
                 <div class="col-lg-3 col-md-6">
-                    <div id="collector-status-panel" class="panel">
+                    <div id="collector-state-panel" class="panel">
                         <div class="panel-heading">
                             <div class="row">
                                 <div class="col-xs-12">
                                     <div>Kogumisteenuse seisund:</div>
-                                    <div id="collector-status" class="fa-2x"></div>
+                                    <div id="collector-state" class="fa-2x"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6">
+                <!-- /.col-lg-3 -->
+                <div id="voting-phase" class="col-lg-3 col-md-6">
                     <div class="panel panel-info">
                         <div class="panel-heading">
                             <div class="row">
@@ -158,6 +170,7 @@ Collector management service - Web interface - Index (overview) page
                         </ul>
                     </div>
                 </div>
+                <!-- /.col-lg-3 -->
                 <div class="col-lg-3 col-md-6">
                     <div id="voters-list-update-available" class="panel panel-yellow" style="display: none">
                         <div class="panel-heading">
@@ -176,6 +189,7 @@ Collector management service - Web interface - Index (overview) page
                         </a>
                     </div>
                 </div>
+                <!-- /.col-lg-3 -->
             </div>
             <!-- /.row -->
             <div class="row">
@@ -199,9 +213,23 @@ Collector management service - Web interface - Index (overview) page
                             Valimisnimekirjade seisundid ja versioonid:
                         </div>
                         <ul class="list-group">
-                            <li id="choiceslist" class="list-group-item"><strong>Valikute nimekiri:</strong> <span id="list-choices">-</span></li>
-                            <li id="choicesliststatus" class="list-group-item"><strong>Valikute nimekirja seisund:</strong> <span id="list-choices-status">-</span></li>
-                            <li id="voterslist" class="list-group-item"><strong>Valijate nimekirjad:</strong> haldusteenusesse laaditud <span id="list-voters-loaded">-</span>, rakendamise ootel <span id="list-voters-pending">-</span></li>
+                            <li id="choiceslist" class="list-group-item">
+                                <strong>Valikute nimekiri:</strong>
+                                <span id="list-choices">-</span></li>
+                            <li id="choicesliststatus" class="list-group-item">
+                                <strong>Valikute nimekirja seisund:</strong>
+                                <span id="list-choices-status">-</span></li>
+                            <li id="districtslist" class="list-group-item">
+                                <strong>Ringkondade nimekiri:</strong>
+                                <span id="list-districts">-</span>
+                            </li>
+                            <li id="districtsliststatus" class="list-group-item">
+                                <strong>Ringkondade nimekirja seisund:</strong>
+                                <span id="list-districts-status">-</span></li>
+                            <li id="voterslist" class="list-group-item">
+                                <strong>Valijate nimekirjad:</strong>
+                                haldusteenusesse laaditud <span id="list-voters-loaded">-</span>,
+                                rakendamise ootel <span id="list-voters-pending">-</span></li>
                             <div id="list-list"></div>
                         </ul>
                     </div>
@@ -210,6 +238,7 @@ Collector management service - Web interface - Index (overview) page
                 <!-- /.col-lg-6 -->
             </div>
             <!-- /.row -->
+
             <div class="row">
                 <div id="service_summary" style="display: none" class="col-lg-6">
                     <div class="panel panel-primary">
@@ -222,9 +251,11 @@ Collector management service - Web interface - Index (overview) page
                             <br/> Seadistatud: <span id="configured"></span>
                             <br/> Osaline tõrge: <span id="p_failure"></span>
                             <br/> Tõrge: <span id="failure"></span>
+                            <br/> Eemaldatud: <span id="removed"></span>
                         </div>
                     </div>
                 </div>
+                <!-- /.col-lg-6 -->
                 <div class="col-lg-6">
                     <div class="panel-group">
                         <div id="packagepanel" class="panel panel-danger">
@@ -235,7 +266,6 @@ Collector management service - Web interface - Index (overview) page
                             </div>
                             <!-- /.panel-heading -->
                             <div id="missing-debs-list" class="panel-group" style="margin-bottom:0px;"></div>
-                            <!-- /.table-responsive -->
                         </div>
                         <!-- /.panel -->
                         <div class="panel panel-primary">
@@ -244,18 +274,27 @@ Collector management service - Web interface - Index (overview) page
                             </div>
                             <!-- /.panel-heading -->
                         </div>
-                        <!-- /.table-responsive -->
+                        <!-- /.panel -->
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">
+                                Korraldused: <span id="command-count"></span>
+                                    haldusteenusesse laaditud <span id="commands-loaded">-</span>, rakendamise ootel <span id="commands-pending">-</span></li>
+                            </div>
+                            <!-- /.panel-heading -->
+                        </div>
+                        <!-- /.panel -->
                     </div>
-                    <!-- /.panel -->
+                    <!-- /.panel-group -->
                 </div>
+                <!-- /.col-lg-6 -->
             </div>
-            <!-- /.col-lg-6 -->
+            <!-- /.row -->
+
         </div>
-        <!-- /.row -->
-    </div>
-    <!-- /#page-wrapper -->
+        <!-- /#page-wrapper -->
     </div>
     <!-- /#wrapper -->
+
     <!-- jQuery -->
     <script src="../vendor/jquery/jquery.min.js"></script>
     <!-- Bootstrap Core JavaScript -->
@@ -266,175 +305,16 @@ Collector management service - Web interface - Index (overview) page
     <script src="../dist/js/sb-admin-2.js"></script>
     <!-- IVXV JavaScript -->
     <script src="../js/ivxv.js"></script>
+    <!-- Page related JavaScript -->
+    <script src="../js/index.js"></script>
     <!-- Page-Level Scripts -->
     <script>
     $(document).ready(function() {
         getContextData();
+        loadPageData();
+        setInterval(loadPageData, 5000);
     });
-
-    function loadPageData() {
-        loadStatus();
-    }
-
-    function loadStatus() {
-        var states = {
-            'NOT INSTALLED': ['Paigaldamata', 'warning', 0],
-            'INSTALLED': ['Paigaldatud', '', 0],
-            'CONFIGURED': ['Seadistatud', 'success', 0],
-            'PARTIAL FAILURE': ['Osaline tõrge', 'danger', 0],
-            'FAILURE': ['Tõrge', 'danger', 0]
-        };
-        var phases = {
-            'PREPARING': 'Ettevalmistamine',
-            'WAITING FOR SERVICE START': 'Teenuse käivitamise ootamine',
-            'WAITING FOR ELECTION START': 'Valimise alguse ootamine',
-            'ELECTION': 'Häälte kogumine',
-            'WAITING FOR SERVICE STOP': 'Teenuse seiskamise ootamine',
-            'FINISHED': 'Lõpetatud'
-        };
-        var loadDate = new Date();
-        loadDate.setTime(Date.now());
-
-        $.getJSON('data/status.json', function(status) {
-                hideErrorMessage();
-
-                if (status['election']['election-id']) {
-                    $('#electionid').show();
-                }
-
-                $('#collector-status').html(status['collector']['status'] in states ? states[status['collector']['status']][0] : 'Tundmatu');
-                $('#collector-status-panel')
-                    .removeClass('panel-danger')
-                    .removeClass('panel-warning')
-                    .removeClass('panel-success')
-                    .addClass(status['collector']['status'] in states ? 'panel-' + states[status['collector']['status']][1] : 'panel-danger');
-
-                $('#voting-id').text(status['election']['election-id']);
-                $('#voting-stage').text(status['election']['phase'] in phases ? phases[status['election']['phase']] : 'Tundmatu1');
-                $('#voting-stage-start').text(status['election']['phase-start']);
-                $('#voting-stage-end').text(status['election']['phase-end']);
-
-                $('#trust').addClass('list-group-item-warning').removeClass('list-group-item-success');
-                if (status['config']['trust']) {
-                    $('#config-trust').text(status['config']['trust']);
-                    $('#trust').removeClass('list-group-item-warning').addClass('list-group-item-success');
-                }
-                $('#tech').addClass('list-group-item-warning').removeClass('list-group-item-success');
-                if (status['config']['technical']) {
-                    $('#config-tech').text(status['config']['technical']);
-                    $('#tech').removeClass('list-group-item-warning').addClass('list-group-item-success');
-                }
-                $('#election').addClass('list-group-item-warning').removeClass('list-group-item-success');
-                if (status['config']['election']) {
-                    $('#config-election').text(status['config']['election']);
-                    $('#election').removeClass('list-group-item-warning').addClass('list-group-item-success');
-                }
-
-                $('#list-choices').text(status['list']['choices'] ? status['list']['choices'] : '-');
-                $('#list-voters-loaded').text(status['list']['voters-list-loaded']);
-                $('#list-voters-pending').text(status['list']['voters-list-pending']);
-                if (!status['list']['choices']) {
-                    $('#list-choices-status').text('Laadimata');
-                    $('#choiceslist').addClass('list-group-item-danger').removeClass('list-group-item-success')
-                        .removeClass('list-group-item-warning');
-                    $('#choicesliststatus').addClass('list-group-item-danger').removeClass('list-group-item-success')
-                        .removeClass('list-group-item-warning');
-                } else if (status['list']['choices'] && !status['list']['choices-loaded']) {
-                    $('#list-choices-status').text('Laaditud haldusteenusesse');
-                    $('#choiceslist').addClass('list-group-item-warning').removeClass('list-group-item-success')
-                        .removeClass('list-group-item-danger');
-                    $('#choicesliststatus').addClass('list-group-item-warning').removeClass('list-group-item-success')
-                        .removeClass('list-group-item-danger');
-                } else if (status['list']['choices'] === status['list']['choices-loaded']) {
-                    $('#list-choices-status').text('Rakendatud kogumisteenusele');
-                    $('#choiceslist').addClass('list-group-item-success').removeClass('list-group-item-danger')
-                        .removeClass('list-group-item-warning');
-                    $('#choicesliststatus').addClass('list-group-item-success').removeClass('list-group-item-danger')
-                        .removeClass('list-group-item-warning');
-                }
-
-                if (status['list']['voters-list-loaded'] === 0) {
-                    $('#voterslist').addClass('list-group-item-danger').removeClass('list-group-item-success');
-                } else if (status['list']['voters-list-loaded'] !== 0 && status['list']['voters-list-pending'] === 0) {
-                    $('#voterslist').addClass('list-group-item-success').removeClass('list-group-item-danger');
-
-                    $('#list-list').empty();
-                    for (var i = 0; i < status['list']['voters-list-loaded']; i++) {
-                        var iStr = i < 10 ? '0' + (i + 1) : (i + 1);
-                        var listStatus = status['list']['voters' + iStr] === status['list']['voters' + iStr + '-loaded'] ? 'LAADITUD' : 'OOTEL';
-                        $('#list-list').append(
-                            '<li class="list-group-item list-group-item-success" style="padding-left:25px">' +
-                            (i + 1) + '. ' + listStatus + ': ' + status['list']['voters' + iStr] +
-                            '</li>'
-                        );
-                    }
-                } else {
-                    $('#voterslist').addClass('list-group-item-warning').removeClass('list-group-item-danger')
-                        .removeClass('list-group-item-success');
-                }
-
-                $('#debs-exist-count').text(status['storage']['debs_exists'].length);
-                if (status['storage']['debs_missing'].length === 0) {
-                    $('#packagepanel').removeClass('panel-danger').addClass('panel-success')
-                } else {
-                    $('#packagepanel').removeClass('panel-success').addClass('panel-danger')
-                }
-                $('#debs-missing-count').text(status['storage']['debs_missing'].length);
-
-                var usercount = 0;
-                if (status['user']) {
-                    usercount = Object.keys(status['user']).length;
-                }
-                $('#user-count').text(usercount);
-
-                $('#missing-debs-list').empty();
-                for (var i = 0; i < status['storage']['debs_missing'].length; i++) {
-                    $('#missing-debs-list').append(
-                        '<div class="panel panel-danger">' +
-                        '<div class="panel-heading">' +
-                        status['storage']['debs_missing'][i] +
-                        '</div>' +
-                        '</div>'
-                    );
-                }
-
-                var serviceexists = false;
-                $.each(status['service'], function(serviceName, service) {
-                    if (service['state'] in states) {
-                        states[service['state']][2]++;
-                        serviceexists = true;
-                    }
-                });
-                if (serviceexists) {
-                    $('#service_summary').show();
-                    $('#not_installed').html(states['NOT INSTALLED'][2]);
-                    $('#configured').html(states['CONFIGURED'][2]);
-                    $('#installed').html(states['INSTALLED'][2]);
-                    $('#failure').html(states['FAILURE'][2]);
-                    $('#p_failure').html(states['PARTIAL FAILURE'][2]);
-                }
-
-                var genDate = new Date();
-                genDate.setTime(Date.parse(status['meta']['time_generated']));
-                $('#loadstatus')
-                    .removeClass('text-danger')
-                    .addClass('text-info')
-                    .html('Andmete laadimise aeg: ' + formatTime(loadDate, 0) + '<br />' +
-                        'Andmete genereerimise aeg: ' + formatTime(genDate, 3));
-            })
-            .fail(function() {
-                $('#loadstatus')
-                    .removeClass('text-info')
-                    .addClass('text-danger')
-                    .html('Viga andmete laadimisel: ' + formatTime(loadDate, 0));
-                showErrorMessage('Viga seisundi laadimisel', true);
-            });
-        setTimeout(loadStatus, 5000);
-    }
     </script>
 </body>
 
 </html>
-<!--
-vim:sts=4 sw=4 et:
--->

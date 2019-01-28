@@ -13,20 +13,28 @@ import ee.ivxv.common.model.LName;
 import ee.ivxv.common.model.Voter;
 import ee.ivxv.common.model.VoterList;
 import ee.ivxv.common.service.bbox.BboxHelper;
+import ee.ivxv.common.service.bbox.BboxHelper.RegDataRef;
 import ee.ivxv.common.service.bbox.BboxHelper.VoterProvider;
 import ee.ivxv.common.service.bbox.InvalidBboxException;
+import ee.ivxv.common.service.bbox.Ref;
+import ee.ivxv.common.service.bbox.Ref.RegRef;
 import ee.ivxv.common.service.bbox.Result;
+import ee.ivxv.common.service.container.Container;
+import ee.ivxv.common.service.container.DataFile;
 import ee.ivxv.common.service.i18n.MessageException;
+import ee.ivxv.common.util.ContainerHelper;
 import ee.ivxv.common.util.I18nConsole;
 import ee.ivxv.common.util.ToolHelper;
 import ee.ivxv.common.util.log.PerformanceLog;
 import ee.ivxv.processor.Msg;
 import ee.ivxv.processor.ProcessorContext;
 import ee.ivxv.processor.tool.CheckTool.CheckArgs;
+import ee.ivxv.processor.util.DistrictsMapper;
 import ee.ivxv.processor.util.ReportHelper;
 import ee.ivxv.processor.util.VotersUtil;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -62,19 +70,25 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
         VoterProvider vp = getVoterProvider(args, dl);
         reporter.writeVlErrors(args.out.value());
 
+        boolean signed = args.bbChecksum.isSet();
+        if (!signed) {
+            console.println(Msg.m_bb_unsigned_skipping_output);
+        }
+
         BallotBox bb = readBallotBox(args, vp, dl.getElection());
         reporter.writeBbErrors(args.out.value());
 
         reporter.writeLog1(args.out.value(), bb);
 
-        tool.writeJsonBb(bb, args.out.value().resolve(OUT_BB));
-
+        if (signed) {
+            tool.writeJsonBb(bb, args.out.value().resolve(OUT_BB));
+        }
         return true;
     }
 
-    private VoterProvider getVoterProvider(CheckArgs args, DistrictList dl) {
+    private VoterProvider getVoterProvider(CheckArgs args, DistrictList dl) throws Exception {
         if (args.voterLists.isSet()) {
-            VoterList vl = readVoterLists(args, dl);
+            VoterList vl = readVoterLists(args, dl, getDistrictsMapper(args.distMapping.value()));
             return vl::find;
         }
 
@@ -98,7 +112,22 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
         return (vid, version) -> new Voter(vid, voterName, null, district, station, null);
     }
 
-    private VoterList readVoterLists(CheckArgs args, DistrictList dl) {
+    private DistrictsMapper getDistrictsMapper(Path path) throws Exception {
+        if (path == null) {
+            return new DistrictsMapper();
+        }
+        console.println();
+        console.println(Msg.m_dist_mapping_loading, path);
+        ctx.container.requireContainer(path);
+        Container c = ctx.container.read(path.toString());
+        ContainerHelper ch = new ContainerHelper(console, c);
+        DataFile file = ch.getSingleFileAndReport(Msg.m_dist_mapping_arg_for_cont);
+        console.println(Msg.m_dist_mapping_loaded, path);
+
+        return new DistrictsMapper(file.getStream());
+    }
+
+    private VoterList readVoterLists(CheckArgs args, DistrictList dl, DistrictsMapper mapper) {
         if (!args.vlKey.isSet()) {
             throw new MessageException(Msg.e_vl_vlkey_missing);
         }
@@ -106,7 +135,7 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
         console.println();
         console.println(Msg.m_vl_reading);
         VotersUtil.Loader loader =
-                VotersUtil.getLoader(args.vlKey.value(), dl, reporter::reportVlErrors);
+                VotersUtil.getLoader(args.vlKey.value(), dl, mapper, reporter::reportVlErrors);
 
         console.println();
         console.println(Msg.m_read);
@@ -125,16 +154,20 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
 
     private BallotBox readBallotBox(CheckArgs args, VoterProvider vp, String eid) throws Exception {
         try {
-            tool.checkBbChecksum(args.bb.value(), args.bbChecksum.value());
-            tool.checkRegChecksum(args.rl.value(), args.rlChecksum.value());
+            if (args.bbChecksum.isSet()) {
+                tool.checkBbChecksum(args.bb.value(), args.bbChecksum.value());
+            }
+            if (args.rl.isSet()) {
+                if (!args.rlChecksum.isSet()) {
+                    throw new MessageException(Msg.e_reg_checksum_missing);
+                }
+                tool.checkRegChecksum(args.rl.value(), args.rlChecksum.value());
+            }
 
             int tc = ctx.args.threads.value();
             BboxHelper.Loader<?> loader =
                     ctx.bbox.getLoader(args.bb.value(), console::startProgress, tc);
 
-            PerformanceLog.log
-                    .info("Starting b-box loader. Num-of threads for container service: {}; "
-                            + "num-of threads for BallotBox service: {}", ctx.args.ct.value(), tc);
             BallotBox bb = load(args, vp, eid, loader);
 
             console.println(M.m_bb_total_checked_ballots, bb.getNumberOfBallots());
@@ -147,8 +180,26 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
 
     private <T> BallotBox load(CheckArgs args, VoterProvider vp, String eid,
             BboxHelper.Loader<T> loader) {
+        boolean haveRegData = args.rl.isSet();
         BboxHelper.BallotsChecked<T> bc = getCheckedBallots(args.bb.value(), vp, args.tsKey.value(),
-                args.elStart.value(), loader);
+                args.elStart.value(), loader, (ref, res, va) -> {
+                    // Ignore BALLOT_WITHOUT_REG_REQ if there is no registration data.
+                    if (haveRegData || res != Result.BALLOT_WITHOUT_REG_REQ) {
+                        reporter.reportBbError(ref, res, va);
+                    }
+                });
+
+        if (!haveRegData) {
+            console.println();
+            console.println(Msg.m_reg_skipping_compare);
+
+            // Even if there is no reg data, we still need to run checkRegData,
+            // because we cannot skip ballotbox stages.
+            console.println();
+            console.println(Msg.m_bb_grouping_votes_by_voter);
+            return exec(() -> bc.checkRegData(new EmptyRegDataLoaderResult<T>())).getBallotBox(eid);
+        }
+
         BboxHelper.RegDataLoaderResult<T> rdlr = getRegData(args.rl.value(), loader);
 
         console.println();
@@ -170,15 +221,16 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
     }
 
     private <T> BboxHelper.BallotsChecked<T> getCheckedBallots(Path path, VoterProvider vp,
-            PublicKeyHolder tsKey, Instant elStart, BboxHelper.Loader<T> l) {
+            PublicKeyHolder tsKey, Instant elStart, BboxHelper.Loader<T> l,
+            BboxHelper.Reporter<Ref.BbRef> reporter) {
         console.println();
         console.println(M.m_bb_loading, path);
-        BboxHelper.BboxLoader<T> loader =
-                exec(() -> l.getBboxLoader(path, reporter::reportBbError));
+        BboxHelper.BboxLoader<T> loader = exec(() -> l.getBboxLoader(path, reporter));
         console.println(M.m_bb_loaded);
         console.println(M.m_bb_checking_type);
         // If no error has occurred so far, the file structure must be correct and type UNORGANIZED
         console.println(M.m_bb_type, BallotBox.Type.UNORGANIZED);
+        console.println(M.m_bb_numof_collector_ballots, loader.getNumberOfValidBallots());
 
         console.println(M.m_bb_checking_integrity);
         BboxHelper.IntegrityChecked<T> ic = exec(() -> loader.checkIntegrity());
@@ -231,17 +283,41 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
         log.info("{} #Invalid: {}", name, stage.getNumberOfInvalidBallots());
     }
 
+    static class EmptyRegDataLoaderResult<T> implements BboxHelper.RegDataLoaderResult<T> {
+        @Override
+        public int getNumberOfValidBallots() {
+            return 0;
+        }
+
+        @Override
+        public int getNumberOfInvalidBallots() {
+            return 0;
+        }
+
+        @Override
+        public void report(RegRef ref, Result res, Object... args) {
+            // Ignore any errors.
+        }
+
+        @Override
+        public Map<Object, RegDataRef<T>> getRegData() {
+            return new LinkedHashMap<>();
+        }
+    }
+
     public static class CheckArgs extends Args {
 
         Arg<Path> bb = Arg.aPath(Msg.arg_ballotbox, true, false);
-        Arg<Path> bbChecksum = Arg.aPath(Msg.arg_ballotbox_checksum, true, false);
+        Arg<Path> bbChecksum = Arg.aPath(Msg.arg_ballotbox_checksum, true, false).setOptional();
         Arg<Path> districts = Arg.aPath(Msg.arg_districts, true, false);
-        Arg<Path> rl = Arg.aPath(Msg.arg_registrationlist, true, false);
-        Arg<Path> rlChecksum = Arg.aPath(Msg.arg_registrationlist_checksum, true, false);
+        Arg<Path> rl = Arg.aPath(Msg.arg_registrationlist, true, false).setOptional();
+        Arg<Path> rlChecksum =
+                Arg.aPath(Msg.arg_registrationlist_checksum, true, false).setOptional();
         Arg<PublicKeyHolder> tsKey = Arg.aPublicKey(Msg.arg_tskey, TS_KEY_ALG_ID);
         Arg<PublicKeyHolder> vlKey = Arg.aPublicKey(Msg.arg_vlkey, VL_KEY_ALG_ID).setOptional();
         Arg<List<VoterListEntry>> voterLists =
                 new TreeList<>(Msg.arg_voterlists, VoterListEntry::new).setOptional();
+        Arg<Path> distMapping = Arg.aPath(Msg.arg_districts_mapping, true, false).setOptional();
         Arg<Instant> elStart = Arg.anInstant(Msg.arg_election_start);
 
         Arg<Path> out = Arg.aPath(Msg.arg_out, false, null);
@@ -255,6 +331,7 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
             args.add(tsKey);
             args.add(vlKey);
             args.add(voterLists);
+            args.add(distMapping);
             args.add(elStart);
             args.add(out);
         }

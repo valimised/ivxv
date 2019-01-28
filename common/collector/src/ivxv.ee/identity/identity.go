@@ -6,6 +6,7 @@ package identity // import "ivxv.ee/identity"
 
 import (
 	"crypto/x509/pkix"
+	"strings"
 	"sync"
 )
 
@@ -16,6 +17,7 @@ type Type string
 const (
 	CommonName   Type = "commonname"   // Built-in.
 	SerialNumber      = "serialnumber" // Built-in.
+	PNOEE             = "pnoee"        // Built-in.
 )
 
 // Identifier is the type of functions that extract unique identifiers from
@@ -27,6 +29,7 @@ var (
 	registry = map[Type]Identifier{
 		CommonName:   commonName,
 		SerialNumber: serialNumber,
+		PNOEE:        pnoee,
 	}
 )
 
@@ -71,4 +74,15 @@ func serialNumber(name *pkix.Name) (id string, err error) {
 		err = EmptySerialError{}
 	}
 	return
+}
+
+// pnoee returns the SerialNumber from a Distinguished Name after removing an
+// optional PNOEE- prefix. The prefix denotes the Estonian national personal
+// number in accordance with ETSI EN 319 412-1 section 5.1.3.
+func pnoee(name *pkix.Name) (id string, err error) {
+	if name == nil {
+		return "", PNOEEEmptyDNError{}
+	}
+	id, err = serialNumber(name)
+	return strings.TrimPrefix(id, "PNOEE-"), err
 }

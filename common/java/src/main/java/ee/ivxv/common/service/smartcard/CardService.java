@@ -20,4 +20,11 @@ public interface CardService {
      */
     Cards createCards();
 
+    /**
+     * Denotes if it is card service which handles physical cards which can be inserted and removed.
+     * 
+     * @return
+     */
+    boolean isPluggableService();
+
 }

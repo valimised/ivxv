@@ -34,7 +34,13 @@ case "$1" in
             a2dissite --quiet ivxv-admin-ui
         fi
 
-        systemctl restart apache2
+        deb-systemd-invoke restart apache2
+
+        # remove ivxv-admin crontab
+        if crontab -l -u ivxv-admin > /dev/null; then
+            echo "# Removing crontab for user ivxv-admin"
+            crontab -r -u ivxv-admin
+        fi
     ;;
 
     purge)
@@ -68,5 +74,3 @@ esac
 #DEBHELPER#
 
 exit 0
-
-# vim:sts=4 sw=4 et:

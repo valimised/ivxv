@@ -1,10 +1,10 @@
 <!--
 IVXV Internet voting framework
 
-Collector management service - Web interface - Services management page
+Collector management service - Web interface - Services overview page
 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="et">
 
 <head>
     <meta charset="utf-8">
@@ -17,20 +17,10 @@ Collector management service - Web interface - Services management page
     <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <!-- MetisMenu CSS -->
     <link href="../vendor/metisMenu/metisMenu.min.css" rel="stylesheet">
-    <!-- DataTables CSS -->
-    <link href="../vendor/datatables-plugins/dataTables.bootstrap.css" rel="stylesheet">
-    <!-- DataTables Responsive CSS -->
-    <link href="../vendor/datatables-responsive/dataTables.responsive.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
     <!-- Custom Fonts -->
     <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
 </head>
 
 <body>
@@ -50,8 +40,8 @@ Collector management service - Web interface - Services management page
             <ul class="nav navbar-top-links navbar-right">
                 <li class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                    <i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
-                </a>
+                        <i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
+                    </a>
                     <ul class="dropdown-menu dropdown-user" style="padding: 10px;">
                         <li><i class="fa fa-user fa-fw"></i> Kasutaja andmed</li>
                         <li>CN:&nbsp;<span id="user-cn"></span></li>
@@ -85,6 +75,9 @@ Collector management service - Web interface - Services management page
                             <a href="ballot-box.html"><i class="fa fa-download fa-fw"></i> E-urn</a>
                         </li>
                         <li>
+                            <a href="config.html"><i class="fa fa-wrench fa-fw"></i> Seadistused</a>
+                        </li>
+                        <li>
                             <a href="log.html"><i class="fa fa-file-text fa-fw"></i> Logiraamat</a>
                         </li>
                         <li>
@@ -97,12 +90,16 @@ Collector management service - Web interface - Services management page
             <!-- /.navbar-static-side -->
         </nav>
         <div id="page-wrapper">
+
             <div class="row">
                 <div class="col-lg-12">
-                    <h1 class="page-header">Kogumisteenuse teenused</h1>
+                    <h1 class="page-header">Hallatavad teenused</h1>
                 </div>
                 <!-- /.col-lg-12 -->
             </div>
+            <!-- /.row -->
+
+            <!-- Data loading status -->
             <div class="row">
                 <div class="col-lg-12">
                     <div class="panel panel-default">
@@ -113,6 +110,7 @@ Collector management service - Web interface - Services management page
                 </div>
             </div>
             <!-- /.row -->
+
             <!-- Error message panel -->
             <div id="common-error-msg" class="row" style="display: none;">
                 <div class="col-lg-12">
@@ -128,6 +126,7 @@ Collector management service - Web interface - Services management page
                 <!-- /.col-lg-12 -->
             </div>
             <!-- /.row -->
+
             <div class="row">
                 <div class="col-lg-12">
                     <div class="panel panel-info">
@@ -138,11 +137,12 @@ Collector management service - Web interface - Services management page
                             Paigaldamata: <span id="not_installed"></span>
                             <br/> Paigaldatud: <span id="installed"></span>
                             <br/> Seadistatud: <span id="configured"></span>
-                            <br/> Osaline tõrge: <span id="p_failure"></span>
                             <br/> Tõrge: <span id="failure"></span>
+                            <br/> Eemaldatud: <span id="removed"></span>
                         </div>
                     </div>
                 </div>
+                <!-- /.col-lg-12 -->
                 <div id="service_list_table" style="display: none;" class="col-lg-12">
                     <div class="panel panel-info">
                         <div class="panel-heading">
@@ -165,294 +165,35 @@ Collector management service - Web interface - Services management page
                         </div>
                     </div>
                 </div>
-            </div>
-            <!-- /.row -->
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="panel panel-info">
-                        <div class="panel-heading">
-                            Seadistuste rakendamine
-                        </div>
-                        <div id="collapseTwo">
-                            <div class="panel-body">
-                                <div class="alert alert-info">
-                                    Käesoleva vormi abil toimub seadistuste üleslaadimine ja rakendamine kogumisteenusele.
-                                </div>
-                                <div id="upload-message" class="alert alert-danger" style="display: none">
-                                    Faili üleslaadimise veateade
-                                </div>
-                                <form id="config-upload-form" action="/ivxv/cgi/upload-config" method="post" enctype="multipart/form-data">
-                                    <div class="form-group">
-                                        <div class="form-group">
-                                            <label>Teenuse seadistusfail</label>
-                                            <input type="file" name="upload" />
-                                        </div>
-                                    </div>
-                                    <div class="dropdown">
-                                        Seadistuse tüüp:
-                                        <br />
-                                        <select id="drop">
-                                            <option value="technical">Tehniline seadistus</option>
-                                            <option value="election">Valimiste seadistus</option>
-                                        </select>
-                                    </div>
-                                    <button id="file-upload-submit" class="btn btn-primary">Rakenda seadistused</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- /.panel -->
-                </div>
                 <!-- /.col-lg-12 -->
             </div>
             <!-- /.row -->
+
         </div>
         <!-- /#page-wrapper -->
     </div>
     <!-- /#wrapper -->
+
     <!-- jQuery -->
     <script src="../vendor/jquery/jquery.min.js"></script>
     <!-- Bootstrap Core JavaScript -->
     <script src="../vendor/bootstrap/js/bootstrap.min.js"></script>
     <!-- Metis Menu Plugin JavaScript -->
     <script src="../vendor/metisMenu/metisMenu.min.js"></script>
-    <!-- DataTables JavaScript -->
-    <script src="../vendor/datatables/js/jquery.dataTables.min.js"></script>
-    <script src="../vendor/datatables-plugins/dataTables.bootstrap.min.js"></script>
-    <script src="../vendor/datatables-responsive/dataTables.responsive.js"></script>
     <!-- Custom Theme JavaScript -->
     <script src="../dist/js/sb-admin-2.js"></script>
     <!-- IVXV JavaScript -->
     <script src="../js/ivxv.js"></script>
+    <!-- Page related JavaScript -->
+    <script src="../js/services.js"></script>
     <!-- Page-Level Scripts -->
     <script>
     $(document).ready(function() {
         getContextData();
-        reset_upload_form();
-        loadStatus();
-        // set handler for file uploads
-        $('input[type=file]').on('change', prepareUpload);
-        $('#config-upload-form').on('submit', uploadFiles);
+        loadPageData();
+        setInterval(loadPageData, 15000);
     });
-
-    function loadStatus() {
-        var states = {
-            'NOT INSTALLED': ['Paigaldamata', 'warning', 0],
-            'INSTALLED': ['Paigaldatud', '', 0],
-            'CONFIGURED': ['Seadistatud', 'success', 0],
-            'PARTIAL FAILURE': ['Osaline tõrge', 'danger', 0],
-            'FAILURE': ['Tõrge', 'danger', 0]
-        };
-        var service_types = {
-            'choices': 'Nimekirjateenus',
-            'dds': 'Mobiil-ID abiteenus',
-            'proxy': 'Vahendusteenus',
-            'storage': 'Talletusteenus',
-            'log': 'Logikogumisteenus',
-            'voting': 'Hääletamisteenus',
-            'verification': 'Kontrollteenus'
-        };
-        var loadDate = new Date();
-        loadDate.setTime(Date.now());
-
-        $.getJSON('data/status.json', function(status) {
-            hideErrorMessage();
-
-            var i = 1;
-            if (status['service']) {
-                $('#service_list_table').show();
-            }
-
-            $('#services-list').empty();
-            $.each(status['service'], function(k, v) {
-                var zone = 'Tundmatu';
-                var state = 'Tundmatu';
-                var status_class = 'warning';
-                var service_type = v['service-type'] in service_types ? service_types[v['service-type']] : 'Tundmatu';
-                var show_hint = 'Hint' in status['service'][k] ? '' : 'display: none';
-                var show_mobile = 'dds-token-key' in status['service'][k] ? '' : 'display: none';
-                var show_tlskey = 'tls-key' in status['service'][k] ? '' : 'display: none';
-                var show_tlscert = 'tls-cert' in status['service'][k] ? '' : 'display: none';
-                var lastdata = status['service'][k]['last-data'] ? status['service'][k]['last-data'] : '-';
-                var econf = status['service'][k]['election-conf-version'] ? status['service'][k]['election-conf-version'] : '-';
-                var tlsc = status['service'][k]['tls-cert'] ? status['service'][k]['tls-cert'] : '-';
-                var tlsk = status['service'][k]['tls-key'] ? status['service'][k]['tls-cert'] : '-';
-                var ddsk = status['service'][k]['dds-token-key'] ? status['service'][k]['dds-token-key'] : '-';
-                var pingerr = status['service'][k]['ping-errors'] ? status['service'][k]['ping-errors'] : '-';
-                var hint = status['service'][k]['Hint'] ? status['service'][k]['Hint'] : '-';
-                var tconf = status['service'][k]['technical-conf-version'] ? status['service'][k]['technical-conf-version'] : '-';
-                var ipaddr = status['service'][k]['ip-address'] ? status['service'][k]['ip-address'] : '-';
-
-                // Service field in json doesn't have info about its zone, have to find it by going through all of them
-                $.each(status['network'], function(network_key, network_value) {
-                    if (k in network_value) {
-                        zone = network_key;
-                        return false;
-                    }
-                });
-
-                if (v['state'] in states) {
-                    states[v['state']][2]++;
-                    state = states[v['state']][0];
-                    status_class = states[v['state']][1];
-                }
-
-                $('#services-list').append(
-                    '<tr class="' + status_class + '" onclick="console.log($(this).next().toggle())">' +
-                    '<td>' + i + '</td>' +
-                    '<td>' + k + '</td>' +
-                    '<td>' + zone + '</td>' +
-                    '<td>' + service_type + '</td>' +
-                    '<td>' + state + '</td>' +
-                    '</tr>' +
-                    '<tr class="warning" style="display: none;">' +
-                    '<td colspan="5">' +
-                    '<table class="table table-striped">' +
-                    '<tbody>' +
-                    '<tr style="' + show_hint + ';">' +
-                    '<td align="right" width="20%">Vihje:</td>' +
-                    '<td>' + hint + '</td>' +
-                    '</tr>' +
-                    '<tr>' +
-                    '<td align="right">Vigade arv:</td>' +
-                    '<td>' + pingerr + '</td>' +
-                    '</tr>' +
-                    '<tr>' +
-                    '<td align="right">Viimane kontroll:</td>' +
-                    '<td>' + lastdata + '</td>' +
-                    '</tr>' +
-                    '<tr>' +
-                    '<td align="right">Tehniline seadistus:</td>' +
-                    '<td>' + tconf + '</td>' +
-                    '</tr>' +
-                    '<tr>' +
-                    '<td align="right">Valimiste seadistus:</td>' +
-                    '<td>' + econf + '</td>' +
-                    '</tr>' +
-                    '<tr>' +
-                    '<td align="right">IP-aaddress:</td>' +
-                    '<td>' + ipaddr + '</td>' +
-                    '</tr>' +
-                    '<tr style="' + show_tlscert + ';">' +
-                    '<td align="right">TLS-sertifikaat:</td>' +
-                    '<td>' + tlsc + '</td>' +
-                    '</tr>' +
-                    '<tr style="' + show_tlskey + ';">' +
-                    '<td align="right">TLS-võti:</td>' +
-                    '<td>' + tlsk + '</td>' +
-                    '</tr>' +
-                    '<tr style="' + show_mobile + ';">' +
-                    '<td align="right">Mobiil-ID krüptimissaladus:</td>' +
-                    '<td>' + ddsk + '</td>' +
-                    '</tr>' +
-                    '</tbody>' +
-                    '</table>' +
-                    '</td>' +
-                    '</tr>'
-                );
-                i++;
-
-                var genDate = new Date();
-                genDate.setTime(Date.parse(status['meta']['time_generated']));
-                $('#loadstatus')
-                    .removeClass('text-danger')
-                    .addClass('text-info')
-                    .html('Andmete laadimise aeg: ' + formatTime(loadDate, 0) + '<br />' +
-                        'Andmete genereerimise aeg: ' + formatTime(genDate, 3));
-            })
-        }).done(function() {
-            $('#not_installed').html(states['NOT INSTALLED'][2]);
-            $('#configured').html(states['CONFIGURED'][2]);
-            $('#installed').html(states['INSTALLED'][2]);
-            $('#failure').html(states['FAILURE'][2]);
-            $('#p_failure').html(states['PARTIAL FAILURE'][2]);
-        }).fail(function() {
-            $('#loadstatus')
-                .removeClass('text-info')
-                .addClass('text-danger')
-                .html('Viga andmete laadimisel: ' + formatTime(loadDate, 0));
-            showErrorMessage('Viga seisundi laadimisel', true);
-        });
-        setTimeout(loadStatus, 15000);
-    }
-
-    // Reset upload form
-    function reset_upload_form() {
-        $('input[type=file]').val(null);
-        $('#file-upload-submit').attr('disabled', '');
-    }
-
-    // Variable to store uploaded files
-    var files;
-
-    // Grab the files and set them to our variable
-    function prepareUpload(event) {
-        files = event.target.files;
-        $('#file-upload-submit').attr('disabled', null);
-        $('#upload-message').hide();
-    }
-
-    // Catch the form submit and upload the files
-    function uploadFiles(event) {
-        $('#upload-message').hide()
-            .removeClass('alert-danger')
-            .removeClass('alert-danger')
-            .removeClass('alert-success');
-
-        event.stopPropagation(); // Stop stuff happening
-        event.preventDefault(); // Totally stop stuff happening
-        // Create a formdata object and add the files
-        var data = new FormData();
-        data.append('upload', files[0]);
-        data.append('type', $("#drop").find(":selected").val());
-
-        var form = $('#config-upload-form');
-        $.ajax({
-            url: form.attr('action'),
-            type: form.attr('method'),
-            data: data,
-            cache: false,
-            dataType: 'json',
-            processData: false, // Don't process the files
-            contentType: false, // Set content type to false as jQuery will tell the server its a query string request
-            success: function(data, textStatus, jqXHR) {
-                if (data.error === undefined) {
-                    // Success so call function to process the form
-                    console.log(jqXHR.responseJSON.message);
-                    if (jqXHR.responseJSON.message !== undefined) {
-                        $('#upload-message').html(jqXHR.responseJSON.message)
-                            .addClass('alert-success');
-                    } else {
-                        $('#upload-message').html(data)
-                            .addClass('alert-danger');
-                    }
-                    reset_upload_form();
-                } else {
-                    // Handle errors here
-                    console.log('ERRORS: ' + data.error);
-                    $('#upload-message').html('Tundmatu viga')
-                        .addClass('alert-danger');
-                }
-                loadStatus();
-                $('#upload-message').show();
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                // Handle errors here
-                if (jqXHR.responseJSON === undefined) {
-                    console.log(jqXHR);
-                    $('#upload-message').html((jqXHR.responseText));
-                } else {
-                    console.log(jqXHR.responseJSON.message);
-                    $('#upload-message').html(jqXHR.responseJSON.message)
-                }
-                $('#upload-message').addClass('alert-danger').show();
-            }
-        });
-    }
     </script>
 </body>
 
 </html>
-<!--
-vim:sts=4 sw=4 et:
--->

@@ -20,27 +20,30 @@ import (
 func mkflag(name, value, desc string) *string {
 	return flag.String(name, fmt.Sprint("/etc/ivxv/", value),
 		fmt.Sprintf("`path` to the %s container. Must have an extension\n"+
-			"    \tcorresponding to the container type it is, e.g., %s.\n"+
-			"    \t", desc, value)) // New line for printing the default value.
+			"corresponding to the container type it is, e.g., %s.\n",
+			desc, value)) // New line for printing the default value.
 }
 
 func mkusage(usage string, args ...string) func() {
+	flag.CommandLine.VisitAll(func(f *flag.Flag) {
+		f.Usage = IndentUsage(f.Usage)
+	})
+
+	var argbuf bytes.Buffer
+	for _, arg := range args {
+		argbuf.WriteString(" <")
+		argbuf.WriteString(arg)
+		argbuf.WriteString(">")
+	}
+	argstr := argbuf.String()
+
+	if len(usage) > 0 {
+		usage += "\n\n"
+	}
+
 	return func() {
-		var argstr bytes.Buffer
-		for _, arg := range args {
-			argstr.WriteString(" <")
-			argstr.WriteString(arg)
-			argstr.WriteString(">")
-		}
-
-		if len(usage) > 0 {
-			usage += "\n\n"
-		}
-
-		// nolint: gas, if writing to stderr returns an error, then we
-		// do not have any way to report it anyway.
 		fmt.Fprintf(os.Stderr, "usage: %s [options]%s\n\n%soptions:\n",
-			os.Args[0], &argstr, usage)
+			os.Args[0], argstr, usage)
 		flag.PrintDefaults()
 		os.Exit(exit.Usage)
 	}
@@ -78,7 +81,8 @@ type C struct {
 //
 // 1. It parses command line options and arguments, checking that all mandatory
 //    arguments are given. It uses usage and argument names from args for usage
-//    and error messages.
+//    and error messages. Note that arguments are only mandatory if c.Until is
+//    at least CheckInput and c.Args is nil otherwise.
 //
 // 2. It creates a context with a logger using the provided tag. It is the
 //    caller's responsibility to call log.Close with this context after the
@@ -120,8 +124,8 @@ func newC(tag string, usage string, withStorage bool, args ...string) (c *C) {
 	techp := mkflag("technical", "technical.bdoc", "technical configuration")
 	instancep := flag.String("instance", "",
 		"instance identifier for the service running this command.")
-	checkp := flag.String("check", "", "check `target` configuration, version, and/or "+
-		"input file and exit. target\n    \tmust be either "+
+	checkp := flag.String("check", "", "check `target` configuration, "+
+		"version, and/or input file and exit. target\nmust be either "+
 		`"trust", "technical", "election", "version", or "input".`)
 
 	flag.Usage = mkusage(usage, args...)
@@ -145,21 +149,20 @@ func newC(tag string, usage string, withStorage bool, args ...string) (c *C) {
 	case "":
 		c.Until = Execute
 	default:
-		// nolint: gas, if writing to stderr returns an error, then we
-		// do not have any way to report it anyway.
 		fmt.Fprintln(os.Stderr, `error: bad "check" value:`, *checkp)
 		flag.Usage()
 	}
 
 	switch m, n := flag.NArg(), len(args); {
 	case m < n:
-		// nolint: gas, if writing to stderr returns an error, then we
-		// do not have any way to report it anyway.
-		fmt.Fprintln(os.Stderr, "error: missing argument:", args[m])
-		flag.Usage()
+		// Only require arguments if at least checking input. Do not
+		// disallow them to maintain backwards-compatibility with when
+		// arguments were always mandatory.
+		if c.Until >= CheckInput {
+			fmt.Fprintln(os.Stderr, "error: missing argument:", args[m])
+			flag.Usage()
+		}
 	case m > n:
-		// nolint: gas, if writing to stderr returns an error, then we
-		// do not have any way to report it anyway.
 		fmt.Fprintln(os.Stderr, "error: extra argument:", flag.Arg(n))
 		flag.Usage()
 	default:
@@ -255,8 +258,12 @@ func (c *C) Error(code int, err log.ErrorEntry, a ...interface{}) int {
 		log.Error(c.Ctx, err)
 	}
 
-	// nolint: gas, if writing to stderr returns an error, then we do not
-	// have any way to report it anyway.
 	fmt.Fprintln(os.Stderr, append([]interface{}{"error:"}, a...)...)
 	return code
+}
+
+// IndentUsage indents a flag's usage message after each newline such that it
+// lines up with previous lines when printed with flag.PrintDefaults.
+func IndentUsage(usage string) string {
+	return indentUsage(usage)
 }

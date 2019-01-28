@@ -30,7 +30,7 @@ public class DistrictsUtil {
         Set<String> stationIds = new HashSet<>();
 
         dl.getDistricts().forEach((d, sl) -> sl.getStations().forEach(sid -> {
-            if (!stationIds.add(sid)) {
+            if (!stationIds.add(d + "|" + sid)) {
                 log.error("Voting station id '{}' not unique", sid);
                 throw new MessageException(M.e_dist_station_id_not_unique, sid);
             }

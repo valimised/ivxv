@@ -69,13 +69,9 @@ override_dh_auto_install:
 override_dh_systemd_enable:
 	dh_systemd_enable
 
-	# In addition, install and enable ivxv-admin-httpd service
-	dh_systemd_enable --package ivxv-admin --name ivxv-admin-httpd ivxv-admin-httpd.service
+	# In addition, install and enable ivxv-admin-agent service
+	dh_systemd_enable --package ivxv-admin --name ivxv-admin-agent ivxv-admin-agent.service
 
 # Silently skip dh_installinit to avoid redundant code in postinst/postrm
 # scripts as packages do not use obsolete init system.
 override_dh_installinit:
-
-# libdigidocpp in common/external contains .orig which must be kept.
-override_dh_clean:
-	dh_clean -X common/external/libdigidocpp/etc/schema

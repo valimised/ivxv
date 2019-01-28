@@ -61,7 +61,7 @@ public class IvxvRegDataLoader<T extends Record<?>, U extends Record<?>, RT exte
             helper.processRecords(filter, profile::createRegRecord, (name, record) -> {
                 try {
                     RU request = profile.getRequest(record);
-                    log.info("REG-NONCE reg-data: {} nonce: {}", name.ref.ref, request.getKey());
+                    log.info("REG-DATA-KEY reg-data: {} key: {}", name.ref.ref, request.getKey());
 
                     // Check request uniqueness
                     if (regData.put(request.getKey(),

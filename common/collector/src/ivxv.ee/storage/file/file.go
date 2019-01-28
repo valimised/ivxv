@@ -34,8 +34,8 @@ func init() {
 		if err = yaml.Apply(n, &f); err != nil {
 			return nil, ConfigurationError{Err: err}
 		}
-		// nolint: gas, we want group permissions so that all services
-		// access the files.
+		// nolint: gosec, we want group permissions so that all
+		// services access the files.
 		if err = os.MkdirAll(f.WD, 0770); err != nil {
 			return nil, WorkingDirectoryError{Path: f.WD, Err: err}
 		}
@@ -50,8 +50,8 @@ type F struct {
 
 // Put implements the storage.PutGetter interface.
 func (f F) Put(ctx context.Context, key string, value []byte) (err error) {
-	// nolint: gas, we want group permissions so that all services access
-	// the file.
+	// nolint: gosec, we want group permissions so that all services can
+	// access the files.
 	fp, err := os.OpenFile(filepath.Join(f.WD, encode(key)),
 		os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0660)
 	if err != nil {
@@ -149,35 +149,34 @@ func (f F) GetWithPrefix(ctx context.Context, prefix string) (
 	return c, errc
 }
 
-// CASAndGet implements the storage.PutGetter interface.
+// CAS implements the storage.PutGetter interface.
 //
 // Note! This method is not actually synchronized.
-func (f F) CASAndGet(ctx context.Context, cas string, old, new []byte, keys ...string) (
-	values map[string][]byte, err error) {
+func (f F) CAS(ctx context.Context, cas string, old, new []byte) (err error) {
 
 	// Read the old value and compare it to the expected one.
-	cfp, err := os.OpenFile(filepath.Join(f.WD, encode(cas)), os.O_RDWR, 0)
+	fp, err := os.OpenFile(filepath.Join(f.WD, encode(cas)), os.O_RDWR, 0)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, storage.NotExistError{
+			return storage.NotExistError{
 				Key: cas,
 				Err: CASMissingCASKeyError{Err: err},
 			}
 		}
-		return nil, log.Alert(CASKeyError{Key: cas, Err: err})
+		return log.Alert(CASKeyError{Key: cas, Err: err})
 	}
 	defer func() {
-		if cerr := cfp.Close(); cerr != nil && err == nil {
+		if cerr := fp.Close(); cerr != nil && err == nil {
 			err = log.Alert(CASCloseError{Key: cas, Err: err})
 		}
 	}()
 
-	value, err := ioutil.ReadAll(cfp)
+	value, err := ioutil.ReadAll(fp)
 	if err != nil {
-		return nil, log.Alert(CASReadValueError{Key: cas, Err: err})
+		return log.Alert(CASReadValueError{Key: cas, Err: err})
 	}
 	if !bytes.Equal(value, old) {
-		return nil, storage.UnexpectedValueError{
+		return storage.UnexpectedValueError{
 			Key: cas,
 			Err: CASValueMismatchError{
 				Have:     value,
@@ -185,22 +184,12 @@ func (f F) CASAndGet(ctx context.Context, cas string, old, new []byte, keys ...s
 			}}
 	}
 
-	// Get the requested values.
-	values = make(map[string][]byte)
-	for _, key := range keys {
-		value, err = f.Get(ctx, key)
-		if err != nil {
-			return nil, CASGetError{Err: err}
-		}
-		values[key] = value
-	}
-
 	// Set the new value.
-	if _, err = cfp.WriteAt(new, 0); err != nil {
-		return nil, log.Alert(CASWriteValueError{Err: err})
+	if _, err = fp.WriteAt(new, 0); err != nil {
+		return log.Alert(CASWriteValueError{Err: err})
 	}
-	if err = cfp.Truncate(int64(len(new))); err != nil {
-		return nil, log.Alert(CASTruncateValueError{Err: err})
+	if err = fp.Truncate(int64(len(new))); err != nil {
+		return log.Alert(CASTruncateValueError{Err: err})
 	}
 	return
 }

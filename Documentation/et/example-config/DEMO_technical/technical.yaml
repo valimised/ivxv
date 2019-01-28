@@ -1,0 +1,103 @@
+debug: true
+
+filter:
+  tls:
+    handshaketimeout: 10
+    ciphersuites:
+      - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+      - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+      # Vanemate nutiseadmete tugi.
+      - TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+      - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+  codec:
+    rwtimeout: 5
+
+network:
+  - id: zone1
+    services:
+      proxy:
+        - id:          proxy@proxy1.ivxv.ee
+          address:     ivxv-rp1:443
+      dds:
+        - id:          dds@dds1.ivxv.ee
+          address:     ivxv1:4441
+      choices:
+        - id:          choices@choices1.ivxv.ee
+          address:     ivxv1:4442
+      voting:
+        - id:          voting@voting1.ivxv.ee
+          address:     ivxv1:4443
+      verification:
+        - id:          verification@verification1.ivxv.ee
+          address:     ivxv1:4444
+      storage:
+        - id:          storage@storage1.ivxv.ee
+          address:     ivxv1:2379
+          peeraddress: ivxv1:2380
+  - id: zone2
+    services:
+      proxy:
+        - id:          proxy@proxy2.ivxv.ee
+          address:     ivxv-rp2:443
+      dds:
+        - id:          dds@dds2.ivxv.ee
+          address:     ivxv2:4441
+      choices:
+        - id:          choices@choices2.ivxv.ee
+          address:     ivxv2:4442
+      voting:
+        - id:          voting@voting2.ivxv.ee
+          address:     ivxv2:4443
+      verification:
+        - id:          verification@verification2.ivxv.ee
+          address:     ivxv2:4444
+      storage:
+        - id:          storage@storage2.ivxv.ee
+          address:     ivxv2:2379
+          peeraddress: ivxv2:2380
+  - id: zone3
+    services:
+      proxy:
+        - id:          proxy@proxy3.ivxv.ee
+          address:     ivxv-rp3:443
+      dds:
+        - id:          dds@dds3.ivxv.ee
+          address:     ivxv3:4441
+      choices:
+        - id:          choices@choices3.ivxv.ee
+          address:     ivxv3:4442
+      voting:
+        - id:          voting@voting3.ivxv.ee
+          address:     ivxv3:4443
+      verification:
+        - id:          verification@verification3.ivxv.ee
+          address:     ivxv3:4444
+      storage:
+        - id:          storage@storage3.ivxv.ee
+          address:     ivxv3:2379
+          peeraddress: ivxv3:2380
+  - id: zone4
+    services:
+      log:
+        - id:          log@log1.ivxv.ee
+          address:     log1:2514
+      backup:
+        - id:          backup@backup.ivxv.ee
+          address:     backup
+
+logging:
+  - address: logmon
+    port: 20514
+
+
+storage:
+  protocol: etcd
+  conf:
+    ca: !container ca.pem
+    conntimeout: 5
+    optimeout: 10
+    bootstrap:
+      - storage@storage1.ivxv.ee
+      - storage@storage2.ivxv.ee
+      - storage@storage3.ivxv.ee
+backup: ["03:00", "09:00", "15:00", "21:00"]

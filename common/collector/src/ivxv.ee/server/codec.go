@@ -73,8 +73,8 @@ func (s *serverCodec) ReadRequestHeader(req *rpc.Request) error {
 // Note: err will be ignored by the codecFilter and sent to the client by the
 // rpc package, so it should be as generic as possible. Any error information
 // should be logged by ReadRequestBody.
-func (s *serverCodec) ReadRequestBody(x interface{}) (err error) {
-	if err = s.ServerCodec.ReadRequestBody(x); err != nil {
+func (s *serverCodec) ReadRequestBody(x interface{}) error {
+	if err := s.ServerCodec.ReadRequestBody(x); err != nil {
 		log.Error(s.header.Ctx, UnmarshalRequestParamsError{
 			RequestType: reflect.TypeOf(x),
 			Err:         err,
@@ -85,10 +85,10 @@ func (s *serverCodec) ReadRequestBody(x interface{}) (err error) {
 	// ReadRequestBody may be called with a nil argument to discard the
 	// body if a correct header was read, but bad method was requested.
 	if x == nil {
-		return
+		return nil
 	}
 
-	if err = checkSize(reflect.ValueOf(x)); err != nil {
+	if err := checkSize(reflect.ValueOf(x)); err != nil {
 		log.Error(s.header.Ctx, RequestSizeError{
 			RequestType: reflect.TypeOf(x),
 			Err:         err,
@@ -102,9 +102,9 @@ func (s *serverCodec) ReadRequestBody(x interface{}) (err error) {
 	// through without doing anything.
 	h := x.(header).header()
 	h.Ctx = s.header.Ctx
-	err = s.filters.next(h)
+	err := s.filters.next(h)
 	s.header = h
-	return
+	return err
 }
 
 // checkSize walks over v looking for struct fields of type string or []byte

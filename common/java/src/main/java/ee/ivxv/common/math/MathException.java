@@ -1,7 +1,8 @@
 package ee.ivxv.common.math;
 
+@SuppressWarnings("serial")
 public class MathException extends Exception {
-    MathException(String string) {
+    public MathException(String string) {
         super(string);
     }
 }

@@ -1,0 +1,118 @@
+# Valimiste seadistus DEMO
+
+identifier: DEMO
+questions:
+  - question-1
+
+period:
+  servicestart: 2018-12-03T10:20:00+03:00
+  electionstart: 2018-12-03T10:30:00+03:00
+  electionstop: 2018-12-20T18:00:00+03:00
+  servicestop: 2018-12-20T18:15:00+03:00
+
+voting:
+  ratelimitstart: 15
+  ratelimitminutes: 5
+
+verification:
+  count: 3
+  minutes: 30
+
+#ignorevoterlist Ringkonna identifikaator, mille valikud esitada kõigile valijatele.
+#Kui see väärtus ei ole tühi, siis kogumisteenus ei kasuta valijate
+#nimekirja ning esitab kõigile valijatele määratud ringkonna valikud ja
+#lubab kõigil, kellel õnnestub isikutuvastus ning hääle allkirja kontrollimine,
+#hääletada.
+# NB! Siin on vaja kasutada !!str märgendit, et parserid ei peaks seda väärtust
+# arvuks ning ei kaotaks esimest nulli ära.
+
+# Kasutusel ainult testimiseks
+# ignorevoterlist: !!str 0284.1
+
+voterlist:
+# Tegu on suvalise failiga
+  key: !container DEMO_valijate_nimekiri.pem
+auth:
+  # Mobiil-ID autentimine on lubatud sest ticket on olemas
+  ticket:
+  tls:
+    roots:
+      - !container EE_Certification_Centre_Root_CA.pem.crt
+      - !container EE-GovCA2018.pem.crt
+    intermediates:
+      - !container ESTEID-SK_2011.pem.crt
+      - !container ESTEID-SK_2015.pem.crt
+      - !container esteid2018.pem.crt
+    ocsp:
+      url: http://aia.sk.ee/esteid2015
+      # respondereid ei tohiks enam vaja minna
+      responders:
+      #  - !container ESTEID-SK_2011_AIA_OCSP_RESPONDER_201808.pem.cer
+      #  - !container ESTEID-SK_2015_AIA_OCSP_RESPONDER_201808.pem.cer
+      # Proovime ainult 1 korra, vea korral uuesti ei lähe, see on ka
+      # vaikeväärtus
+      retry: 0
+
+identity: pnoee
+
+age:
+  method: estpic
+  timezone: Europe/Tallinn
+  # Mõnel valimisel on vanus 16!
+  limit: 18
+
+vote:
+  bdoc:
+    bdocsize: 32768  # 32 KiB
+    filesize: 32768  # 32 KiB
+    roots:
+      - !container EE_Certification_Centre_Root_CA.pem.crt
+      - !container EE-GovCA2018.pem.crt
+    intermediates:
+      - !container ESTEID-SK_2011.pem.crt
+      - !container ESTEID-SK_2015.pem.crt
+      - !container esteid2018.pem.crt
+    profile: BES
+
+# enne oli ria asemel EHS
+
+dds:
+  url: https://digidocservice.sk.ee/v2/
+  countrycode: EE
+  language: EST
+  servicename: RIA
+  authmessage: Mobiil-ID isikutuvastus
+  signmessage: Mobiil-ID hääle allkirjastamine
+  idcoderequired: true
+  phonerequired: true
+  roots:
+    - !container EE_Certification_Centre_Root_CA.pem.crt
+  intermediates:
+    - !container ESTEID-SK_2011.pem.crt
+    - !container ESTEID-SK_2015.pem.crt
+  ocsp:
+    responders:
+      - !container SK_OCSP_RESPONDER_2011.pem.cer
+
+qualification:
+# mis vahe on ocsp ja ocsptm
+  - protocol: ocsp
+    conf:
+      url: http://aia.sk.ee/esteid2015
+      responders:
+      #  - !container ESTEID-SK_2011_AIA_OCSP_RESPONDER_201808.pem.cer
+      #  - !container ESTEID-SK_2015_AIA_OCSP_RESPONDER_201808.pem.cer
+# Lubame ühe korra peale päringu ebaõnnestumist veel proovida
+      retry: 1
+  - protocol: tspreg
+    conf:
+      url: http://tsa.sk.ee
+      signers:
+        - !container SK_TIMESTAMPING_AUTHORITY.pem.cer
+# manualis 1
+# See aeg oli 3600, mis lubaks, et TSA vastuse loomise ja
+# allkirjastamise ajavahe on 1h. Ei ole usutav. Jätame 10sek, mis
+# võiks olla enam kui piisav.
+      delaytime: 10
+# Lubame ühe korra peale päringu ebaõnnestumist veel proovida
+      retry: 1

@@ -1,6 +1,6 @@
-#!/usr/bin/python
-
-"""Data Validation Tool
+#!/usr/bin/python3
+"""
+IVXV Voting List Validation Tool
 
 Usage:
     validator -d <data> -s <schema>
@@ -14,18 +14,17 @@ Options:
     -s --schema <schema>    Schema file
 """
 
+import json
 import os
 
 import docopt
-import schema
-
-import json
 import jsonschema
 
+import schema
 
 if __name__ == "__main__":
-
-    ARGS = docopt.docopt(__doc__, version='Data Validation Tool 1.0')
+    ARGS = docopt.docopt(
+        __doc__, version='IVXV Voting List Validation Tool 1.0')
     SCHEMA = schema.Schema({
         '--help': schema.Or(False),
         '--version': schema.Or(False),
@@ -42,8 +41,8 @@ if __name__ == "__main__":
 
     with open(SCHEMA_F) as sif:
         with open(DATA_F) as dif:
-            schema = json.load(sif)
+            schema_data = json.load(sif)
             data = json.load(dif)
-            jsonschema.validate(data, schema)
+            jsonschema.validate(data, schema_data)
 
     print('Validation ended')

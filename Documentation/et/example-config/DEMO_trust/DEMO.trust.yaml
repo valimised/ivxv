@@ -1,0 +1,21 @@
+# Usaldusjuure seadistus DEMO
+container:
+  bdoc:
+    bdocsize: 104857600  # 100 MiB
+    filesize: 104857600  # 100 MiB
+    roots:
+      - !container EE_Certification_Centre_Root_CA.pem.crt
+      - !container EE-GovCA2018.pem.crt
+    intermediates:
+      - !container ESTEID-SK_2015.pem.crt
+      - !container ESTEID-SK_2011.pem.crt
+      - !container esteid2018.pem.crt
+    profile: TS
+    tsp:
+      signers:
+        - !container SK_TIMESTAMPING_AUTHORITY.pem.cer
+      delaytime: 10
+authorizations:
+    - M,T,3
+    - L,I,3
+    - M,L,3

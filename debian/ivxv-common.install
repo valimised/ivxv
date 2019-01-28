@@ -2,4 +2,5 @@
 etc/ivxv/rsyslog-ivxv-templates.conf => etc/rsyslog.d/10-ivxv-templates.conf
 etc/ivxv/sudoers => etc/sudoers.d/ivxv
 
+usr/bin/ivxv-admin-sudo.sh => usr/bin/ivxv-admin-sudo
 usr/bin/ivxv-admin-helper.sh => usr/bin/ivxv-admin-helper

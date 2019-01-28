@@ -15,6 +15,7 @@ public interface Console {
 
     Progress startProgress(String format, long total);
 
-    void shutdown();
+    Progress startInfiniteProgress(String format, long total);
 
+    void shutdown();
 }

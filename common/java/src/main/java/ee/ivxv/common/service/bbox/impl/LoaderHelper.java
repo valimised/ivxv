@@ -123,14 +123,20 @@ public class LoaderHelper<T extends Ref> {
 
     <U extends Record<?>> void processRecords(Predicate<FileName<T>> filter, Supplier<U> supplier,
             BiConsumer<FileName<T>, U> processor) {
-        Map<T, U> work = new HashMap<>();
+        processRecords(filter, false, supplier, processor);
+    }
+
+    <U extends Record<?>> void processRecords(Predicate<FileName<T>> filter,
+            boolean processIncomplete, Supplier<U> supplier, BiConsumer<FileName<T>, U> processor) {
+        Map<T, NameRecord<T, U>> work = new HashMap<>();
         byte[] buffer = new byte[1024];
 
         processFiles((name, in) -> {
             if (!filter.test(name)) {
                 return;
             }
-            U record = work.computeIfAbsent(name.ref, s -> supplier.get());
+            U record = work.computeIfAbsent(name.ref,
+                    x -> new NameRecord<>(name, supplier.get())).record;
             record.set(name.type, Util.toBytes(in, buffer));
             if (record.isComplete()) {
                 // Release memory
@@ -139,8 +145,10 @@ public class LoaderHelper<T extends Ref> {
             }
         });
 
-        // Report any leftovers. Shouldn't happen if acceptor only accepts complete entries.
-        work.forEach((ref, r) -> r.forMissingFiles(t -> report(ref, Result.MISSING_FILE, t)));
+        // Report incomplete records
+        if (processIncomplete) {
+            work.forEach((ref, nr) -> processor.accept(nr.name, nr.record));
+        }
     }
 
     void handleTechnicalError(FileName<T> name, Exception e) {
@@ -159,6 +167,16 @@ public class LoaderHelper<T extends Ref> {
 
     Progress getProgress(int total) {
         return pf.apply(total);
+    }
+
+    private static class NameRecord<T extends Ref, U extends Record<?>> {
+        final FileName<T> name;
+        final U record;
+
+        public NameRecord(FileName<T> name, U record) {
+            this.name = name;
+            this.record = record;
+        }
     }
 
 }

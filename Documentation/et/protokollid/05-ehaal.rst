@@ -4,9 +4,9 @@
 Elektrooniline hääl
 ===================
 
-IVXV hääletamisprotokoll baseerub topeltümbrikuskeemil, mis tähendab et valija
-avakujul tahteavaldus krüpteeritakse valimise korraldaja poolt levitatud avaliku
-võtmega. Krüpteeritud tahteavaldus allkirjastatakse digitaalselt valija
+IVXV hääletamisprotokoll põhineb topeltümbrikuskeemil, mis tähendab, et valija
+avakujul tahteavaldus krüpteeritakse valimise korraldaja poolt levitatud
+avaliku võtmega. Krüpteeritud tahteavaldus allkirjastatakse digitaalselt valija
 käsutuses oleva allkirjastamisvahendiga ning edastatakse kogumisteenusesse
 mingis kokkulepitud konteinervormingus. Kogumisteenus võib valija poolt
 allkirjastatud häält täiendavalt kvalifitseerida, veendudes näiteks
@@ -19,7 +19,7 @@ elementidega tehakse kättesaadavaks nii valijarakendusele kui
 kontrollrakendusele, mis teostavad üksiku hääle peal samad kontrollid, mida
 hilisem valimise korraldaja töötlemisrakendus teostab kõigi häälte peal.
 Kvalifitseerivate elementide kontrollimise võimalus annab valijale kindluse, et
-tema häält on hilisemates protsessides korrektselt menetleda.
+tema häält on hilisemates protsessides korrektselt menetletud.
 
 
 Valija tahteavaldus avakujul
@@ -27,7 +27,7 @@ Valija tahteavaldus avakujul
 
 Valija tahteavaldus avakujul eksisteerib valijarakenduses ning hiljem ka
 kontrollrakenduses. Tahteavaldus sisaldab nii valiku koodi ringkonnas, ringkonna
-EHAK koodi kui ka valiku nimekirja nime ning konkreetse valiku nime nimekirjas.
+EHAK-koodi kui ka valiku nimekirja nime ning konkreetse valiku nime nimekirjas.
 
 .. code-block:: bnf
 
@@ -127,15 +127,16 @@ IVXV protokollistik võimaldab ka alternatiivsete allkirja- ning
 konteinervormingute kasutamist.
 
 Olenevalt käimasoleval valimisel esitatud küsimuste arvust võib digitaalselt
-allkirjastatud hääl sisaldada ühte või mitut andmefaili MIME tüübiga
-application/octet-stream. Iga andmefaili sisuks on krüpteeritud sedel.
+allkirjastatud hääl sisaldada ühte või mitut andmefaili MIME-tüübiga
+``application/octet-stream``. Iga andmefaili sisuks on krüpteeritud sedel.
 Andmefaili ja teiste signeeritavate andmeobjektide räsimiseks enne
 allkirjastamist kasutatakse räsifunktsiooni SHA-256. Andmefaili nimi
-moodustatakse laiendist 'ballot' ning valimise ja küsimuse identifikaatorist.
-Kõik viidatud andmefailid peavad allkirjakonteineris sisalduma. Digitaalselt
-allkirjastatud hääl ei tohi sisaldada muid andmefaile kui neid, mis sisaldavad
-hääli mõne käimasoleva valimise kontekstis. Seadistusele mittevastavate häälte
-vastuvõtmisest, talletamisest ja töötlemisest peab kogumisteenus keelduma.
+moodustatakse laiendist '``ballot``' ning valimise ja küsimuse
+identifikaatorist. Kõik viidatud andmefailid peavad sisalduma
+allkirjakonteineris. Digitaalselt allkirjastatud hääl ei tohi sisaldada muid
+andmefaile kui neid, mis sisaldavad hääli mõne käimasoleva valimise kontekstis.
+Seadistusele mittevastavate häälte vastuvõtmisest, talletamisest ja
+töötlemisest peab kogumisteenus keelduma.
 
 
 .. code-block:: bnf
@@ -145,7 +146,7 @@ vastuvõtmisest, talletamisest ja töötlemisest peab kogumisteenus keelduma.
     encrypted-ballot-name = election-identifier '.' question-identifier '.' extension
 
 
-Valija poolt valijarakenduses allkirjastatud hääl moodustatakse selliselt, et on
+Valija poolt valijarakenduses allkirjastatud hääl moodustatakse nii, et on
 võimalik selle edasine kvalifitseerimine kogumisteenuses. Käesolev
 septsifikatsioon näeb ette hääle kvalifitseerimiseks nii OCSP kehtivuskinnituse
 kui PKIX ajatempli võtmise. Sellisena on lõplik, kvalfitseeritud hääl, BDOC-TS
@@ -165,30 +166,34 @@ valijarakenduse poolt moodustatud hääl on vaheetapp kvalifitseeritud hääleni
 jõudmiseks.
 
 Valijarakenduses signeeritud häälel peab olema üks ja ainult üks allkiri, mida
-hoitakse signatuurifailis META-INF/signature0.xml. Häält ja allkirja sisaldav
-konteiner moodustatakse BDOC 2.1 standardis kirjeldatud meetodit kasutades.
+hoitakse signatuurifailis :file:`META-INF/signature0.xml`. Häält ja allkirja
+sisaldav konteiner moodustatakse BDOC 2.1 standardis kirjeldatud meetodit
+kasutades.
 
-Täpsustame valijarakenduses allkirjastatud hääle ühe küsimuse korral.
+Spetsifitseerime valijarakenduses allkirjastatud hääle vormingu ühe
+küsimuse korral.
 
-Räsialgoritmina `DIGEST_ALG` on kasutusel SHA-256
-(http://www.w3.org/2001/04/xmlenc#sha256).  XML kanoniseerimiseks (`CANON_ALG`)
-kasutatakse meetodit c14n11 (http://www.w3.org/2006/12/xml-c14n11).
+Räsialgoritmina ``DIGEST_ALG`` on kasutusel SHA-256
+(http://www.w3.org/2001/04/xmlenc#sha256). XML kanoniseerimiseks
+(``CANON_ALG``) kasutatakse meetodit c14n11
+(http://www.w3.org/2006/12/xml-c14n11).
 
 RSA võtmete korral (ID-kaart, Digi-ID) on allkirjastamismeetodiks
 http://www.w3.org/2001/04/xmldsig-more#rsa-sha256. ECC võtmete korral
-(Mobiil-ID) http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256.
+(ID-kaart, Mobiil-ID) http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256.
 
-Identifikaatorite `VOTE_REF`, `SP_URI` ning `SV_URI` täpne väärtus ei ole
-oluline.
+Identifikaatorite `VOTE_REF`, `SP_REF`, `SP_URI` ning `SV_URI` täpne väärtus ei
+ole oluline.
 
 Element `SignedProperties`
 ---------------------------
 
-Element `SignedProperties` moodustatakse kooskõlas BDOC 2.1 standardiga. Kui
+Element ``SignedProperties`` moodustatakse kooskõlas BDOC 2.1 standardiga. Kui
 kvalifitseerimisel kasutatakse ajatemplit, siis elementi
-`SignaturePolicyIdentifier` ei kasutata. Ühtegi mitte-kohustuslikku elementi ei
-kasutata. Allkirjastamise kellaaja fikseerib andmestruktuuri täitev arvuti ning
-valija X509 sertifikaat saadakse kas ID-kaardilt või DigiDoc-teenuse vahendusel.
+``SignaturePolicyIdentifier`` ei kasutata. Ühtegi mitte-kohustuslikku elementi
+ei kasutata. Allkirjastamise kellaaja fikseerib andmestruktuuri täitev arvuti
+ning valija X509-sertifikaat saadakse kas ID-kaardilt või DigiDoc-teenuse
+vahendusel.
 
 
 .. literalinclude:: xmltemplates/sp.template
@@ -199,9 +204,9 @@ valija X509 sertifikaat saadakse kas ID-kaardilt või DigiDoc-teenuse vahendusel
 Element `SignedInfo`
 ---------------------
 
-Element `SignedInfo` moodustatakse kooskõlas BDOC 2.1 standardiga viidates nii
-krüpteeritud sedelile (`VOTE_DIGEST`) kui elemendile `SignedProperties`
-(`SP_DIGEST`).
+Element ``SignedInfo`` moodustatakse kooskõlas BDOC 2.1 standardiga, viidates
+nii krüpteeritud sedelile (``VOTE_DIGEST``) kui elemendile ``SignedProperties``
+(``SP_DIGEST``).
 
 .. literalinclude:: xmltemplates/si.template
    :language: xml
@@ -211,9 +216,9 @@ krüpteeritud sedelile (`VOTE_DIGEST`) kui elemendile `SignedProperties`
 Element `SignatureValue`
 ------------------------
 
-Element `SignatureValue` moodustatakse kooskõlas BDOC 2.1 standardiga.
-Kanoniseeritud elemendist `SignedInfo` arvutatakse räsi, mis allkirjastatakse
-PKCS1 meetodiga.
+Element ``SignatureValue`` moodustatakse kooskõlas BDOC 2.1 standardiga.
+Kanoniseeritud elemendist ``SignedInfo`` arvutatakse räsi, mis allkirjastatakse
+PKCS1-meetodiga.
 
 .. literalinclude:: xmltemplates/sv.template
    :language: xml
@@ -223,12 +228,10 @@ PKCS1 meetodiga.
 Element `XAdESSignatures`
 -------------------------
 
-Element `XAdESSignatures` sisaldab ühte `Signature` elementi, mis on koostatud
-lähtudes kõigist eelmistest elementidest ning valija X509 sertifikaadist.
-Elementi `UnsignedProperties` ei kasutata.
+Element ``XAdESSignatures`` sisaldab ühte ``Signature`` elementi, mis on
+koostatud lähtudes kõigist eelmistest elementidest ning valija X509
+sertifikaadist. Elementi ``UnsignedProperties`` ei kasutata.
 
 .. literalinclude:: xmltemplates/sig.template
    :language: xml
    :linenos:
-
-.. vim: sts=3 sw=3 et:

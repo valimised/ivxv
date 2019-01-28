@@ -17,5 +17,4 @@ IVXV dokumentatsiooni üldsisukord
 
    annotatsioon
    nimekiri
-
-.. vim: sts=3 sw=3 et:
+   tarned

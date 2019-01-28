@@ -50,4 +50,8 @@ class ProgressImpl implements Progress {
         return isFinished;
     }
 
+    void reset() {
+        value.reset();
+    }
+
 }

@@ -11,6 +11,9 @@ import ee.ivxv.common.math.ModPGroup;
 import ee.ivxv.common.math.ModPGroupElement;
 import java.math.BigInteger;
 
+/**
+ * ElGamalParameters holds parameters for ElGamal crypto system encryption and decryption.
+ */
 public class ElGamalParameters {
     // http://tools.ietf.org/html/draft-rfced-info-pgutmann-00#section-2
     private final static String OID_MODP = "1.3.6.1.4.1.3029.2.1";
@@ -24,6 +27,13 @@ public class ElGamalParameters {
     private GroupElement generator;
     private String electionIdentifier;
 
+    /**
+     * Initialize the parameters using the group and generator.
+     * 
+     * @param group
+     * @param generator
+     * @throws IllegalArgumentException
+     */
     public ElGamalParameters(Group group, GroupElement generator) throws IllegalArgumentException {
         if (!group.isGroupElement(generator)) {
             throw new IllegalArgumentException("Generator is not group element");
@@ -42,6 +52,19 @@ public class ElGamalParameters {
         }
     }
 
+    /**
+     * Initialize the parameters using algorithm identifier and serialized parameter values.
+     * <p>
+     * When decoding from a X.509 certificate, it is possible to obtain both the algorithm
+     * identifier and the key parameters.
+     * 
+     * @see #getBytes()
+     * @see #getOID()
+     * 
+     * @param algOID
+     * @param in
+     * @throws IllegalArgumentException
+     */
     public ElGamalParameters(String algOID, byte[] in) throws IllegalArgumentException {
         Sequence seq = new Sequence();
         try {
@@ -52,7 +75,13 @@ public class ElGamalParameters {
         initGroupAndGenerator(algOID, seq);
     }
 
-    // duplicate constructors with provided election identifier
+    /**
+     * Initialize the parameters using the group, generator and election identifier.
+     * 
+     * @param group
+     * @param generator
+     * @throws IllegalArgumentException
+     */
     public ElGamalParameters(Group group, GroupElement generator, String electionIdentifier)
             throws IllegalArgumentException {
         this(group, generator);
@@ -117,7 +146,16 @@ public class ElGamalParameters {
         }
     }
 
-    // return asn1 packed parameters
+    /**
+     * Serialize the parameters using ASN1 DER encoding.
+     * <p>
+     * Implementation is algorithm-specific.
+     * 
+     * @see #getBytesModP()
+     * @see #getBytesEC()
+     * 
+     * @return
+     */
     public byte[] getBytes() {
         switch (oid) {
             case OID_MODP:
@@ -130,6 +168,23 @@ public class ElGamalParameters {
         }
     }
 
+    /**
+     * Serialize parameters for group of integers modulo a prime.
+     * <p>
+     * The parameters are stored in the following structure:
+     * 
+     * {@code
+     * SEQUENCE (
+     *   group      ModPGroup,
+     *   generator  ModPGroupElement,
+     *   electionID GeneralString
+     *   )
+     * }
+     * 
+     * @see ee.ivxv.common.math.ModPGroup#getBytes()
+     * @see ee.ivxv.common.math.ModPGroupElement#getBytes()
+     * @return
+     */
     private byte[] getBytesModP() {
         return new Sequence(group.getBytes(), generator.getBytes(),
                 new Field(getElectionIdentifier()).encode()).encode();

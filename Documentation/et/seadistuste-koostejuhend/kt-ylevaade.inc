@@ -16,9 +16,9 @@ Nimekiri kogumisteenuse haldamise korraldustest:
 
 #. Valikute nimekiri;
 
-#. Kasutajate volituste määramine;
-
 #. Valijate nimekiri.
+
+#. Kasutajate volituste määramine;
 
 Lisaks korraldustele tuleb kogumisteenusele genereerida ka komplekt
 krüptovõtmeid.
@@ -86,4 +86,4 @@ YAML-vormingus seadistuse (usaldusjuure seadistus, tehniline seadistus ja
 valimiste seadistus) korral võivad failis olla ka seadistusfaili pool
 kasutatavad välised failid.
 
-.. vim: sts=3 sw=3 et syntax=rst:
+.. vim:syntax=rst:

@@ -1,7 +1,7 @@
 ..  IVXV kogumisteenuse haldusliidese kasutusjuhend
 
-Teenuste haldamine
-==================
+Teenuste haldus
+===============
 
 Teenuste haldamise leht avaneb menüüvalikust ``Teenused``.
 
@@ -23,6 +23,8 @@ arvu:
 
 #. Tõrge – teenuse toimimises on avastatud tõrge;
 
+#. Eemaldatud – teenuse on kogumisteenuse koosseisust eemaldatud.
+
 
 Teenuste nimekiri
 -----------------
@@ -41,10 +43,11 @@ teenuse identifikaatori järgi:
 
 #. Teenuse seisund;
 
-Nimekirjas teenuse kirjel klõpsates avaneb kirje all tabel täpsema infoga:
+Kui haldusteenus on alamteenuse kohta tuvastanud seadistuste puudumise või
+veaolukorra, siis vastav teave kuvatakse teenuse all. Iga teenuse kohta
+kuvatakse korraga vaid ühte teadet.
 
-#. Vihje teenuse seadistamiseks
-   (ainult teenustel, mis on olekus ``paigaldamata`` või ``paigaldatud``);
+Nimekirjas teenuse kirjel klõpsates avaneb kirje all tabel täpsema infoga:
 
 #. Teenuse korrasoleku kontrolli poolt tuvastatud järjestikune vigade arv
    (ainult teenustel, mis on olekus ``seadistatud`` või ``tõrge``);
@@ -63,13 +66,3 @@ Nimekirjas teenuse kirjel klõpsates avaneb kirje all tabel täpsema infoga:
 #. Teenuse TLS-sertifikaadile vastava võtme kontrollsumma (SHA256);
 
 #. Mobiil-ID tugiteenuse jagatud krüptimissaladuse kontrollsumma (SHA256);
-
-
-Seadistuste laadimine kogumisteenusesse
----------------------------------------
-
-Seadistuste laadimiseks kogumisteenusesse on lehe allosas laadimisvorm. Laadida
-on lubatud ainult volitatud kasutajate poolt digitaaltelt signeeritud
-seadistuspakke.
-
-.. vim: sts=3 sw=3 et:

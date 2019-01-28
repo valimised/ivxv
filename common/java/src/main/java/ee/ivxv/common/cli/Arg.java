@@ -10,7 +10,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +46,7 @@ public abstract class Arg<T> {
     private static final Parser<Integer> INT_PARSER = new IntParser();
     private static final Parser<BigInteger> BIGINT_PARSER = new BigIntParser();
     private static final Parser<Instant> INSTANT_PARSER = new InstantParser();
+    private static final Parser<LocalDate> LOCAL_DATE_PARSER = new LocalDateParser();
     private static final Parser<Path> PATH_PARSER = new PathParser();
     static final Parser<Path> EXISTING_FILE_PARSER = new PathParser(true, false);
 
@@ -76,7 +80,7 @@ public abstract class Arg<T> {
                 super.parse(v, r);
             }
 
-        }.setDefault(Boolean.FALSE);
+        }.setDefault(Boolean.FALSE).setOptional();
 
     }
 
@@ -94,6 +98,10 @@ public abstract class Arg<T> {
 
     public static Arg<Instant> anInstant(NameHolder n) {
         return new SingleValueArg<>(n, INSTANT_PARSER);
+    }
+
+    public static Arg<LocalDate> aLocalDate(NameHolder n) {
+        return new SingleValueArg<>(n, LOCAL_DATE_PARSER);
     }
 
     public static Arg<Path> aPath(NameHolder n) {
@@ -490,6 +498,28 @@ public abstract class Arg<T> {
                 return OffsetDateTime.parse(s).toInstant();
             } catch (DateTimeParseException e) {
                 throw new ParseException(Msg.e_invalid_instant, s);
+            }
+        }
+    }
+
+    static class LocalDateParser implements Parser<LocalDate> {
+        @Override
+        public LocalDate parse(String s, Resolver r) {
+            try {
+                return LocalDate.parse(s);
+            } catch (DateTimeParseException e) {
+                // Dates parsed via YAML are reformatted with time and zone offset, so also
+                // check for that format, but ensure that time and offset are both zero.
+                try {
+                    OffsetDateTime full = OffsetDateTime.parse(s);
+                    if (!full.toLocalTime().equals(LocalTime.MIDNIGHT)
+                            || !full.getOffset().equals(ZoneOffset.UTC)) {
+                        throw new ParseException(Msg.e_invalid_local_date, s);
+                    }
+                    return full.toLocalDate();
+                } catch (DateTimeParseException e2) {
+                    throw new ParseException(Msg.e_invalid_local_date, s);
+                }
             }
         }
     }

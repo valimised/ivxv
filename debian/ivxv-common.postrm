@@ -51,5 +51,3 @@ esac
 #DEBHELPER#
 
 exit 0
-
-# vim:sts=4 sw=4 et:

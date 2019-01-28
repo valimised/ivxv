@@ -25,4 +25,5 @@ var (
 	// Vote errors.
 	ErrIdentityMismatch = errors.New("IDENTITY_MISMATCH")
 	ErrOutdatedChoices  = errors.New("OUTDATED_CHOICES")
+	ErrVotingRateLimit  = errors.New("RATE_LIMIT_EXCEEDED")
 )

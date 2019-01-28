@@ -1,0 +1,51 @@
+
+@startuml
+
+title "Lugemisfaas - offline"
+
+package "Töötleja" {
+    usecase (Allkirjastatud häälte import)
+    usecase (Ajamärgendite import)
+    usecase (Kontrollimine - ver, ATO)
+    usecase (Korduvate häälte tühistamine)
+    usecase (E-hääletanute nimekiri jaoskondade kaupa)
+
+    usecase (Tühistusavalduste import)
+    usecase (Tühistamise ennistusavalduste import)
+    usecase (Anonümiseerimine)
+    usecase (Anonüümsete häälte eksport)
+    usecase (Lugemisele läinud E-hääletanute nimekiri jaoskondade kaupa)
+}
+
+package "Miksimine" {
+    usecase (Auditeeritud random)
+    usecase (Anonüümsete häälte import)
+    usecase (Häälte miksimine)
+    usecase (Miksitud häälte eksport)
+    usecase (Miksimistõestuse eksport)
+}
+
+package "Lugemine" {
+    usecase (Krüpteeritud häälte import)
+    usecase (E-häälte kokkulugemine)
+    usecase (E-hääletamise tulemuste eksport)
+    usecase (Dekrüptimistõestuse eksport)
+}
+
+package "Võtmehaldus" {
+    usecase (Privaatvõtme aktiveerimine)
+}
+
+package  "Audit" {
+    usecase (Kogumisteenuse auditimaterjali import)
+    usecase (Lugemisteenuse auditimaterjali import)
+    usecase (Ajatembeldusteenuse auditimaterjali import)
+    usecase (Auditi läbiviimine)
+}
+
+package "Valimise lõpetamine" {
+    usecase (Arhiveerimine)
+    usecase (Privaatvõtme ja koopiate hävitamine)
+}
+
+@enduml

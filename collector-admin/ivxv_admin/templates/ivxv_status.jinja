@@ -7,7 +7,7 @@ Template file for ivxv-status utility output.
 -#}
 {# COLLECTOR #}
 {% if 'collector' in sections %}
-Collector status: {{ collector_status }}
+Collector state: {{ collector_state }}
 {% endif %}
 
 {# ELECTION #}
@@ -25,7 +25,7 @@ Voting phase: {{ election['phase'] or '-' }}
 
 {# CONFIG #}
 {% if 'config' in sections %}
-Config status:
+Config state:
     Trust root config: {{ config.trust or '-' }}
     Technical config: {{ config.technical or '-' }}
     Election config: {{ config.election or '-' }}
@@ -33,10 +33,13 @@ Config status:
 
 {# LIST #}
 {% if 'list' in sections %}
-Lists status:
+Lists state:
     Choices list: {{ list.choices or '-' }}
-    Choices list status: {{ list.choices == list['choices-loaded'] and
-                            'LOADED TO SERVICE' or 'PENDING' }}
+{%- if list.choices %}
+    Choices list state: {{ list.choices == list['choices-loaded'] and
+                           'LOADED TO SERVICE' or 'PENDING' }}
+{% endif %}
+    Districts list: {{ list.districts or '-' }}
     Voters lists: {{ '%s loaded'|format(list['voters-list-loaded'])
                   }}, {{
                      '%s pending'|format(list['voters-list-pending'])
@@ -44,7 +47,7 @@ Lists status:
 {%- if not list['voters01'] %}
         [No voter lists loaded]
 {% else -%}
-{% for list_no in range(1, list['voters-list-pending'] + 1) %}
+{% for list_no in range(1, list['voters-list-loaded'] + list['voters-list-pending'] + 1) %}
 {%- set registered_list_key = "voters%02d"|format(list_no) %}
 {%- set loaded_list_key = registered_list_key + '-loaded' %}
         {{ list_no
@@ -66,13 +69,16 @@ Services: {{ service|count }} services in {{ network|count }} network(s)
 {% set service = network[network_name][service_id] %}
         Service ID: {{ service_id }}
           Type: {{ service['service-type'] }}
-          Status: {{ service['state'] }}
+          State: {{ service['state'] }}
           Address: {{ service['ip-address'] }}
           Technical config: {{ service['technical-conf-version']
                                or '-' }}
-{%- if service['service-type'] != 'log' %}
+{%- if service['service-type'] not in ['backup', 'log'] %}
           Election config: {{ service['election-conf-version']
                               or '-' }}
+{%- endif %}
+{%- if service['service-type'] == 'backup' %}
+          Automatic backup times: {{ service['backup-times'] or '-' }}
 {%- endif %}
 {%- if 'tls-key' in service %}
           Service TLS key: {{ service['tls-key'] or '-' }}
@@ -85,16 +91,10 @@ Services: {{ service|count }} services in {{ network|count }} network(s)
           PKIX TSP registration key: {{ service['tspreg-key'] or '-' }}
 {%- endif %}
           Last data received: {{ service['last-data'] or '-' }}
-          Hint: {{ service['hint'] or '-' }}
+          Background info: {{ service['bg_info'] or '-' }}
 {% endfor %}
 {% endfor %}
 {% endif -%}
-
-{# EXTERNAL SERVICES #}
-{% if 'ext' in sections %}
-External services:
-    Statistics: ░░░ NOT IMPLEMENTED ░░░
-{% endif %}
 
 {# STORAGE #}
 {% if 'storage' in sections %}
@@ -108,11 +108,11 @@ Data storage:
 {%- endfor %}
 {%- endif %}
     Users count: {{ user|count }}
-    Uploaded commands: ░░░ NOT IMPLEMENTED ░░░
-    Commands executed: ░░░ NOT IMPLEMENTED ░░░
-    Commands waiting: ░░░ NOT IMPLEMENTED ░░░
-    Ballot-box download count: ░░░ NOT IMPLEMENTED ░░░
+    Commands: {{
+        storage.command_files|count }} loaded ({{
+        storage.command_files_applied|count }} applied, {{
+        storage.command_files_pending|count }} pending)
 {% endif %}
 {#-
-vim:set syntax=jinja:
+vim:ft=jinja:
 #}

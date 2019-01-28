@@ -54,6 +54,9 @@ public class Util {
         return output;
     }
 
+    /**
+     * Copy all files to target directory.
+     */
     public static class CopyFileVisitor extends SimpleFileVisitor<Path> {
         private final Path targetPath;
         private Path sourcePath = null;

@@ -125,6 +125,10 @@ func verifymain() (code int) {
 		code = c.Cleanup(code)
 	}()
 
+	// Create new RPC instance with the election configuration and storage
+	// client.
+	rpc := &RPC{election: c.Conf.Election, storage: c.Storage}
+
 	var start, stop time.Time
 	var err error
 	if c.Conf.Election != nil {
@@ -138,34 +142,32 @@ func verifymain() (code int) {
 			return c.Error(exit.Config, StopTimeError{Err: err},
 				"bad service stop time:", err)
 		}
-	}
 
-	// Create new RPC instance with the election configuration and storage
-	// client.
-	rpc := &RPC{election: c.Conf.Election, storage: c.Storage}
-
-	var s *server.S
-	if tech := c.Conf.Technical; tech != nil {
 		// Initialize the list of qualifying properties which must
 		// exist for each vote.
-		for _, q := range tech.Qualification {
+		for _, q := range c.Conf.Election.Qualification {
 			rpc.qps = append(rpc.qps, q.Protocol)
 		}
 
+		// No authentication is used during verification.
+	}
+
+	var s *server.S
+	if c.Conf.Technical != nil {
 		// Configure a new server with the service instance
 		// configuration and the RPC handler instance.
+		cert, key := conf.TLS(conf.Sensitive(c.Service.ID))
 		if s, err = server.New(&server.Conf{
-			Sensitive: conf.Sensitive(c.Service.ID),
-			Address:   c.Service.Address,
-			End:       stop,
-			Filter:    &c.Conf.Technical.Filter,
-			Version:   &c.Conf.Version,
+			CertPath: cert,
+			KeyPath:  key,
+			Address:  c.Service.Address,
+			End:      stop,
+			Filter:   &c.Conf.Technical.Filter,
+			Version:  &c.Conf.Version,
 		}, rpc); err != nil {
 			return c.Error(exit.Config, ServerConfError{Err: err},
 				"failed to configure server:", err)
 		}
-
-		// No authentication is used during verification.
 	}
 
 	// Start listening for incoming connections during the voting period.

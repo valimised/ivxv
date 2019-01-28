@@ -1,0 +1,72 @@
+@startuml
+
+/'
+ '
+ '  BEAUTIFICATION
+ '
+ '/
+
+skinparam interface {
+    backgroundColor<<IVXV>> Gold
+    backgroundColor<<External>> LightSalmon
+    backgroundColor<<NEC>> DarkGoldenRod
+    backgroundColor<<Undefined>> Black
+}
+
+skinparam actor {
+    backgroundColor<<IVXV>> Gold
+    backgroundColor<<External>> LightSalmon
+    backgroundColor<<NEC>> DarkGoldenRod
+    backgroundColor<<Undefined>> Black
+}
+
+skinparam component {
+    backgroundColor<<IVXV>> Gold
+    backgroundColor<<NEC>> DarkGoldenRod
+    backgroundColor<<External>> LightSalmon
+    backgroundColor<<Undefined>> Black
+}
+
+
+actor "Party" <<NEC>> as a_owner
+
+
+/'
+ '
+ '  EXTERNAL SERVICES
+ '
+ '/
+
+
+package "Application" {
+
+    interface "Interface" <<IVXV>> as liides_1
+    interface "Undefined interface" <<Undefined>> as liides_3
+    [Component] <<IVXV>> as komponent_1
+
+    komponent_1 - liides_1
+    komponent_1 -up- liides_3
+}
+
+a_owner --> liides_3
+
+package "Service" {
+
+    interface "Interface" <<IVXV>> as liides_2
+    [IVXV component] <<IVXV>> as komponent_2
+    [External component] <<External>> as komponent_3
+
+    komponent_2 --> komponent_3
+    komponent_2 - liides_2
+
+    database "Database" as andmebaas {
+    }
+
+    komponent_2 --> andmebaas
+
+}
+
+liides_1 --> liides_2
+
+
+@enduml

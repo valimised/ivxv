@@ -3,29 +3,57 @@
 Kogumisteenus
 =============
 
-Üldkirjelduse [ÜK2016]_ põhjal on Kogumisteenus süsteemi keskne komponent, mida käitab Koguja. Teenus abistab Hääletajat e-hääle koostamisel ning registreerib selle enne salvestamist e-urni. Kogumisteenus kasutab väliseid teenuseid (tuvastamine, allkirjastamine, registreerimine). Kogumisteenusel on peale Koguja enda teisigi haldureid (Korraldaja, Klienditugi), kelle jaoks on Kogumisteenusel eraldi haldusliidesed.
+Üldkirjelduse [ÜK2016]_ põhjal on Kogumisteenus:
 
-Kogumisteenus töötab sidusrežiimis ning vähemalt valija- ja kontrollrakenduse suunalised liidesed on avatud internetile. Seega töötleb Kogumisteenus potentsiaalselt ebausaldusväärsest allikast pärit päringuid. Tulenevalt tarkvarale seatavast turvatasemest, kõrgkäideldavuse, skaleeritavuse, kihilise evitatavuse ning laiendatavuse nõuetest on kogumisteenus omakorda liigendatud ühte konkreetset teenust osutavateks mikroteenusteks, mida on võimalik paindlikult evitada.
+.. epigraph::
 
-Kõik kogumisteenuse komponendid programmeeritakse keeles Go (https://golang.org). Keelel Go on
+   Süsteemi keskne komponent, mida käitab Koguja. Teenus abistab Hääletajat
+   e-hääle koostamisel ning registreerib selle enne salvestamist e-urni.
+   Kogumisteenus kasutab väliseid teenuseid (tuvastamine, allkirjastamine,
+   registreerimine). Kogumisteenusel on peale Koguja enda teisigi haldureid
+   (Korraldaja, Klienditugi), kelle jaoks on Kogumisteenusel eraldi
+   haldusliidesed.
 
-- staatiline tüüpimine, mis võimaldab tüübivigade avastamist enne programmi käivitamist,
-- automaatne mäluhaldus, mis välistab rakenduse vigasest mäluhaldusest tulenevad turvaaugud,
-- kompilaator avatud lähtekoodiga ning
-- ribastamine/rööprapse, mis võimaldab kasutada paralleelsust mitmetuumalistes süsteemides.
+Kogumisteenus töötab sidusrežiimis ning vähemalt valija- ja kontrollrakenduse
+suunalised liidesed on avatud internetile. Seega töötleb Kogumisteenus
+potentsiaalselt ebausaldusväärsest allikast pärit päringuid. Tulenevalt
+tarkvarale seatavast turvatasemest, kõrgkäideldavuse, skaleeritavuse, kihilise
+evitatavuse ning laiendatavuse nõuetest on kogumisteenus omakorda liigendatud
+ühte konkreetset teenust osutavateks mikroteenusteks, mida on võimalik
+paindlikult evitada.
 
-Kogumisteenuse andmeedastusvormingutes kasutatakse üldjuhul JSON-it väljaarvatud olukordades, kus välised asjaolud tingivad mõne muu andmevormingu kasutamist – näiteks BDOC vorming baseerub XML-il.
+Kõik kogumisteenuse komponendid programmeeritakse keeles `Go
+<https://golang.org>`_. Keelel Go on:
 
-Kogumisteenus toetab Riigikogu valimisi, kohaliku omavalitsuse volikogu valimisi, Euroopa parlamendi valimisi ning rahvahääletusi.
+- staatiline tüüpimine, mis võimaldab tüübivigade avastamist enne programmi
+  käivitamist;
 
-Kogumisteenuse komponendid arvestavad virtualiseerimistehnoloogiate kasutamisega ning kogumisteenust on võimalik evitada nii ühel virtuaalriistvara instantsil, kui ka mikroteenuste kaupa erinevatel instantsidel. Kogumisteenuse komponendid on evitatavad Ubuntu LTS 16.04 operatsioonisüsteemil 64-bitisel arhitektuuril.
+- automaatne mäluhaldus, mis välistab rakenduse vigasest mäluhaldusest
+  tulenevad turvaaugud;
 
-Andmesäilitus on realiseeritud kasutades võti-väärtus andmebaasi (etcd).
-Testotstarbel on teostatud ka andmesäilitus failisüsteemi ning mällu, kuid
-neid ei ole soovituslik kasutada tootekeskkonnas. Lisaks on kogumisteenusel
-olemas liides uute talletusprotokollide lisamiseks. Lõplik otsus kasutatava
-lahenduse kohta tehakse kogumisteenuse administraatorite poolt teenust
-seadistades.
+- kompilaator avatud lähtekoodiga;
+
+- ribastamine/rööprapse, mis võimaldab kasutada paralleelsust mitmetuumalistes
+  süsteemides.
+
+Kogumisteenuse andmeedastuseks kasutatakse üldjuhul JSON-vormingut, välja
+arvatud olukordades, kus välised asjaolud tingivad mõne muu andmevormingu
+kasutamist (näiteks BDOC-vorming põhineb XML-il).
+
+Kogumisteenus toetab Riigikogu valimisi, kohaliku omavalitsuse volikogu
+valimisi, Euroopa parlamendi valimisi ning rahvahääletusi.
+
+Kogumisteenuse komponendid arvestavad virtualiseerimistehnoloogiate
+kasutamisega ning kogumisteenust on võimalik evitada nii ühel virtuaalriistvara
+instantsil, kui ka mikroteenuste kaupa erinevatel instantsidel. Kogumisteenuse
+komponendid on evitatavad Ubuntu LTS 18.04 (Bionic Beaver)
+operatsioonisüsteemil 64-bitisel arhitektuuril.
+
+Andmesäilitus on teostatud kasutades võti-väärtus andmebaasi (etcd).
+Testotstarbel on teostatud ka andmesäilitus failisüsteemi ning mällu, kuid neid
+ei ole soovituslik kasutada tootekeskkonnas. Lisaks on kogumisteenusel olemas
+liides uute talletusprotokollide lisamiseks. Lõplik otsus kasutatava lahenduse
+kohta tehakse kogumisteenuse haldurite poolt teenust seadistades.
 
 Mikroteenused
 -------------
@@ -34,32 +62,45 @@ Mikroteenused
 
    Kogumisteenuse jaotus mikroteenusteks
 
-Kogumisteenus on jaotatud põhiteenusteks ja abiteenusteks. Põhiteenused - vahendusteenus, nimekirjateenus, hääletamisteenus, kontrollteenus ning talletamisteenus - on arhitektuuri tehnilise lihtsuse mõttes piiritletud ühe valimisega, kuid ühel riistvaral, ühe operatsioonisüsteemi kontekstis võivad käia mitme valimise mikroteenused. Täiendavalt võib kogumisteenuse juures kasutada abiteenuseid - tuvastusteenust hääletaja isiku tuvastamiseks ning allkirjateenust valijarakenduse poolt hääle allkirjastamise hõlbustamiseks.
+Kogumisteenus on jaotatud põhiteenusteks ja abiteenusteks. Põhiteenused -
+vahendusteenus, nimekirjateenus, hääletamisteenus, kontrollteenus ning
+talletamisteenus - on arhitektuuri tehnilise lihtsuse mõttes piiritletud ühe
+valimisega, kuid ühel riistvaral, ühe operatsioonisüsteemi kontekstis võivad
+käia mitme valimise mikroteenused. Täiendavalt võib kogumisteenuse juures
+kasutada abiteenuseid - tuvastusteenust hääletaja isiku tuvastamiseks ning
+allkirjateenust valijarakenduse poolt hääle allkirjastamise hõlbustamiseks.
 
-Teenuseid on võimalik evitada nii eraldatult kui koos erinevates konfiguratsioonides, mis teeb võimalikuks kihilise arhitektuuri. Lähtudes funktsioonist on otstarbekas hoida Vahendus- ning Talletamisteenused teistest eraldi.
+Teenuseid on võimalik evitada nii eraldatult kui koos erinevates
+konfiguratsioonides, mis teeb võimalikuks kihilise arhitektuuri. Lähtudes
+funktsioonist on otstarbekas hoida Vahendus- ning Talletamisteenused teistest
+eraldi.
 
-Teenused kasutavad transpordiprotokollina TLS-i, kõik ühendused on mõlemapoolselt autenditud. Rakenduskihi protokoll on JSON-RPC.
+Teenused kasutavad transpordiprotokollina TLS-i, kõik ühendused on
+mõlemapoolselt autenditud. Rakenduskihi protokoll on JSON-RPC.
 
-Kõik teenused tekitavad tegevuslogi, mida säilitatakse nii lokaalselt kui logitakse rsyslog liidese vahendusel.
+Kõik teenused tekitavad tegevuslogi, mida säilitatakse nii lokaalselt kui
+logitakse syslog protokolli vahendusel kesksesse logikogujasse.
 
 Vahendusteenuse funktsioon ja tehniline liides
 ``````````````````````````````````````````````
-Vahendusteenuse põhifunktsiooniks on ühe sisenemispunkti (port 443) pakkumine
+
+Vahendusteenuse põhifunktsioon on ühe sisenemispunkti (port 443) pakkumine
 Valijarakendusele ja Kontrollrakendusele. Vahendusteenus on dispetšerteenus
 teiste komponentide vahel, mis võimaldab sisemiselt evitada kogumisteenust
-mikroteenustena, ent omada süsteemi ainult ühte sisenemispunkti. Lisaks suudab
+mikroteenustena, ent omada süsteemil ainult ühte sisenemispunkti. Lisaks suudab
 see dubleeritud evituse puhul täita koormusjaoturi ülesannet.
 
-Vahendusteenus ei termineeri TLS-ühendust vaid kasutab TLS-i *Server Name
-Indication* (SNI) laiendust sihtpunkti tuvastamiseks. Kliendid panevad TLS
-``ClientHello`` sõnumisse SNI laiendi, kus avatekstis määravad, millise
+Vahendusteenus ei termineeri TLS-ühendust vaid kasutab sihtpunkti tuvastamiseks
+TLS-i *Server Name Indication* (SNI) laiendust. Kliendid panevad TLS
+``ClientHello`` sõnumisse SNI-laiendi, kus avatekstis määravad, millise
 teenusega soovivad suhelda: vahendusteenus näeb seda, võtab ühendust vastavat
 teenust pakkuva isendiga ja hakkab kliendi ning teenuse vahelisi sõnumeid
 vahendama. Vahendusteenus EI termineeri TLS-i ning ei näe sõnumite sisu.
 Vahendusteenusel on andmed kõigi teiste teenuste asukohtadest (aadress:port)
 ning teenus vahendab sõnumivahetust kõigi osapoolte vahel.
 
-Vahendusteenus on olekuvaba komponent, mida on võimalik horisontaalselt skaleerida.
+Vahendusteenus on olekuvaba komponent, mida on võimalik horisontaalselt
+skaleerida.
 
 Vahendusteenuse teostus
 '''''''''''''''''''''''
@@ -83,33 +124,47 @@ Kuigi HAProxy on võimeline ise teostama koormusjaoturi ülesannet, on seda
 võimalik evitada ka teiste, potentsiaalselt riistvaraliste koormusjaoturite
 taha, kus see jääb täitma ainult SNI põhjal vahendmise ülesannet.
 
-HAProxy lähtekood on avalik GPL v2 all ning versioon 1.6.3 on pakendatud
-Ubuntu 16.04 ametlikus hoidlas.
-
+HAProxy lähtekood on avalik ja sobiva litsentsiga ning pakendatud
+kogumisteenuse alusplatvormi ametlikus hoidlas (vt. :ref:`tehnoloogiad`).
 
 Nimekirjateenuse funktsioon ja tehniline liides
 ```````````````````````````````````````````````
-Nimekirjateenuse põhifunktsiooniks on valikute nimekirjade vahendamine Valijarakendusele. Nimekirjateenusesse jõuab informatsioon tuvastatud valija kohta ning Nimekirjateenus väljastab valija ringkonnale vastava valikute nimekirja Talletamisteenusest Valijarakendusse.
 
-Nimekirjateenus on olekuvaba komponent, mida on võimalik horisontaalselt skaleerida.
+Nimekirjateenuse põhifunktsioon on valikute nimekirjade vahendamine
+Valijarakendusele. Nimekirjateenusesse jõuab informatsioon tuvastatud valija
+kohta ning Nimekirjateenus väljastab valija ringkonnale vastava valikute
+nimekirja Talletamisteenusest Valijarakendusse.
+
+Nimekirjateenus on olekuvaba komponent, mida on võimalik horisontaalselt
+skaleerida.
 
 Kontrollteenuse funktsioon ja tehniline liides
 ``````````````````````````````````````````````
-Kontrollteenuse põhifunktsiooniks on kontrollpäringute töötlemine ning kontrollitava hääle väljastamine Talletamisteenusest Kontrollrakendusse.
 
-Kontrollteenus on olekuvaba komponent, mida on võimalik horisontaalselt skaleerida.
+Kontrollteenuse põhifunktsioon on kontrollpäringute töötlemine ning
+kontrollitava hääle väljastamine Talletamisteenusest Kontrollrakendusse.
+
+Kontrollteenus on olekuvaba komponent, mida on võimalik horisontaalselt
+skaleerida.
 
 Hääletamisteenuse funktsioon ja tehniline liides
 ````````````````````````````````````````````````
-Hääletamisteenuse põhifunktsiooniks on hääletamispäringute töötlemine. Hääletamisteenus verifitseerib sissetuleva hääle, registreerib selle Registreerimisteenuses ning talletab Talletamisteenusesse.
 
-Hääletamisteenus on olekuvaba komponent, mida on võimalik horisontaalselt skaleerida.
+Hääletamisteenuse põhifunktsioon on hääletamispäringute töötlemine.
+Hääletamisteenus verifitseerib sissetuleva hääle, registreerib selle
+Registreerimisteenuses ning talletab Talletamisteenusesse.
+
+Hääletamisteenus on olekuvaba komponent, mida on võimalik horisontaalselt
+skaleerida.
 
 Talletamisteenuse funktsioon ja tehniline liides
 `````````````````````````````````````````````````
-Talletamisteenuse põhifunktsiooniks on valikute ja valijanimekirjade ning häälte pikaajaline talletamine.
 
-Talletamisteenuse horisontaalseks skaleerimiseks tuleb kasutada hajustalletamist võimaldavat säilitustehnoloogiat.
+Talletamisteenuse põhifunktsioon on valikute ja valijanimekirjade ning
+häälte pikaajaline talletamine.
+
+Talletamisteenuse horisontaalseks skaleerimiseks kasutatakse
+hajustalletamist võimaldavat säilitustehnoloogiat.
 
 Talletamisteenuse teostus
 '''''''''''''''''''''''''
@@ -120,29 +175,34 @@ säilitamiseks. Kogu teadmus talletatavate andmete struktuurist ja võtmete
 hierarhiast on teistes, Talletamisteenust kasutatavates teenustes, mis
 käituvad nii-öelda "tarkade" klientidena.
 
-Selline lähenemine lubab kasutada ükskõik millist üldlevinud võti-väärtus
-andmebaasi Talletamisteenusena ilma suurema vaevata: ainsateks ülesanneteks on
+Selline lähenemine lubab ilma suurema vaevata kasutada Talletamisteenusena
+ükskõik millist üldlevinud võti-väärtus andmebaasi: ainsateks ülesanneteks on
 IVXV seadistuse teisendamine andmebaasi jaoks sobilikku vormingusse ning
 teenuse käivitamine. Andmebaasi tarkvara peab võimaldama vaid võtme järgi
 talletamist ja lugemist, võtmete prefiksi järgi loetlemist ning atomaarset
 võrdle-ja-vaheta (*compare-and-swap*) operatsiooni.
 
-Talletamisteenus on kogumisteenuse töökiiruse oluliseks määrajaks: seetõttu
+Talletamisteenus on kogumisteenuse töökiiruse oluliseks määrajaks, mistõttu
 mõjutab seda teenust pakkuv riistvara kogu süsteemi jõudlust ning see tuleks
 vastavalt kasutatavale andmebaasile dimensioneerida.
 
 Hetkel ainus tooteks mõeldud Talletamisteenuse teostus kasutab hajusat
 võti-väärtus andmebaasi etcd. Selle puhul tuleks järgida etcd autorite
-riistvara soovitusi aadressil
-https://coreos.com/etcd/docs/latest/op-guide/hardware.html.
+`riistvara soovitusi
+<https://coreos.com/etcd/docs/latest/op-guide/hardware.html>`_.
 
 Tuvastusteenuse funktsioon ja tehniline liides
 ``````````````````````````````````````````````
-Tuvastusteenuse põhifunktsiooniks on valija identiteedi tuvastamine. Tuvastusteenus on vajalik näiteks Mobiil-ID autentimise korral.
+
+Tuvastusteenuse põhifunktsioon on valija identiteedi tuvastamine.
+Tuvastusteenus on vajalik näiteks Mobiil-ID autentimise korral.
 
 Allkirjateenuse funktsioon ja tehniline liides
 ``````````````````````````````````````````````
-Allkirjateenuse funktsiooniks on Valijarakenduse toetamine hääle allkirjastamisel. Allkirjateenus on vajalik näiteks Mobiil-ID allkirjastamise korral.
+
+Allkirjateenuse funktsioon on Valijarakenduse toetamine hääle
+allkirjastamisel. Allkirjateenus on vajalik näiteks Mobiil-ID allkirjastamise
+korral.
 
 Mobiil-ID abiteenuse teostus
 ''''''''''''''''''''''''''''
@@ -162,14 +222,22 @@ kui ID-kaardiga loodud signatuuri.
 
 Mobiil-ID abiteenus sisaldab küll olekut pooleliolevate tuvastusseansside
 kohta, aga muus osas on tegu olekuvaba komponendiga. Tänu sellele on võimalik
-Mobiil-ID abiteenust horisontaalselt skaleerida, eeldusel et ühe
+Mobiil-ID abiteenust horisontaalselt skaleerida eeldusel, et ühe
 tuvastusseansi kõik päringud edastatakse samale isendile.
 
 Kogumisteenuse mikroteenuste evitamine
 ``````````````````````````````````````
-Kogumisteenuse mikroteenused sõltuvad välistest pakkidest minimaalselt. Soovitatav on rsyslog teenuse kasutamine.
 
-Kogumisteenuse mikroteenused pakendatakse deb vormingus, neid on võimalik evitada ka docker'i-laadsete konteineritena.
+Kogumisteenuse mikroteenused sõltuvad välistest pakkidest minimaalselt.
+Vajalikud sõltuvused on:
+
+#. SSH-server haldustegevuste läbiviimiseks (seda kasutab mikroteenuste
+   haldamiseks haldusteenus).
+
+#. rsyslog logide kogumiseks logikogumisteenustesse.
+
+Kogumisteenuse mikroteenused pakendatakse deb-vormingus, neid on võimalik
+evitada ka docker'i-laadsete konteineritena.
 
 Välised teenused ja laiendatavus
 --------------------------------
@@ -182,53 +250,85 @@ Kogumisteenuse mikroteenused kasutavad laiendusmooduleid teostamaks erinevaid
 mehhanisme valija tuvastamiseks, digiallkirjade verifitseerimiseks ja
 täiendamiseks, sealhulgas hääle registreerimiseks. Laiendusmoodulid võivad
 teostuse võimaldamiseks kasutada väliseid teenuseid. Mikroteenuste
-laiendatavuse huvides on defineeritud Go API, mille alusel saab realiseerida
-ka täiendavaid mooduleid. Hetkel on realiseeritud järgmised moodulid:
+laiendatavuse huvides on defineeritud Go API, mille alusel saab teostada
+ka täiendavaid mooduleid. Hetkel on teostatud järgmised moodulid:
 
-- Autentimine TLS sertifikaadiga (ID-kaart)
-- Autentimine Tuvastusteenuse piletiga (Mobiil-ID)
-- BDOC verifitseerimine
-- Kehtivuskinnitusteenus OCSP
-- Ajatempliteenus RFC 3161
-- Registreerimisteenus OCSP
-- Registreerimisteenus RFC 3161
+- Autentimine TLS-sertifikaadiga (ID-kaart);
 
-IVXV krüptograafilises protokollis on kesksel kohal Registreerimisteenus, mis osaleb samuti häälte pikaajalisel talletamisel.
+- Autentimine Tuvastusteenuse piletiga (Mobiil-ID);
+
+- BDOC verifitseerimine;
+
+- Kehtivuskinnitusteenus OCSP;
+
+- Ajatempliteenus RFC 3161;
+
+- Registreerimisteenus OCSP;
+
+- Registreerimisteenus RFC 3161.
+
+IVXV krüptograafilises protokollis on kesksel kohal Registreerimisteenus, mis
+osaleb samuti häälte pikaajalisel talletamisel.
 
 Registreerimisteenuse funktsioon
-``````````````````````````````````````````````
+````````````````````````````````
 
-Registreerimisteenuse põhifunktsioon on võtta Hääletamisteenuselt vastu allkirjastatud registreerimispäringuid, kinnitada neid omapoolse allkirjastatud vastusega ning säilitada vähemalt hääletamisperioodi lõpuni, hilisemaks auditeerimiseks.
+Registreerimisteenuse põhifunktsioon on võtta Hääletamisteenuselt vastu
+allkirjastatud registreerimispäringuid, kinnitada need omapoolse allkirjastatud
+vastusega ning säilitada hilisemaks auditeerimiseks vähemalt hääletamisperioodi
+lõpuni.
 
 Auditeerimisel tekkivate võimalike erisuste lahendamiseks on oluline, et
 
-- Registreerimisteenus on võimeline tõestama, et igale tema poolt väljastatud kinnitusele eelnes Talletamisteenuse poolne registreerimispäring
-- Talletamisteenus on võimeline tõestama, et iga tema poolt talletatud hääle kohta on olemas Registreerimisteenuse kinnitus
+- Registreerimisteenus on võimeline tõestama, et igale tema poolt väljastatud
+  kinnitusele eelnes Talletamisteenuse poolne registreerimispäring;
 
-Piisav protokoll sellise tõendamistaseme saavutamiseks on, kus mõlemal osapoolel on olemas võtmepaar allkirjastamiseks, päringud ja vastused on allkirjastatud ning kumbki pool peab registrit teise poole teadete üle. Selline protokoll on realiseeritav näiteks OCSP-põhise Registreerimisteenuse korral. Samas võib esineda juhtumeid, kus näiteks registreerimispäringute allkirjastamine ei ole standardsete vahenditega võimalik - RFC 3161 põhine registreerimine - sellisel juhul tuleb registreerimisteenusele vajalik tõendusmaterjal anda muude organisatsioonilis-tehniliste vahenditega.
+- Talletamisteenus on võimeline tõestama, et iga tema poolt talletatud hääle
+  kohta on olemas Registreerimisteenuse kinnitus.
 
-Registreerimisteenusel on täna kaks erinevat teostust:
+Piisav protokoll sellise tõendamistaseme saavutamiseks on, kus mõlemal
+osapoolel on olemas võtmepaar allkirjastamiseks, päringud ja vastused on
+allkirjastatud ning kumbki pool peab registrit teise poole teadete üle. Selline
+protokoll on realiseeritav näiteks OCSP-põhise Registreerimisteenuse korral.
+Samas võib esineda juhtumeid, kus näiteks registreerimispäringute
+allkirjastamine ei ole standardsete vahenditega võimalik (RFC 3161 põhine
+registreerimine). Sellisel juhul tuleb registreerimisteenusele vajalik
+tõendusmaterjal anda muude organisatsioonilis-tehniliste vahenditega.
 
-- OCSP liides eeldab Eestis rakendatava OCSP-põhise ajamärgendamisteenuse kasutamist, kus allkirjastatud OCSP-päringu nonsiks on Hääletamisteenuse poolt pandud hääle räsi. Päring on allkirjastatud standardsete OCSP vahenditega.
-- RFC 3161 liides, mille korral ebastandardse lahendusena pannakse ajatemplipäringu nonsiks Hääletamisteenuse poolt allkirjastatud hääle räsi.
+Registreerimisteenusel on praegu kaks erinevat teostust:
+
+#. OCSP-liides eeldab Eestis rakendatava OCSP-põhise ajamärgendamisteenuse
+   kasutamist, kus allkirjastatud OCSP-päringu nonsiks on Hääletamisteenuse
+   poolt pandud hääle räsi. Päring on allkirjastatud standardsete OCSP
+   vahenditega;
+
+#. RFC 3161 liides, mille korral ebastandardse lahendusena pannakse
+   ajatemplipäringu nonsiks Hääletamisteenuse poolt allkirjastatud hääle räsi.
 
 
 Kogumisteenuse laiendusmoodulite lisamine
-``````````````````````````````````````````````
+`````````````````````````````````````````
 
 Kogumisteenuse API defineerib kuute tüüpi laiendusmooduleid:
 
-- isikutuvastus (Go pakk ``ivxv.ee/auth``, näiteks ``tls``),
-- tuvastatud isiku sertifikaadist valija identifikaatori tuletamine (Go pakk
-  ``ivxv.ee/identity``, näiteks ``serialnumber``),
-- valija identifikaatorist vanuse tuletamine (Go pakk ``ivxv.ee/age``, näiteks ``estpic``),
-- allkirjastatud konteineri verifitseerimine (Go pakk ``ivxv.ee/container``, näiteks ``bdoc``),
-- allkirja kvalifitseerimine (Go pakk ``ivxv.ee/q11n``, näiteks ``tspreg``) ja
-- andmetalletusprotokoll (Go pakk ``ivxv.ee/storage``, näiteks ``etcd``).
+#. isikutuvastus (Go pakk ``ivxv.ee/auth``, näiteks ``tls``);
 
-Uue mooduli lisamiseks tuleb moodulpakki lisada uue mooduli identifikaator ning
-mooduli teostusega alampakk. Alampaki alglaadimisel tuleb kutsuda välja
-moodulpaki ``Register`` funktsioon mooduli registreerimiseks.
+#. tuvastatud isiku sertifikaadist valija identifikaatori tuletamine (Go pakk
+   ``ivxv.ee/identity``, näiteks ``serialnumber``);
+
+#. valija identifikaatorist vanuse tuletamine (Go pakk ``ivxv.ee/age``, näiteks
+   ``estpic``);
+
+#. allkirjastatud konteineri verifitseerimine (Go pakk ``ivxv.ee/container``,
+   näiteks ``bdoc``);
+
+#. allkirja kvalifitseerimine (Go pakk ``ivxv.ee/q11n``, näiteks ``tspreg``);
+
+#. andmetalletusprotokoll (Go pakk ``ivxv.ee/storage``, näiteks ``etcd``).
+
+Uue mooduli lisamiseks tuleb moodulpakki lisada mooduli identifikaator ning
+mooduli teostusega alampakk. Alampaki alglaadimisel tuleb mooduli
+registreerimiseks kutsuda välja moodulpaki ``Register`` funktsioon.
 
 Uue mooduli kasutamiseks tuleb selle identifikaator lisada seadistusse vastava
 moodulitüübi seadistuse juurde koos alammooduli seadistusega. Laiendusmoodulile
@@ -236,7 +336,8 @@ antakse ette tema identifikaatoriga viidatud seadistusblokk, mida see
 mooduli-siseselt edasi töötleb.
 
 Moodulpakid ja nende moodulitelt nõutavad liidesed on täpsemalt kirjeldatud
-dokumendis ``IVXV API``. Samuti on iga mooduli kohta olemas vähemalt üks teostus, mida saab kasutada eeskujuna.
+dokumendis ``IVXV API``. Samuti on iga mooduli kohta olemas vähemalt üks
+teostus, mida saab kasutada eeskujuna.
 
 
 Monitooring
@@ -282,11 +383,11 @@ Logimisel järgitakse järgmisi põhimõtteid:
 * Logikirje on JSON vormingus, automaatse monitooringu jaoks on masinloetavus
   primaarne ning inimloetavus sekundaarne;
 
-* Logisse minev info saneeritakse (urlencode), peale pannakse pikkuse piirang
-  (kogu piirang ja parameetri kaupa);
+* Logisse minev info saneeritakse (urlencode) ja sellele rakendatakse pikkuse
+  piirangut (piirang terve logiteate ja samuti parameetri kaupa);
 
 * Süsteemiperimeetrist väljastpoolt pärinevat infot logitakse ainult
-  saneerituna, ainult etteantud pikkuses.
+  saneerituna ja ainult etteantud pikkuses.
 
 Kuna logimine toimub rsyslog vahendusel, on võimalik Guardtime mooduli
 kasutamine logide tervikluse tagamiseks.
@@ -295,11 +396,11 @@ kasutamine logide tervikluse tagamiseks.
 Üldstatistika
 `````````````
 
-Järgmise statistika jälgimiseks kasutatakse staatilist veebiliidest
+Järgmise statistika jälgimiseks kasutatakse staatilist veebiliidest:
 
 * edukalt kogutud hääled/hääletajate hulk;
 
-* hääletajate jagunemine sugude, eagruppide, operatsioonisüsteemide ning
+* hääletajate jagunemine sugude, vanusegruppide, operatsioonisüsteemide ning
   autentimisvahendite kaupa;
 
 * edukalt kontrollitud häälte/hääletajate hulk;
@@ -316,7 +417,7 @@ Detailstatistika agregeeritakse logide põhjal kasutades SCCEIV
 logianalüsaatorit, mis  analüüsib rakenduste tegevuslogi eeldefineeritud
 profiili suhtes ning võimaldab seansi-/veatüübipõhist analüüsi.
 
-Detailstatistika on kättesaadav üle HTTPS liidese.
+Detailstatistika on kättesaadav üle HTTPS-liidese.
 
 
 .. _kogumisteenuse-haldus:
@@ -324,14 +425,13 @@ Detailstatistika on kättesaadav üle HTTPS liidese.
 Haldus
 ------
 
-Kogumisteenuse administreerimine toimub digitaalallkirjastatud seadistuspakkide
-abil.
+Kogumisteenuse haldamine toimub digitaalallkirjastatud seadistuspakkide abil.
 
 Kogumisteenus pakub seadistuspakkide laadimiseks kahte liidest:
 
 * Käsurealiides – rakendus verifitseerib allkirja, valideerib korralduste
-  kooskõlalisust ja sobivust kogumisteenuse seisundi suhtes. Korralduse
-  rakendamine toimub eraldi utiliidi abil.
+  vormingut, kooskõlalisust ja sobivust kogumisteenuse seisundi suhtes.
+  Korralduse rakendamine toimub eraldi utiliidi abil.
 
 * Veebiliides – veebiliides vahendab seadistuspaki käsurealiidesele ja tagastab
   kasutajale info laadimise tulemuse kohta. Eduka laadimise korral toimub
@@ -349,12 +449,13 @@ Veebiliidese funktsioonideks on:
 
 * Kogumisteenuse halduse logi kuvamine.
 
-Kõik rakendusele antud korraldused säilitatakse - ka need mida ei rakendatud,
+Kõik rakendusele antud korraldused säilitatakse - ka need mida ei rakendatud.
+Vigaseid (mittevalideeruvaid) korraldusi ei säilitata.
 
-Kogumisteenus võib järgmisi tegevusi teostada automaatselt:
+Kogumisteenus võib järgmisi tegevusi teostada automaatselt (vastavalt
+seadistustes määratud aegadele):
 
-* Talletatud häälte, logide ning seadistuste varundamiseks ettevalmistamine –
-  konteinerisse pakendamine.
+* Talletatud häälte, logide ning seadistuste varundamine varundusteenusesse.
 
 
 Haldusteenuse komponendid
@@ -416,11 +517,6 @@ Välised komponendid, millega haldusteenus kokku puutub:
 #. **Seireserver** - üldstatistika andmete allalaadimine haldusteenuses
    kuvamiseks;
 
-.. note::
-
-   Veebiserver (WSGI), Haldusdeemon ja Agentdeemon on teostatus Python-keeles
-   ja kasutavad ühist **halduse teeki**
-
 .. figure:: model/management-service/upload-command.png
 
    Korralduste laadimine haldusteenusesse
@@ -435,12 +531,12 @@ kasutuselolevate väliste teenuste seisundit ja eelneva põhal tuletatud
 
 Üldseisundi olekud on:
 
-#. **Paigaldamata** - seisund pärast haldusteenuse paigaldamist kuni kõigi
+#. **Paigaldamata** - alates haldusteenuse paigaldamisest kuni kõigi
    alamteenuste paigaldamiseni;
 
-#. **Paigaldatud** - kõik alamteenused on paigaldatud neile on rakendatud
+#. **Paigaldatud** - kõik alamteenused on paigaldatud, neile on rakendatud
    tehnilised seadistused ja teenuse toimimiseks vajalikud krüptovõtmed.
-   Valimiste seadistust pole rakendatud (kuid võib olla laaditud
+   Valimiste seadistust pole rakendatud (kuid see võib olla laaditud
    haldusteenusesse);
 
 #. **Seadistatud** - kogumisteenus on seadistatud ja töökorras, sellega on
@@ -474,7 +570,7 @@ Kogumisteenuse alamteenuste seisundid
 Kogumisteenuse seisundi muutused
 ````````````````````````````````
 
-Kogumisteenuse seisund on jälgimav alates haldusteenuse edukast
+Kogumisteenuse seisund on jälgitav alates haldusteenuse edukast
 paigaldamisest, algne seisund on **Paigaldamata**.
 
 
@@ -538,4 +634,8 @@ Seadistatud süsteemil on tuvastatud rike, mis takistab teenuse osutamist.
 Rikete kõrvaldamisel olukorrani, kus süsteemiga on võimalik teenust osutada,
 saab süsteemi uueks olekuks **Osaline tõrge**.
 
-.. vim: sts=3 sw=3 et:
+
+Eemaldatud
+''''''''''
+
+Teenus on konfiguratsioonist eemaldatud.

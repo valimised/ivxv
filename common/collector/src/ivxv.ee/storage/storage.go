@@ -6,17 +6,20 @@ package storage // import "ivxv.ee/storage"
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/binary"
 	"strings"
 	"time"
 
+	"ivxv.ee/command/status"
 	"ivxv.ee/container"
 	"ivxv.ee/errors"
 	"ivxv.ee/log"
 	"ivxv.ee/q11n"
 	"ivxv.ee/yaml"
 )
+
+// timefmt is the time format used to store timestamps in storage.
+const timefmt = time.RFC3339Nano
 
 // Conf is the storage service client protocol configuration.
 type Conf struct {
@@ -106,8 +109,12 @@ const (
 	versionKey    = "version"
 )
 
-// PutChoices stores the map of choices lists.
-func (c *Client) PutChoices(ctx context.Context, version string, choices map[string][]byte) (err error) {
+// PutChoices stores the map of choices lists with the given version string.
+// Progress of the operation is reported to progress as well as logged
+// periodically.
+func (c *Client) PutChoices(ctx context.Context, version string,
+	choices map[string][]byte, progress status.Add) (err error) {
+
 	// Check if a choices list is already stored.
 	oldver, err := c.GetChoicesVersion(ctx)
 	switch {
@@ -117,24 +124,13 @@ func (c *Client) PutChoices(ctx context.Context, version string, choices map[str
 		return PutChoicesCheckExistingError{Err: err}
 	}
 
-	progress := ImportingChoice{ID: "", Index: 0, Count: len(choices)}
-	for id, list := range choices {
-		// If debugging is enabled, then report progress.
-		progress.ID = id
-		progress.Index = progress.Index.(int) + 1
-		log.Debug(ctx, progress)
+	// Ensure that no IDs clash with our version key.
+	if _, ok := choices[versionKey]; ok {
+		return PutChoicesVersionIDNotAllowedError{}
+	}
 
-		// Ensure that no IDs clash with our version key.
-		if id == versionKey {
-			return PutChoicesIDNotAllowedError{Choices: id}
-		}
-
-		// It is possible that a previous call to PutChoices failed
-		// half-way through, resulting in some choices already
-		// existing. Use ensure instead of put.
-		if err = c.ensure(ctx, choicesPrefix+id, list); err != nil {
-			return PutChoicesError{Choices: id, Err: err}
-		}
+	if err = c.putAll(ctx, choicesPrefix, choices, true, progress); err != nil {
+		return PutChoicesError{Err: err}
 	}
 
 	// Set the marker that choices lists were successfully stored.
@@ -189,8 +185,11 @@ const (
 // PutVoters concatenates cversion to the current container version and
 // compare-and-swaps the list version from oldver to newver, unless oldver is
 // empty, in which case it creates a new version file.
-func (c *Client) PutVoters(ctx context.Context, cversion string, voters map[string]string,
-	oldver, newver string) (err error) {
+//
+// Progress of the operation is reported to progress as well as logged
+// periodically.
+func (c *Client) PutVoters(ctx context.Context, cversion string, voters map[string][]byte,
+	oldver, newver string, progress status.Add) (err error) {
 
 	const vkey = votersPrefix + versionKey
 	prefix := versionPrefix(newver)
@@ -243,27 +242,17 @@ func (c *Client) PutVoters(ctx context.Context, cversion string, voters map[stri
 		}
 	}
 
+	// Ensure that no voters clash with our version or previous key.
+	if _, ok := voters[versionKey]; ok {
+		return PutVotersVersionKeyNotAllowedError{}
+	}
+	if _, ok := voters[previousKey]; ok {
+		return PutVotersPreviousKeyNotAllowedError{}
+	}
+
 	// Create a new voters list version.
-	progress := ImportingVoter{Version: newver, Voter: "", Choices: "", Index: 0, Count: len(voters)}
-	for voter, choices := range voters {
-		// If debugging is enabled, then report progress.
-		progress.Voter = voter
-		progress.Choices = choices
-		progress.Index = progress.Index.(int) + 1
-		log.Debug(ctx, progress)
-
-		// Ensure that no voters clash with our version or previous key.
-		switch voter {
-		case versionKey, previousKey:
-			return PutVotersVoterNotAllowedError{Voter: voter}
-		}
-
-		// It is possible that a previous call to PutVoters failed
-		// half-way through, resulting in some voters already existing.
-		// Use ensure instead of put.
-		if err = c.ensure(ctx, prefix+voter, []byte(choices)); err != nil {
-			return PutVotersError{Version: newver, Voter: voter, Err: err}
-		}
+	if err = c.putAll(ctx, prefix, voters, true, progress); err != nil {
+		return PutVotersError{Version: newver, Err: err}
 	}
 	if err = c.ensure(ctx, prefix+versionKey, []byte(oldcver+cversion+"\n")); err != nil {
 		return PutVotersContainerVersionsError{Version: newver, Err: err}
@@ -277,7 +266,7 @@ func (c *Client) PutVoters(ctx context.Context, cversion string, voters map[stri
 		return
 	}
 
-	if _, err = c.prot.CASAndGet(ctx, vkey, []byte(oldver), []byte(newver)); err != nil {
+	if err = c.prot.CAS(ctx, vkey, []byte(oldver), []byte(newver)); err != nil {
 		err = PutVotersCASVersionError{Old: oldver, New: newver, Err: err}
 	}
 	return
@@ -398,11 +387,16 @@ func (c *Client) EligibleVoter(ctx context.Context, voter, choices string) (vers
 	return
 }
 
-const votedPrefix = "/voted/"
+const (
+	votedPrefix = "/voted/"
+	successKey  = "success"
+	statsKey    = "stats" // Value is 8 bytes for submissions followed by timestamp.
+)
 
 // SetVoted marks the voter as voted.
 func (c *Client) SetVoted(ctx context.Context, voter string) (err error) {
-	if err = c.ensure(ctx, votedPrefix+voter, nil); err != nil {
+	prefix := votedVoterPrefix(voter)
+	if err = c.ensure(ctx, prefix+successKey, nil); err != nil {
 		err = SetVotedError{Voter: voter, Err: err}
 	}
 	return
@@ -410,13 +404,104 @@ func (c *Client) SetVoted(ctx context.Context, voter string) (err error) {
 
 // CheckVoted checks if the voter has already voted.
 func (c *Client) CheckVoted(ctx context.Context, voter string) (voted bool, err error) {
-	switch _, err = c.prot.Get(ctx, votedPrefix+voter); {
+	prefix := votedVoterPrefix(voter)
+	switch _, err = c.prot.Get(ctx, prefix+successKey); {
 	case err == nil:
 		return true, nil
 	case errors.CausedBy(err, new(NotExistError)) != nil:
 		return false, nil
 	default:
 		return false, CheckVotedError{Voter: voter, Err: err}
+	}
+}
+
+func votedVoterPrefix(voter string) string {
+	return votedPrefix + voter + "/"
+}
+
+// GetVoteStats returns per-voter vote submission statistics: the number of
+// times the voter has submitted a vote and the timestamp of the last
+// submission.
+func (c *Client) GetVoteStats(ctx context.Context, voter string) (
+	submissions uint64, last time.Time, err error) {
+
+	prefix := votedVoterPrefix(voter)
+	stats, err := c.prot.Get(ctx, prefix+statsKey)
+	switch {
+	case err == nil:
+	case errors.CausedBy(err, new(NotExistError)) != nil:
+		err = nil // No attempts yet.
+		return
+	default:
+		err = GetVoteStatsError{Voter: voter, Err: err}
+		return
+	}
+
+	if len(stats) < 8 {
+		err = log.Alert(InvalidVoteStatsLengthError{
+			Voter:  voter,
+			Length: len(stats),
+		})
+		return
+	}
+	submissions = binary.BigEndian.Uint64(stats[:8])
+
+	if last, err = time.Parse(timefmt, string(stats[8:])); err != nil {
+		err = log.Alert(ParseVoteStatsTimeError{Voter: voter, Err: err})
+	}
+	return
+}
+
+// SetVoteStats updates per-voter vote submission statistics based on last
+// known information from GetVoteStats. It increases the submission counter and
+// updates the last attempt timestamp, given that the old information is
+// unchanged.
+func (c *Client) SetVoteStats(ctx context.Context, voter string,
+	submissions uint64, last, now time.Time) (
+	err error) {
+
+	// Serialize the CAS values.
+	old := make([]byte, 8, 8+len(timefmt))
+	binary.BigEndian.PutUint64(old, submissions)
+	old = last.AppendFormat(old, timefmt)
+
+	newv := make([]byte, 8, 8+len(timefmt))
+	binary.BigEndian.PutUint64(newv, submissions+1)
+	newv = now.AppendFormat(newv, timefmt)
+
+	key := votedVoterPrefix(voter) + statsKey
+
+	// If either value is non-zero, then the key should already exist and
+	// we attempt to perform the usual compare-and-swap.
+	if submissions > 0 || !last.IsZero() {
+		if err = c.prot.CAS(ctx, key, old, newv); err != nil {
+			err = SetVoteStatsError{Voter: voter, Err: err}
+		}
+		return
+	}
+
+	// Otherwise this must be the first time this voter has submitted a
+	// vote. Use Put to create the key instead.
+	switch err = c.prot.Put(ctx, key, newv); {
+	case err == nil:
+		return nil
+	case errors.CausedBy(err, new(ExistError)) != nil:
+		// Somebody has created the key before us. Wrap err in
+		// UnexpectedValueError to mask the fact that we did a
+		// Put instead of CAS and the caller can still only
+		// check for that error type to determine if they need
+		// to try again with fresh values.
+		//
+		// We cannot use a struct literal, because gen would
+		// report it as a duplicate error type.
+		var unexpected UnexpectedValueError
+		unexpected.Err = SetVoteStatsPutExistsError{
+			Voter: voter,
+			Err:   err,
+		}
+		return unexpected
+	default:
+		return SetVoteStatsPutError{Voter: voter, Err: err}
 	}
 }
 
@@ -470,8 +555,6 @@ const (
 	voterKey = "voter"
 	// versionKey is already defined.
 	countKey = "count" // The number of times a vote has been verified.
-
-	timefmt = time.RFC3339Nano
 )
 
 // StoreVote stores the provided vote and accompanying data in the storage
@@ -481,36 +564,20 @@ func (c *Client) StoreVote(ctx context.Context, vote StoredVote) error {
 		return StoreIncompleteVoteError{VoteID: vote.VoteID, Missing: m}
 	}
 
-	prefix := voteIDPrefix(vote.VoteID)
-
-	// If putting votes fails, then raise the errors as alerts.
-
-	if err := c.prot.Put(ctx, prefix+timeKey, []byte(vote.Time.Format(timefmt))); err != nil {
-		return log.Alert(StoreTimeError{VoteID: vote.VoteID, Err: err})
-	}
-
-	if err := c.prot.Put(ctx, prefix+typeKey, []byte(vote.VoteType)); err != nil {
-		return log.Alert(StoreVoteTypeError{VoteID: vote.VoteID, Err: err})
-	}
-
-	if err := c.prot.Put(ctx, prefix+voteKey, vote.Vote); err != nil {
+	if err := c.putAll(ctx, voteIDPrefix(vote.VoteID), map[string][]byte{
+		timeKey:    []byte(vote.Time.Format(timefmt)),
+		typeKey:    []byte(vote.VoteType),
+		voteKey:    vote.Vote,
+		voterKey:   []byte(vote.Voter),
+		versionKey: []byte(vote.Version),
+		countKey:   make([]byte, 8),
+	}, false, noopAdd); err != nil {
 		return log.Alert(StoreVoteError{VoteID: vote.VoteID, Err: err})
 	}
-
-	if err := c.prot.Put(ctx, prefix+voterKey, []byte(vote.Voter)); err != nil {
-		return log.Alert(StoreVoterError{VoteID: vote.VoteID, Err: err})
-	}
-
-	if err := c.prot.Put(ctx, prefix+versionKey, []byte(vote.Version)); err != nil {
-		return log.Alert(StoreVersionError{VoteID: vote.VoteID, Err: err})
-	}
-
-	if err := c.prot.Put(ctx, prefix+countKey, make([]byte, 8)); err != nil {
-		return log.Alert(StoreVerificationCountError{VoteID: vote.VoteID, Err: err})
-	}
-
 	return nil
 }
+
+func noopAdd(uint64) uint64 { return 0 }
 
 // StoreQualifyingProperty stores a qualifying property for a vote in the
 // storage service.
@@ -552,6 +619,13 @@ func (c *Client) StoreQualifyingProperty(ctx context.Context, voteID []byte,
 // followed by more errors.
 func (c *Client) GetVotes(ctx context.Context, qps []q11n.Protocol, optional []string) (
 	<-chan *StoredVote, <-chan error) {
+
+	// XXX: It might make more sense to iterate over keys only to get vote
+	// identifiers and then use getAll to get entire votes. This would
+	// reduce our running memory usage and probably be a lot easier to
+	// read, however increase the number of storage queries, resulting in a
+	// performance hit. This change would need to be benchmarked to see if
+	// even viable.
 
 	ch := make(chan *StoredVote)
 	errc := make(chan error) // Not buffered!
@@ -719,49 +793,81 @@ func (c *Client) GetVerification(ctx context.Context,
 
 	prefix := voteIDPrefix(voteid)
 
-	// Serialize the CAS values.
-	old := make([]byte, 8)
-	new := make([]byte, 8)
-	binary.BigEndian.PutUint64(old, count)
-	binary.BigEndian.PutUint64(new, count+1)
-
-	// Attempt to read the values.
-	paths := make([]string, 2, len(qps)+2)
-	paths[0] = prefix + typeKey
-	paths[1] = prefix + voteKey
+	// First ensure that we can read the the verification data.
+	keys := make([]string, 2, len(qps)+2)
+	keys[0] = prefix + typeKey
+	keys[1] = prefix + voteKey
 	for _, qp := range qps {
-		paths = append(paths, prefix+string(qp))
+		keys = append(keys, prefix+string(qp))
 	}
-
-	m, err := c.prot.CASAndGet(ctx, prefix+countKey, old, new, paths...)
+	m, err := c.getAll(ctx, keys...)
 	if err != nil {
 		err = GetVerificationError{VoteID: voteid, Err: err}
 		return
 	}
+	if len(m) != len(keys) {
+		var missing string
+		for _, key := range keys {
+			if _, ok := m[key]; !ok {
+				missing = key
+				break
+			}
+		}
+		var ne NotExistError
+		ne.Key = missing
+		ne.Err = GetVerificationMissingDataError{Keys: keys, Count: len(m)}
+		err = ne
+		return
+	}
 
-	// Map the values into the vote.
+	// Map verification data into the vote.
 	vote.VoteType = container.Type(m[prefix+typeKey])
 	vote.Vote = m[prefix+voteKey]
 	vote.Qualification = make(q11n.Properties)
 	for _, qp := range qps {
 		vote.Qualification[qp] = m[prefix+string(qp)]
 	}
+
+	// Serialize the CAS values.
+	old := make([]byte, 8)
+	new := make([]byte, 8)
+	binary.BigEndian.PutUint64(old, count)
+	binary.BigEndian.PutUint64(new, count+1)
+
+	// Perform the CAS.
+	if err = c.prot.CAS(ctx, prefix+countKey, old, new); err != nil {
+		err = GetVerificationCASError{VoteID: voteid, Err: err}
+		return
+	}
 	return
 }
 
 func voteIDPrefix(voteid []byte) string {
-	return votePrefix + base64.URLEncoding.EncodeToString(voteid) + "/"
+	// Do not encode voteid: it is up to the storage protocol to encode it
+	// in any way if necessary. Without encoding we get a nice distribution
+	// of vote keys (given that vote IDs are uniformly distributed) which
+	// makes it easier to retrieve them in some cases (e.g., etcd).
+	//
+	// Note that this means that the vote ID can also contain slashes. Be
+	// careful when handling these cases!
+	//
+	// Because of this we can also not use path.Join, since that would call
+	// path.Clean on the result, possibly corrupting it.
+	return votePrefix + string(voteid) + "/"
 }
 
 func splitVoteKey(fullkey string) (voteid []byte, key string, err error) {
-	tokens := strings.Split(fullkey[len(votePrefix):], "/")
-	if len(tokens) != 2 {
-		return nil, "", SplitVoteKeyError{Count: len(tokens), Expected: 2}
+	// Note that the vote ID can contain slashes so be careful!
+	if !strings.HasPrefix(fullkey, votePrefix) {
+		return nil, "", SplitVoteKeyNoPrefixError{FullKey: fullkey}
 	}
-
-	voteid, err = base64.URLEncoding.DecodeString(tokens[0])
-	if err != nil {
-		return nil, "", SplitVoteKeyDecodeError{Err: err}
+	stripped := fullkey[len(votePrefix):]
+	slash := strings.LastIndex(stripped, "/")
+	switch slash {
+	case -1:
+		return nil, "", SplitVoteKeyNoSlashError{FullKey: fullkey}
+	case len(stripped) - 1:
+		return nil, "", SplitVoteKeyNoKeyError{FullKey: fullkey}
 	}
-	return voteid, tokens[1], nil
+	return []byte(stripped[:slash]), stripped[slash+1:], nil
 }

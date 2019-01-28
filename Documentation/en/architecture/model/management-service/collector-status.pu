@@ -1,0 +1,52 @@
+@startuml
+
+Title Collector service status
+
+skinparam state {
+  BackgroundColor<<OK>> LightGreen
+  BackgroundColor<<Error>> LightCoral
+}
+
+state "Not installed" as Notinstalled
+Notinstalled : - Administration service is installed,
+Notinstalled : - Subservices are not installed.
+
+state Installed <<OK>>
+Installed : All subservices have been installed
+Installed : and technically configured.
+Installed : The election settings have not been applied.
+
+state Configured <<OK>>
+Configured : Election settings have been
+Configured : applied to the collector
+Configured : service; it can be used to conduct
+Configured : voting and issue the ballot box.
+
+state Failure <<Error>>
+Failure : One or more subservices are not
+Failure : operational, an important collector
+Failure : service node is not operational.
+
+state "Partial failure" as OsalineTõrge
+OsalineTõrge : One or more redundant subservices
+OsalineTõrge : are not operational, the collector
+OsalineTõrge : service is operational.
+
+
+[*] --> Notinstalled
+
+Notinstalled --> Installed : Service \n installation
+
+Installed --> Configured : Election \n settings \n are applied \n to services
+
+Configured --> OsalineTõrge : Identifying the \n service failure \n status
+Configured --> [*]
+
+OsalineTõrge --> Configured : Identifying \n if all \n services \n are \n operational
+OsalineTõrge --> Failure
+OsalineTõrge --> [*]
+
+Failure --> OsalineTõrge
+Failure --> [*]
+
+@enduml

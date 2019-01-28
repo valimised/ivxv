@@ -1,0 +1,601 @@
+@startuml
+
+!ifdef MONITORING
+    !define COLLECTOR
+    !define OWNER
+!endif
+
+!ifdef KEY_APPLICATION
+    !define OWNER
+    !define GENERIC_APP
+!endif
+
+!ifdef AUDIT_APPLICATION
+    !define EXTERNAL_MODULES
+    !define GENERIC_APP
+!endif
+
+!ifdef PROCESSING_APPLICATION
+    !define GENERIC_APP
+    !define EXTERNAL_MODULES
+!endif
+
+!ifdef APP_MODULES
+    !define EXTERNAL_MODULES
+    !define HELPER_MODULES
+!endif
+
+!ifdef COLLECTOR_MICROSERVICES
+    !define COLLECTOR
+    !define SERVICES
+    !define VOTER
+!endif
+
+!ifdef COLLECTOR_EXTENSION
+    !define COLLECTOR
+    !define EXTENSION_MODULES
+    !define EXTERNAL_INTERFACES
+!endif
+
+
+/'
+ '
+ '  BEAUTIFICATION
+ '
+ '/
+
+skinparam interface {
+    backgroundColor<<IVXV>> Gold
+    backgroundColor<<External>> LightSalmon
+    backgroundColor<<NEC>> DarkGoldenRod
+    backgroundColor<<Not defined>> Black
+}
+
+skinparam actor {
+    backgroundColor<<IVXV>> Gold
+    backgroundColor<<External>> LightSalmon
+    backgroundColor<<NEC>> DarkGoldenRod
+    backgroundColor<<Not defined>> Black
+}
+
+skinparam component {
+    backgroundColor<<IVXV>> Gold
+    backgroundColor<<NEC>> DarkGoldenRod
+    backgroundColor<<External>> LightSalmon
+    backgroundColor<<Not defined>> Black
+}
+
+
+!ifdef GENERIC_APP
+    interface "Application log" <<IVXV>> as i_app_log
+!endif
+
+!ifdef PROCESSING_APPLICATION
+    interface "List of online voters PDF" <<Not defined>> as i_ivoters_pdf
+    !define ENCRYPTED_VOTES
+!endif
+
+
+
+!ifdef KEY_APPLICATION
+    interface "Key share" <<IVXV>> as i_key_share
+    interface "Invalid vote count" <<IVXV>> as i_invalid_votes
+    interface "Certificate" <<External>> as i_certificate
+    !define AUDITABLE
+!endif
+
+
+!ifdef AUDIT_APPLICATION
+    interface "Mixing proof" <<Not defined>> as i_mixing_proof
+    !define AUDITABLE
+!endif
+
+
+!ifdef AUDITABLE
+    interface "Decryption proof" <<IVXV>> as i_decryption_proof
+    interface "Voting result" <<External>> as i_voting_result
+    interface "Mixed votes" <<IVXV>> as i_mixed_votes
+    !define ENCRYPTED_VOTES
+!endif
+
+
+!ifdef ENCRYPTED_VOTES
+    interface "Anonymized votes" <<IVXV>> as i_encrypted_votes
+!endif
+
+'interface "Konfiguratsioonifail" <<IVXV>> as i_conf_bundle
+
+
+/'
+ '
+ '  ACTORS
+ '
+ '/
+
+!ifdef OWNER
+    actor "Organizer" <<NEC>> as a_owner
+!endif
+
+!ifdef MONITORING
+    actor "Customer support" <<External>> as a_helpdesk
+    actor "System administrator" <<External>> as a_sysadmin
+!endif
+
+!ifdef KEY_APPLICATION
+    actor "Key administrator" <<NEC>> as a_keymanager
+    a_keymanager ..> i_key_share
+!endif
+
+!ifdef PROCESSING_APPLICATION
+    actor "Processor" <<NEC>> as a_offline_processor
+!endif
+
+!ifdef AUDIT_APPLICATION
+    actor "Auditor" <<External>> as a_auditor
+!endif
+
+/'
+ '
+ '  EXTERNAL SERVICES
+ '
+ '/
+
+!ifdef EXTERNAL_INTERFACES
+interface "OCSP" <<External>> as i_sk_ocsp
+interface "Authentication OCSP" <<External>> as i_sk_auth
+interface "RFC3161" <<External>> as i_rfc_3161
+interface "DigiDocService" <<External>> as i_dds
+!endif
+
+
+!ifdef PROCESSING_APPLICATION
+interface "Registered votes" <<Not defined>> as i_registered_votes
+!endif
+
+!ifdef EXTERNAL_SERVICES
+[OCSP Registreerimisteenus] <<Väline>> as sk_ocsp
+sk_ocsp -up- i_sk_ocsp
+sk_ocsp -down- i_registered_votes
+
+[RFC3161 Registreerimisteenus] <<Väline>> as rfc_3161
+rfc_3161 -up- i_rfc_3161
+rfc_3161 -down- i_registered_votes
+
+
+[DigiDocService] <<Väline>> as ddoc_service
+ddoc_service -up- i_dds
+
+!endif
+
+!ifdef MONITORING
+[Election web server] <<NEC>> as election_www
+[External monitoring server] <<External>> as zabbix_ext
+'[Messente SMS] <<External>> as messente
+'interface "Messente" <<External>> as i_messente
+
+    interface "Monitoring" <<External>> as i_monitor
+    interface "Helpdesk" <<External>> as i_helpdesk
+'messente -up- i_messente
+
+!endif
+
+
+
+
+
+
+!ifdef PROCESSING_APPLICATION
+interface "List of online voters" <<External>> as i_vis_voters
+interface "Revocation and restoration list" <<External>> as i_vis_revoke
+interface "Voter list" <<External>> as i_pop_voters
+interface "District list" <<External>> as i_vis_dist
+!endif
+
+
+'[VIS] <<Väline>> as vis
+'interface "Tulemuste sisestamine" <<Väline>> as i_vis_results
+'vis -up- i_vis_results
+'interface "Kandidaatide nimekiri" <<Väline>> as i_vis_cands
+'vis - i_vis_cands
+'vis -up- i_vis_dist
+
+
+!ifdef VIS
+vis -up- i_vis_voters
+vis -up- i_vis_revoke
+
+[Rahvastikuregister] <<Väline>> as pop
+pop -up- i_pop_voters
+!endif
+
+
+!ifdef EXTERNAL_MODULES
+[DigiDoc4J] <<External>> as jdigidoc
+interface "DigiDoc4J" <<External>> as i_java
+i_java -right- jdigidoc
+!endif
+
+
+!ifdef HELPER_MODULES
+package "Support modules" {
+
+    interface "Election interface" <<IVXV>> as elec
+    [Riigikogu] <<IVXV>> as rk_elec
+    [Referendum] <<IVXV>> as rh_elec
+    [European Parliament] <<IVXV>> as ep_elec
+    [Local government council] <<IVXV>> as kov_elec
+
+    rk_elec -up- elec
+    rh_elec -up- elec
+    ep_elec -up- elec
+    kov_elec -up- elec
+}
+!endif
+
+
+
+
+!ifdef PROCESSING_APPLICATION
+interface "Vote export" <<IVXV>> as i_export_votes
+!endif
+
+
+!ifdef COLLECTOR
+
+package "Collector service" as collector {
+
+
+
+
+
+!ifdef SUPPORT
+        [Haldus] <<IVXV>> as admin_app
+'        admin_app - i_export_votes
+        interface "Käsurida" <<IVXV>> as i_localadmin
+        interface "Kaughaldus" <<IVXV>> as i_remoteadmin
+        admin_app -up- i_localadmin
+        admin_app -left- i_remoteadmin
+
+
+        [Varundamine] <<IVXV>> as backup
+
+
+
+       interface "Varundamine" <<IVXV>> as i_backup
+       backup - i_backup
+!endif
+
+!ifdef MONITORING
+
+    interface "RELP-JSON" <<IVXV>> as i_log_int
+    interface "Zabbix" <<IVXV>> as i_zabbix
+
+    rectangle "Monitoring" {
+        [Log analyzer] <<External>> as ivxv_monitor
+
+        database "Logs" as monitor_db {
+            }
+
+        interface "HTTPS" <<IVXV>> as i_log_ext
+'        interface "SMTP" <<IVXV>> as i_log_smtp
+'        interface "SMS" <<IVXV>> as i_log_sms
+        ivxv_monitor -down- i_log_int
+'        ivxv_monitor -down- i_log_smtp
+'        ivxv_monitor -down- i_log_sms
+        ivxv_monitor -up- i_log_ext
+        ivxv_monitor -up- i_zabbix
+        ivxv_monitor -left-> monitor_db
+
+        zabbix_ext <-left- i_monitor
+        zabbix_ext <-left- i_helpdesk
+'        i_log_sms -> i_messente
+
+    }
+
+    a_helpdesk -down-> i_helpdesk
+    a_owner -down-> i_monitor
+    a_sysadmin -down-> i_monitor
+
+    election_www --> i_log_ext
+    zabbix_ext --> i_zabbix
+
+!endif
+
+
+!ifdef EXTENSION_MODULES
+
+    interface "IVXV API" <<IVXV>> as i_api_int
+
+
+    rectangle "Mobile ID support service" {
+        [Authentication] <<IVXV>> as mid_auth
+        [Signing] <<IVXV>> as mid_sign
+
+        interface "Mobile ID support service" <<IVXV>> as i_mid
+
+        mid_auth -up- i_mid
+        mid_sign -up- i_mid
+
+        mid_auth -down-> i_dds
+        mid_sign -down-> i_dds
+    }
+
+    rectangle "Extension modules" {
+        [Authentication, TLS] <<IVXV>> as tls
+        [Authentication, ticket] <<IVXV>> as ticket
+        [BDOC] <<IVXV>> as bdoc
+        [Validity confirmation] <<IVXV>> as ocsp
+        [Timestamp] <<IVXV>> as tsp
+        [Registration] <<IVXV>> as reg
+
+        interface "Identification" <<IVXV>> as i_auth
+        interface "Verification" <<IVXV>> as i_verify
+        interface "Qualification" <<IVXV>> as i_q11n
+
+        tls -up- i_auth
+        ticket -up- i_auth
+        bdoc -up- i_verify
+        ocsp -up- i_q11n
+        tsp -up- i_q11n
+        reg -up- i_q11n
+
+        tls -down-> i_sk_auth
+        ocsp -down-> i_sk_ocsp
+        tsp -down-> i_rfc_3161
+        reg -down-> i_sk_ocsp
+        reg -down-> i_rfc_3161
+
+
+
+    }
+	i_api_int -down-> i_mid
+    i_api_int -down-> i_auth
+    i_api_int -down-> i_verify
+    i_api_int -down-> i_q11n
+!endif
+
+!ifdef SERVICES
+    rectangle "Storage service" {
+        [Storage service] <<IVXV>> as storage
+
+        database "Choices and votes" as storage_db {
+            }
+
+        database "Configuration" as conf_db_storage {
+            }
+
+
+        storage -> storage_db
+
+        interface "TLS" <<IVXV>> as i_tls_storage
+        i_tls_storage -- storage
+
+    }
+
+
+
+    rectangle "Choices service" {
+        interface "Choices" <<IVXV>> as i_tls_cls
+        [Choices service] <<IVXV>> as cls
+
+        database "Configuration" as conf_db_cls {
+            }
+        cls --> i_tls_storage
+
+        cls -up- i_tls_cls
+    }
+
+    rectangle "Verification service" {
+        interface "Verification" <<IVXV>> as i_tls_verify
+        [Verification service] <<IVXV>> as verify
+
+        database "Configuration" as conf_db_verify {
+            }
+        verify --> i_tls_storage
+
+        verify -up- i_tls_verify
+    }
+
+    rectangle "Voting service" {
+        interface "Voting" <<IVXV>> as i_tls_vote
+        [Voting service] <<IVXV>> as vote
+
+        database "Configuration" as conf_db_vote {
+            }
+        vote --> i_tls_storage
+
+        vote -up- i_tls_vote
+    }
+
+    rectangle "Proxy service" {
+        interface "HTTPS" <<IVXV>> as i_https_ext
+        interface "TLS-SNI" <<IVXV>> as i_tls_int
+        [Proxy service] <<IVXV>> as forwarder
+
+        database "Configuration" as conf_db_forwarder {
+            }
+
+        i_tls_int --> i_tls_cls
+        i_tls_int --> i_tls_vote
+        i_tls_int --> i_tls_verify
+
+        forwarder -up- i_https_ext
+        forwarder -down-> i_tls_int
+    }
+
+!endif
+
+}
+
+!endif
+
+
+/'
+ '
+ ' VÕTMERAKENDUS
+ '
+ '/
+
+!ifdef KEY_APPLICATION
+package "Key application" {
+    [Key application] <<IVXV>> as key_app
+
+    interface "FS Import" <<IVXV>> as i_key_in
+    interface "FS Export" <<IVXV>> as i_key_out
+    interface "PKCS15" <<IVXV>> as i_pkcs15
+    interface "GUI" <<IVXV>> as i_key_gui
+
+    key_app -down-> i_pkcs15
+    key_app -left-> i_key_in
+    key_app -up-> i_key_out
+    key_app -right-> i_key_gui
+
+
+    i_pkcs15 -- i_key_share
+    i_key_in ..> i_mixed_votes
+    i_key_out .up.> i_voting_result
+    i_key_out .up.> i_decryption_proof
+    i_key_out .up.> i_app_log
+    i_key_out .up.> i_certificate
+    i_key_out .up.> i_invalid_votes
+}
+
+a_owner -> i_key_gui
+!endif
+
+
+/'
+ '
+ ' TÖÖTLEMISRAKENDUS
+ '
+ '/
+
+!ifdef PROCESSING_APPLICATION
+package "Processing application" {
+    [Processing application] <<IVXV>> as offline_processor
+    [PDF API] <<External>> as pdf_api
+
+    offline_processor -> pdf_api
+
+    interface "FS Import" <<IVXV>> as i_processor_in
+    interface "FS Export" <<IVXV>> as i_processor_out
+    interface "GUI" <<IVXV>> as i_processor_gui
+    offline_processor -down-> i_processor_in
+    offline_processor -left- i_processor_gui
+    offline_processor -up-> i_processor_out
+    offline_processor -right-> i_java
+
+    i_processor_in ..> i_registered_votes
+    i_processor_in ..> i_vis_revoke
+    i_processor_in ..> i_vis_dist
+    i_processor_in ..> i_pop_voters
+    i_processor_in ..> i_export_votes
+
+    i_processor_out .up.> i_vis_voters
+    i_processor_out .up.> i_ivoters_pdf
+    i_processor_out .up.> i_encrypted_votes
+    i_processor_out .up.> i_app_log
+}
+
+a_offline_processor -> i_processor_gui
+!endif
+
+/'
+ '
+ ' AUDITIRAKENDUS
+ '
+ '/
+
+!ifdef AUDIT_APPLICATION
+package "Audit application" {
+    [Audit] <<IVXV>> as offline_audit
+    [Decryption proof verification] <<IVXV>> as decryption_verifier
+    interface "Mixing proof verification" <<IVXV>> as i_mixing_verifier
+    interface "FS Import" <<IVXV>> as i_audit_in
+    interface "FS Export" <<IVXV>> as i_audit_out
+    interface "GUI" <<IVXV>> as i_audit_gui
+
+    offline_audit --> decryption_verifier
+    offline_audit --> i_mixing_verifier
+
+    offline_audit -down-> i_audit_in
+    offline_audit -left- i_audit_gui
+    offline_audit -up-> i_audit_out
+    offline_audit -right-> i_java
+
+    i_audit_in ..> i_encrypted_votes
+    i_audit_in ..> i_mixed_votes
+    i_audit_in ..> i_decryption_proof
+    i_audit_in ..> i_mixing_proof
+    i_audit_in ..> i_voting_result
+
+
+    i_audit_out ..> i_app_log
+
+}
+
+a_auditor -> i_audit_gui
+!endif
+
+/'
+ '
+ ' SEADISTUSRAKENDUS
+ '
+ '/
+
+!ifdef CONFIG_APPLICATION
+package "Seadistusrakendus" {
+    [Seadistusrakendus] <<IVXV>> as conf_app
+
+    database "Seadistused" as conf_db {
+    }
+
+    conf_app -> conf_db
+
+    interface "FS Import" <<IVXV>> as i_conf_in
+    interface "FS Export" <<IVXV>> as i_conf_out
+
+    interface "Kiirkorraldus (SMTP)" <<IVXV>> as i_smtp
+    interface "GUI" <<IVXV>> as i_conf_gui
+
+    conf_app -up- i_smtp
+    conf_app -down- i_conf_in
+    conf_app -down- i_conf_out
+    conf_app -down- i_conf_gui
+
+    i_conf_out --> i_conf_bundle
+    i_conf_out --> i_app_log
+
+    i_conf_in --> i_vis_dist
+    i_conf_in --> i_vis_cands
+    i_conf_in --> i_pop_voters
+}
+
+a_owner --> i_conf_gui
+!endif
+
+
+
+
+
+
+
+/'
+actor :Local admin: <<VVK>> as admin
+owner -left-> i_remoteadmin
+admin -down-> i_localadmin
+admin -down-> i_backup
+'/
+
+!ifdef VOTER
+actor Voter <<External>> as voter
+interface "Voter application" <<VVK>> as i_vote
+interface "Verification application" <<VVK>> as i_indverify
+i_https_ext -up- i_vote
+i_https_ext -up- i_indverify
+voter -down-> i_vote
+voter -down-> i_indverify
+!endif
+
+
+@enduml

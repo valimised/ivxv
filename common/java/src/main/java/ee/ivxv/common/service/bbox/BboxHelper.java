@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public interface BboxHelper {
 
@@ -66,6 +67,21 @@ public interface BboxHelper {
          * @param exporter An exporter callback.
          */
         void export(Optional<String> voterId, BiConsumer<Ref.BbRef, byte[]> exporter);
+
+        /**
+         * Lists the voters in the current ballot box. A voter is reported per ballot, so if they
+         * have voted multiple times, then they will be listed the same number of times (but not
+         * necessarily sequentially).
+         * <p>
+         * <tt>start</tt> and <tt>end</tt> can be used to limit the output to voters after a start
+         * time and/or before an end time (both inclusive).
+         * 
+         * @param start The period start time, may be <tt>null</tt>.
+         * @param end The period end time, may be <tt>null</tt>.
+         * @param vp Function to find active voters.
+         * @param consumer A callback that consumes the list.
+         */
+        void listVoters(Instant start, Instant end, VoterProvider vp, Consumer<Voter> consumer);
     }
 
     /**

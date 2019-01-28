@@ -9,16 +9,16 @@ The voting service
 
 - verifies eligibility of voters,
 - verifies signatures on submitted votes,
-- acquires time marks to prove that the voter's signature certificate was valid
-  during submission,
 - generates vote identifiers,
-- registers the vote with a registration service,
-- stores the voter identity, certificate, vote, vote identifier, time mark, and
-  registration confirmation in the `storage service`_, and
-- sends the voter the vote identifier and registration confirmation for
+- qualifies votes as configured, which usually entails
+  - acquiring revocation information for signing certificates, and
+  - registering votes with a registration service,
+- stores votes, identifiers, and qualifying properties in the `storage
+  service`_, and
+- sends voters the vote identifiers and qualifying properties for
   verification.
 
-The vote container and signature format, time mark, registration, and storage
+The vote container and signature format, qualifying properties, and storage
 protocols are all abstracted and can be replaced with new implementations.
 
 .. _`storage service`: https://ivxv.ee/storage

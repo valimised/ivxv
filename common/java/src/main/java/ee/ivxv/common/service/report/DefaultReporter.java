@@ -60,20 +60,18 @@ public abstract class DefaultReporter implements Reporter {
 
     @Override
     public LogNRecord newLog123Record(String voterId, Ballot b) {
-        String time = getCurrentTime();
-        LName d = b.getDistrict();
-        LName s = b.getStation();
         Map<String, Record> records = new LinkedHashMap<>();
-        b.getVotes().forEach((qid, bytes) -> records.put(qid, new Record(time, getVoteHash(bytes),
-                d.getRegionCode(), d.getNumber(), s.getRegionCode(), s.getNumber(), voterId)));
+        b.getVotes().forEach((qid, bytes) -> records.put(qid, newLog123Record(voterId, b, qid)));
         return new LogNRecord(records);
     }
 
     @Override
-    public Record newLog45Record(String districtId, byte[] vote) {
+    public Record newLog123Record(String voterId, Ballot b, String qid) {
         String time = getCurrentTime();
-        LName d = new LName(districtId);
-        return new Record(time, d.getRegionCode(), d.getNumber(), getVoteHash(vote));
+        LName d = b.getDistrict();
+        LName s = b.getStation();
+        return new Record(time, getVoteHash(b.getVotes().get(qid)), d.getRegionCode(),
+                d.getNumber(), s.getRegionCode(), s.getNumber(), voterId);
     }
 
     private String getVoteHash(byte[] bytes) {
@@ -126,8 +124,10 @@ public abstract class DefaultReporter implements Reporter {
         IVoterList jsonIvl = createIVoterList(data, bb.getElection());
         Json.write(jsonIvl, jsonOut);
 
-        Set<StationBallots> pdfIvl = createIvlDataForPdf(dl, data);
-        writeIVoterListPdf(pdfIvl, pdfOut);
+        if (pdfOut != null) {
+            Set<StationBallots> pdfIvl = createIvlDataForPdf(dl, data);
+            writeIVoterListPdf(pdfIvl, pdfOut);
+        }
     }
 
     private String format(Instant i) {
@@ -164,7 +164,7 @@ public abstract class DefaultReporter implements Reporter {
             SortedSet<VoterBallot> ballots = Optional.ofNullable(data.districts.get(did))
                     .map(sb -> sb.get(sid)).orElse(new TreeSet<>());
             stations.remove(sid);
-            result.add(new StationBallots(stationName, ballots));
+            result.add(new StationBallots(did + "|" + sid, stationName, ballots));
         }));
 
         if (!stations.isEmpty()) {
@@ -266,17 +266,19 @@ public abstract class DefaultReporter implements Reporter {
     }
 
     private static class StationBallots implements Comparable<StationBallots> {
+        final String districtStationId;
         final String stationName;
         final Set<VoterBallot> ballots;
 
-        StationBallots(String stationName, Set<VoterBallot> ballots) {
+        StationBallots(String districtStationId, String stationName, Set<VoterBallot> ballots) {
+            this.districtStationId = districtStationId;
             this.stationName = stationName;
             this.ballots = ballots;
         }
 
         @Override
         public int compareTo(StationBallots o) {
-            return stationName.compareTo(o.stationName);
+            return districtStationId.compareTo(o.districtStationId);
         }
     }
 

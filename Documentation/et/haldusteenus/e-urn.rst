@@ -18,5 +18,3 @@ kokkulugemiseks.
    arvust, varundatud e-urnide arvust, teenusmasinate riistvaralisest
    võimekusest, teenusmasinaid ühendava võrgu läbilaskevõimest ja süsteemi
    koormusest.
-
-.. vim: sts=3 sw=3 et:

@@ -5,9 +5,7 @@ import ee.ivxv.common.crypto.rnd.Rnd;
 import ee.ivxv.common.math.IntegerConstructor;
 import ee.ivxv.common.math.MathUtil;
 import ee.ivxv.common.math.Polynomial;
-import ee.ivxv.common.service.smartcard.Card;
 import ee.ivxv.common.service.smartcard.Cards;
-import ee.ivxv.common.service.smartcard.SmartCardException;
 import ee.ivxv.key.protocol.GenerationProtocol;
 import ee.ivxv.key.protocol.ProtocolException;
 import ee.ivxv.key.protocol.ProtocolUtil;
@@ -17,27 +15,59 @@ import java.math.BigInteger;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.interfaces.RSAPublicKey;
 
+/**
+ * Generate the key for using with RSA algorithm.
+ * <p>
+ * The private key shares are stored on card tokens.
+ */
 public class ShoupGeneration implements GenerationProtocol {
-    private final Cards cards;
     private final int modLen;
     private final ThresholdParameters tparams;
     private final Rnd rnd;
-    private final byte[] cardShareAID;
-    private final byte[] cardShareName;
+    private byte[][] sharestorage;
 
+    /**
+     * Initialize the protocol using values.
+     * 
+     * @param cards List of cards to store the private key shares on.
+     * @param modLen Length of modulus in bits.
+     * @param tparams Threshold scheme parameters indicating the number of shares and the threshold
+     *        for signing.
+     * @param rnd Random source.
+     * @param cardShareAID Authentication identifier to be applied for private key shares.
+     * @param cardShareName Private key share name on card tokens.
+     * @throws IOException When the number of cards is less than the number of expected shares.
+     */
     public ShoupGeneration(Cards cards, int modLen, ThresholdParameters tparams, Rnd rnd,
-            byte[] cardShareAID, byte[] cardShareName) throws IOException {
+            byte[] cardShareAID, byte[] cardShareName, byte[][] sharestorage) throws IOException {
         if (cards.count() < tparams.getParties()) {
             throw new IOException("Fewer cards available than requested number of shareholders");
         }
-        this.cards = cards;
         this.tparams = tparams;
         this.rnd = rnd;
-        this.cardShareAID = cardShareAID;
-        this.cardShareName = cardShareName;
         this.modLen = modLen;
+        this.sharestorage = sharestorage;
     }
 
+    /**
+     * Generate RSA private key shares and output serialized public key.
+     * <p>
+     * The algorithm for constructing the key is shortly as follows: {@code
+     *  1. generate primes p, q of size nLen
+     *  2. generate public exponent 0 < e < (p-1)(q-1)
+     *  3. find private exponent d = e^-1 mod (p-1)(q-1)
+     *  4. generate polynomial with free entry d
+     *  5. compute shares si = f(i) for every node 1 <= i <= n
+     *  6. encode the shares (si, n) as ASN1 DER
+     *  7. store the ASN1-encoded shares on card i
+     *  8. encode the public key (n, e) as ASN1 DER
+     *  9. output encoded public key
+     * }
+     * 
+     * @return Serialized {@link java.security.interfaces.RSAPublicKey} instance.
+     * @throws ProtocolException When exception occurs during protocol run
+     * @throws IOException When exception occurs during card token communication.
+     */
     @Override
     public byte[] generateKey() throws ProtocolException, IOException {
         // 1. generate primes p, q of size nLen
@@ -63,13 +93,7 @@ public class ShoupGeneration implements GenerationProtocol {
         pol = generatePolynomial(p, q, d);
         BigInteger[] shares = ProtocolUtil.generateShares(pol, tparams.getParties());
         RSAPrivateCrtKey[] packedShares = packShares(e, shares, n);
-        try {
-            storeShares(packedShares);
-        } catch (SmartCardException ex) {
-            throw new ProtocolException(
-                    "Error while communicating with smart card: " + ex.toString());
-        }
-
+        storeShares(packedShares);
         RSAPublicKey pk = SignatureUtil.RSA.paramsToRSAPublicKey(e, n);
         return pk.getEncoded();
     }
@@ -109,11 +133,9 @@ public class ShoupGeneration implements GenerationProtocol {
         return packedShares;
     }
 
-    void storeShares(RSAPrivateCrtKey[] shares) throws SmartCardException {
+    void storeShares(RSAPrivateCrtKey[] shares) {
         for (int i = 0; i < shares.length; i++) {
-            Card card = cards.getCard(i);
-            card.storeIndexedBlob(cardShareAID, cardShareName, shares[i].getEncoded(),
-                    i + 1);
+            sharestorage[i] = shares[i].getEncoded();
         }
     }
 }

@@ -7,7 +7,7 @@ Dokumendid
 -------------
 
 .. list-table::
-   :widths: 60 10 10 12
+   :widths: 47 20 13 15
    :header-rows: 1
 
    *  - Nimi
@@ -23,24 +23,24 @@ Dokumendid
    *  - Elektroonilise hääletamise süsteemi IVXV üldkirjeldus
       - IVXV-YK-1.0
       - 1.0
-      - FIXME
+      - 29.05.2017
 
    *  - Elektroonilise hääletamise turvapoliitika
-      - IVXV-TP-0.9
-      - 0.9
-      - FIXME
+      - IVXV-TP-1.0
+      - 1.0
+      - 13.09.2017
 
    *  - Elektroonilise hääletamise käsiraamat
-      - IVXV-KR-0.9
-      - 0.9
-      - FIXME
+      - IVXV-KR-0.4
+      - 0.4
+      - 21.01.2019
 
 
 Spetsifikatsioonid
 ------------------
 
 .. list-table::
-   :widths: 60 10 10 12
+   :widths: 47 20 13 15
    :header-rows: 1
 
    *  - Nimi
@@ -48,38 +48,41 @@ Spetsifikatsioonid
       - Versioon
       - Kuupäev
 
-
    *  - IVXV kasutusmallid
-      - IVXV-KM-|version|
-      - |version|
-      - |today|
+      - IVXV-KM-|kasutusmall_version|
+      - |kasutusmall_version|
+      - 18.01.2019
 
    *  - IVXV protokollid
-      - IVXV-PR-|version|
-      - |version|
+      - IVXV-PR-|protokollid_version|
+      - |protokollid_version|
       - |today|
 
    *  - IVXV arhitektuur
-      - IVXV-AR-|version|
-      - |version|
-      - |today|
-
-   *  - IVXV registreerimisteenus
-      - IVXV-SRT-|version|
-      - |version|
-      - |today|
+      - IVXV-AR-|arhitektuur_version|
+      - |arhitektuur_version|
+      - 18.01.2019
 
    *  - IVXV võtmerakendus
-      - IVXV-SVR-|version|
-      - |version|
+      - IVXV-SVR-|votmerakendus_version|
+      - |votmerakendus_version|
+      - 18.01.2019
+
+   *  - IVXV protocols
+      - IVXV-PR-EN-|protocols_version|
+      - |protocols_version|
       - |today|
 
+   *  - IVXV architecture
+      - IVXV-AR-EN-|architecture_version|
+      - |architecture_version|
+      - |today|
 
 Juhendid
 ------------------
 
 .. list-table::
-   :widths: 60 10 10 12
+   :widths: 47 20 13 15
    :header-rows: 1
 
    *  - Nimi
@@ -87,42 +90,32 @@ Juhendid
       - Versioon
       - Kuupäev
 
-
-
-
    *  - IVXV seadistuste koostamise juhend
-      - IVXV-JSK-|version|
-      - |version|
+      - IVXV-JSK-|seadistused_version|
+      - |seadistused_version|
       - |today|
 
    *  - IVXV süsteemihalduri juhend
-      - IVXV-JSH-|version|
-      - |version|
+      - IVXV-JSH-|systeemihaldur_version|
+      - |systeemihaldur_version|
       - |today|
 
    *  - IVXV kogumisteenuse haldusteenuse kasutusjuhend
-      - IVXV-JHT-|version|
-      - |version|
-      - |today|
+      - IVXV-JHT-|haldusteenus_version|
+      - |haldusteenus_version|
+      - 18.01.2019
 
    *  - IVXV API
-      - IVXV-API-|version|
-      - |version|
-      - |today|
-
-   *  - IVXV testimisplaan
-      - IVXV-JTP
-      - |version|
-      - |today|
+      - IVXV-API-|api_version|
+      - |api_version|
+      - 18.01.2019
 
    *  - IVXV valijarakendus
-      - IVXV-VVR
-      - |version|
+      - IVXV-VVR-|valijarakendus_version|
+      - |valijarakendus_version|
       - |today|
 
-   *  - E-hääletamise süsteem. Valijarakenduse pakendamine
-      - EHA-03-04-2.6
-      - 2.6
-      - 30.08 2017
-
-.. vim: sts=3 sw=3 et:
+   *  - IVXV valijarakenduse pakendamine
+      - IVXV-JVP-|valijarakenduse_pakendamine_version|
+      - |valijarakenduse_pakendamine_version|
+      - |today|
