@@ -45,7 +45,7 @@ tehnilistele seadistustele.
    #. Kõiki logikirjeid logikogumisteenusesse (protokoll: RELP);
 
    #. Kogumisteenuse logikirjeid tegevuslogi monitooringu serverisse
-      (protokoll: UDP);
+      (protokoll: RELP);
 
 
 Logikogumisteenuse korraldus

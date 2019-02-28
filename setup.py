@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup(
     name='IVXVCollectorAdminDaemon',
-    version='1.4.1',
+    version='1.4.4',
     description='IVXV Collector Management Service',
     author='IVXV Developer',
     author_email='info@ivotingcentre.ee',

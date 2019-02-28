@@ -15,6 +15,8 @@ DOCS := $(DOCS) votmerakendus
 #DOCS := $(DOCS) formal
 #DOCS := $(DOCS) ivxv-pyapi
 #DOCS := $(DOCS) regteenus
+#DOCS := $(DOCS) testimisplaan
+DOCS := $(DOCS) $(if $(DEVELOPMENT),tarne)
 DESTDIR := _build
 
 HTMLDOCS  := $(DOCS:%=html-%)

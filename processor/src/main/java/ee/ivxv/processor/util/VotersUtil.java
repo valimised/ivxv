@@ -256,33 +256,37 @@ public class VotersUtil {
                 }
             });
 
-            // Process all removals before additions
             voters.forEach(v -> {
-                if (v.isAddition() || invalid.contains(v.getCode())) {
+                if (invalid.contains(v.getCode())) {
                     return;
                 }
-                if (!removed.add(v.getCode())) {
-                    rep.report(Msg.e_vl_voter_already_removed, vlName, v.getCode(), v.getName());
-                    invalid.add(v.getCode());
+                if (added.contains(v.getCode()) && removed.contains(v.getCode())) {
+                    removed.remove(v.getCode());
+                    added.remove(v.getCode());
                 }
-                if (current == null || current.find(v.getCode()) == null) {
-                    rep.report(Msg.e_vl_removed_voter_missing, vlName, v.getCode(), v.getName());
-                    invalid.add(v.getCode());
+                if (v.isAddition()) {
+                    if (!added.add(v.getCode())) {
+                        rep.report(Msg.e_vl_voter_already_added, vlName, v.getCode(), v.getName());
+                        invalid.add(v.getCode());
+                    }
+                    else {
+                        if (current != null && current.find(v.getCode()) != null && !removed.contains(v.getCode())) {
+                            rep.report(Msg.e_vl_added_voter_exists, vlName, v.getCode(), v.getName());
+                            invalid.add(v.getCode());
+                        }
+                    }
                 }
-            });
-
-            voters.forEach(v -> {
-                if (!v.isAddition() || invalid.contains(v.getCode())) {
-                    return;
-                }
-                if (!added.add(v.getCode())) {
-                    rep.report(Msg.e_vl_voter_already_added, vlName, v.getCode(), v.getName());
-                    invalid.add(v.getCode());
-                }
-                if (!removed.contains(v.getCode()) && current != null
-                        && current.find(v.getCode()) != null) {
-                    rep.report(Msg.e_vl_added_voter_exists, vlName, v.getCode(), v.getName());
-                    invalid.add(v.getCode());
+                else {
+                    if (!removed.add(v.getCode())) {
+                        rep.report(Msg.e_vl_voter_already_removed, vlName, v.getCode(), v.getName());
+                        invalid.add(v.getCode());
+                    }
+                    else {
+                        if ((current == null || current.find(v.getCode()) == null) && (!added.contains(v.getCode()))) {
+                            rep.report(Msg.e_vl_removed_voter_missing, vlName, v.getCode(), v.getName());
+                            invalid.add(v.getCode());
+                        }
+                    }
                 }
             });
 

@@ -12,6 +12,7 @@ import ee.ivxv.common.math.ModPGroupElement;
 import ee.ivxv.common.math.ProductGroup;
 import ee.ivxv.common.math.ProductGroupElement;
 import ee.ivxv.common.util.Util;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import org.slf4j.Logger;
@@ -211,12 +212,15 @@ public class Verifier {
                 new Node((ProductGroupElement) pk), new Node(DataParser.toArray(w).getElements()),
                 new Node(DataParser.toArray(w_prim).getElements()),};
         Node n = new Node(nodes);
-        byte[] encodedNode = n.getEncoded();
-        byte[] input = new byte[rho.length + encodedNode.length];
-        System.arraycopy(rho, 0, input, 0, rho.length);
-        System.arraycopy(encodedNode, 0, input, rho.length, encodedNode.length);
-        RO ro = new RO(rohash, input);
+        RO ro = new RO(rohash);
         byte[] out = new byte[DataParser.getHash(prg).getDigestLength()];
+        ro.setAmount(out.length * 8);
+        try {
+            ro.write(rho);
+            n.writeEncoded(ro);
+        } catch (IOException e) {
+            // checked
+        }
         ro.read(out, out.length * 8);
         return out;
     }
@@ -248,6 +252,7 @@ public class Verifier {
         byte[] seed = new byte[rho.length + l.getEncodedLength()];
         System.arraycopy(rho, 0, seed, 0, rho.length);
         System.arraycopy(l.getEncoded(), 0, seed, rho.length, l.getEncodedLength());
+        @SuppressWarnings("resource")
         RO ro = new RO(rohash, seed);
         byte[] out = new byte[DataParser.getHash(prg).getDigestLength()];
         ro.read(out, out.length * 8);
@@ -274,6 +279,7 @@ public class Verifier {
         byte[] seed = new byte[rho.length + n.getEncodedLength()];
         System.arraycopy(rho, 0, seed, 0, rho.length);
         System.arraycopy(n.getEncoded(), 0, seed, rho.length, n.getEncodedLength());
+        @SuppressWarnings("resource")
         RO ro = new RO(rohash, seed);
         byte[] out = new byte[(n_v + 7) / 8];
         ro.read(out, n_v);

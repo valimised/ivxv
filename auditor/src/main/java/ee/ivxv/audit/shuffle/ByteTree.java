@@ -6,10 +6,16 @@ import ee.ivxv.common.math.ModPGroup;
 import ee.ivxv.common.math.ModPGroupElement;
 import ee.ivxv.common.math.ProductGroupElement;
 import ee.ivxv.common.util.Util;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.Path;
 import javax.xml.bind.DatatypeConverter;
 import org.bouncycastle.util.Arrays;
 
@@ -27,6 +33,10 @@ public class ByteTree {
 
     public byte[] getEncoded() {
         return null;
+    }
+
+    public void writeEncoded(OutputStream out) throws IOException {
+        // Overridden
     }
 
     public boolean isLeaf() {
@@ -161,6 +171,21 @@ public class ByteTree {
         }
 
         /**
+         * Encode the Node and write it to out.
+         * 
+         * @param out Stream to write the ByteTree description of the Node.
+         * @throws IOException When writing to out fails
+         */
+        @Override
+        public void writeEncoded(OutputStream out) throws IOException {
+            out.write(PREFIX);
+            out.write(ByteTree.parse_from_int(getLength()));
+            for (int i = 0; i < getLength(); i++) {
+                getNodes()[i].writeEncoded(out);
+            }
+        }
+
+        /**
          * @return false
          */
         @Override
@@ -182,6 +207,26 @@ public class ByteTree {
             for (int i = 0; i < len; i++) {
                 bts[i] = ByteTree.parse(b, offset + pt + 5);
                 pt += bts[i].getEncodedLength();
+            }
+            Node n = new Node(bts);
+            return n;
+        }
+
+        /**
+         * Parse a DataInputStream into a node.
+         * 
+         * The given DataInputStream must be pointed to the beginning of a valid Node element.
+         * 
+         * @param is DataInputStream to be used for reading a node, seeked to the beginning of Node
+         *        definition.
+         * @return A decoded Node instance.
+         * @throws IOException When reading from the stream fails.
+         */
+        public static Node parse(DataInputStream is) throws IOException {
+            int len = read_length(is);
+            ByteTree[] bts = new ByteTree[len];
+            for (int i = 0; i < len; i++) {
+                bts[i] = ByteTree.parse(is);
             }
             Node n = new Node(bts);
             return n;
@@ -333,6 +378,19 @@ public class ByteTree {
             return ret;
         }
 
+        /**
+         * Encode the Leaf and write it to out.
+         * 
+         * @param out Stream to write the ByteTree description of the Leaf.
+         * @throws IOException When writing to out fails
+         */
+        @Override
+        public void writeEncoded(OutputStream out) throws IOException {
+            out.write(PREFIX);
+            out.write(ByteTree.parse_from_int(getLength()));
+            out.write(getValue());
+        }
+
         private byte[] getEncoded(ModPGroupElement value) {
             // Verificatum verifier manual says that enough enough bytes are needed such that the
             // element fits in. In implementation, it uses BigInteger.toByteArray().length, which is
@@ -365,6 +423,28 @@ public class ByteTree {
         public static Leaf parse(byte[] b, int offset) {
             int len = parse_int_fullbytes(b, offset);
             byte[] leafbytes = Arrays.copyOfRange(b, offset + 5, offset + 5 + len);
+            return new Leaf(leafbytes);
+        }
+
+        /**
+         * Parse a data stream into a leaf.
+         * 
+         * Parses the given DataInputStream into the leaf. The given stream must be pointed to the
+         * beginning of the definition (with length).
+         * 
+         * @param is The given input stream, seeked to the beginning of the Leaf definition.
+         * @return Leaf constructed from the input stream
+         * @throws IOException When reading from the stream fails.
+         */
+        public static Leaf parse(DataInputStream is) throws IOException {
+            int len = read_length(is);
+            byte[] leafbytes = new byte[len];
+            int read = is.read(leafbytes);
+            if (read == -1) {
+                throw new IOException("Unexpected end of stream");
+            } else if (read != len) {
+                throw new IOException("Short read");
+            }
             return new Leaf(leafbytes);
         }
 
@@ -414,6 +494,29 @@ public class ByteTree {
     }
 
     /**
+     * Parse an input stream into ByteTree instance.
+     * 
+     * Depending on the prefix, either Node or Leaf instance is constructed.
+     * 
+     * @param is Given input stream to construct the ByteTree instance from, seeked to the
+     *        beginning.
+     * @return A ByteTree representing the byte array.
+     * @throws IOException When reading from the stream fails or if the prefix is invalid.
+     */
+    public static ByteTree parse(DataInputStream is) throws IOException {
+        switch (is.read()) {
+            case -1:
+                throw new IOException("Unexpected end of stream");
+            case Node.PREFIX:
+                return Node.parse(is);
+            case Leaf.PREFIX:
+                return Leaf.parse(is);
+            default:
+                throw new IOException("Unexpected token in input stream");
+        }
+    }
+
+    /**
      * Short-hand method for {@link #parse(byte[], int)} with {@literal offset} 0.
      * 
      * @param b Byte array to be parsed
@@ -421,6 +524,25 @@ public class ByteTree {
      */
     public static ByteTree parse(byte[] b) {
         return parse(b, 0);
+    }
+
+    /**
+     * Parse a file at a path into a ByteTree instance.
+     * 
+     * Read a file from the given location into a ByteTree instance. In practice, depending on the
+     * prefix, either Node or Leaf is constructed. This method is useful when the files are large
+     * and do not fit into byte arrays.
+     * 
+     * @param path Location of file
+     * @return A ByteTree instance representing the byte array.
+     * @throws IOException When the path is invalid, or the corresponding file is not valid ByteTree
+     *         representation.
+     */
+    public static ByteTree parse(Path path) throws IOException {
+        File file = path.toFile();
+        FileInputStream fis = new FileInputStream(file);
+        DataInputStream dis = new DataInputStream(fis);
+        return parse(dis);
     }
 
     /**
@@ -444,5 +566,9 @@ public class ByteTree {
 
     private static byte[] parse_from_int(int v) {
         return ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(v).array();
+    }
+
+    private static int read_length(DataInputStream is) throws IOException {
+        return is.readInt();
     }
 }

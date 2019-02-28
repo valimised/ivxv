@@ -50,9 +50,13 @@ action(
 
 # REMOTE LOGGING - Log Monitor and other external log collectors
 {% if ext_log_collectors %}
-{% for log_collector in ext_log_collectors %}
-# forward log messages to external log collector using RELP protocol
+{% for log_collector in ext_log_collectors -%}
+{% if loop.index == 1 %}
+# forward log messages to Log Monitor using RELP protocol
 if ($programname startswith 'ivxv-') and ($syslogseverity <= '6') then
+{% else %}
+# forward log messages to external log collector using RELP protocol
+{% endif -%}
 action(
     type="omrelp"
     target="{{ log_collector.address }}"

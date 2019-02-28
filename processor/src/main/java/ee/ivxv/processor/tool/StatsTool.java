@@ -6,6 +6,7 @@ import ee.ivxv.common.cli.Arg.TreeList;
 import ee.ivxv.common.cli.Args;
 import ee.ivxv.common.cli.Tool;
 import ee.ivxv.common.crypto.CryptoUtil.PublicKeyHolder;
+import ee.ivxv.common.model.BallotBox;
 import ee.ivxv.common.model.DistrictList;
 import ee.ivxv.common.model.LName;
 import ee.ivxv.common.model.Voter;
@@ -15,6 +16,7 @@ import ee.ivxv.common.service.bbox.BboxHelper.VoterProvider;
 import ee.ivxv.common.service.bbox.InvalidBboxException;
 import ee.ivxv.common.service.i18n.MessageException;
 import ee.ivxv.common.util.I18nConsole;
+import ee.ivxv.common.util.Json;
 import ee.ivxv.common.util.ToolHelper;
 import ee.ivxv.processor.Msg;
 import ee.ivxv.processor.ProcessorContext;
@@ -52,23 +54,27 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
 
     @Override
     public boolean run(StatsArgs args) throws Exception {
-        // If there are no voter lists, then only report total statistics. If there are, then
-        // require the district list and report statistics per district.
+        // If there is no district list, then only report total statistics. Otherwise statistics are
+        // reported per district.
         DistrictList dl = null;
-        if (args.voterLists.isSet()) {
-            if (!args.districts.isSet()) {
-                throw new MessageException(Msg.e_vl_districts_missing);
-            }
+        if (args.districts.isSet()) {
             dl = tool.readJsonDistricts(args.districts.value());
         }
 
-        VoterProvider vp = getVoterProvider(args, dl);
-        reporter.writeVlErrors(args.out.value());
+        Statistics stats;
+        if (args.bb.value().toString().endsWith(".json")) {
+            // Do not use tool.readJsonBb, since it forces us to specify a ballot box type,
+            // but we want to be able to compute statistics from any type.
+            BallotBox bb = readJsonBallotBox(args.bb.value());
+            stats = generateStatistics(args, dl, bb);
+        } else {
+            VoterProvider vp = getVoterProvider(args, dl);
+            reporter.writeVlErrors(args.out.value());
 
-        BboxHelper.IntegrityChecked<?> bb = checkBallotBox(args.bb.value());
-        reporter.writeBbErrors(args.out.value());
-
-        Statistics stats = generateStatistics(args, vp, dl, bb);
+            BboxHelper.IntegrityChecked<?> bb = checkBallotBox(args.bb.value());
+            reporter.writeBbErrors(args.out.value());
+            stats = generateStatistics(args, vp, dl, bb);
+        }
 
         Path path = args.out.value().resolve(OUT_JSON);
         stats.writeJSON(path);
@@ -81,6 +87,36 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
         return true;
     }
 
+    private BallotBox readJsonBallotBox(Path path) throws Exception {
+        console.println();
+        console.println(M.m_bb_loading, path);
+        BallotBox bb = Json.read(path, BallotBox.class);
+        console.println(M.m_bb_loaded);
+        console.println(M.m_bb_total_ballots, bb.getNumberOfBallots());
+        return bb;
+    }
+
+    private Statistics generateStatistics(StatsArgs args, DistrictList dl, BallotBox bb) {
+        console.println();
+        console.println(Msg.m_stats_generating);
+        Statistics stats = new Statistics(args.elDay.value(), dl);
+        bb.getBallots().forEach((vid, vb) -> vb.getBallots().forEach(ballot -> {
+            if (args.start.isSet() && ballot.getTime().isBefore(args.start.value())
+                    || args.end.isSet() && ballot.getTime().isAfter(args.end.value())) {
+                return;
+            }
+
+            // Ballot does not contain voter code so assemble new voter. Cannot reuse for
+            // all ballots, since district or station may change.
+            Voter v = new Voter(vid, ballot.getName(), null, ballot.getDistrict(),
+                    ballot.getStation(), ballot.getRowNumber());
+            stats.countVoteFrom(v);
+        }));
+        console.println(Msg.m_stats_generated);
+
+        return stats;
+    }
+
     private VoterProvider getVoterProvider(StatsArgs args, DistrictList dl) {
         if (!args.voterLists.isSet()) {
             // Use dummy VoterProvider for reporting total statistics only.
@@ -89,6 +125,10 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
 
         if (!args.vlKey.isSet()) {
             throw new MessageException(Msg.e_vl_vlkey_missing);
+        }
+
+        if (dl == null) {
+            throw new MessageException(Msg.e_vl_districts_missing);
         }
 
         console.println();

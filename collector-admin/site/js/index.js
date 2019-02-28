@@ -218,7 +218,7 @@ function loadPageData() {
         .removeClass('text-danger')
         .addClass('text-info')
         .html('Andmete laadimise aeg: ' + formatTime(loadDate, 0) + '<br />' +
-          'Andmete genereerimise aeg: ' + formatTime(genDate, 3));
+          'Andmete genereerimise aeg: ' + genDate.toLocaleTimeString('et-EE', {}));
     })
     .fail(function() {
       $('#loadstatus')

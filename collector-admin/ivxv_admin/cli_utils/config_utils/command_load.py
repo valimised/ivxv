@@ -125,7 +125,6 @@ def register_cfg(cmd_type,
                  cfg_version,
                  autoapply):
     """Register config version in database and file system."""
-    cfg_ext = cfg_filename.split('.')[-1]
     db_key = 'config' if cmd_type in CFG_TYPES else 'list'
 
     # connect to management service database
@@ -133,15 +132,15 @@ def register_cfg(cmd_type,
         # detect order number for voters list
         if cmd_type == 'voters':
             voter_list_no = detect_voters_list_order_no(db) + 1
-            active_cfg_filename = f'{cmd_type}{voter_list_no:02}.{cfg_ext}'
+            active_cfg_filename = f'{cmd_type}{voter_list_no:02}.bdoc'
             db_key += f'/{cmd_type}{voter_list_no:02}'
         else:
-            active_cfg_filename = f'{cmd_type}.{cfg_ext}'
+            active_cfg_filename = f'{cmd_type}.bdoc'
             db_key += '/' + cmd_type
 
         # write config file to admin ui data path
         cmd_filepath = cfg_path(
-            'command_files_path', f'{cmd_type}-{cfg_timestamp}.{cfg_ext}')
+            'command_files_path', f'{cmd_type}-{cfg_timestamp}.bdoc')
         log.debug('Copying file %s to %s', cfg_filename, cmd_filepath)
         shutil.copy(cfg_filename, cmd_filepath)
         log.info('%s file loaded successfully',

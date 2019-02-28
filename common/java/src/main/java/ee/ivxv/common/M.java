@@ -111,6 +111,7 @@ public enum M implements Translatable {
 
     r_ivl_description, //
     r_ivl_station_name, //
+    r_ivl_district_name, //
     ;
 
     @Override

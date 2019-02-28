@@ -8,19 +8,19 @@
 ..  Feature: Kogumisteenuse käivitamine kõrgkäideldava konfiguratsiooniga
              features/collector-ha-setup.feature:6
    Scenario: Kogumisteenuse tehniliste seadistuste rakendamine
-             features/collector-ha-setup.feature:366
+             features/collector-ha-setup.feature:370
        Step: Haldur laadib haldusteenusesse kogumisteenuse tehnilised seadistused
-             features/collector-ha-setup.feature:386
+             features/collector-ha-setup.feature:390
 
 .. code-block:: text
 
-   ivxv-admin@admin $ ivxv-cmd-load technical /output/voting/HA-SETUP/config/HA-SETUP.technical.bdoc
-   INFO: Config file is signed by: ROPKA,KIVIVALVUR,32608320001 2019-01-25T14:30:17Z
+   ivxv-admin@admin $ ivxv-cmd-load technical /output/voting/HA-SETUP/config/HA-SETUP.technical.asice
+   INFO: Config file is signed by: ROPKA,KIVIVALVUR,32608320001 2019-02-11T11:02:33Z
    INFO: User ROPKA,KIVIVALVUR,32608320001 with role "admin" is authorized to execute "technical" commands
-   INFO: Using signature "ROPKA,KIVIVALVUR,32608320001 2019-01-25T14:30:17Z" as config file version
-   INFO: Config file version is "ROPKA,KIVIVALVUR,32608320001 2019-01-25T14:30:17Z"
-   INFO: Loading command "collectors technical configuration" from file /output/voting/HA-SETUP/config/HA-SETUP.technical.bdoc
-   command_file:INFO: Loading command file "/output/voting/HA-SETUP/config/HA-SETUP.technical.bdoc" (collectors technical configuration)
+   INFO: Using signature "ROPKA,KIVIVALVUR,32608320001 2019-02-11T11:02:33Z" as config file version
+   INFO: Config file version is "ROPKA,KIVIVALVUR,32608320001 2019-02-11T11:02:33Z"
+   INFO: Loading command "collectors technical configuration" from file /output/voting/HA-SETUP/config/HA-SETUP.technical.asice
+   command_file:INFO: Loading command file "/output/voting/HA-SETUP/config/HA-SETUP.technical.asice" (collectors technical configuration)
    command_file:INFO: Validating collectors technical configuration
    command_file:INFO: Files in collectors technical configuration package are valid
    lib:INFO: Registering new service backup@backup.ivxv.ee in management service

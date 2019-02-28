@@ -134,8 +134,15 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 
 :logging:
         Alamblokk, mis sisaldab loetelu mikroteenuste kauglogimise serveritest.
-        Siin blokis kirjeldatakse logiseire teenus (loetelus esimene),
-        vajadusel ka täiendavad serverid. Logimine toimub üle RELP protokolli.
+        Siin blokis kirjeldatakse:
+
+        * Logiseire teenus. Alati loetelus esimene. Logiseirele saadetakse IVXV
+          logi alates tasemest INFO;
+
+        * Vajadusel ka täiendavad välised logikogujad, kuhu saadetakse täielik
+          logi alates tasemest DEBUG.
+
+        Logimine toimub üle RELP protokolli.
 
         Kõik logiserverite parameetrid määrab kogumisteenuse osutaja.
 

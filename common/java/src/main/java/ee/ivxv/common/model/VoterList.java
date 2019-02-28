@@ -29,7 +29,19 @@ public class VoterList {
         this.type = type;
         Map<String, Voter> a = new LinkedHashMap<>();
         Map<String, Voter> r = new LinkedHashMap<>();
-        voters.forEach(v -> (v.isAddition() ? a : r).put(v.getCode(), v));
+        voters.forEach(v -> {
+            if (a.containsKey(v.getCode()) && r.containsKey(v.getCode())) {
+                a.remove(v.getCode());
+                r.remove(v.getCode());
+            }
+
+            if (v.isAddition()) {
+                a.put(v.getCode(), v);
+            }
+            else {
+                r.put(v.getCode(), v);
+            }
+        });
         added = Collections.unmodifiableMap(a);
         removed = Collections.unmodifiableMap(r);
     }
@@ -92,15 +104,32 @@ public class VoterList {
      * @return The voter instance that is active in this voter list or <tt>null</tt>.
      */
     public Voter find(String voterId) {
-        Voter v = added.get(voterId);
 
-        if (v != null) {
-            return v;
+        Voter prev = Optional.ofNullable(parent).map(p -> p.find(voterId)).orElse(null);
+        Voter current_add = added.get(voterId);
+        Voter current_del = removed.get(voterId);
+
+        // no change
+        if (current_add == null && current_del == null) {
+            return prev;
         }
-        if (removed.containsKey(voterId)) {
-            return null;
+
+        // prev exists - change station
+        // otherwise nop
+        if (current_add != null && current_del != null) {
+            if (prev == null) {
+                return null;
+            }
+            else {
+                return current_add;
+            }
         }
-        return Optional.ofNullable(parent).map(p -> p.find(voterId)).orElse(null);
+
+        if (current_add != null) {
+            return current_add;
+        }
+
+        return null;
     }
 
 }

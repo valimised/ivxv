@@ -8,22 +8,22 @@
 ..  Feature: Kogumisteenuse käivitamine kõrgkäideldava konfiguratsiooniga
              features/collector-ha-setup.feature:6
    Scenario: Kogumisteenuse tehniliste seadistuste rakendamine
-             features/collector-ha-setup.feature:366
+             features/collector-ha-setup.feature:370
        Step: Haldur laadib haldusteenusesse usaldusjuure seadistused
-             features/collector-ha-setup.feature:374
+             features/collector-ha-setup.feature:378
 
 .. code-block:: text
 
-   ivxv-admin@admin $ ivxv-cmd-load trust /output/voting/HA-SETUP/config/HA-SETUP.trust.bdoc
-   command_file:INFO: Loading command file "/output/voting/HA-SETUP/config/HA-SETUP.trust.bdoc" (trust root configuration)
+   ivxv-admin@admin $ ivxv-cmd-load trust /output/voting/HA-SETUP/config/HA-SETUP.trust.asice
+   command_file:INFO: Loading command file "/output/voting/HA-SETUP/config/HA-SETUP.trust.asice" (trust root configuration)
    command_file:INFO: Validating trust root configuration
    command_file:INFO: Files in trust root configuration package are valid
-   INFO: Config file is signed by: ORAV,IVAN,30809010001 2019-01-25T14:30:11Z
+   INFO: Config file is signed by: ORAV,IVAN,30809010001 2019-02-11T11:02:27Z
    INFO: User ORAV,IVAN,30809010001 with role "admin" is authorized to execute "trust" commands
-   INFO: Using signature "ORAV,IVAN,30809010001 2019-01-25T14:30:11Z" as config file version
-   INFO: Config file version is "ORAV,IVAN,30809010001 2019-01-25T14:30:11Z"
-   INFO: Loading command "trust root configuration" from file /output/voting/HA-SETUP/config/HA-SETUP.trust.bdoc
-   command_file:INFO: Loading command file "/output/voting/HA-SETUP/config/HA-SETUP.trust.bdoc" (trust root configuration)
+   INFO: Using signature "ORAV,IVAN,30809010001 2019-02-11T11:02:27Z" as config file version
+   INFO: Config file version is "ORAV,IVAN,30809010001 2019-02-11T11:02:27Z"
+   INFO: Loading command "trust root configuration" from file /output/voting/HA-SETUP/config/HA-SETUP.trust.asice
+   command_file:INFO: Loading command file "/output/voting/HA-SETUP/config/HA-SETUP.trust.asice" (trust root configuration)
    command_file:INFO: Validating trust root configuration
    command_file:INFO: Files in trust root configuration package are valid
    INFO: Resetting collector management database

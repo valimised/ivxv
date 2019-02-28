@@ -8,9 +8,9 @@
 ..  Feature: Kogumisteenuse käivitamine kõrgkäideldava konfiguratsiooniga
              features/collector-ha-setup.feature:6
    Scenario: Mikroteenuse seiskamine ja käivitamine
-             features/collector-ha-setup.feature:427
-       Step: Haldur tuvastab teenuse "voting@voting2.ivxv.ee" seisundi
              features/collector-ha-setup.feature:431
+       Step: Haldur tuvastab teenuse "voting@voting2.ivxv.ee" seisundi
+             features/collector-ha-setup.feature:435
 
 .. code-block:: text
 

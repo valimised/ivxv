@@ -315,14 +315,15 @@ Tööriist *stats*
 ****************
 
 *Stats* on lisavahend, millega saab arvutada häälte ja hääletajate statistikat
-kogumisteenusest saadud e-urni põhjal. Statistikat on võimalik piiritleda
-ajavahemikuga ning väljundit on võimalik piiritleda koondandmetega kui ka
-ringkondade kaupa. NB! Tööriist ei kontrolli digitaalallkirju, häälte
-töötlemiseks tuleb kasutada *check*, *squash*, *revoke*, *anonymize*
-töövoogu.
+e-urni põhjal. Statistikat on võimalik piiritleda ajavahemikuga ning väljundit
+on võimalik piiritleda koondandmetega kui ka ringkondade kaupa. NB! Tööriist ei
+kontrolli digitaalallkirju, häälte töötlemiseks tuleb kasutada *check*,
+*squash*, *revoke*, *anonymize* töövoogu.
 
 :stats.ballotbox:
-        Kogumisteenusest väljastatud e-urn.
+        E-urn, mille põhjal statistika koostada. Kui faili laiendiks on
+        ``.json``, siis peab see olema olema töödeldud e-urn. Vastasel juhul
+        peab see olema kogumisteenusest väljastatud e-urn.
 
 :stats.election_day:
         Valimispäev. Kõikide e-hääletanute vanused arvutatakse statistika
@@ -337,17 +338,22 @@ töövoogu.
         hääli statistikasse ei kaasata.
 
 :stats.districts:
-        Digitaalselt allkirjastatud ringkondade nimekiri.
-        Argument on kohustuslik, kui valijate nimekirjad on antud.
+        Digitaalselt allkirjastatud ringkondade nimekiri. Vajalik ringkondade
+        kaupa statistika väljastamiseks. Kui on määramata, siis väljastatakse
+        ainult koondstatistika.
+
+        Argument on kohustuslik, kui e-urn on kogumisteenusest väljastatud ja
+        valijate nimekirjad on antud.
 
 :stats.vlkey:
         Valijate nimekirjade verifitseerimiseks kasutatav avalik võti.
-        Argument on kohustuslik, kui valijate nimekirjad on antud.
+        Argument on kohustuslik, kui e-urn on kogumisteenusest väljastatud ja
+        valijate nimekirjad on antud.
 
 :stats.voterlists:
-        Valijate nimekirjade loend. Vajalik ringkondade kaupa statistika
-        väljastamiseks. Kui on määramata, siis väljastatakse ainult
-        koondstatistika.
+        Valijate nimekirjade loend. Vajalik kogumisteenusest väljastatud
+        e-urnist valija ringkonna tuvastamiseks. Kui on määramata, siis sellise
+        e-urni puhul väljastatakse ainult koondstatistika.
 
 :stats.voterlists.path:
         Valijate nimekirja fail.

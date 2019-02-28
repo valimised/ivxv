@@ -8,19 +8,19 @@
 ..  Feature: Kogumisteenuse käivitamine kõrgkäideldava konfiguratsiooniga
              features/collector-ha-setup.feature:6
    Scenario: Valikute nimekirja rakendamine
-             features/collector-ha-setup.feature:437
+             features/collector-ha-setup.feature:441
        Step: Nimekirjade haldur laadib valikute nimekirja haldusteenusesse
-             features/collector-ha-setup.feature:483
+             features/collector-ha-setup.feature:487
 
 .. code-block:: text
 
-   ivxv-admin@admin $ ivxv-cmd-load choices /output/voting/HA-SETUP/config/choices.bdoc
-   INFO: Config file is signed by: TRUMM,KAPTEN,33333333333 2019-01-25T14:37:28Z
+   ivxv-admin@admin $ ivxv-cmd-load choices /output/voting/HA-SETUP/config/choices.asice
+   INFO: Config file is signed by: TRUMM,KAPTEN,33333333333 2019-02-11T11:09:12Z
    INFO: User TRUMM,KAPTEN,33333333333 with role "election-conf-manager" is authorized to execute "choices" commands
-   INFO: Using signature "TRUMM,KAPTEN,33333333333 2019-01-25T14:37:28Z" as config file version
-   INFO: Config file version is "TRUMM,KAPTEN,33333333333 2019-01-25T14:37:28Z"
-   INFO: Loading command "choices list" from file /output/voting/HA-SETUP/config/choices.bdoc
-   command_file:INFO: Loading command file "/output/voting/HA-SETUP/config/choices.bdoc" (choices list)
+   INFO: Using signature "TRUMM,KAPTEN,33333333333 2019-02-11T11:09:12Z" as config file version
+   INFO: Config file version is "TRUMM,KAPTEN,33333333333 2019-02-11T11:09:12Z"
+   INFO: Loading command "choices list" from file /output/voting/HA-SETUP/config/choices.asice
+   command_file:INFO: Loading command file "/output/voting/HA-SETUP/config/choices.asice" (choices list)
    command_file:INFO: Validating choices list
    command_file:INFO: Files in choices list package are valid
    INFO: Choices list file loaded successfully

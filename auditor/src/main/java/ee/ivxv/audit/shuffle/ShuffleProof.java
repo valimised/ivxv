@@ -128,14 +128,14 @@ public class ShuffleProof {
         pc = new PermutationCommitment(prot, pcpath);
         posc = new PoSCommitment(prot, poscpath);
         posr = new PoSReply(prot, posrpath);
-        ByteTree ctsbt = ByteTree.parse(Files.readAllBytes(ciphspath));
-        ByteTree sctsbt = ByteTree.parse(Files.readAllBytes(shuffledpath));
-        ByteTree pkbt = ByteTree.parse(Files.readAllBytes(pkpath));
+        ByteTree pkbt = ByteTree.parse(pkpath);
         Group group = prot.get_parsed_pgroup();
         Group ciphgroup = get_ciphertext_group(prot, group);
-        ciphs = DataParser.getAsElementArray(ciphgroup, ctsbt);
-        shuffled = DataParser.getAsElementArray(ciphgroup, sctsbt);
         pk = DataParser.getAsElement(ciphgroup, pkbt);
+        ByteTree ctsbt = ByteTree.parse(ciphspath);
+        ciphs = DataParser.getAsElementArray(ciphgroup, ctsbt);
+        ByteTree sctsbt = ByteTree.parse(shuffledpath);
+        shuffled = DataParser.getAsElementArray(ciphgroup, sctsbt);
     }
 
     public ProtocolInformation get_ProtocolInformation() {

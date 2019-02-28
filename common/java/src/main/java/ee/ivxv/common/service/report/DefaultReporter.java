@@ -126,7 +126,7 @@ public abstract class DefaultReporter implements Reporter {
 
         if (pdfOut != null) {
             Set<StationBallots> pdfIvl = createIvlDataForPdf(dl, data);
-            writeIVoterListPdf(pdfIvl, pdfOut);
+            writeIVoterListPdf(pdfIvl, bb.getElection(), pdfOut);
         }
     }
 
@@ -160,11 +160,12 @@ public abstract class DefaultReporter implements Reporter {
         dl.getDistricts().forEach((did, district) -> district.getStations().forEach(sid -> {
             LName station = new LName(sid);
             String regionName = getRegionName(dl.getRegions().get(station.getRegionCode()));
-            String stationName = i18n.get(M.r_ivl_station_name, regionName, station.getNumber());
+            String stationName = i18n.get(M.r_ivl_station_name, station.getNumber(), regionName);
+            String districtName = i18n.get(M.r_ivl_district_name, district.getName());
             SortedSet<VoterBallot> ballots = Optional.ofNullable(data.districts.get(did))
                     .map(sb -> sb.get(sid)).orElse(new TreeSet<>());
             stations.remove(sid);
-            result.add(new StationBallots(did + "|" + sid, stationName, ballots));
+            result.add(new StationBallots(did + "|" + sid, stationName, districtName, ballots));
         }));
 
         if (!stations.isEmpty()) {
@@ -180,7 +181,7 @@ public abstract class DefaultReporter implements Reporter {
                 .collect(Collectors.joining(", ")); // Join by ','
     }
 
-    private void writeIVoterListPdf(Set<StationBallots> stations, Path out) throws Exception {
+    private void writeIVoterListPdf(Set<StationBallots> stations, String election, Path out) throws Exception {
         try (OutputStream os = Files.newOutputStream(out); PdfDoc doc = new PdfDoc(os)) {
             AtomicBoolean guard = new AtomicBoolean();
             stations.forEach(sb -> {
@@ -190,8 +191,10 @@ public abstract class DefaultReporter implements Reporter {
                     }
 
                     doc.resetPageNumber();
-                    doc.addText(i18n.get(M.r_ivl_description), -1, Alignment.LEFT);
+                    doc.addText(i18n.get(M.r_ivl_description, election), -1, Alignment.LEFT);
                     doc.newLine();
+                    doc.newLine();
+                    doc.addTitle(sb.districtName, -1, Alignment.LEFT);
                     doc.newLine();
                     doc.addTitle(sb.stationName, -1, Alignment.LEFT);
                     doc.newLine();
@@ -268,11 +271,13 @@ public abstract class DefaultReporter implements Reporter {
     private static class StationBallots implements Comparable<StationBallots> {
         final String districtStationId;
         final String stationName;
+        final String districtName;
         final Set<VoterBallot> ballots;
 
-        StationBallots(String districtStationId, String stationName, Set<VoterBallot> ballots) {
+        StationBallots(String districtStationId, String stationName, String districtName, Set<VoterBallot> ballots) {
             this.districtStationId = districtStationId;
             this.stationName = stationName;
+            this.districtName = districtName;
             this.ballots = ballots;
         }
 

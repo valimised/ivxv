@@ -34,6 +34,10 @@ usage need are listed in the tables below. There are separate tables for
 packaging and operating the framework as well as developing and testing the
 framework.
 
+All external libraries used in the IVXV project are available in the
+``ivxv-external.git`` repository or on the platform on which the application
+will be operating.
+
 All components used in the collector service have an open source code.
 
 .. tabularcolumns:: |p{0.4\linewidth}|p{0.1\linewidth}|p{0.25\linewidth}|p{0.25\linewidth}|

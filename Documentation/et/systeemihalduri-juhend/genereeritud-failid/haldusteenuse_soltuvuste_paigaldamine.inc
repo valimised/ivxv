@@ -8,9 +8,9 @@
 ..  Feature: Kogumisteenuse käivitamine kõrgkäideldava konfiguratsiooniga
              features/collector-ha-setup.feature:6
    Scenario: Kogumisteenuse haldusteenuse paigaldus
-             features/collector-ha-setup.feature:336
+             features/collector-ha-setup.feature:340
        Step: Haldur paigaldab haldusteenuse
-             features/collector-ha-setup.feature:342
+             features/collector-ha-setup.feature:346
 
 .. code-block:: text
 
@@ -28,10 +28,10 @@
    ...
    apache2 is already the newest version (2.4.29-1ubuntu4.5).
    language-pack-et is already the newest version (1:18.04+20180712).
-   openssh-server is already the newest version (1:7.6p1-4ubuntu0.1).
+   openssh-server is already the newest version (1:7.6p1-4ubuntu0.2).
    openssl is already the newest version (1.1.0g-2ubuntu4.3).
    python3 is already the newest version (3.6.7-1~18.04).
    python3 on määratud käsitsi paigaldatuks.
    python3-gdbm is already the newest version (3.6.7-1~18.04).
    tzdata is already the newest version (2018i-0ubuntu0.18.04).
-   0 uuendatud, 0 värskelt paigaldatud, 0 eemaldada ja 15 uuendamata.
+   0 uuendatud, 0 värskelt paigaldatud, 0 eemaldada ja 2 uuendamata.

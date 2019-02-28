@@ -295,7 +295,7 @@ Haldusteenuse paigaldamine
 Haldusteenuse paigaldamine toimub haldusteenuse hostil.
 
 Haldusteenuse paigaldamiseks tuleb kopeerida **kõik** kogumisteenuse
-tarkvarapakid haldusteenuse masina kataloogi :file:`/opt/`. Nendest pakkidest
+tarkvarapakid haldusteenuse masina kataloogi :file:`/etc/ivxv/debs/`. Nendest pakkidest
 paigaldatakse haldusteenus, samuti kasutab haldusteenus neid pakke alamteenuste
 paigaldamiseks.
 

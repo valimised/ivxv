@@ -128,24 +128,31 @@ def validate_voters_consistency(districts, districts_cfg, voters_cfg):
 
     # generate stations list
     stations = set()
-    for district_stations in districts_cfg['districts'].values():
+
+    for district in districts_cfg['districts']:
+        district_stations = districts_cfg['districts'][district]
         for station in district_stations['stations']:
-            if station in stations:
-                errors.append(f'Duplicate record for station {station}')
+            uniq_station = '.'.join([station, district])
+            if uniq_station in stations:
+                errors.append(f'Duplicate record for station {station} '
+                              f'in district {district}')
             else:
-                stations.add(station)
+                stations.add(uniq_station)
 
     # check consistency
     for voter in voters_cfg['voters']:
-        # Each voter must be in an existing station
-        voter_station = '.'.join(voter[3:5])
-        if voter_station not in stations:
-            errors.append(f'Voter {voter[0]} have no station {voter_station}')
 
         # In each station there must be at least one voter voters
         voter_district = '.'.join(voter[5:7])
         if voter_district not in districts:
             errors.append(
-                f'Voter {voter[0]} have no district {voter_district}')
+                f'Voter {voter[0]} in non-existing district {voter_district}')
+
+        # Each voter must be in an existing station
+        voter_station = '.'.join(voter[3:5])
+        uniq_station = '.'.join(voter[3:7])
+        if uniq_station not in stations:
+            errors.append(f'Voter {voter[0]} in non-existing station '
+                          f'{voter_station} in district {voter_district}')
 
     return errors

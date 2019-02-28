@@ -103,6 +103,8 @@ function loadPageData() {
           $('#stats-error-msg').html(data[key].replace(/\n/g, '<br />'));
         }
       });
+
+      // data loading stats
       var genDate = new Date();
       genDate.setTime(Date.parse(data['meta']['time_generated']));
       $('#loadstatus')

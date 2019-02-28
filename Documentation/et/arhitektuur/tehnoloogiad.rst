@@ -37,6 +37,9 @@ kasutamisvajadusega on üles loetletud järgnevates tabelites. Eraldi tabelid on
 raamistiku pakendamiseks ja töötamiseks ning raamistiku arenduseks ja
 testimiseks.
 
+Kõik IVXV projektis kasutatavad välised teegid asuvad ``ivxv-external.git``
+hoidlas või on saadaval platvormil, kus rakendus tööle hakkab.
+
 Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
 
 .. tabularcolumns:: |p{0.4\linewidth}|p{0.1\linewidth}|p{0.25\linewidth}|p{0.25\linewidth}|

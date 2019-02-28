@@ -27,6 +27,12 @@ koosneb tööriistadest *convert*, *mixer* ja *decrypt*.
 E-häälte korrektse kokkulugemise kontrolliks on vajalik ja piisav
 kasutada kõiki kolme auditirakenduse tööriista.
 
+Suurte e-urni ja tõendite korral võib olla tarvilik suurendada rakenduse
+mälupiirangut. Selleks tuleb seada keskonnamuutuja ``AUDITOR_OPTS`` väärtusega
+``-Xmx{N}G``, kus ``{N}`` on mälupiirangu suurus gigabaitides. Näiteks 10
+gigabaidi mälupiirangu seadmiseks tuleb seada keskkonnamuutuja
+``AUDITOR_OPTS=-Xmx10G``.
+
 Kõigi tööriistade kasutamine eeldab allkirjastatud usaldusjuure ja
 konkreetse tööriista seadistuste olemasolu. Alljärgnevalt kirjeldame
 konkreetsete tööriistade seadistusi.

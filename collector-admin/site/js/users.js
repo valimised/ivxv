@@ -30,6 +30,7 @@ function loadPageData() {
         i++;
       });
 
+      // data loading stats
       var genDate = new Date();
       genDate.setTime(Date.parse(state['meta']['time_generated']));
       $('#loadstatus')
@@ -37,7 +38,7 @@ function loadPageData() {
         .addClass('text-info')
         .html(
           'Andmete laadimise aeg: ' + formatTime(loadDate, 0) + '<br />' +
-          'Andmete genereerimise aeg: ' + formatTime(genDate, 3));
+          'Andmete genereerimise aeg: ' + genDate.toLocaleTimeString('et-EE', {}));
     })
     .fail(function() {
       $('#loadstatus')

@@ -1,3 +1,26 @@
+ivxv (1.4.4) UNRELEASED; urgency=medium
+
+  * Java application-only release
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Tue, 26 Feb 2019 10:56:04 +0200
+
+ivxv (1.4.3) bionic; urgency=medium
+
+  * Management service:
+      - Use hardcoded extension .bdoc for config file names in /etc/ivxv
+      - Fixed setting timezone offset in UI data files
+  * Collector service:
+      - Send full log to external log collectors
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Mon, 11 Feb 2019 12:23:56 +0200
+
+ivxv (1.4.2) bionic; urgency=medium
+
+  * Management service:
+    * Enforce station number uniqueness only within a district
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Fri, 01 Feb 2019 15:13:05 +0200
+
 ivxv (1.4.1) bionic; urgency=medium
 
   * Collector service:
