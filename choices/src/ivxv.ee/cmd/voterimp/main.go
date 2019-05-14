@@ -370,10 +370,10 @@ func initial(ctx context.Context, voter, action, choices string, voters map[stri
 		errs = append(errs, InitialNonAddActionError{Action: action})
 		skip = true
 	}
-	if len(choices) == 0 {
-		errs = append(errs, InitialEmptyChoicesError{})
+	if !validChoices(choices) {
+		errs = append(errs, InitialInvalidChoicesError{Choices: choices})
 		// Do not set skip: detect duplicate voter regardless of faulty
-		// choices. It is OK to add empty choices since we will error
+		// choices. It is OK to add invalid choices since we will error
 		// anyway and the map values are not used.
 	}
 	if !skip {
@@ -395,18 +395,18 @@ func changes(ctx context.Context, voter, action, choices string, voters map[stri
 		errs = append(errs, ChangesVoterWithPreviousErrorsError{Voter: voter})
 	}
 
-	if len(choices) == 0 {
-		errs = append(errs, ChangesEmptyChoicesError{})
+	if !validChoices(choices) {
+		errs = append(errs, ChangesInvalidChoicesError{Choices: choices})
 		previousErrors = true
 	}
 
 	// Only perform consistency checks if there are no previous errors.
 	var oldchoices []byte
+	var inMemory bool
 	if !previousErrors {
 		// Get the current choices for the voter. Check the
 		// in-memory map first and only then storage.
-		var ok bool
-		if oldchoices, ok = voters[voter]; !ok {
+		if oldchoices, inMemory = voters[voter]; !inMemory {
 			oldchoicesstr, err := s.GetVoter(ctx, version, voter)
 			switch {
 			case err == nil:
@@ -438,6 +438,8 @@ func changes(ctx context.Context, voter, action, choices string, voters map[stri
 					Choices:  choices,
 					Expected: string(oldchoices),
 				})
+			} else if inMemory {
+				errs = append(errs, ChangesRemoveAddedVoterError{Voter: voter})
 			}
 			voters[voter] = nil // nil to distinguish from unchanged voters.
 		}
@@ -446,6 +448,17 @@ func changes(ctx context.Context, voter, action, choices string, voters map[stri
 		errs = append(errs, ChangesUnsupportedActionError{Action: action})
 	}
 	return
+}
+
+// validChoices checks if the choices list identifier is valid.
+func validChoices(choices string) bool {
+	// The choices list identifier is the district EHAK joined with the
+	// district number with a period ('.'). Check that we have something
+	// before and after the first separator and that there is no second
+	// separator.
+	sep := strings.IndexByte(choices, '.')
+	return sep > 0 && len(choices[sep+1:]) > 0 &&
+		strings.IndexByte(choices[sep+1:], '.') < 0
 }
 
 // stepadd calls add with count and, if step is zero or the new total modulo

@@ -112,6 +112,7 @@ kontrollrakendusele. Tulenevalt ElGamal krüptosüsteemi eripärast funktsioneer
 see juhuarv nö. teise võtmena ning võimaldab krüptogrammi dekodeerimist
 kontrollrakenduses.
 
+.. _signed-vote:
 
 Valija poolt allkirjastatud hääl
 ================================
@@ -167,8 +168,8 @@ jõudmiseks.
 
 Valijarakenduses signeeritud häälel peab olema üks ja ainult üks allkiri, mida
 hoitakse signatuurifailis :file:`META-INF/signature0.xml`. Häält ja allkirja
-sisaldav konteiner moodustatakse BDOC 2.1 standardis kirjeldatud meetodit
-kasutades.
+sisaldav konteiner (edaspidi viidatud kui ``SignedVote``) moodustatakse BDOC 2.1
+standardis kirjeldatud meetodit kasutades.
 
 Spetsifitseerime valijarakenduses allkirjastatud hääle vormingu ühe
 küsimuse korral.
@@ -196,7 +197,7 @@ ning valija X509-sertifikaat saadakse kas ID-kaardilt või DigiDoc-teenuse
 vahendusel.
 
 
-.. literalinclude:: xmltemplates/sp.template
+.. literalinclude:: ../../common/xmltemplates/sp.template
    :language: xml
    :linenos:
 
@@ -208,7 +209,7 @@ Element ``SignedInfo`` moodustatakse kooskõlas BDOC 2.1 standardiga, viidates
 nii krüpteeritud sedelile (``VOTE_DIGEST``) kui elemendile ``SignedProperties``
 (``SP_DIGEST``).
 
-.. literalinclude:: xmltemplates/si.template
+.. literalinclude:: ../../common/xmltemplates/si.template
    :language: xml
    :linenos:
 
@@ -220,7 +221,7 @@ Element ``SignatureValue`` moodustatakse kooskõlas BDOC 2.1 standardiga.
 Kanoniseeritud elemendist ``SignedInfo`` arvutatakse räsi, mis allkirjastatakse
 PKCS1-meetodiga.
 
-.. literalinclude:: xmltemplates/sv.template
+.. literalinclude:: ../../common/xmltemplates/sv.template
    :language: xml
    :linenos:
 
@@ -232,6 +233,6 @@ Element ``XAdESSignatures`` sisaldab ühte ``Signature`` elementi, mis on
 koostatud lähtudes kõigist eelmistest elementidest ning valija X509
 sertifikaadist. Elementi ``UnsignedProperties`` ei kasutata.
 
-.. literalinclude:: xmltemplates/sig.template
+.. literalinclude:: ../../common/xmltemplates/sig.template
    :language: xml
    :linenos:

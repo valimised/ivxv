@@ -56,11 +56,7 @@ type writer struct {
 	// io.Writer because of its guaranteed writes. If a use case appears
 	// which requires a generic destination, then writer can be rewritten.
 	b  *bytes.Buffer
-	ns map[string]string
-}
-
-func newWriter(b *bytes.Buffer) *writer {
-	return &writer{b: b, ns: make(map[string]string)}
+	ns mapstack
 }
 
 // write write the canonical form of the struct reflected in v into p.w. v must
@@ -68,8 +64,7 @@ func newWriter(b *bytes.Buffer) *writer {
 // encoding/xml.Encoder.EncodeToken here because it writes non-canonical XML.
 //
 // If root is true, then write is processing the root element of the document
-// and the namespace bindings in p.ns are written. p.ns must already include
-// all namespace bindings declared in v or write panics.
+// and the namespace bindings in c14nHeader(v).ns are written.
 func (w *writer) write(v reflect.Value, root bool) {
 	header := c14nHeader(v)
 
@@ -84,22 +79,18 @@ func (w *writer) write(v reflect.Value, root bool) {
 			` "xmlx" tag does not contain "c14nroot" flag`))
 	}
 
+	w.ns.push()
+	defer w.ns.pop()
+
 	w.writeRaw("<")
 	if header.start.nsprefix != "" {
 		w.writeRaw(header.start.nsprefix, ":")
 	}
 	w.writeRaw(header.start.name.Local)
-	oldns := w.writeAttributes(header, root)
+	w.writeAttributes(header, root)
 	w.writeRaw(">")
 
 	w.writeSubelements(v, header)
-	for prefix, uri := range oldns {
-		if uri == nil {
-			delete(w.ns, prefix)
-		} else {
-			w.ns[prefix] = *uri
-		}
-	}
 
 	w.writeRaw("</")
 	if header.start.nsprefix != "" {
@@ -108,10 +99,10 @@ func (w *writer) write(v reflect.Value, root bool) {
 	w.writeRaw(header.start.name.Local, ">")
 }
 
-func (w *writer) writeAttributes(header *c14n, root bool) (oldns map[string]*string) {
+func (w *writer) writeAttributes(header *c14n, root bool) {
 	if root {
-		ns := make([]attr, 0, len(w.ns))
-		for prefix, uri := range w.ns {
+		ns := make([]attr, 0, len(header.ns))
+		for prefix, uri := range header.ns {
 			var decl attr
 			if prefix == "" {
 				decl.Name.Local = xmlns
@@ -121,6 +112,7 @@ func (w *writer) writeAttributes(header *c14n, root bool) (oldns map[string]*str
 			}
 			decl.Value = uri
 			ns = append(ns, decl)
+			w.ns.set(prefix, uri)
 		}
 		sortAttr(ns)
 		for _, decl := range ns {
@@ -134,28 +126,17 @@ func (w *writer) writeAttributes(header *c14n, root bool) (oldns map[string]*str
 			if attr.nsprefix == xmlns {
 				prefix = attr.Name.Local
 			}
-			uri, ok := w.ns[prefix]
-			if ok && uri == attr.Value {
+			if uri, ok := w.ns.get(prefix); ok && uri == attr.Value {
 				continue // Skip superfluous declarations.
 			}
 			if root { // Should never reach if root.
 				panic(fmt.Sprintf("XML namespace map does not "+
 					"include %q declared by root element", prefix))
 			}
-			// Save old namespace bindings for restoration.
-			if oldns == nil {
-				oldns = make(map[string]*string)
-			}
-			if ok {
-				oldns[prefix] = &uri
-			} else {
-				oldns[prefix] = nil
-			}
-			w.ns[prefix] = attr.Value // Update live namespace bindings.
+			w.ns.set(prefix, attr.Value)
 		}
 		w.writeAttribute(attr)
 	}
-	return
 }
 
 func (w *writer) writeAttribute(a attr) {
@@ -196,11 +177,9 @@ func (w *writer) writeSubelements(v reflect.Value, header *c14n) {
 		optional := xmlxSubelement(ftype)
 
 		if field.Kind() == reflect.Struct {
-			if optional { // Skip field if it's header.start is a zero value.
-				fheader := c14nHeader(field)
-				if fheader.start.name.Local == "" {
-					continue
-				}
+			// Skip optional field if it is not present.
+			if optional && !c14nHeader(field).isPresent() {
+				continue
 			}
 			w.write(field, false)
 			w.writeRaw(header.whitespace[ws])
@@ -301,11 +280,5 @@ func lessAttr(a, b attr) bool {
 }
 
 func writeXML(v interface{}, b *bytes.Buffer) {
-	r := valueOfPtr(v).Elem()
-
-	w := newWriter(b)
-	for prefix, uri := range c14nHeader(r).ns {
-		w.ns[prefix] = uri
-	}
-	w.write(r, true)
+	(&writer{b: b}).write(valueOfPtr(v).Elem(), true)
 }

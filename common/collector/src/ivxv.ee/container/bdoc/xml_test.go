@@ -29,13 +29,9 @@ func TestParserToken(t *testing.T) {
 		{"mismatched element", "<foo></bar>", []xml.Token{
 			startElement{name: xml.Name{Local: "foo"}},
 		}, new(MismatchingTagsError)},
-		{"mismatched element different prefix",
-			`<a:foo></b:foo>`, []xml.Token{
-				startElement{
-					nsprefix: "a",
-					name:     xml.Name{Space: "a", Local: "foo"},
-				},
-			}, new(MismatchingTagsError)},
+		{"mismatched element different prefix", `<foo></a:foo>`, []xml.Token{
+			startElement{name: xml.Name{Local: "foo"}},
+		}, new(MismatchingTagsError)},
 		{"empty namespace prefix", `<foo xmlns:="ns"/>`, nil, new(EmptyNamespacePrefixError)},
 		{"redeclare xmlns prefix", `<foo xmlns:xmlns="ns"/>`, nil, new(RedeclareXMLNSPrefixError)},
 		{"undeclaring namespace", `<foo xmlns=""/>`, nil, new(UndeclaringNamespaceError)},
@@ -43,19 +39,10 @@ func TestParserToken(t *testing.T) {
 		{"duplicate attribute different prefix",
 			`<foo xmlns:a="ns" xmlns:b="ns" a:bar="bar" b:bar="baz"/>`,
 			nil, new(DuplicateAttributeError)},
+		{"undeclared prefix", "<foo:bar/>", nil, new(UndeclaredNamespacePrefixError)},
 		{"empty attribute", `<foo bar=""/>`, nil, new(EmptyAttributeError)},
 
 		// translations
-		{"untranslated", "<foo:bar/>", []xml.Token{
-			startElement{
-				nsprefix: "foo",
-				name:     xml.Name{Space: "foo", Local: "bar"},
-			},
-			xml.EndElement{
-				Name: xml.Name{Space: "foo", Local: "bar"},
-			},
-		}, io.EOF},
-
 		{"default", `<foo xmlns="namespace"/>`, []xml.Token{
 			startElement{
 				name: xml.Name{Space: "namespace", Local: "foo"},
@@ -262,37 +249,37 @@ func TestParseXML(t *testing.T) {
 			}{}, `XMLElement bdoc.c14n tagged with unallowed "xmlx" flag "attr"`, nil,
 		},
 		{
-			"attr chardata", "<foo:bar/>", struct {
+			"attr chardata", `<bar xmlns="foo"/>`, struct {
 				XMLElement c14n   `xmlx:"foo bar"`
 				Attribute  string `xmlx:",attr,chardata"`
 			}{}, `Attribute string tagged with unallowed "xmlx" flag "chardata"`, nil,
 		},
 		{
-			"non-string attr", "<foo:bar/>", struct {
+			"non-string attr", `<bar xmlns="foo"/>`, struct {
 				XMLElement c14n `xmlx:"foo bar"`
 				Attribute  int  `xmlx:",attr"`
 			}{}, "Attribute int tagged as XML attribute (must be string)", nil,
 		},
 		{
-			"chardata name", "<foo:bar/>", struct {
+			"chardata name", `<bar xmlns="foo"/>`, struct {
 				XMLElement c14n   `xmlx:"foo bar"`
 				Value      string `xmlx:"foo baz,chardata"`
 			}{}, `XML character data "xmlx" tag must not contain name`, nil,
 		},
 		{
-			"chardata optional", "<foo:bar/>", struct {
+			"chardata optional", `<bar xmlns="foo"/>`, struct {
 				XMLElement c14n   `xmlx:"foo bar"`
 				Value      string `xmlx:",chardata,optional"`
 			}{}, `Value string tagged with unallowed "xmlx" flag "optional"`, nil,
 		},
 		{
-			"non-string chardata", "<foo:bar/>", struct {
+			"non-string chardata", `<bar xmlns="foo"/>`, struct {
 				XMLElement c14n `xmlx:"foo bar"`
 				Value      int  `xmlx:",chardata"`
 			}{}, "Value int tagged as XML character data (must be string)", nil,
 		},
 		{
-			"chardata subelements", "<foo:bar/>", struct {
+			"chardata subelements", `<bar xmlns="foo"/>`, struct {
 				XMLElement c14n   `xmlx:"foo bar"`
 				Value      string `xmlx:",chardata"`
 				Subelement struct{}
@@ -303,13 +290,13 @@ func TestParseXML(t *testing.T) {
 				"} must not have sub-elements along with character data", nil,
 		},
 		{
-			"subelement name", "<foo:bar/>", struct {
+			"subelement name", `<bar xmlns="foo"/>`, struct {
 				XMLElement c14n     `xmlx:"foo bar"`
 				Subelement struct{} `xmlx:"foo sub"`
 			}{}, `XML sub-element "xmlx" tag must not contain name`, nil,
 		},
 		{
-			"non-struct subelement", "<foo:bar/>", struct {
+			"non-struct subelement", `<bar xmlns="foo"/>`, struct {
 				XMLElement c14n `xmlx:"foo bar"`
 				Value      string
 			}{}, "Value string tagged as XML sub-element (must be struct or []struct)", nil,
@@ -327,21 +314,21 @@ func TestParseXML(t *testing.T) {
 			}{}, nil, new(ParseXMLNotStartElementError),
 		},
 		{
-			"wrong name", "<foo:baz/>", struct {
+			"wrong name", `<baz xmlns="foo"/>`, struct {
 				XMLElement c14n `xmlx:"foo bar"`
 			}{}, nil, new(ParseXMLUnexpectedElementError),
 		},
 		{
-			"missing attribute", "<foo:bar/>", struct {
+			"missing attribute", `<bar xmlns="foo"/>`, struct {
 				XMLElement c14n   `xmlx:"foo bar"`
 				Attribute  string `xmlx:",attr"`
 			}{}, nil, new(ParseXMLMissingAttributeError),
 		},
 		{
-			"non-unique attribute", `<foo:bar>
-						<foo:first id="foo"/>
-						<foo:second id="foo"/>
-					</foo:bar>`, struct {
+			"non-unique attribute", `<bar xmlns="foo">
+						<first id="foo"/>
+						<second id="foo"/>
+					</bar>`, struct {
 				XMLElement c14n `xmlx:"foo bar"`
 				First      struct {
 					XMLElement c14n   `xmlx:"foo first"`
@@ -354,12 +341,12 @@ func TestParseXML(t *testing.T) {
 			}{}, nil, new(ParseXMLNonUniqueAttributeError),
 		},
 		{
-			"extra attribute", `<foo:bar baz="baz"/>`, struct {
+			"extra attribute", `<bar xmlns="foo" baz="baz"/>`, struct {
 				XMLElement c14n `xmlx:"foo bar"`
 			}{}, nil, new(ParseXMLExtraAttributeError),
 		},
 		{
-			"slice at least one", `<foo:bar/>`, struct {
+			"slice at least one", `<bar xmlns="foo"/>`, struct {
 				XMLElement c14n `xmlx:"foo bar"`
 				Slice      []struct {
 					XMLElement c14n `xmlx:"foo slice"`
@@ -367,41 +354,36 @@ func TestParseXML(t *testing.T) {
 			}{}, nil, new(ParseXMLSubSliceError),
 		},
 		{
-			"element trailing element", "<foo:bar><baz/></foo:bar>", struct {
+			"element trailing element", `<bar xmlns="foo"><baz/></bar>`, struct {
 				XMLElement c14n `xmlx:"foo bar"`
 			}{}, nil, new(ParseXMLElementTrailingElementError),
 		},
 		{
-			"element trailing token", "<foo:bar>trailing</foo:bar>", struct {
+			"element trailing token", `<bar xmlns="foo">trailing</bar>`, struct {
 				XMLElement c14n `xmlx:"foo bar"`
 			}{}, nil, new(ParseXMLElementTrailingTokenError),
 		},
 		{
-			"trailing token", "<foo:bar/><baz/>", struct {
+			"trailing token", `<bar xmlns="foo"/><baz/>`, struct {
 				XMLElement c14n `xmlx:"foo bar"`
 			}{}, nil, new(ParseXMLTrailingTokenError),
 		},
 
 		// parsing
 		{
-			"simple", "<foo:bar/>", struct {
+			"simple", `<bar xmlns="foo"/>`, struct {
 				XMLElement c14n `xmlx:"foo bar"`
 			}{c14n{whitespace: []string{""}}}, nil, nil,
 		},
 		{
-			"procinst and whitespace", xml.Header + " \t<foo:bar/>\r\n", struct {
+			"procinst and whitespace", xml.Header + " \t<bar xmlns=\"foo\"/>\r\n", struct {
 				XMLElement c14n `xmlx:"foo bar"`
 			}{c14n{whitespace: []string{""}}}, nil, nil,
 		},
 		{
-			"internal whitespace", "<foo:bar>\n</foo:bar>", struct {
+			"internal whitespace", "<bar xmlns=\"foo\">\n</bar>", struct {
 				XMLElement c14n `xmlx:"foo bar"`
 			}{c14n{whitespace: []string{"\n"}}}, nil, nil,
-		},
-		{
-			"namespace", `<foo xmlns="namespace"/>`, struct {
-				XMLElement c14n `xmlx:"namespace foo"`
-			}{XMLElement: c14n{whitespace: []string{""}}}, nil, nil,
 		},
 		{
 			"c14nroot", `<foo xmlns="default" xmlns:ns="prefixed"/>`, struct {
@@ -430,7 +412,7 @@ func TestParseXML(t *testing.T) {
 			}, nil, nil,
 		},
 		{
-			"character data", "<foo:bar>character data</foo:bar>", struct {
+			"character data", `<bar xmlns="foo">character data</bar>`, struct {
 				XMLElement c14n   `xmlx:"foo bar"`
 				Value      string `xmlx:",chardata"`
 			}{
@@ -438,11 +420,11 @@ func TestParseXML(t *testing.T) {
 			}, nil, nil,
 		},
 		{
-			"sub-elements", `<foo:bar>
-						<foo:struct/>
-						<foo:slice>first</foo:slice>
-						<foo:slice>second</foo:slice>
-					</foo:bar>`, struct {
+			"sub-elements", `<bar xmlns="foo">
+						<struct/>
+						<slice>first</slice>
+						<slice>second</slice>
+					</bar>`, struct {
 				XMLElement c14n `xmlx:"foo bar"`
 				Struct     struct {
 					XMLElement c14n `xmlx:"foo struct"`
@@ -462,7 +444,6 @@ func TestParseXML(t *testing.T) {
 					XMLElement c14n `xmlx:"foo struct"`
 				}{c14n{
 					start: startElement{
-						nsprefix: "foo",
 						name: xml.Name{
 							Space: "foo",
 							Local: "struct",
@@ -477,7 +458,6 @@ func TestParseXML(t *testing.T) {
 					{
 						XMLElement: c14n{
 							start: startElement{
-								nsprefix: "foo",
 								name: xml.Name{
 									Space: "foo",
 									Local: "slice",
@@ -489,7 +469,6 @@ func TestParseXML(t *testing.T) {
 					{
 						XMLElement: c14n{
 							start: startElement{
-								nsprefix: "foo",
 								name: xml.Name{
 									Space: "foo",
 									Local: "slice",
@@ -502,7 +481,7 @@ func TestParseXML(t *testing.T) {
 			}, nil, nil,
 		},
 		{
-			"optional", "<foo:bar><foo:after-optional/></foo:bar>", struct {
+			"optional", `<bar xmlns="foo"><after-optional/></bar>`, struct {
 				XMLElement c14n `xmlx:"foo bar"`
 				Struct     struct {
 					XMLElement c14n `xmlx:"foo struct"`
@@ -520,7 +499,6 @@ func TestParseXML(t *testing.T) {
 					XMLElement c14n `xmlx:"foo after-optional"`
 				}{c14n{
 					start: startElement{
-						nsprefix: "foo",
 						name: xml.Name{
 							Space: "foo",
 							Local: "after-optional",

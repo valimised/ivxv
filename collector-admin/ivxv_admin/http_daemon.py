@@ -63,19 +63,33 @@ def upload_cmd_file():
 
 
 @get('/download-ballot-box')
+@get('/download-consolidated-ballot-box')
 def download_ballots():
     """Export votes into ballot box folder."""
     timestamp = '{:%Y.%m.%d_%H.%M}'.format(datetime.datetime.now())
-    filename = f'exported-votes-{timestamp}.zip'
-    path = cfg_path('exported_votes_path', filename)
-    cmd = ['ivxv-consolidate-votes', path]
-    subprocess.run(cmd)
 
-    os.chmod(path, 0o666)
+    # prepare command
+    cmd = ['ivxv-export-votes']
+    if 'download-consolidated-ballot-box' in request.url:
+        cmd.append('--consolidate')
+        filename = f'exported-votes-consolidated-{timestamp}.zip'
+    else:
+        filename = f'exported-votes-{timestamp}.zip'
+    path = cfg_path('exported_votes_path', filename)
+    cmd.append(path)
+
+    cmd_str = ' '.join(cmd)
+    logfile_path = cfg_path(
+        'exported_votes_path', filename.replace('.zip', '.log'))
+    cmd = [
+        'sh', '-e', '-c',
+        f'( {cmd_str} && chmod 664 {path} ) > {logfile_path}'
+    ]
+    subprocess.Popen(cmd)
 
     # start response
     response.content_type = 'application/json'
-    return json.dumps(filename)
+    return json.dumps('OK')
 
 
 @get('/remove-voters-lists')

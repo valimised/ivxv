@@ -15,7 +15,7 @@ protocol.
 :method: RPC method
 :params: Parameters of a specific RPC method
 
-.. literalinclude:: examples/json.rpc.method.query.json
+.. literalinclude:: ../../common/examples/json.rpc.method.query.json
    :language: json
    :linenos:
 
@@ -23,7 +23,7 @@ protocol.
 :id: JSON-RPC information request identifier, has to match the id used in the request
 :result: Method-based response data structure
 
-.. literalinclude:: examples/json.rpc.method.response.json
+.. literalinclude:: ../../common/examples/json.rpc.method.response.json
    :language: json
    :linenos:
 
@@ -62,7 +62,7 @@ Request ``RPC.VoterChoices`` when authenticating with an ID card – authenticat
 happens at the TLS protocol level during the processing of the request using the
 authentication certificate of the ID card.
 
-.. literalinclude:: examples/id.rpc.voterchoices.query.json
+.. literalinclude:: ../../common/examples/id.rpc.voterchoices.query.json
    :language: json
    :linenos:
 
@@ -77,7 +77,7 @@ be used to retrieve a signed authentication certificate.
                    there exists a session identifier that needs to be used.
 
 
-.. literalinclude:: examples/mid.rpc.voterchoices.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.voterchoices.query.json
    :language: json
    :linenos:
 
@@ -89,7 +89,7 @@ Response of the list service to the request ``RPC.VoterChoices``.
                not, it will not be displayed among the field responses.
 
 
-.. literalinclude:: examples/id.rpc.voterchoices.response.json
+.. literalinclude:: ../../common/examples/id.rpc.voterchoices.response.json
    :language: json
    :linenos:
 
@@ -125,13 +125,13 @@ be stored.
 
 Request ``RPC.Vote`` when authenticating with an ID card.
 
-.. literalinclude:: examples/id.rpc.vote.query.json
+.. literalinclude:: ../../common/examples/id.rpc.vote.query.json
    :language: json
    :linenos:
 
 Request ``RPC.Vote`` when authenticating with mobile ID.
 
-.. literalinclude:: examples/mid.rpc.vote.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.vote.query.json
    :language: json
    :linenos:
 
@@ -159,7 +159,7 @@ The voting service’s response to the request  ``RPC.Vote``.
     The vote’s identifier in the storage service; based on that, the
     verification application can demand access to the vote for later analysis.
 
-.. literalinclude:: examples/id.rpc.vote.response.json
+.. literalinclude:: ../../common/examples/id.rpc.vote.response.json
    :language: json
    :linenos:
 
@@ -198,7 +198,7 @@ authentication.
 :params.OS: The operation system in which the voter application is used.
 :params.PhoneNo: The mobile phone number of the person using the mobile ID.
 
-.. literalinclude:: examples/mid.rpc.authenticate.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.authenticate.query.json
    :language: json
    :linenos:
 
@@ -207,7 +207,7 @@ authentication.
 :result.SessionCode: The mobile ID session identifier for further poll requests.
 
 
-.. literalinclude:: examples/mid.rpc.authenticate.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.authenticate.response.json
    :language: json
    :linenos:
 
@@ -226,7 +226,7 @@ status of the authentication process.
 :params.OS: The operation system in which the voter application is used.
 :params.SessionCode: Authentication session identifier.
 
-.. literalinclude:: examples/mid.rpc.authenticatestatus.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.authenticatestatus.query.json
    :language: json
    :linenos:
 
@@ -244,11 +244,11 @@ status of the authentication process.
 :result.Surname: The voter’s surname in case of successful authentication.
 
 
-.. literalinclude:: examples/mid.rpc.authenticatestatus.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.authenticatestatus.response.json
    :language: json
    :linenos:
 
-.. literalinclude:: examples/mid.rpc.authenticatestatus2.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.authenticatestatus2.response.json
    :language: json
    :linenos:
 
@@ -275,14 +275,14 @@ signing certificate.
 :params.OS: The operation system in which the voter application is used.
 :params.PhoneNo: The phone number of the person signing the vote.
 
-.. literalinclude:: examples/mid.rpc.getcertificate.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.getcertificate.query.json
    :language: json
    :linenos:
 
 
 :result.Certificate: Signing certificate in the X509 format.
 
-.. literalinclude:: examples/mid.rpc.getcertificate.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.getcertificate.response.json
    :language: json
    :linenos:
 
@@ -304,7 +304,7 @@ The voter application makes the request ``RPC.Sign`` to initiate vote signing.
 :params.OS: The operation system in which the voter application is used.
 :params.PhoneNo: The phone number of the person signing the vote.
 
-.. literalinclude:: examples/mid.rpc.sign.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.sign.query.json
    :language: json
    :linenos:
 
@@ -313,7 +313,7 @@ The voter application makes the request ``RPC.Sign`` to initiate vote signing.
 :result.SessionCode: The mobile ID session identifier for further poll requests.
 
 
-.. literalinclude:: examples/mid.rpc.sign.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.sign.response.json
    :language: json
    :linenos:
 
@@ -332,7 +332,7 @@ of the signing process.
 :params.OS: The operation system in which the voter application is used.
 :params.SessionCode: Mobile ID session identifier.
 
-.. literalinclude:: examples/mid.rpc.signstatus.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.signstatus.query.json
    :language: json
    :linenos:
 
@@ -343,11 +343,11 @@ of the signing process.
                 only contain information if the value is ``OK``.
 
 
-.. literalinclude:: examples/mid.rpc.signstatus.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.signstatus.response.json
    :language: json
    :linenos:
 
-.. literalinclude:: examples/mid.rpc.signstatus2.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.signstatus2.response.json
    :language: json
    :linenos:
 
@@ -373,7 +373,7 @@ signed vote and the certificates qualifying the vote from the collector service.
 :params.VoteID: The identifier of the vote in the storage service retrieved from
                 the voter application via a QR code.
 
-.. literalinclude:: examples/ver.rpc.verify.query.json
+.. literalinclude:: ../../common/examples/ver.rpc.verify.query.json
    :language: json
    :linenos:
 
@@ -386,7 +386,7 @@ signed vote and the certificates qualifying the vote from the collector service.
               ``bdoc``.
 :result.Vote: BASE64-encoded vote ``SignedVote`` in the format specified above.
 
-.. literalinclude:: examples/ver.rpc.verify.response.json
+.. literalinclude:: ../../common/examples/ver.rpc.verify.response.json
    :language: json
    :linenos:
 

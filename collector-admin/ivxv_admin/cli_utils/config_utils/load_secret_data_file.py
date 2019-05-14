@@ -12,6 +12,7 @@ from ... import (COLLECTOR_STATE_CONFIGURED, COLLECTOR_STATE_FAILURE,
                  SERVICE_STATE_FAILURE, SERVICE_STATE_INSTALLED,
                  SERVICE_TYPE_PARAMS, lib)
 from ...event_log import register_service_event
+from ...lib import IvxvError
 from ...service.service import Service
 
 
@@ -66,24 +67,11 @@ def main():
         return 1
 
     # validate file
-    if secret_type in ('tls-cert', 'tls-key') and not args['--service']:
-        log.error('Service ID must be specified with %s', secret_descr)
+    try:
+        _validate_secret_file(secret_type, file_content, args['--service'])
+    except IvxvError as err:
+        log.error('Error while validating %s: %s', secret_descr, err)
         return 1
-    if secret_type == 'dds-token-key' and len(file_content) != 32:
-        log.error('%s file is not 32 bytes long (actual size: %d bytes)',
-                  secret_descr, len(file_content))
-        return 1
-    if secret_type == 'tsp-regkey':
-        try:
-            OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM,
-                                           file_content)
-        except OpenSSL.crypto.Error as err:
-            err_lib, err_func, err_reason = err.args[0][0]
-            log.error(
-                'Unable to load %s from file "%s". '
-                'Error in %s library %s function: %s',
-                secret_descr, filepath, err_lib, err_func, err_reason)
-            return 1
 
     # calculate file checksum
     file_checksum = hashlib.sha256(file_content).hexdigest()
@@ -150,3 +138,25 @@ def main():
         log.info('%s is loaded to services', secret_descr)
 
     return 0
+
+
+def _validate_secret_file(secret_type, file_content, service_id):
+    """Validate secret data file.
+
+    :raises: IvxvError
+    """
+    if secret_type in ('tls-cert', 'tls-key') and not service_id:
+        raise IvxvError(f'Service ID is not specified')
+    if secret_type == 'dds-token-key' and len(file_content) != 32:
+        raise IvxvError(
+            f'File is not 32 bytes long '
+            f'(actual size: {len(file_content)} bytes)')
+    if secret_type == 'tsp-regkey':
+        try:
+            OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM,
+                                           file_content)
+        except OpenSSL.crypto.Error as err:
+            err_lib, err_func, err_reason = err.args[0][0]
+            raise IvxvError(
+                f'Error in {err_lib} library {err_func} '
+                f'function: {err_reason}')

@@ -3,17 +3,16 @@
 
 import datetime
 import os
-import random
 import subprocess
+import sys
 
-from . import ask_user_confirmation, init_cli_util, log
-from .. import (CFG_TYPES, COLLECTOR_STATE_CONFIGURED, COLLECTOR_STATE_FAILURE,
-                COLLECTOR_STATE_INSTALLED, COLLECTOR_STATE_PARTIAL_FAILURE,
-                SERVICE_STATE_CONFIGURED, SERVICE_STATE_FAILURE,
-                SERVICE_STATE_INSTALLED, __version__)
+from . import init_cli_util, log
+from .. import (COLLECTOR_STATE_CONFIGURED, COLLECTOR_STATE_FAILURE,
+                COLLECTOR_STATE_INSTALLED, COLLECTOR_STATE_NOT_INSTALLED,
+                COLLECTOR_STATE_PARTIAL_FAILURE, SERVICE_STATE_CONFIGURED,
+                SERVICE_STATE_FAILURE, SERVICE_STATE_INSTALLED,
+                SERVICE_STATE_REMOVED, SERVICE_TYPE_PARAMS, __version__)
 from ..agent_daemon import get_collector_data, ping_service
-from ..command_file import load_collector_cmd_file
-from ..config import cfg_path
 from ..db import IVXVManagerDb
 from ..lib import IvxvError, get_services
 from ..service.service import Service, exec_remote_cmd
@@ -25,16 +24,19 @@ JSON_DUMP_ARGS = dict(indent=2, sort_keys=True)
 def consolidate_votes_util():
     """Consolidate and export collected votes."""
     args = init_cli_util("""
-    Consolidate and export collected votes.
+    Export collected votes.
 
     This utility copies current ballot box from voting service to backup
     service and consolidates collected votes from all ballot box backup files.
 
-    Usage: ivxv-consolidate-votes <output-file>
+    Usage: ivxv-export-votes [--consolidate] <output-file>
+
+    Options:
+        --consolidate   Consolidate all ballot box backup files
     """)
 
     try:
-        consolidate_votes(args['<output-file>'])
+        consolidate_votes(args['--consolidate'], args['<output-file>'])
     except IvxvError as err:
         log.error(err)
         return 1
@@ -42,7 +44,7 @@ def consolidate_votes_util():
     return 0
 
 
-def consolidate_votes(output_filename):
+def consolidate_votes(must_consolidate, output_filename):
     """Consolidate votes."""
     # fail if output file already exist
     if os.path.exists(output_filename):
@@ -66,16 +68,25 @@ def consolidate_votes(output_filename):
 
     backup_service = Service(*list(services.items())[0])
     log.debug('Backup service: %s', backup_service.service_id)
-
-    # run consolidation in backup service
     ballot_box_filepath = datetime.datetime.now().strftime(
         '/var/lib/ivxv/ballot-box-consolidated-%Y%m%d_%H%M.zip')
-    proc = backup_service.ssh([
-        'ivxv-voteunion', ballot_box_filepath,
-        '/var/backups/ivxv/ballot-box/ballot-box-????????_????.zip'
-    ])
-    if proc.returncode:
-        raise IvxvError('Consolidation command failed in backup service')
+
+    # run consolidation in backup service
+    if must_consolidate:
+        proc = backup_service.ssh([
+            'ivxv-voteunion', ballot_box_filepath,
+            '/var/backups/ivxv/ballot-box/ballot-box-????????_????.zip'
+        ])
+        if proc.returncode:
+            raise IvxvError('Consolidation command failed in backup service')
+    else:
+        # export without consolidation - detect last backup filename
+        cmd = [
+            'ls', '/var/backups/ivxv/ballot-box/ballot-box-????????_????.zip'
+        ]
+        proc = backup_service.ssh(cmd, stdout=subprocess.PIPE, check=True)
+        ballot_box_filepath = proc.stdout.decode('UTF-8').strip().split(
+            '\n')[-1]
 
     # copy consolidated ballot box from backup
     log.info('Copying ballot box to management service')
@@ -85,8 +96,9 @@ def consolidate_votes(output_filename):
             'consolidated ballot box',
             to_remote=False):
         raise IvxvError('Failed to copy ballot box to management service')
-    log.info('Removing consolidated ballot box from backup service')
-    backup_service.ssh(['rm', '-v', ballot_box_filepath])
+    if must_consolidate:
+        log.info('Removing consolidated ballot box from backup service')
+        backup_service.ssh(['rm', '-v', ballot_box_filepath])
 
     log.info('Collected votes archive is written to %s', output_filename)
 
@@ -95,67 +107,91 @@ def copy_logs_to_logmon_util():
     """Initialize Log Monitor."""
     # validate CLI arguments
     args = init_cli_util("""
-    Initialize IVXV Log Monitor.
+    Copy IVXV log files from service hosts to Log Monitor.
 
-    This utility exports collected IVXV log files from Log Collector
-    Service to Log Monitor and initializes log analyzis in Log Monitor.
+    This utility transports collected IVXV log files from IVXV services
+    (including Log Collector Service) to Log Monitor.
 
-    Usage: ivxv-logmonitor-copy-log [--force]
+    Usage: ivxv-copy-log-to-logmon [<hostname> ...]
 
     Options:
-        --force     Don't ask user confirmation
+        <hostname>  Service host name.
     """)
 
-    # ask confirmation
-    if not args['--force']:
-        if not ask_user_confirmation(
-                'Do You want to initialize IVXV Log Monitor (Y=yes) ?'):
+    # check collector state
+    with IVXVManagerDb() as db:
+        collector_state = db.get_value('collector/state')
+        logmonitor_address = db.get_value('logmonitor/address')
+        services = db.get_all_values('service')
+    if collector_state == COLLECTOR_STATE_NOT_INSTALLED:
+        # emit warning only if attached to console
+        # (suppress if executed from crontab)
+        if sys.stdout.isatty():
+            log.warning('Collector is not installed')
             return 1
+        return 0
 
-    # detect Log Monitor location
-    cfg = load_collector_cmd_file(
-        'technical', cfg_path('active_config_files_path', 'technical.bdoc'))
-    assert cfg, 'Cannot load {}'.format(CFG_TYPES['technical'])
-    logmonitor_cfg = cfg.get('logging')
-    try:
-        logmonitor_address = logmonitor_cfg[0]['address']
-    except (TypeError, IndexError, KeyError):
-        log.error('Log monitor config is not defined')
+    # create service host list
+    hostnames = args['<hostname>']
+    if not hostnames:
+        hostnames = []
+        for service in services.values():
+            is_main_service = (
+                SERVICE_TYPE_PARAMS[service['service-type']]['main_service'])
+            if (is_main_service
+                    or service['service-type'] == 'log'
+                    and service['state'] != SERVICE_STATE_REMOVED):
+                hostnames.append(service['ip-address'].split(':')[0])
+        hostnames = list(set(hostnames))
+
+    # checking access to Log Monitor account
+    if not logmonitor_address:
+        log.error('Log monitor is not defined')
         return 1
     log.info('Using address "%s" for log monitor', logmonitor_address)
     logmon_account = f'logmon@{logmonitor_address}'
-
-    # detect Log Collectors
-    with IVXVManagerDb() as db:
-        services = db.get_all_values('service')
-    log_collectors = [[sid, service]
-                      for sid, service in services.items()
-                      if service['service-type'] == 'log']
-    try:
-        log_collector = random.choice(log_collectors)
-    except IndexError:
-        log.error(
-            'Log Collector service is not defined in technical configuration')
-        return 1
-    service = Service(log_collector[0], log_collector[1])
-    log.info('Using log collector service %s', service.service_id)
-
-    # checking access to Log Monitor account
+    log.info('Checking SSH access to Log Monitor account %s', logmon_account)
     proc = exec_remote_cmd(['ssh', logmon_account, 'true'])
     if proc.returncode:
         log.error('Cannot access to Log Monitor (%s)', logmon_account)
         return 1
 
-    # export log file from Log Collector to Log Monitor
-    source_path = (
-        f'{service.service_account_name}@{service.hostname}:/var/log/ivxv.log')
-    target_path = f'logmon@{logmonitor_address}:/var/log/ivxv-log/ivxv.log'
-    log.info(
-        'Copying collected log file from Log Collector Service to Log Monitor')
-    proc = exec_remote_cmd(['scp', '-3', '-C', source_path, target_path])
-    if proc.returncode:
-        log.error('Failed to copy log file')
-        return 1
+    # copy log file from service hosts to Log Monitor
+    for hostname in hostnames:
+        remote_account = f'ivxv-admin@{hostname}'
+
+        # check if service host have Log Monitor host key
+        log.info('Checking if "%s" have Log Monitor host key', remote_account)
+        proc = exec_remote_cmd(
+            ['ssh', hostname, 'ssh-keygen', '-F', logmonitor_address],
+            stdout=subprocess.PIPE)
+        if proc.returncode:
+            log.error(
+                'Failed to check Log Monitor host key for %s', remote_account)
+            log.info('Installing Log Monitor host key for %s', remote_account)
+            proc = subprocess.run(
+                ['sh', '-c',
+                 f'ssh-keygen -F {logmonitor_address} | '
+                 'grep -v ^# | '
+                 f'ssh {hostname} tee --append .ssh/known_hosts'])
+            if proc.returncode:
+                log.error('Failed to install Log Monitor host key for %s',
+                          remote_account)
+                continue
+
+        # execute rsync command in host to copy log file to Log Monitor
+        log.info(
+            'Copying IVXV service log files from host "%s" to Log Monitor',
+            hostname)
+        transfer_cmd = [
+            'ivxv-admin-helper', 'copy-logs-to-logmon', hostname,
+            logmon_account
+        ]
+        cmd = ['ssh-agent', 'ssh', '-A', hostname] + transfer_cmd
+        proc = subprocess.run(cmd)
+        if proc.returncode:
+            log.error('Failed to copy log file from host "%s" to Log Monitor',
+                      hostname)
 
     return 0
 
@@ -181,11 +217,13 @@ def update_software_pkg_util():
             COLLECTOR_STATE_INSTALLED,
             COLLECTOR_STATE_CONFIGURED,
             COLLECTOR_STATE_FAILURE,
-            COLLECTOR_STATE_PARTIAL_FAILURE],
+            COLLECTOR_STATE_PARTIAL_FAILURE,
+        ],
         service_state=[
             SERVICE_STATE_INSTALLED,
             SERVICE_STATE_CONFIGURED,
-            SERVICE_STATE_FAILURE])
+            SERVICE_STATE_FAILURE,
+        ])
     if not services:
         return 1
 
@@ -270,6 +308,10 @@ def manage_service():
         return 1
 
     services = get_collector_data()
+    if services is None:
+        log.error('Election data is not loaded')
+        return 1
+
     exit_code = 0
     for service_id in args['<service-id>']:
         if service_id not in services:

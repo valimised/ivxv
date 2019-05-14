@@ -1,0 +1,50 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+
+    "definitions": {
+        "results": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "additionalItems": false
+        },
+        "questions": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/definitions/results"
+            },
+            "minProperties": 1
+        },
+        "stations": {
+            "type": "object",
+            "patternProperties": {
+                "^[0-9]+\\.[0-9]+$": {
+                    "$ref": "#/definitions/questions"
+                }
+            },
+            "additionalProperties": false,
+            "minProperties": 1
+        },
+        "districts": {
+            "type": "object",
+            "patternProperties": {
+                "^[0-9]+\\.[0-9]+$": {
+                    "$ref": "#/definitions/stations"
+                }
+            },
+            "additionalProperties": false,
+            "minProperties": 1
+        }
+    },
+
+    "type": "object",
+    "properties": {
+        "election": {"type": "string"},
+        "districts": {
+            "$ref": "#/definitions/districts"
+        }
+    },
+    "required": ["election", "districts"],
+    "additionalProperties": false
+}

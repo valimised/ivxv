@@ -1,0 +1,7 @@
+groupgen:
+  paramtype: mod
+  length: 3072
+  init_template: key.init.template.yaml
+  random_source:
+  - random_source_type: DPRNG
+    random_source_path: public_seed_file

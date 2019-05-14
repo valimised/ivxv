@@ -1,0 +1,5 @@
+squash:
+  ballotbox: out-1/TESTCONF-bb-1.json
+  ballotbox_checksum: out-1/TESTCONF-bb-1.json.sha256sum.bdoc
+  districts: TESTCONF.districts.bdoc
+  out: out-2

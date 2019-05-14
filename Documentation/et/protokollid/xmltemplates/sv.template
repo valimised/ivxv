@@ -1,1 +1,0 @@
-<ds:SignatureValue xmlns:asic="http://uri.etsi.org/02918/v1.2.1#" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="%SV_URI%">%SIG_VALUE%</ds:SignatureValue>

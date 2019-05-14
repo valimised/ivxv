@@ -70,6 +70,8 @@ class CollectorTechnicalConfigSchema(Model):
         class CodecFilterSchema(Model):
             """Validating schema for codec connection filter config."""
             rwtimeout = IntType(required=True, min_value=0)
+            requestsize = IntType(min_value=0)
+            logrequests = BooleanType(default=False)
 
         codec = ModelType(CodecFilterSchema, required=True)
 

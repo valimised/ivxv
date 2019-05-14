@@ -18,6 +18,7 @@ import ee.ivxv.common.service.i18n.MessageException;
 import ee.ivxv.common.util.I18nConsole;
 import ee.ivxv.common.util.Json;
 import ee.ivxv.common.util.ToolHelper;
+import ee.ivxv.common.util.Util;
 import ee.ivxv.processor.Msg;
 import ee.ivxv.processor.ProcessorContext;
 import ee.ivxv.processor.tool.StatsTool.StatsArgs;
@@ -37,8 +38,8 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
     private static final ASN1ObjectIdentifier VL_KEY_ALG_ID = PKCSObjectIdentifiers.rsaEncryption;
     private static final LName DUMMY_LNAME = new LName("0.0");
 
-    private static final String OUT_JSON = "stats.json";
-    private static final String OUT_CSV = "stats.csv";
+    private static final String OUT_JSON_TMPL = "stats.json";
+    private static final String OUT_CSV_TMPL = "stats.csv";
 
     private final ProcessorContext ctx;
     private final I18nConsole console;
@@ -62,24 +63,29 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
         }
 
         Statistics stats;
+        String elid;
         if (args.bb.value().toString().endsWith(".json")) {
             // Do not use tool.readJsonBb, since it forces us to specify a ballot box type,
             // but we want to be able to compute statistics from any type.
             BallotBox bb = readJsonBallotBox(args.bb.value());
+            elid = bb.getElection();
             stats = generateStatistics(args, dl, bb);
         } else {
             VoterProvider vp = getVoterProvider(args, dl);
             reporter.writeVlErrors(args.out.value());
+            elid = dl.getElection();
 
             BboxHelper.IntegrityChecked<?> bb = checkBallotBox(args.bb.value());
             reporter.writeBbErrors(args.out.value());
             stats = generateStatistics(args, vp, dl, bb);
         }
 
+        Path OUT_JSON = Util.prefixedPath(elid, OUT_JSON_TMPL);
         Path path = args.out.value().resolve(OUT_JSON);
         stats.writeJSON(path);
         console.println(Msg.m_stats_json_saved, path);
 
+        Path OUT_CSV = Util.prefixedPath(elid, OUT_CSV_TMPL);
         path = args.out.value().resolve(OUT_CSV);
         stats.writeCSV(path);
         console.println(Msg.m_stats_csv_saved, path);

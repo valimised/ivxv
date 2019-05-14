@@ -9,7 +9,7 @@ Standards-Version: 3.9.8
 
 Package: ivxv-common
 Architecture: all
-Depends: ${misc:Depends}, adduser, openssh-server, openssl, rsyslog, rsyslog-relp, sudo, tzdata
+Depends: ${misc:Depends}, adduser, openssh-server, openssl, rsync, rsyslog, rsyslog-relp, sudo, tzdata
 Recommends: locales | locales-all
 Description: IVXV alamteenuste ühispakk
  Elektroonilise hääletamise infosüsteem IVXV
@@ -18,7 +18,7 @@ Description: IVXV alamteenuste ühispakk
 
 Package: ivxv-admin
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${python3:Depends}, apache2, cron, ivxv-common, language-pack-et, libapache2-mod-wsgi-py3, python3-gdbm, python3-openssl, python3-pkg-resources, rsync
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python3:Depends}, apache2, cron, ivxv-common, language-pack-et, libapache2-mod-wsgi-py3, python3-gdbm
 Description: IVXV kogumisteenuse haldusteenus
  Elektroonilise hääletamise infosüsteem IVXV
  .

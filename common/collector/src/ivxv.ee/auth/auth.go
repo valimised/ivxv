@@ -18,8 +18,8 @@ type Type string
 // Enumeration of authentication verifiers.
 const (
 	Dummy  Type = "dummy"  // import "ivxv.ee/auth/dummy"
-	TLS         = "tls"    // import "ivxv.ee/auth/tls"
-	Ticket      = "ticket" // import "ivxv.ee/auth/ticket"
+	TLS    Type = "tls"    // import "ivxv.ee/auth/tls"
+	Ticket Type = "ticket" // import "ivxv.ee/auth/ticket"
 )
 
 // Here we "declare" errors that authentication modules should use for wrapping

@@ -1,0 +1,5 @@
+anonymize:
+  ballotbox: out-3/TESTCONF-bb-3.json
+  ballotbox_checksum: out-3/TESTCONF-bb-3.json.sha256sum.bdoc
+  enckey: TESTCONF-enc.pub.key
+  out: out-4

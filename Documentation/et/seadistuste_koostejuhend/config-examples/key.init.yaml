@@ -1,0 +1,29 @@
+init:
+  identifier: TESTCONF
+  paramtype:
+    mod:
+      p: 58096059953699580627919159656392014021766122269029005337..
+      g: 2
+  out: initout
+  skiptest: true
+  fastmode: true
+  signaturekeylen: 3072
+  signcn: SIGNATURE
+  signsn: 1
+  enccn: ENCRYPTION
+  encsn: 2
+  required_randomness: 128
+  random_source:
+  - random_source_type: file
+    random_source_path: randomness_file
+  - random_source_type: system
+  - random_source_type: DPRNG
+    random_source_path: seed_file
+  - random_source_type: stream
+    random_source_path: /dev/urandom
+  - random_source_type: user
+    random_source_path: user_entropy.exe
+  genprotocol:
+    desmedt:
+      threshold: 2
+      parties: 3

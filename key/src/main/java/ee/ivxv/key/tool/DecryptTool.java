@@ -5,6 +5,7 @@ import ee.ivxv.common.cli.Arg;
 import ee.ivxv.common.cli.Args;
 import ee.ivxv.common.cli.Tool;
 import ee.ivxv.common.crypto.CorrectnessUtil.CiphertextCorrectness;
+import ee.ivxv.common.crypto.elgamal.ElGamalDecryptionProof;
 import ee.ivxv.common.crypto.rnd.NativeRnd;
 import ee.ivxv.common.model.AnonymousBallotBox;
 import ee.ivxv.common.model.CandidateList;
@@ -13,7 +14,6 @@ import ee.ivxv.common.model.DistrictList;
 import ee.ivxv.common.model.IBallotBox;
 import ee.ivxv.common.service.bbox.impl.BboxHelperImpl;
 import ee.ivxv.common.service.i18n.MessageException;
-import ee.ivxv.common.service.report.Reporter;
 import ee.ivxv.common.service.smartcard.Card;
 import ee.ivxv.common.service.smartcard.Cards;
 import ee.ivxv.common.service.smartcard.IndexedBlob;
@@ -166,12 +166,9 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
         CompletionService<Void> ioCompService = new ExecutorCompletionService<>(ioExecutor);
 
         ExecutorService decExecutor;
-        if (threadCount == 0) {
-            decExecutor = Executors.newCachedThreadPool();
-        } else {
-            decExecutor = new ThreadPoolExecutor(threadCount, threadCount, 0L,
-                    TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(threadCount * 2));
-        }
+        threadCount = threadCount > 0 ? threadCount : 1;
+        decExecutor = new ThreadPoolExecutor(threadCount, threadCount, 0L, TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(threadCount * 2));
 
         WorkManager manager = new WorkManager(abb, getDecConsumer(dec, result, checkDecodable),
                 decExecutor, result);
@@ -195,26 +192,41 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
             boolean checkDecodable) {
         return (vote) -> {
             byte[] msg = vote.getVote();
-            boolean isCorrect = true;
+            // as a defensive measure, assume that the message is not decodable.
+            boolean isCorrect = false;
+            ElGamalDecryptionProof dp;
             if (checkDecodable) {
+                // decodability check of the ciphertexts is explicitly required
                 try {
-                    if (dec.checkCorrectness(msg) != CiphertextCorrectness.VALID) {
-                        log.warn("Non-decodable ciphertext");
-                        isCorrect = false;
+                    if (dec.checkCorrectness(msg) == CiphertextCorrectness.VALID) {
+                        // the ciphertext is correctly encoded
+                        isCorrect = true;
+                    } else {
+                        // ciphertext is not correctly encoded
                     }
                 } catch (ProtocolException e) {
-                    log.warn("Could not check correctness", e);
-                    isCorrect = false;
+                    // catch the exception, but omit the stack-trace as it may contain unique
+                    // information about why the correctness verification failed. This unique
+                    // information could be used to connect the ballot with a voter.
+                }
+            } else {
+                // if decodability check is not explicitly required, then assume that the message is
+                // decodable. This assumption holds when the checks are done in previous steps (i.e.
+                // during processing of the votes).
+                isCorrect = true;
+            }
+            if (isCorrect) {
+                try {
+                    dp = dec.decryptMessage(msg);
+                    vote.setProof(dp);
+                } catch (Exception e) {
+                    // catch the exception, but omit the stack-trace as it may contain identifiable
+                    // information about the error. The possible reasons for decryption failure are
+                    // different padding errors.
                 }
             }
-            try {
-                if (isCorrect) {
-                    vote.setProof(dec.decryptMessage(msg));
-                }
-            } catch (Exception e) {
-                log.warn("Couldn't decrypt vote", e);
-                // console.println(M.e_decryption_error, vote);
-            }
+            // the vote is added to the result even if it is not correctly encoded - it is counted
+            // towards the invalid vote count
             result.addVote(vote);
         };
     }

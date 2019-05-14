@@ -35,6 +35,16 @@ case "$1" in
                 "${SSH_PUBKEY_FILE}"
         fi
 
+        # generate SSH config for ivxv-admin account
+        SSH_CONFIG_FILE=~ivxv-admin/.ssh/config
+        if [ ! -e "${SSH_CONFIG_FILE}" ]; then
+            echo "# Creating SSH config for user 'ivxv-admin'"
+            echo "# SSH config file for " > "${SSH_CONFIG_FILE}"
+            echo "AddKeysToAgent yes" >> "${SSH_CONFIG_FILE}"
+        fi
+        chown --changes ivxv-admin:ivxv "${SSH_CONFIG_FILE}"
+        chmod --changes 600 "${SSH_CONFIG_FILE}"
+
         # CREATE DATA DIRECTORIES
         ivxv-create-data-dirs
 
@@ -75,6 +85,15 @@ case "$1" in
 
         # CONFIGURE APACHE
         APACHE_RESTART="reload"
+
+        # enable system default locale for Apache
+        if grep --quiet '^#\. /etc/default/locale' /etc/apache2/envvars; then
+            echo "# Enabling system default locale for Apache"
+            sed --regexp-extended --in-place \
+                --expression 's/^#(\. .etc.default.locale)/\1/' \
+                /etc/apache2/envvars
+            APACHE_RESTART="restart"
+        fi
 
         # remove Apache default site config
         if [ -L /etc/apache2/sites-enabled/000-default.conf ]; then

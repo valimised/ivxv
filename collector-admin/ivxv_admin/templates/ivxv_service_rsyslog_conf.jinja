@@ -16,23 +16,34 @@ Template file for rsyslog config in service host.
 # load RELP output module
 module(load="omrelp")
 
+# increase max message size
+global(maxMessageSize="32k")
 
 # LOCAL LOGGING
 
-# write IVXV log to /var/log/ivxv.log (up to level INFO)
-if ($programname startswith 'ivxv-') then action(
+# write IVXV log to file (up to level INFO)
+if ($programname startswith 'ivxv-') and ($syslogfacility-text == 'local0') and
+   ($syslogseverity <= '6') then
+action(
     type="omfile"
-    file="/var/log/ivxv.log"
+    dynaFile="IVXV_DEFAULT_LOG_FILENAME"
     template="ivxv-json"
 )
 
+# write IVXV request log to /var/log/ivxv-request-YYYY-MM-DD.log
+if ($programname startswith 'ivxv-') and ($syslogfacility-text == 'local1') then
+action(
+    type="omfile"
+    dynaFile="IVXV_REQUEST_LOG_FILENAME"
+)
+
 # write IVXV debug log and log of related
-# services (haproxy, etcd, rsyslog, sshd) to /var/log/ivxv-debug.log
+# services (haproxy, etcd, rsyslog, sshd) to /var/log/ivxv-debug-YYYY-MM-DD.log
 if ($programname startswith 'ivxv-') or ($programname startswith 'rsyslog') or
    ($programname == 'haproxy') or ($programname == 'sshd') or ($programname == 'etcd') then
 action(
     type="omfile"
-    file="/var/log/ivxv-debug.log"
+    dynaFile="IVXV_DEBUG_LOG_FILENAME"
 )
 
 
@@ -53,7 +64,8 @@ action(
 {% for log_collector in ext_log_collectors -%}
 {% if loop.index == 1 %}
 # forward log messages to Log Monitor using RELP protocol
-if ($programname startswith 'ivxv-') and ($syslogseverity <= '6') then
+if ($programname startswith 'ivxv-') and ($syslogfacility-text == 'local0') and
+   ($syslogseverity <= '6') then
 {% else %}
 # forward log messages to external log collector using RELP protocol
 {% endif -%}

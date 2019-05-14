@@ -16,8 +16,8 @@ type Type string
 // Enumeration of identity types.
 const (
 	CommonName   Type = "commonname"   // Built-in.
-	SerialNumber      = "serialnumber" // Built-in.
-	PNOEE             = "pnoee"        // Built-in.
+	SerialNumber Type = "serialnumber" // Built-in.
+	PNOEE        Type = "pnoee"        // Built-in.
 )
 
 // Identifier is the type of functions that extract unique identifiers from

@@ -1,0 +1,64 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+
+    "definitions": {
+        "results": {
+            "type": "object",
+            "properties": {
+                "invalid": {
+                    "type": "integer"
+                }
+            },
+            "patternProperties": {
+                "^[0-9]+\\.[0-9]+$": {
+                    "type": "integer"
+                }
+            },
+            "additionalProperties": false,
+            "required": ["invalid"]
+        },
+        "stations": {
+            "type": "object",
+            "patternProperties": {
+                "^[0-9]+\\.[0-9]+$": {
+                    "$ref": "#/definitions/results"
+                }
+            },
+            "additionalProperties": false,
+            "minProperties": 1
+        },
+        "district_dict": {
+            "type": "object",
+            "patternProperties": {
+                "^[0-9]+\\.[0-9]+$": {
+                    "$ref": "#/definitions/results"
+                }
+            },
+            "additionalProperties": false,
+            "minProperties": 1
+        },
+        "stations_dict": {
+            "type": "object",
+            "patternProperties": {
+                "^[0-9]+\\.[0-9]+$": {
+                    "$ref": "#/definitions/stations"
+                }
+            },
+            "additionalProperties": false,
+            "minProperties": 1
+        }
+    },
+
+    "type": "object",
+    "properties": {
+        "election": {"type": "string"},
+        "bydistrict": {
+            "$ref": "#/definitions/district_dict"
+        },
+        "bystation": {
+            "$ref": "#/definitions/stations_dict"
+        }
+    },
+    "required": ["election", "bydistrict", "bystation"],
+    "additionalProperties": false
+}

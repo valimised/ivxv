@@ -14,8 +14,8 @@ type Type string
 // Enumeration of container types.
 const (
 	Dummy Type = "dummy" // import "ivxv.ee/container/dummy"
-	BDOC       = "bdoc"  // import "ivxv.ee/container/bdoc"
-	ASiCE      = "asice" // Alias for bdoc.
+	BDOC  Type = "bdoc"  // import "ivxv.ee/container/bdoc"
+	ASiCE Type = "asice" // Alias for bdoc.
 )
 
 // OpenFunc is the type of functions that parse and verify an encoded container

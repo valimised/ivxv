@@ -203,7 +203,7 @@ func export(ctx context.Context, s *storage.Client, qps []q11n.Protocol,
 
 func addFile(w *zip.Writer, mod time.Time, name string, value []byte) error {
 	h := &zip.FileHeader{Name: name, Method: zip.Deflate}
-	h.SetModTime(mod) // nolint: megacheck, Use deprecated API to support Go 1.9.
+	h.SetModTime(mod) // nolint: megacheck, staticcheck, Use deprecated API to support Go 1.9.
 	f, err := w.CreateHeader(h)
 	if err != nil {
 		return AddFileCreateError{Name: name, Err: err}

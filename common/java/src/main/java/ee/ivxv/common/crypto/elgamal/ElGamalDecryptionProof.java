@@ -4,10 +4,11 @@ import ee.ivxv.common.asn1.ASN1DecodingException;
 import ee.ivxv.common.asn1.Field;
 import ee.ivxv.common.asn1.Sequence;
 import ee.ivxv.common.crypto.Plaintext;
-import ee.ivxv.common.crypto.hash.HashFunction;
-import ee.ivxv.common.crypto.hash.Sha256;
+import ee.ivxv.common.crypto.rnd.DPRNG;
 import ee.ivxv.common.math.GroupElement;
+import ee.ivxv.common.math.IntegerConstructor;
 import ee.ivxv.common.math.MathException;
+import java.io.IOException;
 import java.math.BigInteger;
 
 /**
@@ -26,7 +27,6 @@ import java.math.BigInteger;
  */
 public class ElGamalDecryptionProof {
     private static final byte[] NI_PROOF_DOMAIN = new Field("DECRYPTION").encode();
-    private final HashFunction hashFun = new Sha256();
     public final ElGamalPublicKey publickey;
     public ElGamalCiphertext ciphertext;
     public Plaintext decrypted;
@@ -255,11 +255,22 @@ public class ElGamalDecryptionProof {
     /**
      * Compute the challenge for the prover.
      * <p>
-     * The challenge is the value {@literal H("DECRYPTION" || pk || ct || dec || a || b)}, where
-     * {@literal H} is a hash function, {@literal "DECRYPTION"} is a domain separation value in
-     * bytes, {@literal pk} is the serialized public key, {@literal ct} is the serialzied
-     * ciphertext, {@literal dec} is the serialized decrypted message, {@literal a} is the
-     * serialized message commitment and {@literal b} is the key commitment.
+     * The challenge is constructed non-interactively from the preceding messages between the
+     * prover and verifier.
+     * <p>
+     * An ASN.1 sequence {@code
+     * SEQUENCE (
+     *   NI_PROOF_DOMAIN GENERAL STRING
+     *   pubkey        SubjectPublicKeyInfo
+     *   ciphertext    encryptedBallot
+     *   decrypted     OCTET STRING
+     *   msgCommitment GroupElement
+     *   keyCommitment GroupElement
+     *   )
+     * } is DER-encoded and the encoded value is used to initialize an instance of
+     * {@link ee.ivxv.common.crypto.rnd.DPRNG} for using with
+     * {@link ee.ivxv.common.math.IntegerConstructor } to generate the challenge not larger than the
+     * order of the generator in the corresponding group.
      * 
      * @return Challenge encoded as a positive BigInteger
      */
@@ -285,11 +296,19 @@ public class ElGamalDecryptionProof {
                 // decrypted bytes representation consists of:
                 // - asn1 encoding of the plaintext
                 decrypted.getBytes(),
-                // msg ja key commitments consists of bytes representation
+                // msg and key commitments consists of bytes representation
                 // of group elements (group specific)
                 msgCommitment.getBytes(), keyCommitment.getBytes()).encode();
-        byte[] hash = hashFun.digest(hashSeed);
-        return new BigInteger(1, hash);
+        DPRNG rnd = new DPRNG(hashSeed);
+        BigInteger k = null;
+        try {
+            k = IntegerConstructor.construct(rnd, publickey.getParameters().getGeneratorOrder());
+        } catch (IOException e) {
+            // The exception is checked. IntegerConstructor passes the IOException thrown by the
+            // underlying Rnd implementation. DPRNG does not depend on IO and thus does not throw
+            // IOException.
+        }
+        return k;
     }
 
     /**

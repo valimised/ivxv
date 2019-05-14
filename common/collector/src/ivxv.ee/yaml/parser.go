@@ -273,7 +273,7 @@ func (p *parser) mapping(key lexeme) (m Mapping, next lexeme) {
 		// Keys must be unique. Unlike standard YAML, we require the
 		// keys to be case-insensitively unique.
 		for k := range m.pairs {
-			if strings.ToLower(k) == strings.ToLower(key.content) {
+			if strings.EqualFold(k, key.content) {
 				p.error(key.line, key.column,
 					NonUniqueKeyError{Key: key.content})
 			}

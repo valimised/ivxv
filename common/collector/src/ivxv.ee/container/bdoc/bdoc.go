@@ -69,8 +69,8 @@ type Profile string
 // Enumeration of BDOC signature profiles.
 const (
 	BES Profile = "BES" // Base profile.
-	TM          = "TM"  // Timemark profile.
-	TS          = "TS"  // Timestamp profile.
+	TM  Profile = "TM"  // Timemark profile.
+	TS  Profile = "TS"  // Timestamp profile.
 )
 
 // Conf contains the configurable options for the BDOC container opener. It
@@ -211,8 +211,8 @@ func (o *Opener) Open(encoded io.Reader) (bdoc *BDOC, err error) {
 		file.close()
 
 		// Parse signer certificate.
-		var cert *x509.Certificate
-		if cert, err = parseBase64Certificate(s.KeyInfo.
+		var signer *x509.Certificate
+		if signer, err = parseBase64Certificate(s.KeyInfo.
 			X509Data.X509Certificate.Value); err != nil {
 
 			return nil, SignerCertificateParseError{
@@ -233,14 +233,26 @@ func (o *Opener) Open(encoded io.Reader) (bdoc *BDOC, err error) {
 			return nil, SigningTimeParseError{Err: err}
 		}
 
+		// Verify signer certificate and determine the issuer. We use
+		// the declared signing time because the certificate might have
+		// expired by now. The declared time cannot be trusted and the
+		// certificate might have been revoked before expiration:
+		// additional OCSP checks are performed, either here if the
+		// profile is TM or TS, or during signature qualification.
+		var issuer *x509.Certificate
+		if issuer, err = o.verifyCertificate(signer, signingTime); err != nil {
+			return nil, SignerCertificateVerificationError{
+				Certificate: signer.Raw, // Log entire cert for diagnostics.
+				SigningTime: signingTime,
+				Err:         err,
+			}
+		}
+
 		// Append to BDOC signatures.
 		bdoc.signatures = append(bdoc.signatures, container.Signature{
-			ID:     s.ID,
-			Signer: cert,
-
-			// Issuer will be determined and inserted during
-			// certificate checking.
-
+			ID:          s.ID,
+			Signer:      signer,
+			Issuer:      issuer,
 			SigningTime: signingTime,
 		})
 
@@ -314,45 +326,13 @@ func (b *BDOC) TimestampData(id string) ([]byte, error) {
 
 const xmlc14n11 = "http://www.w3.org/2006/12/xml-c14n11"
 
-var signAlgorithms = map[string]x509.SignatureAlgorithm{
-	"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256":   x509.SHA256WithRSA,
-	"http://www.w3.org/2001/04/xmldsig-more#rsa-sha384":   x509.SHA384WithRSA,
-	"http://www.w3.org/2001/04/xmldsig-more#rsa-sha512":   x509.SHA512WithRSA,
-	"http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256": x509.ECDSAWithSHA256,
-	"http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha384": x509.ECDSAWithSHA384,
-	"http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha512": x509.ECDSAWithSHA512,
-}
-
 func (o *Opener) check(s *signature, c *container.Signature, files map[string]*asiceFile) error {
-	c14n := s.SignedInfo.CanonicalizationMethod.Algorithm
-	if c14n != xmlc14n11 {
-		return UnsupportedCanonicalizationAlgorithmError{Algorithm: c14n}
-	}
-
-	signing := s.SignedInfo.SignatureMethod.Algorithm
-	x509sa, ok := signAlgorithms[signing]
-	if !ok {
-		return UnsupportedSigningAlgorithmError{Algorithm: signing}
-	}
-
-	var err error
-	if err = checkReferences(s, files); err != nil {
-		return err
-	}
-
-	// We use the declared signing time here to check the validity of the
-	// certificate, because the certificate might have expired by now.
-	// However this is not enough, because the declared time cannot be
-	// trusted and the certificate might have been revoked before
-	// expiration: additional OCSP checks are performed for these cases,
-	// either here if the profile is TM or TS, or later during signature
-	// qualification.
-	if c.Issuer, err = o.checkKeyInfo(c.Signer, c.SigningTime); err != nil {
-		return err
-	}
-
-	sigval, err := checkSignatureValue(s, c.Signer, x509sa)
+	sigval, err := checkSignatureValue(s, c.Signer)
 	if err != nil {
+		return err
+	}
+
+	if err = checkReferences(s, files); err != nil {
 		return err
 	}
 
@@ -385,6 +365,57 @@ func (o *Opener) check(s *signature, c *container.Signature, files map[string]*a
 		c.SigningTime, err = checkTimestamp(&usp.SignatureTimeStamp, &s.SignatureValue, o.tsp)
 	}
 	return err
+}
+
+var signAlgorithms = map[string]x509.SignatureAlgorithm{
+	"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256":   x509.SHA256WithRSA,
+	"http://www.w3.org/2001/04/xmldsig-more#rsa-sha384":   x509.SHA384WithRSA,
+	"http://www.w3.org/2001/04/xmldsig-more#rsa-sha512":   x509.SHA512WithRSA,
+	"http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256": x509.ECDSAWithSHA256,
+	"http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha384": x509.ECDSAWithSHA384,
+	"http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha512": x509.ECDSAWithSHA512,
+}
+
+func checkSignatureValue(s *signature, c *x509.Certificate) (signature []byte, err error) {
+	signing := s.SignedInfo.SignatureMethod.Algorithm
+	x509sa, ok := signAlgorithms[signing]
+	if !ok {
+		return nil, UnsupportedSigningAlgorithmError{Algorithm: signing}
+	}
+
+	c14n := s.SignedInfo.CanonicalizationMethod.Algorithm
+	if c14n != xmlc14n11 {
+		return nil, UnsupportedSignedInfoCanonicalizationAlgorithmError{Algorithm: c14n}
+	}
+
+	siginfo := buffer()
+	defer release(siginfo)
+	writeXML(&s.SignedInfo, siginfo)
+
+	if signature, err = b64d(s.SignatureValue.Value); err != nil {
+		return nil, DecodeSignatureValueError{Err: err}
+	}
+
+	// We need to re-encode ECDSA signatures for the Go standard library.
+	recode := signature
+	switch x509sa {
+	case x509.ECDSAWithSHA256, x509.ECDSAWithSHA384, x509.ECDSAWithSHA512:
+		var r, s *big.Int
+		if r, s, err = cryptoutil.ParseECDSAXMLSignature(signature); err != nil {
+			return nil, ECDSASignatureParseError{Signature: signature, Err: err}
+		}
+		if recode, err = asn1.Marshal(struct {
+			R *big.Int
+			S *big.Int
+		}{r, s}); err != nil {
+			return nil, ECDSASignatureASN1MarshalError{Err: err}
+		}
+	}
+
+	if err = c.CheckSignature(x509sa, siginfo.Bytes(), recode); err != nil {
+		return nil, SignatureVerificationError{Err: err}
+	}
+	return signature, nil
 }
 
 // checkReferences checks the references for SignedProperties and each file.
@@ -489,71 +520,6 @@ func findDataObjectFormat(dofs []dataObjectFormat, ref string) (dataObjectFormat
 		}
 	}
 	return dataObjectFormat{}, NoDataObjectFormatWithReferenceError{Reference: ref}
-}
-
-// checkKeyInfo verifies the signing certificate against our trusted roots.
-func (o *Opener) checkKeyInfo(c *x509.Certificate, time time.Time) (issuer *x509.Certificate, err error) {
-	if c.KeyUsage&x509.KeyUsageContentCommitment == 0 {
-		return nil, NotANonRepudiationCertificateError{
-			KeyUsage: c.KeyUsage,
-		}
-	}
-
-	opts := x509.VerifyOptions{
-		Roots:         o.rpool,
-		Intermediates: o.ipool,
-		CurrentTime:   time,
-		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageAny},
-	}
-
-	chains, err := c.Verify(opts)
-	if err != nil {
-		return nil, SignerCertificateVerificationError{
-			Certificate: c.Raw, // Log entire cert for diagnostics.
-			SigningTime: time,
-			Err:         err,
-		}
-	}
-
-	// At least one chain is guaranteed: use the first one.
-	issuer = c
-	if len(chains[0]) > 1 {
-		issuer = chains[0][1]
-	}
-	return
-}
-
-func checkSignatureValue(s *signature, c *x509.Certificate, alg x509.SignatureAlgorithm) (
-	signature []byte, err error) {
-
-	if signature, err = b64d(s.SignatureValue.Value); err != nil {
-		return nil, DecodeSignatureValueError{Err: err}
-	}
-
-	siginfo := buffer()
-	defer release(siginfo)
-	writeXML(&s.SignedInfo, siginfo)
-
-	// We need to re-encode ECDSA signatures for the Go standard library.
-	recode := signature
-	switch alg {
-	case x509.ECDSAWithSHA256, x509.ECDSAWithSHA384, x509.ECDSAWithSHA512:
-		var r, s *big.Int
-		if r, s, err = cryptoutil.ParseECDSAXMLSignature(signature); err != nil {
-			return nil, ECDSASignatureParseError{Signature: signature, Err: err}
-		}
-		if recode, err = asn1.Marshal(struct {
-			R *big.Int
-			S *big.Int
-		}{r, s}); err != nil {
-			return nil, ECDSASignatureASN1MarshalError{Err: err}
-		}
-	}
-
-	if err = c.CheckSignature(alg, siginfo.Bytes(), recode); err != nil {
-		return nil, SignatureVerificationError{Err: err}
-	}
-	return signature, nil
 }
 
 func checkSignedProperties(p *signedProperties, c *x509.Certificate, profile Profile) error {
@@ -767,6 +733,33 @@ func parseBase64Certificate(c string) (*x509.Certificate, error) {
 		return nil, CertificateParseError{Err: err}
 	}
 	return cert, nil
+}
+
+func (o *Opener) verifyCertificate(c *x509.Certificate, time time.Time) (
+	issuer *x509.Certificate, err error) {
+
+	if c.KeyUsage&x509.KeyUsageContentCommitment == 0 {
+		return nil, NotANonRepudiationCertificateError{
+			KeyUsage: c.KeyUsage,
+		}
+	}
+
+	opts := x509.VerifyOptions{
+		Roots:         o.rpool,
+		Intermediates: o.ipool,
+		CurrentTime:   time,
+		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageAny},
+	}
+
+	chains, err := c.Verify(opts)
+	if err == nil {
+		// At least one chain is guaranteed: use the first one.
+		issuer = c
+		if len(chains[0]) > 1 {
+			issuer = chains[0][1]
+		}
+	}
+	return issuer, err
 }
 
 func b64d(data string) ([]byte, error) {

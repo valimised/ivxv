@@ -129,13 +129,13 @@ Ringkondade nimekirja JSON-vorming on defineeritud järgnevalt. Objekti
 elemendiga tüüpi :token:`district`. Massiivi :token:`stations` elemendid on
 tüüpi :token:`station`.
 
-.. literalinclude:: schema/ivxv.districts.schema
+.. literalinclude:: ../../common/schema/ivxv.districts.schema
    :language: json
    :linenos:
 
 Näide:
 
-.. literalinclude:: schema/ivxv.districts.schema.example
+.. literalinclude:: ../../common/schema/ivxv.districts.schema.example
    :language: json
 
 Ringkondade nimekiri saadakse Valimiste Infosüsteemist ning JSON-vormingus faili
@@ -287,11 +287,11 @@ Valikute nimekirja JSON-vorming on defineeritud järgnevalt: Objekti
 Objekti :token:`list-choices` elemente indekseeritakse elemendiga tüüpi
 :token:`district-choice`.
 
-.. literalinclude:: schema/ivxv.choices.schema
+.. literalinclude:: ../../common/schema/ivxv.choices.schema
    :language: json
    :linenos:
 
 Näide:
 
-.. literalinclude:: schema/ivxv.choices.schema.example
+.. literalinclude:: ../../common/schema/ivxv.choices.schema.example
    :language: json

@@ -14,8 +14,8 @@ type Protocol string
 // Enumeration of storage protocols.
 const (
 	Memory Protocol = "memory" // import "ivxv.ee/storage/memory"
-	File            = "file"   // import "ivxv.ee/storage/file"
-	Etcd            = "etcd"   // import "ivxv.ee/storage/etcd"
+	File   Protocol = "file"   // import "ivxv.ee/storage/file"
+	Etcd   Protocol = "etcd"   // import "ivxv.ee/storage/etcd"
 )
 
 // Here we "declare" error types, but instead of defining them ourselves, we

@@ -130,13 +130,13 @@ elements of the object :token:`region_dict` are indexed with the element type
 indexed with the element type :token:`district`. The elements of the array
 :token:`stations` are type :token:`station`.
 
-.. literalinclude:: schema/ivxv.districts.schema
+.. literalinclude:: ../../common/schema/ivxv.districts.schema
    :language: json
    :linenos:
 
 Example:
 
-.. literalinclude:: schema/ivxv.districts.schema.example
+.. literalinclude:: ../../common/schema/ivxv.districts.schema.example
    :language: json
 
 The list of electoral districts is received from the Election Infosystem and the
@@ -286,11 +286,11 @@ of the object :token:`district_dict` are indexed with the :token:`district` type
 element.  The elements of the object :token:`list-choices` are indexed with the
 :token:`district-choice` type element.
 
-.. literalinclude:: schema/ivxv.choices.schema
+.. literalinclude:: ../../common/schema/ivxv.choices.schema
    :language: json
    :linenos:
 
 Example:
 
-.. literalinclude:: schema/ivxv.choices.schema.example
+.. literalinclude:: ../../common/schema/ivxv.choices.schema.example
    :language: json

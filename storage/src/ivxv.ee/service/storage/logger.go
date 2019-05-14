@@ -39,7 +39,7 @@ func (l logger) log(ctx context.Context, r io.ReadCloser) {
 		line := scanner.Text()
 		matches := re.FindStringSubmatch(line)
 		if matches == nil {
-			log.Error(ctx, EtcdUnexpectedLog{Line: line})
+			log.Error(ctx, EtcdUnexpectedLogError{Line: line})
 			continue
 		}
 

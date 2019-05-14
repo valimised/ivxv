@@ -10,6 +10,7 @@ import ee.ivxv.common.model.DistrictList;
 import ee.ivxv.common.service.report.Reporter;
 import ee.ivxv.common.util.I18nConsole;
 import ee.ivxv.common.util.ToolHelper;
+import ee.ivxv.common.util.Util;
 import ee.ivxv.processor.Msg;
 import ee.ivxv.processor.ProcessorContext;
 import ee.ivxv.processor.tool.SquashTool.SquashArgs;
@@ -20,10 +21,10 @@ import java.util.List;
 
 public class SquashTool implements Tool.Runner<SquashArgs> {
 
-    private static final String OUT_BB = "bb-2.json";
-    private static final String OUT_IVLJSON = "ivoterlist.json";
-    private static final String OUT_IVLPDF = "ivoterlist.pdf";
-    private static final String OUT_RR = "revocation-report.csv";
+    private static final String OUT_BB_TMPL = "bb-2.json";
+    private static final String OUT_IVLJSON_TMPL = "ivoterlist.json";
+    private static final String OUT_IVLPDF_TMPL = "ivoterlist.pdf";
+    private static final String OUT_RR_TMPL = "revocation-report.csv";
 
     private final ProcessorContext ctx;
     private final I18nConsole console;
@@ -49,6 +50,11 @@ public class SquashTool implements Tool.Runner<SquashArgs> {
         Path out = args.out.value();
 
         removeRecurrentVotes(bb);
+
+        Path OUT_IVLJSON = Util.prefixedPath(bb.getElection(), OUT_IVLJSON_TMPL);
+        Path OUT_IVLPDF = Util.prefixedPath(bb.getElection(), OUT_IVLPDF_TMPL);
+        Path OUT_RR = Util.prefixedPath(bb.getElection(), OUT_RR_TMPL);
+        Path OUT_BB = Util.prefixedPath(bb.getElection(), OUT_BB_TMPL);
 
         reporter.writeIVoterList(out.resolve(OUT_IVLJSON), out.resolve(OUT_IVLPDF), bb, dl);
         reporter.writeRevocationReport(out.resolve(OUT_RR), bb.getElection(), revocationRecords);

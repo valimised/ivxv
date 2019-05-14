@@ -1,0 +1,6 @@
+convert:
+  input_bb: TESTCONF-bb-4.json
+  output_bb: TESTCONF-shuffled.json
+  pub: TESTCONF-pub.pem
+  protinfo: prot.xml
+  proofdir: mixnet/

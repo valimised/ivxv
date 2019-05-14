@@ -1,8 +1,41 @@
-ivxv (1.4.4) UNRELEASED; urgency=medium
+ivxv (1.5.1) bionic; urgency=medium
+
+  * Management service:
+    - Don't fail ivxv-backup if log files grow during backup process
+    - Improve whitespace handling in voters list validator
+    - Improve ivxv-service error message if election configuration is missing
+    - Fixed authentication with user names containing unicode characters
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Tue, 07 May 2019 13:04:29 +0300
+
+ivxv (1.5.0) bionic; urgency=medium
+
+  * Management service:
+    * Added jsonschema support for ivxv-config-validate to check choices and
+      districts lists schema.
+    * Added alternative log transport channel (rsync) to feed Log Monitor
+    * Renamed utility ivxv-consolidate-votes to ivxv-export-votes
+    * Consolidation is now optional in ballot box export
+    * Increased maximum size of syslog messages in configured services to 32k
+    * Install etcd packages from Debian buster, where they are built using a
+      newer version of golang-google-grpc
+    * Changed ballot box downloading in UI to two step operation
+  * Collector service:
+    * Added "option tcplog" to HAProxy template to monitor connections better
+    * Removed "option dontlognull" from HAProxy template to log everything
+    * Updated etcd client library version from 3.1.0 to 3.2.17
+    * Added request size limiting support to codec filter
+    * Added raw request logging to codec filter
+      - Request log will be stored at /var/log/ivxv-request-YYYY-MM-DD.log
+    * Write log files to /var/log/ivxv-YYYY-MM-DD.log
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Mon, 22 Apr 2019 16:22:39 +0300
+
+ivxv (1.4.4) bionic; urgency=medium
 
   * Java application-only release
 
- -- IVXV Developer <info@ivotingcentre.ee>  Tue, 26 Feb 2019 10:56:04 +0200
+ -- IVXV Developer <info@ivotingcentre.ee>  Thu, 28 Feb 2019 14:37:56 +0200
 
 ivxv (1.4.3) bionic; urgency=medium
 

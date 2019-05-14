@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AnonymizeTool implements Tool.Runner<AnonymizeArgs> {
 
-    private static final String OUT_BB = "bb-4.json";
+    private static final String OUT_BB_TMPL = "bb-4.json";
 
     private static final Map<String, Object> EMPTY = new HashMap<>();
 
@@ -57,6 +57,7 @@ public class AnonymizeTool implements Tool.Runner<AnonymizeArgs> {
         reporter.writeLog3(args.out.value(), bb,
                 (voterId, qid) -> !excluded.getOrDefault(voterId, EMPTY).containsKey(qid));
 
+        Path OUT_BB = Util.prefixedPath(bb.getElection(), OUT_BB_TMPL);
         tool.writeJsonBb(abb, args.out.value().resolve(OUT_BB));
 
         return true;

@@ -28,7 +28,7 @@ author = 'Cybernetica AS'
 # The short X.Y version
 version = '1.4.0'
 # The full version, including alpha/beta/rc tags
-release = '1.4.4'
+release = '1.5.1'
 
 # custom variables
 document_number = f'IVXV-SRT-{version}'

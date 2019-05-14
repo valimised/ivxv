@@ -7,18 +7,18 @@ global
 	daemon
 
 defaults
-	log	global
-	option	dontlognull
-        timeout connect 5000
-        timeout client  50000
-        timeout server  50000
+	log global
+	timeout connect 7000
+	timeout client  60000
+	timeout server  60000
 
 frontend {{replace .Service.ID "@" "-" -1}}
 	# Listen on all interfaces instead of only {{.Service.Address}}.
 	bind *:{{port .Service.Address}}
+	option tcplog
 
 	# Only accept TLS ClientHello messages.
-	tcp-request inspect-delay 1000
+	tcp-request inspect-delay 3000
 	tcp-request content accept if { req.ssl_hello_type 1 }
 {{range .Backends}}
 	use_backend {{.Name}} if { req.ssl_sni {{.Name}}.ivxv.invalid }

@@ -22,19 +22,22 @@ set -e
 case "$1" in
     remove)
         # CONFIGURE APACHE
-        # install Apache default site config
-        if [ ! -L /etc/apache2/sites-enabled/000-default.conf ]; then
-            echo "# Enabling Apache default site"
-            a2ensite --quiet 000-default
-        fi
+        if which a2ensite > /dev/null; then
+            # install Apache default site config
+            if [ ! -L /etc/apache2/sites-enabled/000-default.conf ] &&
+                [ -e /etc/apache2/sites-available/000-default.conf ]; then
+                echo "# Enabling Apache default site"
+                a2ensite --quiet 000-default
+            fi
 
-        # remove IVXV collector admin UI site config
-        if [ -L /etc/apache2/sites-enabled/ivxv-admin-ui.conf ]; then
-            echo "# Disabling Apache site for IVXV collector management service UI"
-            a2dissite --quiet ivxv-admin-ui
-        fi
+            # remove IVXV collector admin UI site config
+            if [ -L /etc/apache2/sites-enabled/ivxv-admin-ui.conf ]; then
+                echo "# Disabling Apache site for IVXV collector management service UI"
+                a2dissite --quiet ivxv-admin-ui
+            fi
 
-        deb-systemd-invoke restart apache2
+            deb-systemd-invoke restart apache2
+        fi
 
         # remove ivxv-admin crontab
         if crontab -l -u ivxv-admin > /dev/null; then

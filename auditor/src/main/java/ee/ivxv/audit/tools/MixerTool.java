@@ -2,6 +2,7 @@ package ee.ivxv.audit.tools;
 
 import ee.ivxv.audit.AuditContext;
 import ee.ivxv.audit.Msg;
+import ee.ivxv.audit.shuffle.ShuffleConsole;
 import ee.ivxv.audit.shuffle.ShuffleException;
 import ee.ivxv.audit.shuffle.ShuffleProof;
 import ee.ivxv.audit.shuffle.ThreadedVerifier;
@@ -42,12 +43,13 @@ public class MixerTool implements Tool.Runner<MixerArgs> {
     public boolean run(MixerArgs args) throws Exception {
         console.println();
         console.println(Msg.m_shuffle_proof_loading, args.protPath.value(), args.proofPath.value());
-        ShuffleProof proof = new ShuffleProof(args.protPath.value(), args.proofPath.value());
+        ShuffleConsole sc = new ShuffleConsole(console);
+        ShuffleProof proof = new ShuffleProof(args.protPath.value(), args.proofPath.value(), sc);
         Verifier ver;
         if (args.threaded.value()) {
-            ver = new ThreadedVerifier(proof, ctx.args.threads.value());
+            ver = new ThreadedVerifier(sc, proof, ctx.args.threads.value());
         } else {
-            ver = new Verifier(proof);
+            ver = new Verifier(sc, proof);
         }
         boolean res = false;
         try {

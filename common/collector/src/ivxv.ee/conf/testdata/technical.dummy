@@ -27,6 +27,8 @@ data:
           - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
       codec:
         rwtimeout: 5
+        requestsize: 16834  # 16 KiB
+        logrequests: true
 
     network:
       - id: default

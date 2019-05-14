@@ -200,7 +200,7 @@ class IVXVManagerDb:
             if value != '':
                 assert len(value.split(' ')) == 2
                 cn, timestamp = value.split(' ')
-                assert re.match(r'^(\w+,){2}\d{11}$', cn)
+                assert re.match(r'^(.+,){2}\d{11}$', cn)
                 dateutil.parser.parse(timestamp)
         elif re.match(r'host/.+/.+$', key):
             key_type = key.split('/')[2]
@@ -218,7 +218,7 @@ class IVXVManagerDb:
                     r'[0-9]{2}:[0-9]{2}( [0-9]{2}:[0-9]{2})*$',
                     value), ('Invalid value for %s: %s' % (key, value))
         elif re.match(r'user/.+$', key):
-            assert re.match(r'user/.+,.+,[0-9]{11}$', key), (
+            assert re.match(r'user/(.+,){2}\d{11}$', key), (
                 'Invalid user CN: %s' % key.split('/')[1])
         else:
             raise KeyError('Invalid database field name: ' + key)

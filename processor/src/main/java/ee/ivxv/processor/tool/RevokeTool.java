@@ -18,6 +18,7 @@ import ee.ivxv.common.util.ContainerHelper;
 import ee.ivxv.common.util.I18nConsole;
 import ee.ivxv.common.util.Json;
 import ee.ivxv.common.util.ToolHelper;
+import ee.ivxv.common.util.Util;
 import ee.ivxv.processor.Msg;
 import ee.ivxv.processor.ProcessorContext;
 import ee.ivxv.processor.tool.RevokeTool.RevokeArgs;
@@ -31,9 +32,9 @@ import java.util.stream.Collectors;
 
 public class RevokeTool implements Tool.Runner<RevokeArgs> {
 
-    private static final String OUT_BB = "bb-3.json";
-    private static final String OUT_RR = "revocation-report.csv";
-    private static final String OUT_IVLJSON = "ivoterlist.json";
+    private static final String OUT_BB_TMPL = "bb-3.json";
+    private static final String OUT_RR_TMPL = "revocation-report.csv";
+    private static final String OUT_IVLJSON_TMPL = "ivoterlist.json";
 
     final ProcessorContext ctx;
     final I18nConsole console;
@@ -57,6 +58,10 @@ public class RevokeTool implements Tool.Runner<RevokeArgs> {
         Path out = args.out.value();
 
         applyRevocationLists(bb, args.revLists.value(), loader);
+
+        Path OUT_IVLJSON = Util.prefixedPath(bb.getElection(), OUT_IVLJSON_TMPL);
+        Path OUT_RR = Util.prefixedPath(bb.getElection(), OUT_RR_TMPL);
+        Path OUT_BB = Util.prefixedPath(bb.getElection(), OUT_BB_TMPL);
 
         reporter.writeIVoterList(out.resolve(OUT_IVLJSON), null, bb, dl);
         reporter.writeRevocationReport(out.resolve(OUT_RR), bb.getElection(), loader.revRecords);

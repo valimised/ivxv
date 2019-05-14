@@ -192,7 +192,7 @@ The time of signing is fixed by the computer filling in the data structure, and
 the voter’s X509 certificate is retrieved from the ID card or using the DigiDoc service.
 
 
-.. literalinclude:: xmltemplates/sp.template
+.. literalinclude:: ../../common/xmltemplates/sp.template
    :language: xml
    :linenos:
 
@@ -204,7 +204,7 @@ The element ``SignedInfo`` is generated according to the BDOC 2.1 standard,
 referring to both the encrypted ballot (``VOTE_DIGEST``) and the element
 ``SignedProperties`` (``SP_DIGEST``).
 
-.. literalinclude:: xmltemplates/si.template
+.. literalinclude:: ../../common/xmltemplates/si.template
    :language: xml
    :linenos:
 
@@ -216,7 +216,7 @@ The element ``SignatureValue`` is generated according to the BDOC 2.1 standard.
 The canonicalized element ``SignedInfo`` is the basis for calculating the hash,
 which is signed using the PKCS1 method.
 
-.. literalinclude:: xmltemplates/sv.template
+.. literalinclude:: ../../common/xmltemplates/sv.template
    :language: xml
    :linenos:
 
@@ -228,6 +228,6 @@ The element ``XAdESSignatures`` contains one ``Signature`` element, generated on
 basis of all the previous elements and the voter’s X509 certificate. The element
 ``UnsignedProperties`` is not used.
 
-.. literalinclude:: xmltemplates/sig.template
+.. literalinclude:: ../../common/xmltemplates/sig.template
    :language: xml
    :linenos:

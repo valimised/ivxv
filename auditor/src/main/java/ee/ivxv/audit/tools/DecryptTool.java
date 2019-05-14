@@ -81,12 +81,9 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
         CompletionService<Void> CompService = new ExecutorCompletionService<>(ioExecutor);
 
         ExecutorService verifyExecutor;
-        if (threadCount == 0) {
-            verifyExecutor = Executors.newCachedThreadPool();
-        } else {
-            verifyExecutor = new ThreadPoolExecutor(threadCount, threadCount, 0L,
-                    TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(threadCount * 2));
-        }
+        threadCount = threadCount > 0 ? threadCount : 1;
+        verifyExecutor = new ThreadPoolExecutor(threadCount, threadCount, 0L, TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(threadCount * 2));
 
         WorkManager manager =
                 new WorkManager(input, getVerifyConsumer(pub, idp), verifyExecutor, idp);

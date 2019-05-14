@@ -102,6 +102,9 @@ public class Ciphertext implements ee.ivxv.common.asn1.ASN1Encodable, ASN1Decoda
         if (oidSeq.size() != 1) {
             throw new ASN1DecodingException("Bytes do not correspond to Ciphertext structure");
         }
+        if (!(oidSeq.getObjectAt(0) instanceof ASN1ObjectIdentifier)) {
+            throw new ASN1DecodingException("Bytes do not correspond to Ciphertext structure");
+        }
         oid = (ASN1ObjectIdentifier) oidSeq.getObjectAt(0);
         try {
             ct = ((ASN1Primitive) s.getObjectAt(1)).getEncoded("DER");

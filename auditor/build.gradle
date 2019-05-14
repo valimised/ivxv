@@ -13,3 +13,5 @@ dependencies {
 }
 
 mainClassName = "ee.ivxv.audit.Audit"
+
+applicationDefaultJvmArgs = ["-Xmx8G"]

@@ -13,7 +13,10 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"ivxv.ee/conf"
 	"ivxv.ee/cryptoutil"
@@ -104,7 +107,7 @@ type client struct {
 }
 
 func (c *client) BatchSize() int {
-	return 128 // Not configurable in etcd v3.1.
+	return 128 // Not configurable in etcd v3.2.
 }
 
 // kv returns the KV interface of the client, initializing it if not already
@@ -185,8 +188,7 @@ func (c *client) put(ctx context.Context, kv clientv3.KV, reqs ...storage.PutAll
 	var ops []clientv3.Op
 	var fail []clientv3.Op
 	for _, req := range reqs {
-		// clientv3/clientv3util.KeyMissing in newer etcd.
-		cmps = append(cmps, clientv3.Compare(clientv3.Version(req.Key), "=", 0))
+		cmps = append(cmps, clientv3util.KeyMissing(req.Key))
 		ops = append(ops, clientv3.OpPut(req.Key, string(req.Value)))
 		fail = append(fail, clientv3.OpGet(req.Key, clientv3.WithKeysOnly()))
 	}
@@ -464,8 +466,8 @@ func (c *client) CAS(ctx context.Context, cas string, old, new []byte) (err erro
 	return
 }
 
-// doRetry performs a transaction, automatically retrying up to three times if
-// there are timeout errors.
+// doRetry performs a transaction, automatically retrying up to three times in
+// total if there are transient errors.
 //
 // doRetry takes a function which constructs and commits the transaction. The
 // transaction needs to be reconstructed each time, so that it can use a new
@@ -473,24 +475,31 @@ func (c *client) CAS(ctx context.Context, cas string, old, new []byte) (err erro
 //
 // Usually clientv3.Txn.Commit retries any operations itself until the context
 // expires or the operation succeeds, but not in case of write requests.
-// However, we still wish to retry if the error was caused by a timeout error:
-// this works around any write errors caused by network issues or leader
-// changes.
+// However, since all our transactions are reentrant we still wish to retry if
+// the error was caused by the service being currently unavailable: this works
+// around any write errors caused by network issues, leader changes, etc.
 func (c *client) doRetry(ctx context.Context, f func(context.Context) (*clientv3.TxnResponse, error)) (
 	resp *clientv3.TxnResponse, err error) {
 
-	for i := 0; i < 3; i++ {
+	for attempt := 1; ; attempt++ {
 		rctx, cancel := context.WithTimeout(ctx, c.optime)
 		defer cancel()
-		switch resp, err = f(rctx); err {
-		case rpctypes.ErrTimeout,
-			rpctypes.ErrTimeoutDueToLeaderFail,
-			rpctypes.ErrTimeoutDueToConnectionLost:
+		if resp, err = f(rctx); err != nil {
+			var code codes.Code
+			if rerr, ok := err.(rpctypes.EtcdError); ok {
+				code = rerr.Code() // etcd-level error.
+			} else if serr, ok := status.FromError(err); ok {
+				code = serr.Code() // grpc-level error.
+			}
+			if attempt < 3 && code == codes.Unavailable {
+				log.Log(ctx, RetryingTxn{Attempt: attempt, Err: err})
 
-			time.Sleep(300 * time.Millisecond) // Give time to recover.
-		default:
-			return
+				// Very naive backoff, allowing time to recover.
+				time.Sleep(time.Duration(attempt) * 500 * time.Millisecond)
+				continue
+			}
 		}
+		break
 	}
-	return // Out of retries, return resp and err from last attempt.
+	return resp, err // Return resp and err from last attempt.
 }

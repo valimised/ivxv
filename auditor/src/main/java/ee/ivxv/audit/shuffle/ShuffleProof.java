@@ -1,5 +1,6 @@
 package ee.ivxv.audit.shuffle;
 
+import ee.ivxv.audit.shuffle.ShuffleConsole.ShuffleStep;
 import ee.ivxv.common.crypto.elgamal.ElGamalCiphertext;
 import ee.ivxv.common.crypto.elgamal.ElGamalPublicKey;
 import ee.ivxv.common.math.Group;
@@ -117,23 +118,37 @@ public class ShuffleProof {
      * @throws IOException
      * @throws ShuffleException
      */
-    public ShuffleProof(Path protpath, Path proofdir) throws IOException, ShuffleException {
-        Path pcpath = Paths.get(proofdir.toString(), PROOFS_PATH, PC_PATH);
-        Path poscpath = Paths.get(proofdir.toString(), PROOFS_PATH, POSC_PATH);
-        Path posrpath = Paths.get(proofdir.toString(), PROOFS_PATH, POSR_PATH);
-        Path ciphspath = Paths.get(proofdir.toString(), CIPHERTEXTS_PATH);
-        Path shuffledpath = Paths.get(proofdir.toString(), SHUFFLED_CIPHERTEXTS_PATH);
-        Path pkpath = Paths.get(proofdir.toString(), PUBLICKEY_PATH);
+    public ShuffleProof(Path protpath, Path proofdir, ShuffleConsole console) throws IOException, ShuffleException {
+        console.enter(ShuffleStep.READ);
+        console.enter(ShuffleStep.READ_PROT_INFO);
         prot = new ProtocolInformation(protpath);
+
+        console.enter(ShuffleStep.READ_PC);
+        Path pcpath = Paths.get(proofdir.toString(), PROOFS_PATH, PC_PATH);
         pc = new PermutationCommitment(prot, pcpath);
+
+        console.enter(ShuffleStep.READ_POSC);
+        Path poscpath = Paths.get(proofdir.toString(), PROOFS_PATH, POSC_PATH);
         posc = new PoSCommitment(prot, poscpath);
+
+        console.enter(ShuffleStep.READ_POSR);
+        Path posrpath = Paths.get(proofdir.toString(), PROOFS_PATH, POSR_PATH);
         posr = new PoSReply(prot, posrpath);
+
+        console.enter(ShuffleStep.READ_PUBKEY);
+        Path pkpath = Paths.get(proofdir.toString(), PUBLICKEY_PATH);
         ByteTree pkbt = ByteTree.parse(pkpath);
         Group group = prot.get_parsed_pgroup();
         Group ciphgroup = get_ciphertext_group(prot, group);
         pk = DataParser.getAsElement(ciphgroup, pkbt);
+
+        console.enter(ShuffleStep.READ_CIPHS);
+        Path ciphspath = Paths.get(proofdir.toString(), CIPHERTEXTS_PATH);
         ByteTree ctsbt = ByteTree.parse(ciphspath);
         ciphs = DataParser.getAsElementArray(ciphgroup, ctsbt);
+
+        console.enter(ShuffleStep.READ_SHUFFLED);
+        Path shuffledpath = Paths.get(proofdir.toString(), SHUFFLED_CIPHERTEXTS_PATH);
         ByteTree sctsbt = ByteTree.parse(shuffledpath);
         shuffled = DataParser.getAsElementArray(ciphgroup, sctsbt);
     }

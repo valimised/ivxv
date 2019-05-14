@@ -3,11 +3,30 @@
 Setup of Collector Management Service.
 """
 
+import os
+
 from setuptools import setup
+from setuptools.command.build_py import build_py
+
+
+class IvxvPackageBuilder(build_py):
+    """Customized build_py."""
+
+    def build_package_data(self):
+        """Copy data files into build directory."""
+        super().build_package_data()
+
+        # install jsonschema files
+        src_dir = 'Documentation/common/schema'
+        tgt_dir = os.path.join(self.build_lib, 'ivxv_admin', 'jsonschema')
+        self.mkpath(tgt_dir)
+        self.copy_file(os.path.join(src_dir, 'ivxv.choices.schema'), tgt_dir)
+        self.copy_file(os.path.join(src_dir, 'ivxv.districts.schema'), tgt_dir)
+
 
 setup(
     name='IVXVCollectorAdminDaemon',
-    version='1.4.4',
+    version='1.5.1',
     description='IVXV Collector Management Service',
     author='IVXV Developer',
     author_email='info@ivotingcentre.ee',
@@ -15,11 +34,14 @@ setup(
         'bottle',
         'docopt',
         'jinja2',
+        'jsonschema',
         'pyopenssl',
         'python-dateutil',
         'python-debian',
         'pyyaml',
+        'setuptools',
     ],
+    cmdclass={'build_py': IvxvPackageBuilder},
     packages=[
         'ivxv_admin',
         'ivxv_admin.cli_utils',
@@ -63,13 +85,13 @@ setup(
             'ivxv_admin.cli_utils.backup_utils:backup_util',
             'ivxv-backup-crontab='
             'ivxv_admin.cli_utils.backup_utils:backup_crontab_generator_util',
-            'ivxv-logmonitor-copy-log'
+            'ivxv-copy-log-to-logmon'
             '=ivxv_admin.cli_utils.service_utils:copy_logs_to_logmon_util',
             'ivxv-status='
             'ivxv_admin.cli_utils.status_utils:status_util',
             'ivxv-service'
             '=ivxv_admin.cli_utils.service_utils:manage_service',
-            'ivxv-consolidate-votes='
+            'ivxv-export-votes='
             'ivxv_admin.cli_utils.service_utils:consolidate_votes_util',
             'ivxv-update-packages'
             '=ivxv_admin.cli_utils.service_utils:update_software_pkg_util',

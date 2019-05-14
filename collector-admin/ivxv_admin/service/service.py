@@ -210,6 +210,17 @@ class Service:
                 account='ivxv-admin'):
             return False
 
+        # configure etcd APT source for storage service
+        if self.service_type == 'storage':
+            self.log.info('Configuring APT source for package "etcd"')
+            proc = self.ssh(
+                'sudo ivxv-admin-sudo configure-etcd-apt-source',
+                account='ivxv-admin')
+            if proc.returncode:
+                self.log.error('Failed to configure APT source '
+                               'for package "etcd"')
+                return False
+
         # install service package
         self.log.info('Installing package "%s"', self.deb_pkg_name)
         proc = self.ssh(

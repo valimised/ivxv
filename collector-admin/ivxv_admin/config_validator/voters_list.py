@@ -17,14 +17,18 @@ def parse_voters_list(list_content):
 
     :raises: ValueError
     """
-    lines = list_content.rstrip('\n').split('\n')
+    lines = list_content.split('\n')
     if len(lines) < 3:
         raise ValueError(f'Too few lines in voters list ({len(lines)})')
 
     # parse header
-    data = dict(version=lines[0])
-    data['election'] = lines[1]
-    data['list_type'] = lines[2]
+    data = dict(version=lines[0].rstrip('\r'))
+    data['election'] = lines[1].rstrip('\r')
+    try:
+        data['election'].encode('ASCII')
+    except UnicodeEncodeError:
+        raise ValueError(f'Election ID contains non-ASCII characters')
+    data['list_type'] = lines[2].rstrip('\r')
 
     # validate header
     if data['version'] != '1':
@@ -40,7 +44,9 @@ def parse_voters_list(list_content):
     # parse list
     is_original_list = data['list_type'] == 'algne'
     data['voters'] = []
-    for line_no, line in enumerate(lines, 1):
+    for line_no, line in enumerate(lines[:-1], 1):
+        if '\r' in line:
+            raise ValueError(f'Line #{line_no}: Invalid character <CR>')
         if line_no < 4:
             continue
         fields = line.split('\t')
@@ -49,6 +55,9 @@ def parse_voters_list(list_content):
         except ValueError as err:
             raise ValueError(f'Line #{line_no}: {err.args[0]}')
         data['voters'].append(fields)
+
+    if lines[-1] != '':
+        raise ValueError(f'Line #{len(lines)}: Must end with <LF> character')
 
     return data
 
@@ -69,6 +78,9 @@ def validate_voter_record(fields, is_original_list):
     if fields[2] not in VOTER_ACTION_TYPES:
         raise ValueError('Unknown action "{}". Expected values are {}'
                          .format(fields[2], VOTER_ACTION_TYPES))
+    if is_original_list and fields[2] != 'lisamine':
+        raise ValueError('Action "{}" is not allowed in initial list'
+                         .format(fields[2]))
     # field #4...7 - station-legacy
     for field_no in 3, 4, 5, 6:
         try:
@@ -77,12 +89,13 @@ def validate_voter_record(fields, is_original_list):
             raise ValueError('Invalid district/station number "{}"'
                              .format(fields[field_no]))
     # field #8 - line-no
-    if is_original_list and fields[7]:
+    if is_original_list:
         try:
             int(fields[7])
         except ValueError:
             raise ValueError('Invalid voter line number "{}"'
                              .format(fields[7]))
+
     # field #9 - reason
     if is_original_list and fields[8] != '':
         raise ValueError(

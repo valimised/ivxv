@@ -1,54 +1,101 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"ivxv.ee/log"
+	"ivxv.ee/safereader"
 )
 
-// serverCodec is a rpc.ServerCodec that passes everything to the jsonrpc
-// codec, but also sets reading and writing deadlines, injects the given
-// context into the header of the request, and passes the header through
-// provided filters.
+// wrappedConn wraps net.Conn so its Read method can be replaced with another
+// io.Reader.
+type wrappedConn struct {
+	net.Conn
+	r io.Reader
+}
+
+func (w wrappedConn) Read(p []byte) (n int, err error) {
+	return w.r.Read(p)
+}
+
+// serverCodec is a rpc.ServerCodec which wraps a jsonrpc codec with additional
+// behavior:
+//
+//     - sets read and write deadlines,
+//     - sets a maximum request size limit (if configured),
+//     - logs requests to the request log (if configured),
+//     - checks the size of all request fields tagged with "size",
+//     - injects a context into the header of the request,
+//     - applies filters to the header of the request, and
+//     - sets the filtered header of the request as the header of the response.
+//
 type serverCodec struct {
-	rpc.ServerCodec
-	header  *Header
-	conn    net.Conn
+	rpc.ServerCodec // Inner jsonrpc server codec.
+
+	conn    wrappedConn // Wrapped connection served by this codec.
 	timeout time.Duration
+	logreq  bool
+
+	header  *Header // Server header of the request and response.
 	filters headerFilters
 }
 
-func newCodec(ctx context.Context, conn net.Conn, timeout time.Duration,
+func newCodec(ctx context.Context, conf *CodecConf, conn net.Conn,
 	filters headerFilters) *serverCodec {
 
-	return &serverCodec{
-		jsonrpc.NewServerCodec(conn),
-		&Header{Ctx: ctx},
-		conn,
-		timeout,
-		filters,
+	codec := &serverCodec{
+		conn:    wrappedConn{Conn: conn, r: conn},
+		timeout: time.Duration(conf.RWTimeout) * time.Second,
+		logreq:  conf.LogRequests,
+		header:  &Header{Ctx: ctx},
+		filters: filters,
 	}
+	if conf.RequestSize > 0 {
+		codec.conn.r = safereader.New(conn, conf.RequestSize)
+	}
+	// Must be reference so that changes to codec.conn affect inner codec.
+	codec.ServerCodec = jsonrpc.NewServerCodec(&codec.conn)
+	return codec
 }
 
 var errIgnored = errors.New("ignored")
 
-// ReadRequestHeader sets a read timeout for the underlying connection and then
-// calls ReadRequestHeader of the underlying codec.
+var buffers = sync.Pool{New: func() interface{} { return new(bytes.Buffer) }}
+
+// ReadRequestHeader sets a read deadline for the connection and then calls
+// ReadRequestHeader of the underlying codec, logging the request if
+// configured.
 //
 // Note: err will be ignored by the codecFilter, so any error information must
 // be logged by ReadRequestHeader. err will not be sent to the client. However,
 // a non-nil error must still be returned to stop processing the request any
 // further.
 func (s *serverCodec) ReadRequestHeader(req *rpc.Request) error {
+	if s.logreq {
+		tee := buffers.Get().(*bytes.Buffer)
+		defer buffers.Put(tee)
+		defer tee.Reset()
+		s.conn.r = io.TeeReader(s.conn.r, tee)
+		defer func() {
+			if err := log.Request(s.header.Ctx, tee.Bytes()); err != nil {
+				log.Error(s.header.Ctx, LogRequestError{Err: log.Alert(err)})
+				// Do not block handling of request.
+			}
+		}()
+	}
+
 	if err := s.conn.SetReadDeadline(time.Now().Add(s.timeout)); err != nil {
 		log.Error(s.header.Ctx, SetReadDeadlineError{Err: log.Alert(err)})
 		return errIgnored
@@ -165,10 +212,10 @@ func checkSize(v reflect.Value) error {
 }
 
 // WriteResponse injects the request's server header into the response, sets a
-// write timeout for the underlying connection, and then calls WriteResponse of
-// the underlying codec. WriteResponse will panic if x does not satisfy the
-// header interface: this is by design to avoid developers forgetting to embed
-// the server header in response types.
+// write deadline for the connection, and then calls WriteResponse of the
+// underlying codec. WriteResponse will panic if x does not satisfy the header
+// interface: this is by design to avoid developers forgetting to embed the
+// server header in response types.
 //
 // Note: err will be ignored by the codecFilter and will not be sent to the
 // client (as writing failed): it is meant for debugging the rpc package. Any

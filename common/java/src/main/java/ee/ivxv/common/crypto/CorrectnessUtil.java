@@ -59,6 +59,8 @@ public class CorrectnessUtil {
             ciphertext = new ElGamalCiphertext(pk.getParameters(), ctb);
         } catch (IllegalArgumentException e) {
             return CiphertextCorrectness.INVALID_BYTES;
+        } catch (Throwable t) {
+            return CiphertextCorrectness.INVALID;
         }
         for (GroupElement el : new GroupElement[] {ciphertext.getBlind(),
                 ciphertext.getBlindedMessage()}) {

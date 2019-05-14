@@ -3,6 +3,88 @@
 Tarned
 ======
 
+Muudatused tarne 1.5.0 koosseisus, erinevused võrreldes tarnega 1.4.1
+--------------------------------------------------------------------------------
+
+Kogumisteenus
+~~~~~~~~~~~~~
+
+Üldised muutused
+
+* Kõigi päringute logimine
+* etcd Debian buster repositooriumist, uusima golang-google-rpc saamiseks
+* Väiksemad muutused/veaparandused vastavalt `changelog` failile
+
+Haldusteenus
+
+* Väiksemad muutused/veaparandused vastavalt `changelog` failile
+
+IVXV mikroteenused
+
+* Väiksemad muutused/veaparandused vastavalt `changelog` failile
+
+Registreerimisteenus
+~~~~~~~~~~~~~~~~~~~~
+
+* Muudatusi ei ole
+
+Kontrollrakendused
+~~~~~~~~~~~~~~~~~~
+
+Android
+
+* Muudatused seoses koodiläbivaatuse ja veatöötluse parendamisega
+
+iOS
+
+* Muudatusi ei ole
+
+Mixnet
+~~~~~~
+
+* Muudatused seoses 300K hääle miksimisega
+
+Töötleja rakendused
+~~~~~~~~~~~~~~~~~~~
+
+Üldised
+
+* Valimise identifikaatori kasutamine läbiva prefiksina
+
+Võtmerakendus
+
+* Muudatused seoses koodiläbivaatusega
+
+Töötlemisrakendus
+
+* Muudatused seoses 300K hääle töötlemisega
+
+Auditirakendus
+
+* Edenemisriba
+* Muudatused seoses 300K hääle töötlemisega
+
+Valijarakendused ja seadistusrakendus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* MSAA toe täpsustamine
+* Süsteemsete PIN-dialoogide kasutamine Windows platvormil
+
+Dokumentatsioon
+~~~~~~~~~~~~~~~
+
+* IVXV audiitori juhendi lisamine
+* Muudatusdokumentide lisamine tarnesse
+
+
+Logimonitor
+~~~~~~~~~~~
+
+* Muutused/veaparandused vastavalt `changelog` failile
+
+
+
+
 Muudatused tarne 1.4.1 koosseisus, erinevused võrreldes tarnega 1.4.0
 --------------------------------------------------------------------------------
 

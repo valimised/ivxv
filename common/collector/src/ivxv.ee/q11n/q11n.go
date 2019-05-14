@@ -22,9 +22,9 @@ type Protocol string
 // Enumeration of qualification protocols.
 const (
 	OCSP   Protocol = "ocsp"   // import "ivxv.ee/q11n/ocsp"
-	OCSPTM          = "ocsptm" // import "ivxv.ee/q11n/ocsp"
-	TSP             = "tsp"    // import "ivxv.ee/q11n/tsp"
-	TSPREG          = "tspreg" // import "ivxv.ee/q11n/tsp"
+	OCSPTM Protocol = "ocsptm" // import "ivxv.ee/q11n/ocsp"
+	TSP    Protocol = "tsp"    // import "ivxv.ee/q11n/tsp"
+	TSPREG Protocol = "tspreg" // import "ivxv.ee/q11n/tsp"
 )
 
 // Qualifier is used for requesting qualifying properties for signature

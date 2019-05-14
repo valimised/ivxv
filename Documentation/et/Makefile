@@ -4,8 +4,8 @@ DOCS := $(DOCS) haldusteenus
 DOCS := $(DOCS) ivxvapi
 DOCS := $(DOCS) kasutusmall
 DOCS := $(DOCS) protokollid
-DOCS := $(DOCS) seadistuste-koostejuhend
-DOCS := $(DOCS) systeemihalduri-juhend
+DOCS := $(DOCS) seadistuste_koostejuhend
+DOCS := $(DOCS) systeemihalduri_juhend
 DOCS := $(DOCS) uldsisukord
 DOCS := $(DOCS) votmerakendus
 
@@ -18,10 +18,16 @@ DOCS := $(DOCS) votmerakendus
 #DOCS := $(DOCS) testimisplaan
 DOCS := $(DOCS) $(if $(DEVELOPMENT),tarne)
 DESTDIR := _build
+PREVIVXVDOC := $(DESTDIR)/ivxv/Documentation/et
 
-HTMLDOCS  := $(DOCS:%=html-%)
-PDFDOCS   := $(DOCS:%=pdf-%)
-CLEANDOCS := $(DOCS:%=clean-%)
+OLDPDFDOCS    := $(DOCS:%=oldpdf-%)
+DIFFDOCS      := $(DOCS:%=diff-%)
+
+DOCS := $(DOCS) audiitor
+
+HTMLDOCS      := $(DOCS:%=html-%)
+PDFDOCS       := $(DOCS:%=pdf-%)
+CLEANDOCS     := $(DOCS:%=clean-%)
 
 .PHONY: all
 all: html pdf
@@ -46,8 +52,29 @@ $(PDFDOCS): pdf-%:
 
 .PHONY: clean
 clean: $(CLEANDOCS)
+	py3clean .
 	rm -rf $(DESTDIR)
 
 .PHONY: $(CLEANDOCS)
 $(CLEANDOCS): clean-%:
 	$(MAKE) -C $* clean
+
+
+.PHONY: diff
+diff: $(DIFFDOCS)
+	find . -name \*-diff.tex -print0 | xargs -0 grep -v PREAMBLE | grep -E '(DIFdel|DIFadd)' | cut -d : -f 1 | uniq -c
+
+
+$(PREVIVXVDOC):
+	cd $(DESTDIR) && git clone git:/opt/git/ivxv
+
+
+.PHONY: $(OLDPDFDOCS)
+$(OLDPDFDOCS): oldpdf-%: $(PREVIVXVDOC)
+	cd $(PREVIVXVDOC) && make pdf-$*
+
+
+.PHONY: $(DIFFDOCS)
+$(DIFFDOCS): diff-%: pdf-% oldpdf-%
+	../differ.sh $*
+

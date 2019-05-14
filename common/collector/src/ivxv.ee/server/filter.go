@@ -269,7 +269,9 @@ func (f *tlsFilter) filter(ctx context.Context, c net.Conn, chain connFilters) c
 
 // CodecConf if the codec filter configuration.
 type CodecConf struct {
-	RWTimeout int64 // Timeout for reading reading requests and writing responses in seconds.
+	RWTimeout   int64 // Timeout for reading reading requests and writing responses in seconds.
+	RequestSize int64 // Maximum accepted request size in bytes. 0 disables size limiting.
+	LogRequests bool  // Should requests be logged?
 }
 
 // codecFilter terminates the connfilter chain: it passes c to the RPC server
@@ -282,7 +284,7 @@ type codecFilter struct {
 }
 
 func (f *codecFilter) filter(ctx context.Context, c net.Conn, _ connFilters) context.Context {
-	codec := newCodec(ctx, c, time.Duration(f.conf.RWTimeout)*time.Second, f.filters)
+	codec := newCodec(ctx, f.conf, c, f.filters)
 
 	// ServeRequest can return three types of errors:
 	//

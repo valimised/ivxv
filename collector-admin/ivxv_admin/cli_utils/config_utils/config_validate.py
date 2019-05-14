@@ -47,7 +47,15 @@ def main():
         return 1
     log.info('Config files are valid')
 
-    # validate lists consistency
+    # validate multiple voters lists consistency
+    if len(args['--voters']) > 1:
+        if not validate_voters_lists_consistency(validated_cfg):
+            log.info('Voters lists consistency check failed')
+            return 1
+
+        log.info('Voters lists consistency check succeeded')
+
+    # validate districts and choices/voters lists consistency
     if args['--districts'] and (args['--choices'] or args['--voters']):
         if not validate_lists_consistency(validated_cfg):
             log.info('Voting lists consistency check failed')
@@ -72,6 +80,74 @@ def validate_cfg_files(cfg_files, plain):
         cfg_array.append([cfg_type, cfg])
 
     return cfg_array
+
+
+def validate_voters_lists_consistency(cfg_objects):
+    """Validate voters lists consistency."""
+    check_failed = False
+    voters_reg = None
+    file_no = 0
+    errors = []
+    for cfg_type, cfg in cfg_objects:
+        if cfg_type != 'voters':
+            continue
+
+        file_no += 1
+        if file_no == 1:
+            if cfg['list_type'] != 'algne':
+                errors.append(
+                    f'Invalid type "{cfg["list_type"]}" '
+                    'for initial voters list')
+                break
+            voters_reg = dict(
+                [voter[0], voter[3:7]] for voter in cfg['voters'])
+            continue
+
+        log.info('Checking voters list patch #%d consistency', file_no - 1)
+        if cfg['list_type'] != 'muudatused':
+            errors.append(
+                f'Invalid type "{cfg["list_type"]}" '
+                'for voters list patch')
+            break
+        voters_in_patch = set()
+        for rec_no, voter in enumerate(cfg['voters'], start=1):
+            voter_id = voter[0]
+
+            if voter[2] == 'lisamine':
+                if (voter_id not in voters_reg
+                        and voter_id not in voters_in_patch):
+                    voters_reg[voter_id] = voter[3:7]
+                else:
+                    errors.append(
+                        f'Record #{rec_no}: Adding voter ID {voter_id} '
+                        'that is already in voters list')
+                voters_in_patch.add(voter_id)
+            else:
+                if voter_id in voters_in_patch:
+                    errors.append(
+                        f'Record #{rec_no}: Removing ID {voter_id} '
+                        'that is added with this patch')
+                try:
+                    district = voters_reg.pop(voter_id)
+                    if district != voter[3:7]:
+                        errors.append(
+                            f'Record #{rec_no}: Removing voter ID {voter_id} '
+                            f'from invalid district {voter[3:7]}. '
+                            f'Voter is registered in district {district}')
+                except KeyError:
+                    errors.append(
+                        f'Record #{rec_no}: Removing voter ID {voter_id} '
+                        'that is not in voters list')
+
+        if errors:
+            break
+
+    for error in errors:
+        log.error(error)
+
+    check_failed = check_failed or bool(errors)
+
+    return not check_failed
 
 
 def validate_lists_consistency(cfg_objects):

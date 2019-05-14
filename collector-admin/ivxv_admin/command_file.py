@@ -75,7 +75,7 @@ def load_collector_cmd_file(cmd_type, filename, plain=False):
         return None
 
     # validate election ID in config
-    if cmd_type not in ['technical', 'trust']:
+    if cmd_type not in ['technical', 'trust', 'user']:
         with IVXVManagerDb() as db:
             election_id = db.get_value('election/election-id')
             if election_id:

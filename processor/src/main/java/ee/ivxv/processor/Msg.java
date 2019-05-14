@@ -50,8 +50,6 @@ public enum Msg implements NameHolder {
     e_reg_checksum_missing, //
     e_bb_read_error, e_bb_ballot_processing, e_reg_record_processing, //
     e_bb_invalid_file_name, e_bb_missing_file, e_bb_repeated_file, e_bb_unknown_file_type, //
-    e_ocsp_resp_invalid, e_ocsp_resp_status_not_suffessful, e_ocsp_resp_cert_status_not_good, //
-    e_ocsp_resp_not_basic, e_ocsp_resp_sig_not_valid, e_ocsp_resp_issuer_unknown, //
     e_ballot_signature_invalid, e_ballot_missing_voter_signature, e_active_voter_not_found, //
     e_time_before_start, //
     e_reg_resp_invalid, e_reg_req_invalid, //

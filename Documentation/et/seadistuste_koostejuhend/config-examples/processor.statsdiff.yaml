@@ -1,0 +1,4 @@
+statsdiff:
+  compare: out-stats/TESTCONF-stats.json
+  to: TESTCONF-voting-stats.json
+  diff: TESTCONF-stats-diff.json

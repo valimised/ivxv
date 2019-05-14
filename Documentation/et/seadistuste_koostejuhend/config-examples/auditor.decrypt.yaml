@@ -1,0 +1,4 @@
+decrypt:
+  input: decout/TESTCONF-proof
+  pub: initout/TESTCONF-pub.pem
+  out: auditout

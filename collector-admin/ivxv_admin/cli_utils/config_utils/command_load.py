@@ -342,7 +342,13 @@ def _validate_lists_consistency(cmd_type, cmd_filepath):
                 'active_config_files_path', f'{db_key}.bdoc')
 
     # add current list
-    list_files[cmd_type] = cmd_filepath
+    if cmd_type != 'voters':
+        list_files[cmd_type] = cmd_filepath
+    else:  # change voters list key for proper ordering
+        for _ in range(1, 100):
+            if f'voters{_:02d}' not in list_files:
+                list_files[f'voters{_:02d}'] = cmd_filepath
+                break
 
     # validate
     if len(list_files) > 1:

@@ -57,9 +57,9 @@ type RPC struct {
 // Args are the arguments provided to a call of RPC.Vote.
 type Args struct {
 	server.Header
-	Choices string         `size:"10"`      // Identifier of the choice list used.
-	Type    container.Type `size:"10"`      // The type of container that the ballot is encapsulated in.
-	Vote    []byte         `size:"1000000"` // The signed container of the ballot.
+	Choices string         `size:"10"` // Identifier of the choice list used.
+	Type    container.Type `size:"10"` // The type of container that the ballot is encapsulated in.
+	Vote    []byte         // The signed container of the ballot. Size is limited by codec filter.
 }
 
 // Response is the response returned by RPC.Vote.

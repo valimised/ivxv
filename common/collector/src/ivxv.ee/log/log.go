@@ -23,8 +23,7 @@ import (
 	"ivxv.ee/errors"
 )
 
-// facility is the the syslog facility to log with.
-const facility = syslog.LOG_LOCAL0
+const timefmt = "2006-01-02T15:04:05.000000000Z07:00"
 
 // maxlen is the maximum byte-length of a formatted log entries field. If a
 // field exceeds this, then it will be truncated.
@@ -45,6 +44,7 @@ const (
 type logger struct {
 	debug uint32           // Is debug logging enabled?
 	w     writer           // Destination to log formatted entries to.
+	req   writer           // Separate destination (facility) for requests.
 	now   func() time.Time // Function used to get current time.
 }
 
@@ -71,18 +71,22 @@ func (w noopWriter) Close() error         { return nil }
 // it.
 func NewContext(ctx context.Context, tag string) (context.Context, error) {
 	// No need to set default severity level, as we will not be using it.
-	w, err := syslog.New(facility, tag)
+	w, err := syslog.New(syslog.LOG_LOCAL0, tag)
 	if err != nil {
 		return ctx, err
 	}
-	return context.WithValue(ctx, loggerKey, &logger{0, w, time.Now}), nil
+	req, err := syslog.New(syslog.LOG_LOCAL1, tag)
+	if err != nil {
+		return ctx, err
+	}
+	return context.WithValue(ctx, loggerKey, &logger{0, w, req, time.Now}), nil
 }
 
 // TestContext adds a logger to the context, which does not log anything. This
 // is meant to be used in tests, which call logging functions, but where we do
 // not want to log anything.
 func TestContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, loggerKey, &logger{0, noopWriter{}, time.Now})
+	return context.WithValue(ctx, loggerKey, &logger{0, noopWriter{}, noopWriter{}, time.Now})
 }
 
 // SetDebug sets debugging in the logger in the context.
@@ -96,7 +100,12 @@ func SetDebug(ctx context.Context, debug bool) {
 
 // Close closes the logger in the context.
 func Close(ctx context.Context) error {
-	return fromctx(ctx).w.Close()
+	l := fromctx(ctx)
+	err := l.w.Close()
+	if rerr := l.req.Close(); err == nil {
+		err = rerr
+	}
+	return err
 }
 
 // WithConnectionID sets the connection ID used when logging with the returned
@@ -265,7 +274,8 @@ type message struct {
 
 // format formats the entry to a string as described by Log.
 func format(ctx context.Context, entry Entry) string {
-	now := fromctx(ctx).now().Format(time.RFC3339Nano)
+	// Use time.RFC3339Nano with trailing zeroes.
+	now := fromctx(ctx).now().Format(timefmt)
 
 	var cid, sid string
 	if val := ctx.Value(connIDKey); val != nil {
@@ -377,7 +387,7 @@ func (e *encoder) encode(v reflect.Value, nest bool) (err error) {
 	case reflect.Slice:
 		// Check if we are encoding a byte slice: encode to Base64.
 		if v.Type().Elem().Kind() == reflect.Uint8 {
-			return e.encodeBase64(v.Bytes())
+			return e.encodeString(base64.StdEncoding.EncodeToString(v.Bytes()))
 		}
 		fallthrough
 	case reflect.Array:
@@ -459,22 +469,6 @@ func (e *encoder) encodeString(s string) (err error) {
 	}
 
 	return e.Encode(url.QueryEscape(s))
-}
-
-// encodeBase64 encodes a byte slice into Base64. It does this manually instead
-// of using encoding/json, because a type alias of []byte with a MarshalJSON
-// method could override this behavior.
-//
-// nolint: errcheck, gosec, writing to bytes.Buffer always returns nil and
-// base64.Encoder only returns errors when writing to the underlying stream
-// fails.
-func (e *encoder) encodeBase64(data []byte) (err error) {
-	e.WriteByte('"')
-	b := base64.NewEncoder(base64.StdEncoding, e)
-	b.Write(data)
-	b.Close()
-	e.WriteByte('"')
-	return
 }
 
 // encodeArray encodes an array or slice into a JSON array with encoded values.
@@ -574,4 +568,33 @@ func empty(b []byte) bool {
 	// null will have a newline at the end.
 	s := string(b)
 	return s == "null\n" || s == "{}"
+}
+
+type reqMessage struct {
+	Timestamp    string
+	ConnectionID interface{}
+	Request      string
+}
+
+// Request logs an incoming request into the separate request log destination.
+// The log message will be formatted as a JSON object with three members.
+//
+//     - Timestamp    an ISO8601 timestamp of the time the entry was logged,
+//     - ConnectionID the unique network connection identifier which received
+//                    the request, and
+//     - Request      the incoming request, URL-encoded according to RFC 3986.
+//
+func Request(ctx context.Context, request []byte) error {
+	l := fromctx(ctx)
+	encoder := encPool.Get().(*encoder)
+	defer encPool.Put(encoder)
+	defer encoder.Reset()
+	if err := encoder.Encode(reqMessage{
+		Timestamp:    l.now().Format(timefmt),
+		ConnectionID: ctx.Value(connIDKey),
+		Request:      url.QueryEscape(string(request)), // Ignore maxlen.
+	}); err != nil {
+		return err
+	}
+	return l.req.Info(encoder.String())
 }

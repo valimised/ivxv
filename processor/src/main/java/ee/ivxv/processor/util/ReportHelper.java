@@ -185,18 +185,6 @@ public class ReportHelper {
                 return Msg.e_bb_repeated_file;
             case UNKNOWN_FILE_TYPE:
                 return Msg.e_bb_unknown_file_type;
-            case OCSP_RESP_INVALID:
-                return Msg.e_ocsp_resp_invalid;
-            case OCSP_STATUS_NOT_SUCCESSFUL:
-                return Msg.e_ocsp_resp_status_not_suffessful;
-            case OCSP_CERT_STATUS_NOT_GOOD:
-                return Msg.e_ocsp_resp_cert_status_not_good;
-            case OCSP_NOT_BASIC:
-                return Msg.e_ocsp_resp_not_basic;
-            case OCSP_SIGNATURE_NOT_VALID:
-                return Msg.e_ocsp_resp_sig_not_valid;
-            case OCSP_ISSUER_UNKNOWN:
-                return Msg.e_ocsp_resp_issuer_unknown;
             case INVALID_BALLOT_SIGNATURE:
                 return Msg.e_ballot_signature_invalid;
             case MISSING_VOTER_SIGNATURE:

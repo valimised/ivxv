@@ -8,6 +8,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -303,4 +304,40 @@ public class Util {
         return (X509Certificate) certificateFactory.generateCertificate(pem);
     }
 
+    /**
+     * Join sanitized identifier and name, return as Path.
+     * 
+     * Everything except lower and upper case letters, digits and symbols '-', '_' are replaced with
+     * underscores in the identifier. More formally, the regular expression
+     * <code>[^a-zA-Z0-9-_]</code> is applied and all matches are replaced with underscores.
+     * 
+     * The identifier and name are joined with hyphen '-'.
+     * 
+     * @param identifier
+     * @param name
+     * @return
+     */
+    public static Path prefixedPath(String identifier, String name) {
+        return Paths.get(sanitize(identifier) + "-" + name);
+    }
+
+    /**
+     * Sanitize the identifier.
+     * 
+     * Every match for the regular expression <code>[^a-zA-Z0-9-_]</code> are replaced with
+     * underscores '_'. The regular expression correspond to all characters which are NOT lower or
+     * upper case ASCII letters, digits or symbols '-', '_'.
+     * 
+     * @param identifier
+     * @return
+     */
+    public static String sanitize(String identifier) {
+        // this pattern matches anything which is not:
+        // * lower case letters
+        // * upper case letters
+        // * digits
+        // * symbols '-' and '_'
+        String exclude = "[^a-zA-Z0-9-_]";
+        return identifier.replaceAll(exclude, "_");
+    }
 }

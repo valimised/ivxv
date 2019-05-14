@@ -16,9 +16,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
@@ -32,8 +30,8 @@ import org.slf4j.LoggerFactory;
 public class ElectionResult {
     static final Logger log = LoggerFactory.getLogger(ElectionResult.class);
 
-    private static final Path INVALID_VOTE_PATH = Paths.get("invalid");
-    private static final Path PROOF_PATH = Paths.get("proof");
+    private static final String INVALID_VOTE_PATH_TMPL = "invalid";
+    private static final String PROOF_PATH_TMPL = "proof";
     private static final String TALLY_SUFFIX = ".tally";
     private static final String SIGNATURE_SUFFIX = TALLY_SUFFIX + ".signature";
 
@@ -69,7 +67,8 @@ public class ElectionResult {
     /**
      * Get the worker for computing the tally.
      * <p>
-     * The worker works in parallel to decryptions and continuously computes the tally. It separates votes which are invalid or are given for invalid candidates
+     * The worker works in parallel to decryptions and continuously computes the tally. It separates
+     * votes which are invalid or are given for invalid candidates
      * 
      * @param voteCount
      * @param console
@@ -126,7 +125,7 @@ public class ElectionResult {
         if (!withProof) {
             return;
         }
-        Json.write(proof, outDir.resolve(PROOF_PATH));
+        Json.write(proof, outDir.resolve(Util.prefixedPath(electionName, PROOF_PATH_TMPL)));
     }
 
     /**
@@ -136,18 +135,17 @@ public class ElectionResult {
      * @throws Exception When writing the file fails.
      */
     public void outputInvalid(Path outDir) throws Exception {
-        Json.write(invalid, outDir.resolve(INVALID_VOTE_PATH));
+        Json.write(invalid,
+                outDir.resolve(Util.prefixedPath(electionName, INVALID_VOTE_PATH_TMPL)));
     }
 
     private class ResultWorker implements Callable<Void> {
         private final int voteCount;
         private I18nConsole console;
-        private Reporter reporter;
 
         public ResultWorker(int voteCount, I18nConsole console, Reporter reporter) {
             this.voteCount = voteCount;
             this.console = console;
-            this.reporter = reporter;
         }
 
         @Override
@@ -156,52 +154,73 @@ public class ElectionResult {
             Object obj;
             while ((obj = votes.take()) != Util.EOT) {
                 progress.increase(1);
+                Vote vote;
                 if (obj instanceof Vote) {
-                    Vote vote = (Vote) obj;
-                    String choice;
-                    if (vote.getProof() != null) {
-                        if (withProof) {
-                            proof.addProof(vote.getProof());
-                        }
-                        choice = isValidChoice(vote) ? getCandidateNumber(vote)
-                                : Tally.INVALID_VOTE_ID;
-                    } else {
-                        log.warn("Vote proof is missing - invalid vote");
-                        choice = Tally.INVALID_VOTE_ID;
-                    }
-                    if (choice.equals(Tally.INVALID_VOTE_ID)) {
-                        log.warn("Vote is invalid!");
-                        invalid.getInvalid().add(vote);
-                    }
-                    addVoteToTally(vote, choice);
+                    vote = (Vote) obj;
                 } else {
                     throw new IllegalArgumentException(
                             "Unexpected decryption result type: " + obj.getClass());
                 }
+                String choice = Tally.INVALID_VOTE_ID;
+                if (vote.getProof() != null) {
+                    // the message has been decrypted
+                    if (isValidChoice(vote)) {
+                        // the message contains a valid choice string.
+                        choice = getCandidateNumber(vote);
+                    } else {
+                        // the message was correctly decrypted, but this does not represent a valid
+                        // choice string
+                        log.warn("Choice is not correctly encoded: invalid vote");
+                    }
+                } else {
+                    // the message has not been decrypted. This can be
+                    // caused by invalid padding, incorrect group elements etc. It was not decrypted
+                    // to prevent any leaks about the key.
+                    log.warn("Ciphertext not correctly encoded: invalid vote");
+                }
+                if (withProof && !choice.equals(Tally.INVALID_VOTE_ID)) {
+                    // output proof of correct decryption only if it is requested and the choice
+                    // string is valid. As the decryption proof also contains the whole encrypted
+                    // message, then this may leak identifiable information
+                    proof.addProof(vote.getProof());
+                }
+                if (choice.equals(Tally.INVALID_VOTE_ID)) {
+                    invalid.getInvalid().add(vote);
+                }
+                addVoteToTally(vote, choice);
             }
             progress.finish();
             return null;
         }
 
         private String getCandidateNumber(Vote vote) {
-            return vote.getProof().getDecrypted().getUTF8DecodedMessage()
-                    .split(Util.UNIT_SEPARATOR)[0];
+            String message = vote.getProof().getDecrypted().getUTF8DecodedMessage();
+            return message.split(Util.UNIT_SEPARATOR)[0];
         }
 
         private boolean isValidChoice(Vote vote) {
-            String voteStr = vote.getProof().decrypted.getUTF8DecodedMessage();
+            String voteStr = vote.getProof().getDecrypted().getUTF8DecodedMessage();
             String[] voteParts = voteStr.split(Util.UNIT_SEPARATOR, 3);
             if (voteParts.length != 3) {
-                log.warn("isValidChoice() voteParts.length == {}, should be 3", voteParts.length);
                 return false;
             }
-            try {
-                return candidates.getCandidates().get(vote.getDistrict()).get(voteParts[1])
-                        .get(voteParts[0]).equals(voteParts[2]);
-            } catch (NullPointerException ignored) {
-                log.warn("isValidChoice() NullPointerException finding choice from candidate list");
+            Map<String, Map<String, Map<String, String>>> ds = candidates.getCandidates();
+            if (!ds.containsKey(vote.getDistrict())) {
                 return false;
             }
+            Map<String, Map<String, String>> ps = ds.get(vote.getDistrict());
+            if (!ps.containsKey(voteParts[1])) {
+                return false;
+            }
+            Map<String, String> ids = ps.get(voteParts[1]);
+            if (!ids.containsKey(voteParts[0])) {
+                return false;
+            }
+            String name = ids.get(voteParts[0]);
+            if (!name.equals(voteParts[2])) {
+                return false;
+            }
+            return true;
         }
 
         private void addVoteToTally(Vote vote, String choice) {

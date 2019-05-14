@@ -11,8 +11,9 @@ DOCS2 := $(DOCS2) en/protocols
 
 DOCS3 := $(DOCS3) et/haldusteenus
 DOCS3 := $(DOCS3) et/ivxvapi
-DOCS3 := $(DOCS3) et/seadistuste-koostejuhend
-DOCS3 := $(DOCS3) et/systeemihalduri-juhend
+DOCS3 := $(DOCS3) et/seadistuste_koostejuhend
+DOCS3 := $(DOCS3) et/systeemihalduri_juhend
+DOCS3 := $(DOCS3) et/audiitor
 
 DESTDIR := _build
 DESTDIR1 := "$(DESTDIR)/1. Ülddokumendid"

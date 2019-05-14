@@ -25,6 +25,7 @@ import ee.ivxv.common.service.i18n.MessageException;
 import ee.ivxv.common.util.ContainerHelper;
 import ee.ivxv.common.util.I18nConsole;
 import ee.ivxv.common.util.ToolHelper;
+import ee.ivxv.common.util.Util;
 import ee.ivxv.common.util.log.PerformanceLog;
 import ee.ivxv.processor.Msg;
 import ee.ivxv.processor.ProcessorContext;
@@ -50,7 +51,7 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
     static final ASN1ObjectIdentifier TS_KEY_ALG_ID = PKCSObjectIdentifiers.rsaEncryption;
     static final ASN1ObjectIdentifier VL_KEY_ALG_ID = PKCSObjectIdentifiers.rsaEncryption;
 
-    private static final String OUT_BB = "bb-1.json";
+    private static final String OUT_BB_TMPL = "bb-1.json";
 
     private final ProcessorContext ctx;
     private final I18nConsole console;
@@ -81,6 +82,7 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
         reporter.writeLog1(args.out.value(), bb);
 
         if (signed) {
+            Path OUT_BB = Util.prefixedPath(bb.getElection(), OUT_BB_TMPL);
             tool.writeJsonBb(bb, args.out.value().resolve(OUT_BB));
         }
         return true;

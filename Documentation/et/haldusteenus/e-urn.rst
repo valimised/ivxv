@@ -5,10 +5,17 @@ E-urni väljastamine
 
 E-urni väljastamise leht avaneb menüüvalikust ``E-urn``.
 
-E-urni väljastamise vaates on võimalik kogutud hääli sisaldava e-urni
-allalaadimine.
+E-urni väljastamise vaates on võimalik:
 
-Enne hääletamisperioodi lõppe alla laaditav urn on mõeldud varundamiseks,
+* Algatada e-urni koostamist;
+
+* Koostatud e-urnide alla laadida.
+
+Urni on võimalik koostada konsolideerimata ja konsolideeritud kujul.
+Konsolideerimine on ressursinõudlik tegevus ja seda on vaja kasutada vaid
+juhul, kui häälte kogumisel on esinenud probleeme talletusteenusega.
+
+Enne hääletamisperioodi lõppu allalaaditav urn on mõeldud varundamiseks,
 pärast hääletusperioodi lõppu allalaaditud urn on mõeldud häälte
 kokkulugemiseks.
 

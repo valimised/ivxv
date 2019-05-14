@@ -12,7 +12,7 @@ end_of_line = lf
 indent_style = space
 indent_size = 4
 
-[*.json]
+[*.{json,schema}]
 indent_style = space
 indent_size = 4
 insert_final_newline = false
@@ -21,7 +21,7 @@ insert_final_newline = false
 indent_style = space
 indent_size = 4
 
-[*.{css,js,pu,sh,yaml,yml}]
+[*.{css,feature,js,pu,sh,yaml,yml}]
 indent_style = space
 indent_size = 2
 

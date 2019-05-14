@@ -14,7 +14,7 @@ kontrollrakendusega JSON-RPC protokolli vahendusel.
 :method: RPC-meetod
 :params: Konkreetse RPC-meetodi parameetrid
 
-.. literalinclude:: examples/json.rpc.method.query.json
+.. literalinclude:: ../../common/examples/json.rpc.method.query.json
    :language: json
    :linenos:
 
@@ -22,7 +22,7 @@ kontrollrakendusega JSON-RPC protokolli vahendusel.
 :id: JSON-RPC päringuidentifikaator, peab ühtima päringus kasutatud id-ga
 :result: Meetodipõhine vastusandmestruktuur
 
-.. literalinclude:: examples/json.rpc.method.response.json
+.. literalinclude:: ../../common/examples/json.rpc.method.response.json
    :language: json
    :linenos:
 
@@ -57,7 +57,7 @@ Päring ``RPC.VoterChoices`` ID-kaardiga autentimise korral - autentimine toimub
 TLS-protokolli tasemel päringu töötlemise ajal kasutades ID-kaardi
 autentimissertifikaati.
 
-.. literalinclude:: examples/id.rpc.voterchoices.query.json
+.. literalinclude:: ../../common/examples/id.rpc.voterchoices.query.json
    :language: json
    :linenos:
 
@@ -72,7 +72,7 @@ sooritamiseks tuleb eelnevalt kasutada DigiDocService vahendusteenuse (SNI
                    interaktsioon autentimistõendi saamiseks, on olemas
                    seansiidentifikaator, mida tuleb kasutada.
 
-.. literalinclude:: examples/mid.rpc.voterchoices.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.voterchoices.query.json
    :language: json
    :linenos:
 
@@ -83,7 +83,7 @@ Nimekirjateenuse vastus päringule ``RPC.VoterChoices``.
 :result.Voted: Kui valija on juba hääletanud, siis ``true``, vastasel juhul
                seda välja vastuses ei ole.
 
-.. literalinclude:: examples/id.rpc.voterchoices.response.json
+.. literalinclude:: ../../common/examples/id.rpc.voterchoices.response.json
    :language: json
    :linenos:
 
@@ -116,17 +116,18 @@ saatmiseks.
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
 :params.Type: Allkirjastatud hääle vorming. Hetkel on ainus toetatud väärtus
               ``bdoc``.
-:params.Vote: BASE64-kodeeritud hääl ``SignedVote`` eelpoolmääratud vormingus.
+:params.Vote: BASE64-kodeeritud hääl ``SignedVote`` eelpoolmääratud vormingus
+              (:ref:`signed-vote`).
 
 Päring ``RPC.Vote`` ID-kaardiga autentimise korral.
 
-.. literalinclude:: examples/id.rpc.vote.query.json
+.. literalinclude:: ../../common/examples/id.rpc.vote.query.json
    :language: json
    :linenos:
 
 Päring ``RPC.Vote`` Mobiil-ID'ga autentimise korral.
 
-.. literalinclude:: examples/mid.rpc.vote.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.vote.query.json
    :language: json
    :linenos:
 
@@ -136,14 +137,14 @@ Hääletamisteenuse vastus päringule ``RPC.Vote``.
 :result.Qualification.ocsp:
 :result.Qualification.tspreg:
     Kogumisteenuse poolt hangitud täiendavad tõendid valijarakenduse poolt
-    loodud hääle ``SignedVote`` kvalifitseerimiseks ning korrektseks
-    registreerimiseks. Vastuse koosseis sõltub kogumisteenuse konkreetsest
-    seadistusest, antud juhul kasutatakse standardset OCSP protokolli valija
-    allkirjasertifikaadi kehtivuse kontrolliks ning PKIX ajatempliprotokolli
-    põhist registreerimisteenust nii hääle andmise aja fikseerimiseks kui
-    elektroonilise hääle registreerimiseks välises sõltumatus teenuses.
-    Valijarakendusele kontrollimiseks edastatakse nii OCSP vastus kui PKIX
-    vormingus ajatempel koos registreerimisteenusele vajalike täiendustega.
+    loodud hääle ``SignedVote`` (:ref:`signed-vote`) kvalifitseerimiseks ning
+    korrektseks registreerimiseks. Vastuse koosseis sõltub kogumisteenuse
+    konkreetsest seadistusest, antud juhul kasutatakse standardset OCSP
+    protokolli valija allkirjasertifikaadi kehtivuse kontrolliks ning PKIX
+    ajatempliprotokolli põhist registreerimisteenust nii hääle andmise aja
+    fikseerimiseks kui elektroonilise hääle registreerimiseks välises sõltumatus
+    teenuses.  Valijarakendusele kontrollimiseks edastatakse nii OCSP vastus kui
+    PKIX vormingus ajatempel koos registreerimisteenusele vajalike täiendustega.
 :result.TestVote: Kui hääl esitati enne hääletamise algust ning läks arvesse
                   proovihäälena, siis ``true``, vastasel juhul seda välja
                   vastuses ei ole. Valijarakendus kuvab valijale proovihääle
@@ -152,7 +153,7 @@ Hääletamisteenuse vastus päringule ``RPC.Vote``.
                 kontrollrakendusel võimalik häält hilisemaks analüüsiks välja
                 nõuda.
 
-.. literalinclude:: examples/id.rpc.vote.response.json
+.. literalinclude:: ../../common/examples/id.rpc.vote.response.json
    :language: json
    :linenos:
 
@@ -188,7 +189,7 @@ algatamiseks.
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
 :params.PhoneNo: Mobiil-ID kasutaja telefoninumber.
 
-.. literalinclude:: examples/mid.rpc.authenticate.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.authenticate.query.json
    :language: json
    :linenos:
 
@@ -196,7 +197,7 @@ algatamiseks.
 :result.SessionCode: Mobiil-ID seansiidentifikaator edasiste poll-päringute
                      jaoks
 
-.. literalinclude:: examples/mid.rpc.authenticate.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.authenticate.response.json
    :language: json
    :linenos:
 
@@ -214,7 +215,7 @@ hindamiseks.
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
 :params.SessionCode: Autentimisseansi identifikaator
 
-.. literalinclude:: examples/mid.rpc.authenticatestatus.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.authenticatestatus.query.json
    :language: json
    :linenos:
 
@@ -229,11 +230,11 @@ hindamiseks.
 :result.Surname: Eduka autentimise korral valija perekonnanimi
 
 
-.. literalinclude:: examples/mid.rpc.authenticatestatus.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.authenticatestatus.response.json
    :language: json
    :linenos:
 
-.. literalinclude:: examples/mid.rpc.authenticatestatus2.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.authenticatestatus2.response.json
    :language: json
    :linenos:
 
@@ -259,14 +260,14 @@ hankimiseks.
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
 :params.PhoneNo: Hääle allkirjastaja telefoninumber
 
-.. literalinclude:: examples/mid.rpc.getcertificate.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.getcertificate.query.json
    :language: json
    :linenos:
 
 
 :result.Certificate: Allkirjastamissertifikaat X509-vormingus
 
-.. literalinclude:: examples/mid.rpc.getcertificate.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.getcertificate.response.json
    :language: json
    :linenos:
 
@@ -288,7 +289,7 @@ Valijarakendus teeb päringu ``RPC.Sign`` hääle allkirjastamise algatamiseks.
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
 :params.PhoneNo: Hääle allkirjastaja telefoninumber
 
-.. literalinclude:: examples/mid.rpc.sign.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.sign.query.json
    :language: json
    :linenos:
 
@@ -296,7 +297,7 @@ Valijarakendus teeb päringu ``RPC.Sign`` hääle allkirjastamise algatamiseks.
 :result.SessionCode: Mobiil-ID seansiidentifikaator edasiste poll-päringute
                      jaoks.
 
-.. literalinclude:: examples/mid.rpc.sign.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.sign.response.json
    :language: json
    :linenos:
 
@@ -315,7 +316,7 @@ hindamiseks.
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
 :params.SessionCode: Mobiil-ID seansiidentifikaator
 
-.. literalinclude:: examples/mid.rpc.signstatus.query.json
+.. literalinclude:: ../../common/examples/mid.rpc.signstatus.query.json
    :language: json
    :linenos:
 
@@ -325,11 +326,11 @@ hindamiseks.
                 viitab edukale allkirjastamisele. Vastuse muud väljad sisaldavad
                 infot vaid siis kui väärtus on ``OK``.
 
-.. literalinclude:: examples/mid.rpc.signstatus.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.signstatus.response.json
    :language: json
    :linenos:
 
-.. literalinclude:: examples/mid.rpc.signstatus2.response.json
+.. literalinclude:: ../../common/examples/mid.rpc.signstatus2.response.json
    :language: json
    :linenos:
 
@@ -355,7 +356,7 @@ kvalifitseerivate tõendite allalaadimiseks kogumisteenusest.
 :params.VoteID: QR-koodi vahendusel valijarakendusest saadud hääle
                 identifikaator talletusteenuses.
 
-.. literalinclude:: examples/ver.rpc.verify.query.json
+.. literalinclude:: ../../common/examples/ver.rpc.verify.query.json
    :language: json
    :linenos:
 
@@ -366,9 +367,10 @@ kvalifitseerivate tõendite allalaadimiseks kogumisteenusest.
 
 :result.Type: Allkirjastatud hääle vorming. Hetkel on ainus toetatud väärtus
               ``bdoc``.
-:result.Vote: BASE64-kodeeritud hääl ``SignedVote`` eelpoolmääratud vormingus.
+:result.Vote: BASE64-kodeeritud hääl ``SignedVote`` eelpoolmääratud vormingus
+              (:ref:`signed-vote`).
 
-.. literalinclude:: examples/ver.rpc.verify.response.json
+.. literalinclude:: ../../common/examples/ver.rpc.verify.response.json
    :language: json
    :linenos:
 

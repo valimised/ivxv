@@ -9,6 +9,7 @@ import datetime
 import json
 import logging
 import os
+import re
 import urllib
 import urllib.request
 
@@ -128,6 +129,7 @@ def context():
 
 
 @APP.post('/download-ballot-box')
+@APP.post('/download-consolidated-ballot-box')
 @APP.post('/remove-voters-lists')
 def fwd_request():
     """Forward request to IVXV Management Service Daemon."""
@@ -206,3 +208,40 @@ def eventlog():
     response.content_type = 'application/json'
     response.expires = EXPIRES_DEFAULT
     return json.dumps({'data': records})
+
+
+@APP.route('/ballot-box-state')
+def get_ballot_box_state():
+    """Output state of ballot boxes.
+
+    :return: State as JSON
+    :rtype: str
+    """
+    state = []
+    for filename in os.listdir(CONFIG['exported_votes_path']):
+        if not filename.endswith('.log'):
+            continue
+        timestamp = datetime.datetime.strptime(
+            re.sub(r'.+-(\d.+).log', '\\1', filename),
+            '%Y.%m.%d_%H.%M')
+        filepath = os.path.join(CONFIG['exported_votes_path'], filename)
+        with open(filepath) as fp:
+            log_lines = fp.readlines()
+            if len(log_lines) > 12:
+                log_lines = log_lines[:6] + ['...\n'] + log_lines[-6:]
+        zip_filename = filename.replace('.log', '.zip')
+        file_state = (
+            'ready'
+            if 'Collected votes archive is written to' in log_lines[-1]
+            else 'prepare')
+        state.append({
+            'timestamp': timestamp.strftime('%d.%m.%Y %H:%M'),
+            'filename': zip_filename,
+            'state': file_state,
+            'log': ''.join(log_lines),
+        })
+
+    # start response
+    response.content_type = 'application/json'
+    response.expires = EXPIRES_DEFAULT
+    return json.dumps({'data': state})

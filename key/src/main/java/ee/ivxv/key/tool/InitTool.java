@@ -147,16 +147,16 @@ public class InitTool implements Tool.Runner<InitArgs> {
             }
             signBlobs.add(ib);
         }
-        Path signCertPath = sanitizeFilename(args.identifier.value(), SIGN_CERT_TMPL);
-        Path encCertPath = sanitizeFilename(args.identifier.value(), ENC_CERT_TMPL);
+        Path signCertPath = Util.prefixedPath(args.identifier.value(), SIGN_CERT_TMPL);
+        Path encCertPath = Util.prefixedPath(args.identifier.value(), ENC_CERT_TMPL);
         generateAndWriteCert(args, signBlobs, tparams, rnd, rsaPub.getEncoded(), signCertPath,
                 args.signCN.value(), args.signCN.value(), args.signSN.value());
         generateAndWriteCert(args, signBlobs, tparams, rnd, pub.getBytes(), encCertPath,
                 args.signCN.value(), args.encCN.value(), args.encSN.value());
         console.println(Msg.m_certificates_generated, signCertPath, encCertPath);
 
-        Path encKeyDerPath = sanitizeFilename(args.identifier.value(), ENC_KEY_DER_TMPL);
-        Path encKeyPemPath = sanitizeFilename(args.identifier.value(), ENC_KEY_PEM_TMPL);
+        Path encKeyDerPath = Util.prefixedPath(args.identifier.value(), ENC_KEY_DER_TMPL);
+        Path encKeyPemPath = Util.prefixedPath(args.identifier.value(), ENC_KEY_PEM_TMPL);
         writeOutEncryptionKey(pub, args.outputPath.value(), encKeyDerPath, encKeyPemPath);
         console.println(Msg.m_keys_saved, encKeyDerPath, encKeyPemPath);
 
@@ -225,15 +225,7 @@ public class InitTool implements Tool.Runner<InitArgs> {
         Files.write(dir.resolve(der), key.getBytes());
     }
 
-    protected static Path sanitizeFilename(String identifier, String name) {
-        // this pattern matches anything which is not:
-        // * lower case letters
-        // * upper case letters
-        // * digits
-        // * symbols '-' and '_'
-        String exclude = "[^a-zA-Z0-9-_]";
-        return Paths.get(identifier.replaceAll(exclude, "_") + "-" + name);
-    }
+
 
     public static class InitArgs extends Args {
         Arg<String> identifier = Arg.aString(Msg.arg_identifier);

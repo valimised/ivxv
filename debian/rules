@@ -11,8 +11,8 @@ export PYBUILD_DISABLE = test
 	dh $@ --with systemd --with python3
 
 override_dh_auto_clean:
-	# Do not clean Java applications.
-	$(MAKE) clean-go clean-doc clean-systemd
+	# Do not clean Java applications nor documentation.
+	$(MAKE) clean-go clean-systemd
 
 	# Clean ivxv-admin.
 	# FIXME: The python build files should not live in the root directory,

@@ -1,8 +1,0 @@
-revoke:
-  ballotbox: out-2/bb-2.json
-  ballotbox_checksum: out-2/bb-2.json.sha256sum.bdoc
-  districts: TESTCONF.districts.bdoc
-  revocationlists:
-    - TESTCONF.revoke_1.bdoc
-    - TESTCONF.revoke_2.bdoc
-  out: out-3

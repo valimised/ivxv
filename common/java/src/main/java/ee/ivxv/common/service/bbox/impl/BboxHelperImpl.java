@@ -6,7 +6,6 @@ import ee.ivxv.common.service.bbox.BboxHelper;
 import ee.ivxv.common.service.bbox.InvalidBboxException;
 import ee.ivxv.common.service.bbox.Ref;
 import ee.ivxv.common.service.bbox.impl.TspProfile.TsProfile;
-import ee.ivxv.common.service.bbox.impl.verify.OcspVerifier;
 import ee.ivxv.common.service.console.Progress;
 import ee.ivxv.common.service.container.ContainerReader;
 import ee.ivxv.common.util.Util;
@@ -20,18 +19,16 @@ public class BboxHelperImpl implements BboxHelper {
 
     private static final Logger log = LoggerFactory.getLogger(BboxHelperImpl.class);
 
-    private final OcspVerifier ocspVerifier;
     private final ContainerReader container;
 
     public BboxHelperImpl(Conf conf, ContainerReader container) {
-        ocspVerifier = new OcspVerifier(conf.getCaCerts(), conf.getOcspCerts());
         this.container = container;
     }
 
     @Override
     public Loader<?> getLoader(Path path, Progress.Factory pf, int nThreads) {
         // TODO Choose profile better!!!
-        Profile<?, ?, ?, ?> profile = new TsProfile(container, ocspVerifier);
+        Profile<?, ?, ?, ?> profile = new TsProfile(container);
         return new LoaderImpl<>(profile, pf, nThreads);
     }
 

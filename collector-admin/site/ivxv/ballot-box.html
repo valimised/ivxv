@@ -124,27 +124,94 @@ Collector management service - Web interface - Ballot box downloading page
                     </div>
                 </div>
                 <!-- /.col-lg-12 -->
+
+            </div>
+            <!-- /.row -->
+
+            <!-- Warning message panel -->
+            <div id="common-warning-msg" class="row" style="display: none;">
+                <div class="col-lg-12">
+                    <div class="panel panel-warning">
+                        <div class="panel-heading">
+                            Hoiatus!
+                        </div>
+                        <div class="panel-body">
+                            <p>Hoiatusteade</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.col-lg-12 -->
+
             </div>
             <!-- /.row -->
 
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="panel panel-default">
+                    <div id="panel-download-form" class="panel panel-default" style='display: none;'>
                         <div class="panel-heading">
-                            E-urni väljastamine
+                            E-urni koostamine
                         </div>
                         <div class="panel-body">
                             <div class="col-lg-12">
-                                <p class="text-warning">Seadistusperioodil pole võimalike-urni väljastada.</p>
+                                <input type="checkbox" name="consolidate" value="1" id="consolidate">
+                                <label for="consolidate">
+                                    Urni konsolideerimine urnist tehtud
+                                    varukoopiate põhjal.
+                                </label>
+                                <div class="col-lg-12 text-danger">
+                                    Konsolideerimine on ressursinõudlik
+                                    protsess ja see on vajalik vaid juhul, kui
+                                    häälte kogumisel on esinenud probleeme
+                                    talletusteenusega.
+                                </div>
                             </div>
                             <div class="col-lg-12">
-                                <p class="text-success">Hääletusperioodil on võimalik väljastada vaid e-urni varukoopiat.</p>
-                            </div>
-                            <div class="col-lg-12">
-                                <button class="btn btn-primary" onclick="downloadBallot()"><i class="fa fa-download"></i> <span id="exportbtn">Väljasta e-urn</span></button>
-                                <br>
-                                <br>
+                                <button class="btn btn-primary" onclick="downloadBallot($('input[name=\'consolidate\']:checked').length)">
+                                    <i class="fa fa-download"></i>
+                                    <span id="exportbtn">Koosta e-urn</span>
+                                </button>
+                                <br />
+                                <br />
                                 <img id="loading" src="../ivxv/ajax-loader.gif" style="display: none;" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.col-lg-12 -->
+
+                <div class="col-lg-12">
+                    <div id="panel-download-ballot-box-template" class="panel panel-default" style='display: none;'>
+                        <div class="panel-heading">
+                            E-urni allalaadimine
+                        </div>
+                        <div class="panel-body">
+                            <div class="list-group">
+
+                                <div class="list-group-item list-group-item-info">
+                                    <i class="fa fa-spinner fa-fw"></i>
+                                    <span>Varukoopia nimetus</span> (koostamisel)
+                                    <span class="pull-right text-muted small">
+                                        <em>01.01.1970 00:00</em>
+                                    </span>
+                                    <pre style="text-align: left; display: none;">Log lines</pre>
+                                </div>
+
+                                <a href="#" class="list-group-item list-group-item-success">
+                                    <i class="fa fa-download fa-fw"></i>
+                                    <span>Varukoopia nimetus</span>
+                                    <span class="pull-right text-muted small">
+                                        <em>01.01.1970 00:00</em>
+                                    </span>
+                                </a>
+
+                                <div class="list-group-item list-group-item-danger">
+                                    <i class="fa fa-warning fa-fw"></i>
+                                    <span>Veateade</span>
+                                    <span class="pull-right text-muted small">
+                                        <em>01.01.1970 00:00</em>
+                                    </span>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -174,6 +241,8 @@ Collector management service - Web interface - Ballot box downloading page
     <script>
     $(document).ready(function() {
         getContextData();
+        loadPageData();
+        setInterval(loadPageData, 10000);
     });
     </script>
 </body>

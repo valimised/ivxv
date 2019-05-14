@@ -148,7 +148,7 @@ public class TestKeyTool implements Tool.Runner<TestKeyArgs> {
     }
 
     static ElGamalPublicKey readDecryptionKey(TestKeyArgs args) throws IOException {
-        Path encCertPath = InitTool.sanitizeFilename(args.identifier.value(), InitTool.ENC_CERT_TMPL);
+        Path encCertPath = Util.prefixedPath(args.identifier.value(), InitTool.ENC_CERT_TMPL);
         Path fullpath = args.outputPath.value().resolve(encCertPath);
         byte[] raw = readKey(fullpath);
         ElGamalPublicKey key = new ElGamalPublicKey(raw);
@@ -167,7 +167,7 @@ public class TestKeyTool implements Tool.Runner<TestKeyArgs> {
 
     static RSAPublicKey readSigningKey(TestKeyArgs args)
             throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
-        Path signCertPath = InitTool.sanitizeFilename(args.identifier.value(), InitTool.SIGN_CERT_TMPL);
+        Path signCertPath = Util.prefixedPath(args.identifier.value(), InitTool.SIGN_CERT_TMPL);
         Path fullpath = args.outputPath.value().resolve(signCertPath);
         byte[] raw = readKey(fullpath);
         RSAPublicKey key = (RSAPublicKey) KeyFactory.getInstance("RSA")

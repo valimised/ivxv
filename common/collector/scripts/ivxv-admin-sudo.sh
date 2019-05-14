@@ -15,7 +15,7 @@ usage() {
   echo "                                      <backup-filename>"
   echo "        Backup ballot box (in backup service)"
   echo
-  echo "    ivxv-admin-sudo backup-log <log-host> <backup-filename>"
+  echo "    ivxv-admin-sudo backup-log <log-host> <backup-timestamp>"
   echo "        Backup log file (in backup service)"
   echo
   echo "    ivxv-admin-sudo create-ssh-access <account-name>"
@@ -27,6 +27,9 @@ usage() {
   echo "    ivxv-admin-sudo init-service <service-id>"
   echo "        Initialize service data directory. "
   echo "        Value 'backup' is used for all backup services"
+  echo
+  echo "    ivxv-admin-sudo configure-etcd-apt-source"
+  echo "        Configure APT source for etcd"
   echo
   echo "    ivxv-admin-sudo install-pkg <package-filename>"
   echo "        Install IVXV package with dependencies"
@@ -64,15 +67,20 @@ backup_ballot_box() {
 # Backup log
 backup_log() {
   LOG_HOST="$1"
-  BACKUP_FILENAME="$2"
-  BACKUP_FILEPATH="/var/backups/ivxv/log/${BACKUP_FILENAME}"
-  echo "# Copying log file from log collector to backup service"
-  rsync -av --delay-updates \
-    "${LOG_HOST}:/var/log/ivxv.log" \
-    "${BACKUP_FILEPATH}"
-  echo "# Compressing log file in backup service"
-  rm -fv "${BACKUP_FILEPATH}.gz"
-  gzip --verbose "${BACKUP_FILEPATH}"
+  BACKUP_TIMESTAMP="$2"
+  BACKUP_TARGET_FILEPATH="/var/backups/ivxv/log/${LOG_HOST}-${BACKUP_TIMESTAMP}.tar.gz"
+  echo "# Copying log files from log collector to backup service"
+  RET=0
+  (
+    ssh ${LOG_HOST} \
+      tar --create --gzip --verbose '/var/log/ivxv*.log' \
+      > "${BACKUP_TARGET_FILEPATH}"
+  ) || RET=$?
+  # ignore exit code 1 (file in grown during archiving process)
+  if [ "${RET}" = 1 ]; then
+    RET=0
+  fi
+  return "${RET}"
 }
 # }}}
 
@@ -140,6 +148,51 @@ init_service() {
     echo "# Removing service directory"
     rm --recursive --force --verbose "/var/lib/ivxv/service/${SERVICE_ID}"
   fi
+}
+# }}}
+
+# configure_etcd_apt_source {{{
+# configure APT source for etcd
+configure_etcd_apt_source() {
+  # Although etcd versions originating from official Ubuntu repositories are
+  # new enough for IVXV, the packages are built using a version of
+  # golang-google-grpc which is too old and contains crashing bugs.
+  #
+  # Until golang-google-grpc is updated in Ubuntu (LP: #1819936) and etcd is
+  # rebuilt, configure Debian buster as the source for etcd.
+
+  # operate in dumb terminal
+  TERM=dumb
+  export TERM
+  DEBIAN_FRONTEND=noninteractive
+  export DEBIAN_FRONTEND
+
+  echo "# Installing Debian archive keyring"
+  apt-get --yes install debian-archive-keyring
+  ln --symbolic --force /usr/share/keyrings/debian-archive-keyring.gpg /etc/apt/trusted.gpg.d/
+
+  # Pin everything originating from Debian at priority -1 (never install) and
+  # etcd packages from Debian buster at 999 (prefer over the target release).
+  echo "# Installing /etc/apt/preferences.d/ivxv-etcd-buster.pref"
+  cat > /etc/apt/preferences.d/ivxv-etcd-buster.pref << HERE
+Package: *
+Pin: release o=Debian
+Pin-Priority: -1
+
+Package: etcd*
+Pin: release o=Debian,n=buster
+Pin-Priority: 999
+HERE
+
+  # Use security updates, but skip stable updates.
+  echo "# Installing /etc/apt/sources.list.d/buster.list"
+  cat > /etc/apt/sources.list.d/buster.list << HERE
+deb http://ftp.ee.debian.org/debian/ buster main
+deb http://security.debian.org/ buster/updates main
+HERE
+
+  echo "# Updating package list"
+  apt-get update
 }
 # }}}
 
@@ -230,6 +283,9 @@ case "${ACTION}" in
   ;;
   init-service)
     init_service "$2"
+  ;;
+  configure-etcd-apt-source)
+    configure_etcd_apt_source
   ;;
   install-pkg)
     install_package "$2"

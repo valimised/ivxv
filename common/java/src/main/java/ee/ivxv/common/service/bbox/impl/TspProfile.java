@@ -6,7 +6,6 @@ import ee.ivxv.common.model.Voter;
 import ee.ivxv.common.service.bbox.BboxHelper.VoterProvider;
 import ee.ivxv.common.service.bbox.Ref;
 import ee.ivxv.common.service.bbox.Result;
-import ee.ivxv.common.service.bbox.impl.verify.OcspVerifier;
 import ee.ivxv.common.service.bbox.impl.verify.TsVerifier;
 import ee.ivxv.common.service.container.Container;
 import ee.ivxv.common.service.container.ContainerReader;
@@ -40,11 +39,9 @@ abstract class TspProfile<T extends TspRespRecord<?>, U extends TspReqRecord<?>>
     private static final String SN_PNOEE_PREFIX = "PNOEE-"; // TODO Make country code configurable.
 
     final ContainerReader container;
-    final OcspVerifier ocspVerifier;
 
-    TspProfile(ContainerReader container, OcspVerifier ocspVerifier) {
+    TspProfile(ContainerReader container) {
         this.container = container;
-        this.ocspVerifier = ocspVerifier;
     }
 
     Voter findVoter(VoterProvider vp, String voterId, String version) throws ResultException {
@@ -145,8 +142,8 @@ abstract class TspProfile<T extends TspRespRecord<?>, U extends TspReqRecord<?>>
      */
     static class TmProfile extends TspProfile<TspRespRecord<TmType>, TspReqRecord<RegType>> {
 
-        TmProfile(ContainerReader container, OcspVerifier ocspVerifier) {
-            super(container, ocspVerifier);
+        TmProfile(ContainerReader container) {
+            super(container);
         }
 
         @Override
@@ -208,8 +205,8 @@ abstract class TspProfile<T extends TspRespRecord<?>, U extends TspReqRecord<?>>
      */
     static class TsProfile extends TspProfile<TspRespRecord<TsType>, TspReqRecord<RegType>> {
 
-        TsProfile(ContainerReader container, OcspVerifier ocspVerifier) {
-            super(container, ocspVerifier);
+        TsProfile(ContainerReader container) {
+            super(container);
         }
 
         @Override

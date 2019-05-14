@@ -22,6 +22,6 @@ mixer:
 # Dekrüpteerimistõestuste verifitseerimine
 #Tööriist decrypt kontrollib dekrüpteerimistõendi korrektsust.
 decrypt:
-  input: DEMO_decout_true/proof
+  input: DEMO_decout_true/DEMO-proof
   pub: DEMO_pub.pem
   out: DEMO_auditout

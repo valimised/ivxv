@@ -1,6 +1,7 @@
 ================================
  IVXV Internet voting framework
 ================================
+
 -----------------
  Key application
 -----------------
@@ -16,6 +17,9 @@ The application functionality is provided by the tools described below:
 * *init* - generate the decryption and signing key in a distributed manner on
   smart cards, construct the corresponding public keys and output the public
   keys and certificate corresponding to the encryption key.
+* *testkey* - encrypt a random message using the given public key and perform
+  the decryption of this message using the given key share. Can be used to test
+  the usability of the key shares.
 * *decrypt* - take the anonymized ballot box from the *processor*, construct the
   decryption key from the shares on the smart cards, decrypt the encrypted
   ballots and provide proofs of correct decryption.
@@ -113,12 +117,12 @@ Sample executions
 -----------------
 
 As the command-line arguments have to be defined precisely for correct
-operation, we strongly recommend using a parameters file. To encourage the
-approach, the examples use the stored parameters file from the repository.
+operation, we strongly recommend using a parameters file. Refer to the
+configuration preparation documentation for the example configurations.
 
 * Display the card readers and inserted cards::
 
-    key util --conf ../examples/app-conf.bdoc --listreaders
+    key util --conf app-conf.bdoc --listreaders
 
   The application should display::
 
@@ -126,20 +130,22 @@ approach, the examples use the stored parameters file from the repository.
     0  | Gemalto Ezio Shield (S1370135510111) 00 00 | Ei
 
 * Generate group parameters for integers modulo a prime for prime with
-  bit-length 2048 bits::
+  bit-length 3072 bits::
 
-    key groupgen --conf ../examples/app-conf.bdoc --params \
-    ../examples/key-app-conf-3-parties.bdoc
+    key groupgen --conf app-conf.bdoc --params key-app-conf-3-parties.bdoc
 
   The application writes the group parameters into a file suitable for using in
   initialization configuration.
+
+  When generating parameters, the recommended approach is to use either
+  determinstic random sources so that the generation could be verified. Another
+  approach is to use the group parameters from known standards, e.g. RFC3526_.
 
 * Initialize key with an group of integers modulo a prime, with the key shared
   between three shareholders with a threshold of two shareholders required for
   reconstruction::
 
-    key init --conf ../examples/app-conf.bdoc --params \
-    ../examples/key-app-conf-3-parties.bdoc
+    key init --conf app-conf.bdoc --params key-app-conf-3-parties.bdoc
 
   The key initialization tool is interactive. Two scenarios are supported:
 
@@ -172,16 +178,14 @@ approach, the examples use the stored parameters file from the repository.
 * Test the keyshares by encrypting a randomly generated ciphertext and decoding
   it using a keyshares::
 
-    key util --conf ../examples/app-conf.bdoc --params \
-    ../examples/key-app-conf-3-parties.bdoc
+    key testkey --conf app-conf.bdoc --params key-app-conf-3-parties.bdoc
 
   Similarly to the initialization tool, the utility tool asks interactively,
   which smart card to insert to which smart card reader.
 
 * Decrypt the anonymized ballot box::
 
-    key decrypt --conf ../examples/app-conf.bdoc --params \
-    ../examples/key-app-conf-3-parties.bdoc
+    key decrypt --conf app-conf.bdoc --params key-app-conf-3-parties.bdoc
 
   Similarly to the initialization tool, the decryption tool asks interactively,
   which smart card is inserted to which smart card reader.
@@ -197,14 +201,10 @@ Sample configuration
 
   util:
     listreaders: true
-    testkey:
-      out: initout
-      threshold: 2
-      parties: 3
 
   groupgen:
     paramtype: mod
-    length: 2048
+    length: 3072
     init_template: key.init.template.yaml
     random_source:
     - random_source_type: file
@@ -217,11 +217,12 @@ Sample configuration
     identifier: TEST ELECTION
     paramtype:
       mod:
-        p: 31006623739572055594316376496810078655821270818754776758101749724523127678743816496005396628221427409620979185538693981332233517023057755223387686225836450702330899860650955137758634321834579766029698693186809115755521515897667860071986274175450351763184797360034660544443454913687056349390882016990934446816120149080730628207368885887225431671992925980886511322581579324848309495164952603484101370988563607786382332191775515738664908046528895919529565837085370042158593639745744812919291872615090822187022072663753788349131123599938206656494617028004229197148296470034927606948396845266919660981060450815399206881783
-        g: 20059753780648374919602788861160364382456464965482375582965295943301854939416182323173140858574092810792118344852095286738382046691448892104316682098008314350665701027152563473740684121450331097788027653033348674923482123773625083470304297639241714585564590789474492899516890105701623740106839386638356003242965179652567872352520346502216110134705958819357550844390509563395644009912704419231922712876118179968831219832352718118433349430475939433575982671204894741140789395862949917210862142735116719181778539869412092203546842680413734885218779101834458151531152658413650017524889336760758622216128148652402856928435
+        p: 5809605995369958062791915965639201402176612226902900533702900882779736177890990861472094774477339581147373410185646378328043729800750470098210924487866935059164371588168047540943981644516632755067501626434556398193186628990071248660819361205119793693985433297036118232914410171876807536457391277857011849897410207519105333355801121109356897459426271845471397952675959440793493071628394122780510124618488232602464649876850458861245784240929258426287699705312584509625419513463605155428017165714465363094021609290561084025893662561222573202082865797821865270991145082200656978177192827024538990239969175546190770645685893438011714430426409338676314743571154537142031573004276428701433036381801705308659830751190352946025482059931306571004727362479688415574702596946457770284148435989129632853918392117997472632693078113129886487399347796982772784615865232621289656944284216824611318709764535152507354116344703769998514148343807
+        g: 2
     out: initout
     skiptest: true
-    signaturekeylen: 2048
+    fastmode: true
+    signaturekeylen: 3072
     signcn: SIGNATURE
     signsn: 1
     enccn: ENCRYPTION
@@ -237,6 +238,13 @@ Sample configuration
       - random_source_type: system
       - random_source_type: DPRNG
         random_source_path: key-app-conf-3-parties.bdoc
+
+  testkey:
+    identifier: TEST ELECTION
+    out: initout
+    threshold: 2
+    parties: 3
+    fastmode: true
 
   decrypt:
     identifier: TEST ELECTION
@@ -326,3 +334,5 @@ Smart card reader support
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. todo:: add list of supported smart card readers
+
+.. _RFC3526: https://tools.ietf.org/html/rfc3526

@@ -11,9 +11,9 @@ import (
 	"time"
 )
 
-var now = time.Date(2016, time.November, 3, 13, 42, 24, 0, time.UTC)
+var now = time.Date(2016, time.November, 3, 13, 42, 24, 123000000, time.UTC)
 
-const nowstr = "2016-11-03T13:42:24Z"
+const nowstr = "2016-11-03T13:42:24.123000000Z"
 
 // testWriter implements writer by writing into a buffer.
 type testWriter struct {
@@ -236,7 +236,7 @@ func TestFormat(t *testing.T) {
 			prefix + `"ID":"TestSlice","Entry":["message","+%FF%22%5C"]}`},
 
 		{"base64", "", "", testBase64("byte slice"),
-			prefix + `"ID":"TestBase64","Entry":"Ynl0ZSBzbGljZQ=="}`},
+			prefix + `"ID":"TestBase64","Entry":"Ynl0ZSBzbGljZQ%3D%3D"}`},
 
 		{"sensitive", "", "", testSensitive{Sensitive: Sensitive("sensitive data")},
 			prefix + `"ID":"TestSensitive","Entry":{"Sensitive":{` +
@@ -282,7 +282,8 @@ func TestFormat(t *testing.T) {
 				`"Subject":"CN%3DConfiguration+Signer",` +
 				`"Issuer":"CN%3DConfiguration+Signer",` +
 				`"Serial":"995d4b1336861e79",` +
-				`"Hash":"49B434Z/brFreLtC7fTop2vIKiImMMTQwK+ArARBJU4="}}}`},
+				`"Hash":{"Truncated":"49B434Z%2FbrFreLtC7fTop2vIKiImMMTQwK%2BA",` +
+				`"FullLength":44}}}}`},
 	}
 
 	for _, test := range tests {

@@ -21,9 +21,9 @@ const xmlns = "xmlns"
 //
 // So we resort to parsing the raw stream of XML lexemes ourselves.
 type parser struct {
-	d     *xml.Decoder
-	stack []element
-	ns    map[string]string
+	d    *xml.Decoder
+	open []xml.Name // Tracks open XML elements. Names are untranslated.
+	ns   mapstack
 
 	// Lookahead values for readToken and unreadToken.
 	nextToken xml.Token
@@ -36,7 +36,6 @@ type parser struct {
 func newParser(r io.Reader) *parser {
 	return &parser{
 		d:      xml.NewDecoder(r),
-		ns:     make(map[string]string),
 		unique: make(map[string]struct{}),
 	}
 }
@@ -48,9 +47,9 @@ func (p *parser) token() (xml.Token, error) {
 	t, err := p.d.RawToken()
 	if err != nil {
 		if err == io.EOF {
-			if len(p.stack) > 0 {
+			if len(p.open) > 0 {
 				err = UnexpectedParseEOFError{
-					Unclosed: p.stack[len(p.stack)-1].name,
+					Unclosed: p.open[len(p.open)-1],
 				}
 			}
 			return nil, err
@@ -65,10 +64,14 @@ func (p *parser) token() (xml.Token, error) {
 			return t, err
 		}
 		ts := startElement{nsprefix: tt.Name.Space, name: tt.Name}
-		p.translate(&ts.name.Space, false)
+		if err = p.translate(&ts.name.Space, false); err != nil {
+			return t, err
+		}
 		for _, tta := range tt.Attr {
 			a := attr{nsprefix: tta.Name.Space, Attr: tta}
-			p.translate(&a.Name.Space, true)
+			if err = p.translate(&a.Name.Space, true); err != nil {
+				return t, err
+			}
 			if findAttr(ts.attr, a.Name) != nil {
 				return t, DuplicateAttributeError{
 					Element:   ts.name,
@@ -89,7 +92,7 @@ func (p *parser) token() (xml.Token, error) {
 		// that the untranslated name matches the top of the stack and
 		// undo any namespace bindings.
 		name := tt.Name
-		p.translate(&tt.Name.Space, false)
+		p.translate(&tt.Name.Space, false) // nolint: errcheck, succeeds if pop does.
 		t, err = tt, p.pop(name)
 	case xml.Comment:
 		// Skip any comments: they are irrelevant to parsing.
@@ -118,14 +121,18 @@ type startElement struct {
 	attr     []attr
 }
 
-func (p *parser) translate(space *string, attr bool) {
+func (p *parser) translate(space *string, attr bool) error {
 	// Skip if attribute without a namespace or declares a new namespace.
 	if attr && (*space == "" || *space == xmlns) {
-		return
+		return nil
 	}
-	if url, ok := p.ns[*space]; ok {
+	if url, ok := p.ns.get(*space); ok || *space == "" {
+		// Allow default namespace ("") to be undeclared in which case
+		// it's value is "": also the value of uri if !ok.
 		*space = url
+		return nil
 	}
+	return UndeclaredNamespacePrefixError{Namespace: *space}
 }
 
 func findAttr(attrs []attr, name xml.Name) *attr {
@@ -139,15 +146,9 @@ func findAttr(attrs []attr, name xml.Name) *attr {
 	return nil
 }
 
-// element is an XML element that can define new namespaces. Used in the parser
-// stack to keep track of nesting.
-type element struct {
-	name  xml.Name           // Untranslated.
-	oldns map[string]*string // If nil, then the key was not defined before.
-}
-
 func (p *parser) push(start *xml.StartElement) error {
-	e := element{name: start.Name, oldns: make(map[string]*string)}
+	p.open = append(p.open, start.Name)
+	p.ns.push()
 	for _, a := range start.Attr {
 		var ns string
 		switch {
@@ -171,34 +172,22 @@ func (p *parser) push(start *xml.StartElement) error {
 					Namespace: ns,
 				}
 			}
-			if old, ok := p.ns[ns]; ok {
-				e.oldns[ns] = &old
-			} else {
-				e.oldns[ns] = nil
-			}
-			p.ns[ns] = a.Value
+			p.ns.set(ns, a.Value)
 		}
 	}
-	p.stack = append(p.stack, e)
 	return nil
 }
 
 func (p *parser) pop(name xml.Name) error {
-	if len(p.stack) == 0 {
+	if len(p.open) == 0 {
 		return UnexpectedEndElementError{Name: name}
 	}
-	e := p.stack[len(p.stack)-1]
-	p.stack = p.stack[:len(p.stack)-1]
-	if e.name != name {
-		return MismatchingTagsError{Start: e.name, End: name}
+	open := p.open[len(p.open)-1]
+	p.open = p.open[:len(p.open)-1]
+	if open != name {
+		return MismatchingTagsError{Start: open, End: name}
 	}
-	for ns, old := range e.oldns {
-		if old == nil {
-			delete(p.ns, ns)
-		} else {
-			p.ns[ns] = *old
-		}
-	}
+	p.ns.pop()
 	return nil
 }
 
@@ -370,10 +359,7 @@ func (p *parser) parse(v reflect.Value, optional bool) (match bool, err error) {
 		return false, ParseXMLUnexpectedElementError{Element: name, Name: start.name}
 	}
 	if c14nroot { // Copy current namespace bindings.
-		header.ns = make(map[string]string)
-		for prefix, uri := range p.ns {
-			header.ns[prefix] = uri
-		}
+		header.ns = p.ns.flatten()
 	}
 	header.start = start
 

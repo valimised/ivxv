@@ -10,13 +10,13 @@ Tühistus- ja ennistusnimekiri
 
 Tühistus- ja ennistusnimekiri sisaldab andmeid isikute kohta, kelle e-hääl tuleb tühistada (ei lähe arvesse valimistulemuste kokkulugemisel) või ennistada (s.t. tühistatakse eelnev tühistamine ning häälte uuesti üle lugemisel võetakse ennistatud e-hääl arvesse). Nimekiri laaditakse süsteemi digitaalselt allkirjastatud dokumendina, mille andmefaili vorming on järgmine:
 
-.. literalinclude:: schema/ivxv.revoke.schema
+.. literalinclude:: ../../common/schema/ivxv.revoke.schema
    :language: json
    :linenos:
 
 Näide:
 
-.. literalinclude:: schema/ivxv.revoke.schema.example
+.. literalinclude:: ../../common/schema/ivxv.revoke.schema.example
    :language: json
 
 
@@ -27,14 +27,14 @@ E-hääletanute nimekiri on pärast e-hääletamise lõppu väljastatav nimekiri
 e-hääletanud isikutest, sordituna valimisjaoskondade kaupa. Dokument
 genereeritakse töötlemisrakenduse poolt.
 
-.. literalinclude:: schema/ivxv.voterlist.schema
+.. literalinclude:: ../../common/schema/ivxv.voterlist.schema
    :language: json
    :linenos:
 
 
 Näide:
 
-.. literalinclude:: schema/ivxv.voterlist.schema.example
+.. literalinclude:: ../../common/schema/ivxv.voterlist.schema.example
    :language: json
 
 
@@ -54,13 +54,13 @@ Hääletamistulemuste failis peavad iga jaoskonna kohta olema järgmised andmed.
    valimisjaoskonnas ei antud selle valiku poolt ühtki häält: sellisel juhul on
    häälte arv null.
 
-.. literalinclude:: schema/ivxv.result.schema
+.. literalinclude:: ../../common/schema/ivxv.result.schema
    :language: json
    :linenos:
 
 Näide:
 
-.. literalinclude:: schema/ivxv.result.schema.example
+.. literalinclude:: ../../common/schema/ivxv.result.schema.example
    :language: json
 
 
@@ -89,7 +89,8 @@ kus:
 
 * ``<voter id>`` on valija identifikaator, Eesti puhul isikukood;
 
-* ``<timestamp>`` on hääle esitamise kellaaeg vormingus ``yyyymmddhhmmss±zzzz``;
+* ``<timestamp>`` on hääle esitamise kellaaeg vormingus
+  ``yyyymmddhhmmssmmm±zzzz``;
 
   * see kellaaeg kajastab hetke, mil päring kogumisteenusesse tehti, ja on
     antud lihtsalt urni inimloetavuse parandamiseks; hääle tegelik ajamärk või
@@ -143,11 +144,11 @@ Anonüümistatud e-urnis puudub informatsioon valijate kohta.
 Anonüümistatud e-urn on töötlemisrakenduse väljund ning võtmerakenduse
 dekrüpteerimise tööriista sisend.
 
-.. literalinclude:: schema/ivxv.anon-bb.schema
+.. literalinclude:: ../../common/schema/ivxv.anon-bb.schema
    :language: json
    :linenos:
 
 Näide:
 
-.. literalinclude:: schema/ivxv.anon-bb.schema.example
+.. literalinclude:: ../../common/schema/ivxv.anon-bb.schema.example
    :language: json

@@ -13,3 +13,5 @@ dependencies {
 }
 
 mainClassName = "ee.ivxv.processor.Processor"
+
+applicationDefaultJvmArgs = ["-Xmx8G"]

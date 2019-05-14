@@ -2,7 +2,7 @@ debug: true
 
 filter:
   tls:
-    handshaketimeout: 10
+    handshaketimeout: 20
     ciphersuites:
       - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
       - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
@@ -10,7 +10,9 @@ filter:
       - TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
       - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
   codec:
-    rwtimeout: 5
+    rwtimeout: 10
+    requestsize: 16384  # 16 KiB
+    logrequests: true
 
 network:
   - id: zone1

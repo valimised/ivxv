@@ -3,6 +3,7 @@ package ee.ivxv.audit.tools;
 import ee.ivxv.audit.AuditContext;
 import ee.ivxv.audit.Msg;
 import ee.ivxv.audit.shuffle.DataParser;
+import ee.ivxv.audit.shuffle.ShuffleConsole;
 import ee.ivxv.audit.shuffle.ShuffleProof;
 import ee.ivxv.audit.tools.ConvertTool.ConvertArgs;
 import ee.ivxv.common.cli.Arg;
@@ -66,7 +67,8 @@ public class ConvertTool implements Tool.Runner<ConvertArgs> {
     public boolean run(ConvertArgs args) throws Exception {
         boolean ret = true;
         log.debug("Reading shuffle proof");
-        ShuffleProof proof = new ShuffleProof(args.protPath.value(), args.proofPath.value());
+        ShuffleConsole sc = new ShuffleConsole(this.console);
+        ShuffleProof proof = new ShuffleProof(args.protPath.value(), args.proofPath.value(), sc);
         log.debug("Reading pre-shuffle ballot box");
         AnonymousBallotBox bb = Json.read(args.inputBbox.value(), AnonymousBallotBox.class);
         log.debug("Reading post-shuffle ballot box");

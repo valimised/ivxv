@@ -59,7 +59,8 @@ def backup_crontab_generator_util():
     template_params['configured_log_collectors'] = sorted(
         get_services(
             include_types=['log'],
-            service_state=[SERVICE_STATE_CONFIGURED]))
+            service_state=[SERVICE_STATE_CONFIGURED],
+        ))
 
     # render crontab
     crontab = template.render(
@@ -94,14 +95,11 @@ def backup_util():
     """)
 
     # execute ballot box and log backup command with ssh-agent wrapper
-    if args['ballot-box'] or args['log']:
-        if not os.environ.get('SSH_AUTH_SOCK') and not os.environ.get(
-                'SSH_AGENT_PID'):
-            log.debug('Starting command with ssh-agent wrapper')
-            os.execvp('ssh-agent', ['ssh-agent'] + sys.argv)
-        else:
-            log.debug('Adding identity to SSH agent')
-            subprocess.run(['ssh-add'], check=True)
+    if ((args['ballot-box'] or args['log'])
+            and not os.environ.get('SSH_AUTH_SOCK')
+            and not os.environ.get('SSH_AGENT_PID')):
+        log.debug('Starting command with ssh-agent wrapper')
+        os.execvp('ssh-agent', ['ssh-agent'] + sys.argv)
 
     services = get_services(include_types=['backup'])
     if not services:
@@ -123,13 +121,15 @@ def backup_util():
     backup_service.scp(
         os.path.expanduser('~/.ssh/known_hosts'), '~/.ssh/',
         'list of known SSH hosts')
+    backup_timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M')
 
     if args['ballot-box']:
         backup_target = datetime.datetime.now().strftime(
-            'ballot-box-%Y%m%d_%H%M.zip')
+            f'ballot-box-{backup_timestamp}.zip')
         services = get_services(
             include_types=['voting'],
-            service_state=[SERVICE_STATE_CONFIGURED])
+            service_state=[SERVICE_STATE_CONFIGURED],
+        )
         voting_service_id = (
             args['<voting_service_id>'] or random.choice(list(services)))
         if args['<voting_service_id>'] and voting_service_id not in services:
@@ -139,14 +139,14 @@ def backup_util():
         service = Service(voting_service_id, services[voting_service_id])
         proc = backup_service.ssh(
             [
-                'ivxv-admin-sudo', 'backup-ballot-box', service.hostname,
-                voting_service_id, backup_target
+                'ivxv-admin-sudo',
+                'backup-ballot-box',
+                service.hostname,
+                voting_service_id,
+                backup_target,
             ],
-            fwd_auth_agent=True)
-        if proc.returncode:
-            log.error('Command execution failed with error code %d',
-                      proc.returncode)
-            return 1
+            fwd_auth_agent=True,
+        )
 
     else:
         assert args['log']
@@ -154,20 +154,22 @@ def backup_util():
             include_types=['log'], service_state=[SERVICE_STATE_CONFIGURED])
         for log_collector_id in services:
             service = Service(log_collector_id, services[log_collector_id])
-            backup_target = datetime.datetime.now().strftime(
-                f'{log_collector_id}-%Y%m%d_%H%M.log')
             proc = backup_service.ssh(
                 [
                     'ivxv-admin-sudo',
                     'backup-log',
                     service.hostname,
-                    backup_target,
+                    backup_timestamp,
                 ],
-                fwd_auth_agent=True)
+                fwd_auth_agent=True,
+            )
             if proc.returncode:
-                log.error('Command execution failed with error code %d',
-                          proc.returncode)
-                return 1
+                break
+
+    if proc.returncode:
+        log.error('Command execution failed with error code %d',
+                  proc.returncode)
+        return 1
 
     return 0
 
@@ -212,7 +214,8 @@ def _backup_management_cfg(backup_service):
                     src_dir + '/',
                     f'{backup_service.hostname}:{backup_tmpdir}/{tgt_dir}/',
                 ],
-                check=True)
+                check=True,
+            )
         _exec_backup_service_cmd(backup_service, 'rm', '-rfv', backup_tgt_path)
         _exec_backup_service_cmd(backup_service, 'mv', '-v', backup_tmpdir,
                                  backup_tgt_path)

@@ -1,4 +1,0 @@
-decrypt:
-  input: decout/proof
-  pub: initout/pub.pem
-  out: auditout

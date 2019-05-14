@@ -49,7 +49,7 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
 
    *  - Nimi
       - Versioon
-      - Litsents
+      - Litsents (SPDX)
       - Kasutusvajadus
 
    *  - `Bootstrap <http://getbootstrap.com>`_
@@ -74,62 +74,62 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
 
    *  - Digidoc 4j
       - 2.1.0
-      - LGPL
+      - LGPL-2.1-only
       - BDoc konteinerite käsitlemine
 
    *  - Digidoc 4j DSS
       - 5.2.d4j.3
-      - LGPL
+      - LGPL-2.1-only or EUPL-1.1
       - Digidoc 4j sõltuvus
 
    *  - Apache Commons (cli 1.4, codec 1.10, collections 4.1, io 2.5, lang 3.6, logging 1.2, compress 1.3)
       - -
-      - Apache License v2.0
+      - Apache-2.0
       - Digidoc 4j ja PDFBox sõltuvused
 
    *  - Apache HttpComponents
       - 4.5.3
-      - Apache License v2.0
+      - Apache-2.0
       - Digidoc 4j sõltuvus
 
    *  - Apache Santuario
       - 2.0.9
-      - Apache License v2.0
+      - Apache-2.0
       - Digidoc 4j sõltuvus
 
    *  - Google Guava
       - 20.0
-      - Apache License v2.0
+      - Apache-2.0
       - Digidoc 4j sõltuvus
 
    *  - JDigiDoc
       - 3.12.1
-      - LGPL
+      - LGPL-2.1-only
       - Digidoc 4j sõltuvus
 
    *  - StaX
       - 1.0-2
-      - Apache License v2.0
+      - Apache-2.0
       - Digidoc 4j sõltuvus
 
    *  - log4j
       - 1.2.6
-      - Apache License 2.0
+      - Apache-2.0
       - Digidoc 4j sõltuvus
 
    *  - Woodstox
       - 4.4.1
-      - Apache License 2.0
+      - Apache-2.0
       - Digidoc 4j sõltuvus
 
    *  - Xalan-Java
       - 2.7.2
-      - Apache License 2.0
+      - Apache-2.0
       - Digidoc 4j sõltuvus
 
    *  - Xml Apis
       - 1.3.04
-      - Apache License 2.0
+      - Apache-2.0
       - Digidoc 4j sõltuvus
 
    *  - `Docopt <http://docopt.org/>`_
@@ -139,78 +139,53 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
 
    *  - `etcd <https://coreos.com/etcd>`_
       - 3.2.17
-      - Apache License v2.0
+      - Apache-2.0
       - Talletusteenusena kasutatav hajus võti-väärtus andmebaas
 
-   *  - `github.com/ghodss/yaml <https://github.com/ghodss/yaml>`_
-      - 73d445a
-      - MIT
-      - etcd klientteegi sõltuvus
-
-   *  - `gopkg.in/yaml.v2 <https://gopkg.in/yaml.v2>`_
-      - 4c78c97
-      - Apache License v2.0
-      - github.com/ghodss/yaml sõltuvus
-
    *  - `github.com/golang/protobuf <https://github.com/golang/protobuf>`_
-      - 224aaba
-      - BSD 2.0
+      - 1909bc2
+      - BSD-3-Clause
       - etcd klientteegi sõltuvus
 
-   *  - `github.com/grpc-ecosystem/go-grpc-prometheus <https://github.com/grpc-ecosystem/go-grpc-prometheus>`_
-      - 6b7015e
-      - Apache License v2.0
-      - etcd klientteegi sõltuvus
-
-   *  - `github.com/grpc-ecosystem/grpc-gateway <https://github.com/grpc-ecosystem/grpc-gateway>`_
-      - 6863684
-      - BSD 2.0
+   *  - `google.golang.org/genproto <https://google.golang.org/genproto>`_
+      - 7f0da29
+      - Apache-2.0
       - etcd klientteegi sõltuvus
 
    *  - `google.golang.org/grpc <https://google.golang.org/grpc>`_
-      - 1.0.4
-      - Apache License v2.0
+      - 1.6.0
+      - Apache-2.0
       - etcd klientteegi sõltuvus
 
    *  - `golang.org/x/net <https://golang.org/x/net>`_
-      - f249948
-      - BSD 2.0
+      - c81e7f2
+      - BSD-3-Clause
       - etcd klientteegi sõltuvus
 
-   *  - `Prometheuse klientteek <https://prometheus.io>`_
-      - 0.8
-      - Apache License v2.0
+   *  - `golang.org/x/text <https://golang.org/x/text>`_
+      - 6353ef0
+      - BSD-3-Clause
       - etcd klientteegi sõltuvus
-
-   *  - `github.com/beorn7/perks/quantile <https://github.com/beorn7/perks>`_
-      - 4c0e845
-      - MIT
-      - Prometheuse klientteegi sõltuvus
-
-   *  - `github.com/matttproud/golang_protobuf_extensions <https://github.com/matttproud/golang_protobuf_extensions>`_
-      - 1.0.0
-      - Apache License v2.0
-      - Prometheuse klientteegi sõltuvus
 
    *  - Gradle
       - 3.0
-      - Apache License v2.0
+      - Apache-2.0
       - Java rakenduste ehitamise raamistik
 
    *  - `HAProxy <http://www.haproxy.org/>`_
       - 1.8.8
-      - GPL v2
+      - GPL-2.0-or-later
       - Vahendusteenusena kasutatav TCP-proksi
 
    *  - IvyPot
       - 0.4
-      - Apache License v2.0
+      - Apache-2.0
       - Gradle ehitusraamistiku laiendus sõltuvuste haldamiseks ja rakenduste
         ehitamiseks vallasrežiimis
 
    *  - Jackson
       - 2.8.9
-      - Apache License v2.0
+      - Apache-2.0
       - JSON vormingus failide lugemine ja kirjutamine
 
    *  - `jQuery <https://jquery.org/>`_
@@ -220,12 +195,12 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
 
    *  - Logback
       - 1.2.3
-      - Eclipse Public License v1.0 või LGPL v2.1
+      - EPL-1.0 or LGPL-v2.1-only
       - Logimise API SLF4J realisatsioon
 
    *  - Logback JSON
       - 0.1.5
-      - Eclipse Public License v1.0 või LGPL v2.1
+      - EPL-1.0 or LGPL-v2.1-only
       - Logback logija laiendus JSON vormingus logikirjete koostamiseks
         Jackson teegi abil
 
@@ -236,7 +211,7 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
 
    *  - PDFBox
       - 2.0.8
-      - Apache License v2.0
+      - Apache-2.0
       - PDF vormingus raportite genereerimise tugi Java rakendustele
 
    *  - `PyYAML <http://pyyaml.org/>`_
@@ -246,7 +221,7 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
 
    *  - `Schematics <https://github.com/schematics/schematics>`_
       - 2.0.1
-      - BSD
+      - BSD-3-Clause
       - Kogumisteenuse seadistusfailide valideerimise tugi haldusteenusele
 
    *  - SLF4J
@@ -256,7 +231,7 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
 
    *  - SnakeYAML
       - 1.18
-      - Apache License v2.0
+      - Apache-2.0
       - YAML vormingus andmete lugemine
 
    *  - `SB Admin 2 <https://github.com/BlackrockDigital/startbootstrap-sb-admin-2>`_
@@ -271,22 +246,22 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
 
    *  - Nimi
       - Versioon
-      - Litsents
+      - Litsents (SPDX)
       - Kasutusvajadus
 
    *  - Hamcrest
       - 1.3
-      - BSD
+      - BSD-3-Clause
       - Loetavam assert-meetodite kasutamine Java ühiktestides
 
    *  - JUnit
       - 4.12
-      - Eclipse Public License v1.0
+      - EPL-1.0
       - Java testimisraamistik
 
    *  - JUnitParams
       - 1.1.0
-      - Apache License v2.0
+      - Apache-2.0
       - Testide parametriseerimise tugi
 
    *  - Mockito
@@ -296,22 +271,22 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
 
    *  - Byte Buddy
       - 1.6.14
-      - Apache License v2.0
+      - Apache-2.0
       - Mockito sõltuvus
 
    *  - Objenesis
       - 2.5
-      - Apache License v2.0
+      - Apache-2.0
       - Mockito sõltuvus
 
    *  - libdigidoc2
       - 3.10.4.1218
-      - LGPL
+      - LGPL-2.1-or-later
       - Testandmete genereerimine
 
    *  - libdigidocpp-tools
       - 3.13.6.1371
-      - LGPL
+      - LGPL-2.1-or-later
       - Testandmete genereerimine
 
 .. list-table::
@@ -321,25 +296,25 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
 
    *  - Nimi
       - Versioon
-      - Litsents
+      - Litsents (SPDX)
       - Kasutusvajadus
 
    *  - `Behave <https://github.com/behave/behave>`_
       - 1.2.6
-      - BSD
+      - BSD-2-Clause
       - Regressioonitestide käivitaja (*Behavior-driven development*)
 
    *  - `Docker <http://www.docker.com/>`_
       - 18.06 (või uuem)
-      - Apache License 2.0
+      - Apache-2.0
       - Regressioonitestide läbiviimise keskkond - tarkvarakonteinerid
 
    *  - `Docker Compose <http://www.docker.com/>`_
       - 1.22.0
-      - Apache License 2.0
+      - Apache-2.0
       - Regressioonitestide läbiviimise keskkond - tarkvarakonteinerite haldus
 
    *  - `Sphinx <http://www.sphinx-doc.org/>`_
       - 1.8.2
-      - BSD
+      - BSD-2-Clause
       - Dokumentatsiooni genereerimine
