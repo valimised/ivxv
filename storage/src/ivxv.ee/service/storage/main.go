@@ -97,7 +97,6 @@ func newCtrl(cfg *conf.Technical, service *conf.Service, election string) (
 		for _, member := range segment.Services.Storage {
 			c.members = append(c.members, member)
 			c.cli.Endpoints = append(c.cli.Endpoints, protocol(member.Address))
-			// nolint: errcheck, Writing to *bytes.Buffer.
 			fmt.Fprint(&cluster, ",", member.ID, "=", protocol(member.PeerAddress))
 		}
 	}
@@ -244,7 +243,6 @@ func (c *ctrl) start(ctx context.Context) error {
 		return err
 	}
 	if first && !c.bstrap { // First boot of added instance: add member.
-		// nolint: vetshadow, false positive.
 		if err := updateMembers(ctx, c.cli, c.optime, c.members, c.service); err != nil {
 			return err
 		}
@@ -253,7 +251,6 @@ func (c *ctrl) start(ctx context.Context) error {
 	// Write the CA to the working directory location added to arguments in
 	// newCtrl. Do this when starting and not before to avoid overwriting
 	// the CA file when only checking the configuration.
-	// nolint: vetshadow, false positive.
 	if err := ioutil.WriteFile(c.capath, c.capem, 0600); err != nil {
 		return EtcdCAWriteError{Err: err}
 	}
@@ -270,7 +267,7 @@ func (c *ctrl) start(ctx context.Context) error {
 
 	// Do not use CommandContext: we do not want it to be killed, but will
 	// perform a graceful stop ourselves.
-	c.cmd = exec.Command("/usr/bin/etcd", c.args...) // nolint: gosec, args are trusted.
+	c.cmd = exec.Command("/usr/bin/etcd", c.args...) //nolint:gosec // Args are trusted.
 	c.cmd.Env = c.env
 
 	// Forward all etcd output to logger.
@@ -286,7 +283,7 @@ func (c *ctrl) start(ctx context.Context) error {
 
 	// Create cleanup function for after etcd has stopped.
 	c.cleanup = func() {
-		w.Close()     // nolint: errcheck, PipeWriter.Close always returns nil.
+		w.Close()
 		cancelReady() // Start notification socket cleanup.
 		// Wait until readyc is closed, i.e., cleanup is done,
 		// discarding any notification messages along the way.
@@ -378,8 +375,8 @@ func listenReady(ctx context.Context, nsock string) (<-chan error, error) {
 	readyc := make(chan error, 1)
 	go func() {
 		defer close(readyc)
-		defer os.Remove(nsock) // nolint: errcheck, ignore removal errors of temporary socket.
-		defer conn.Close()     // nolint: errcheck, ignore close failure of read-only socket.
+		defer os.Remove(nsock)
+		defer conn.Close()
 		select {
 		case <-ctx.Done():
 		case err := <-sockc:

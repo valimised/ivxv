@@ -45,9 +45,7 @@ List of Electoral Districts and Polling Stations
 Candidates can be set up for elections only in specific electoral districts.
 Districts are used to give voters voting choices:
 
-#. The districts are divided into polling stations
-
-#. Each voter belongs to a pre-determined polling station and hence a district
+#. Each voter belongs to a pre-determined district
 
 #. In all polling stations of one district, voters can only choose between the
    candidates of this district
@@ -63,49 +61,42 @@ specified at the local government level pursuant to the rules specified in the
 election act.
 
 Riigikogu elections are organized pursuant to the Riigikogu Election Act.  The
-elections are organized at state level and the voting result is the same for all
-local governments.  The state is divided into 12 electoral districts.
+elections are organized at state level. The state is divided into 12 electoral
+districts. The voting result is determined for every district.
 
 European Parliament elections are organized pursuant to the European Parliament
 Election Act.  The elections are organized at state level and the voting result
-is the same for all local governments.  The entire country is one large
+is the same for all local governments. The entire country is one
 electoral district.
 
 Referendums are organized pursuant to the Referendum Act. The elections are
 organized at state level and the voting result is the same for all local
-governments. The entire country is one large electoral district.
+governments. The entire country is one electoral district.
 
 Various elections are not different on the basis of online voting data forms
 and procedures.  Various district distributions are handled by the Elections
 Infosystem.
 
 Candidates can be set up for elections only in a specific electoral district.
-Districts are divided into polling stations and voters are divided between
-stations.  Voters who belong to a specific polling station can vote in all
-polling stations of one district and have a choice of all the candidates in this
-district. The polling station to which the voter belongs determines the district
-to which they belong. The voter can only choose between the candidates running
-in their district.
+Voters are divided between districts. The voter can only choose between the
+candidates running in their district.
 
 In local government council elections, voting happens at the level of Estonian
 local governments (parishes, cities), and thus the classification of `Estonian
-administrative units and settlements (EHAK) <http://ads.maaamet.ee/>`_ is used
-in the online voting protocol suite to specify electoral districts and
-polling stations and to show to which district voters and choices belong.
+administrative units and settlements (EHAK) <http://metaweb.stat.ee/>`_ is used
+in the online voting protocol suite to specify electoral districts
+and to show to which district voters and choices belong.
 
 For example:
 
 * The EHAK code for the Pirita city district in Tallinn City is 0596
-* The EHAK code for Aegviidu Parish is 0112
+* The EHAK code for Anija Parish is 0141.
 
-As agreed, for state-level elections, the EHAK code for the district is 0.  The
-EHAK code for polling stations is the code of the local government under which
-the specific polling station operates.
+As agreed, for state-level elections, the EHAK code for the district is 0.
 
 At Riigikogu and European Parliament elections and referendums, a fictitious
-polling station is set up in each electoral district and added to the list of
-electoral districts and polling stations for people voting abroad. The polling
-station number for those voters is 0 and the EHAK code is also 0.
+unit is set up in each electoral district for voters who is living abroad. The
+polling station number for those voters is 0 and the EHAK code is 0000.
 
 .. code-block:: bnf
 
@@ -114,11 +105,7 @@ station number for those voters is 0 and the EHAK code is also 0.
    ehak-district = ehak-code
    no-district = 1*10DIGIT
 
-   ehak-station = ehak-code
-   no-station = 1*10 DIGIT
-
    district = ehak-district '.' no-district
-   district-legacy = ehak-district TAB no-district
 
    station = ehak-station '.' no-station
    station-legacy = ehak-station TAB no-station TAB district-legacy
@@ -127,8 +114,7 @@ station number for those voters is 0 and the EHAK code is also 0.
 The JSON schema of the electoral district list is defined as follows. The
 elements of the object :token:`region_dict` are indexed with the element type
 :token:`ehak-code`. The elements of the object :token:`district_dict` are
-indexed with the element type :token:`district`. The elements of the array
-:token:`stations` are type :token:`station`.
+indexed with the element type :token:`district`.
 
 .. literalinclude:: ../../common/schema/ivxv.districts.schema
    :language: json
@@ -141,70 +127,67 @@ Example:
 
 The list of electoral districts is received from the Election Infosystem and the
 JSON file is delivered to the online voting system as a digitally signed
-BDOC file.
+ASICE file.
 
 
 List of Voters
 ================================================================================
 
-The voter list includes the voters’ names and personal identification codes,
-their polling station and the row number in the polling station voter list under
-which the voter votes. The voter list is uploaded to the system in the following format:
+The voter list includes the eligible voters’ names and personal identification codes,
+their district number. The voter list is uploaded to the system in the following format:
 
 .. code-block:: bnf
 
     voter-personalcode = 11DIGIT
     voter-name = 1*100UTF-8-CHAR
     action = "lisamine" | "kustutamine"
-    line-no = "" | 1*11DIGIT
-    reason = "" | "tokend" | "jaoskonna vahetus" | "muu"
-
-    voter = voter-personalcode TAB voter-name TAB action TAB station-legacy TAB line-no TAB reason LF
-
-
-    version-no = "1"
+    adminunit-code = 1*4UTF-8-CHAR | "FOREIGN"
+    electoral-district = adminunit-code TAB no-district
+    reason = "" | "tõkend" | "valimisringkonna vahetus" | "muu"
+    version-no = "2"
     list-type = "algne" | "muudatused"
+
+    voter = voter-personalcode TAB voter-name TAB action TAB electoral-district TAB reason LF
+
     voter-list = version-no LF election-identifier LF list-type LF *voter
 
 The legacy systems’ data structures include the field version number, whose
-length is limited to 2 characters. The value of the field is 1.
+length is limited to 2 characters. The value of the field is 2.
 
 The voter list can either be original or amended. The original list only allows
 adding voters; the amended list also allows removing voters from the list. The
-voter entry can also include additional information – the row number of the
-voter entry in the polling station’s list and a reason to be in the specific
+voter entry can also include additional information – a reason to be in the specific
 amended list.
 
 
 The data contain the following:
 
-#. The type (``list-type``) “``original``” means the original large list uploaded to the system
-   before e-voting starts, and “``amended``” means the cumulative updates made later
+#. The type (``list-type``) "``algne``" means the original large list uploaded to the system
+   before e-voting starts, and "``muudatused``" means the cumulative updates made later
 
-#. The action (``action``) “``adding``” means adding a new voter to the specific polling station,
-   and “``deleting``” means removing. When a voter moves from one polling station to
+#. The action (``action``) "``lisamine``" means adding a new voter
+   and "``kustutamine``" means removing. When a voter moves from one unit
+   (administrative division or electoral district) to
    another, then one deleting entry is made in the amendments of the voter list
-   to delete the voter from their previous polling station, and one adding entry
-   is made to add the voter to the voter list in their new polling station. In
-   the original list, all entries are the “adding” type
+   to delete the voter from their previous unit, and one adding entry
+   is made to add the voter to the voter list in their new unit. In
+   the original list, all entries are the "``lisamine``" type
 
-#. The polling station (``station-legacy``) identifies the station, the district and the local
-   government where the voter votes
-
-#. The row number (``line-no``) is the row number of the person in the polling station list.
-   It is only filled for the original list; when there are amendments, this
-   field is left empty
+#. The electoral district (``electoral-district``) identifies the
+   administrative division and electoral district where the voter votes.
+   Value is EHAK code for municipalities and for districts of Tallinn; or
+   "0000" for voter who lives permanently in the foreign country.
 
 #. The reason (``reason``) is used in deleting entries to note the reason for the deletion.
    The reason field has to be empty for adding entries. If the reason is
-   ``preventive measure``, this means that from the moment the amendment is implemented, the
+   ``tõkend``, this means that from the moment the amendment is implemented, the
    voter with this personal identification code will not be allowed to vote
-   anymore. If the reason is a ``station switch``, it means that the voter is
-   deleted from one polling station, because they are added to another.  In this
+   anymore. If the reason is a ``valimisringkonna vahetus``, it means that the voter is
+   deleted from one electoral district, because they are added to another. In this
    case, a deleting entry has to be accompanied by an adding entry (this is
    checked). If the voter is removed from the list for some other reason (death,
    moving to a district that is not part of the elections), the reason has to be
-   ``other`` or can be left empty. This field is informative.
+   ``muu`` or can be left empty. This field is informative.
 
 
 Signing the Voter List
@@ -258,16 +241,16 @@ List of Choices
 
 The list of choices includes data on the candidates (at elections) or answers
 (at referendums).  At elections, the list includes not only the candidate’s data
-but also the name of their electoral list.
+but also the name of their political party.
 
 There are two systemic differences at elections that are visible to voters
 during online voting:
 
 #. At referendums, voters do not choose between the candidates of political
-   parties, but answer "yes" or "no" to specific questions
+   parties, but answer "yes" or "no" to the referendum question;
 
 #. At Riigikogu, local government and European Parliament elections, voters vote
-   for one candidate, who may or may not belong to a larger party/list
+   for one candidate, who may or may not belong to a political party/list.
 
 The protocol suite encodes the voter’s possible choices in the district as a
 numerical value of up to 11 characters, which is encoded in the list of choices

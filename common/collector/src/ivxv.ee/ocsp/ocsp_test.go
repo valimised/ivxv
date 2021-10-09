@@ -35,7 +35,7 @@ func TestCheck(t *testing.T) {
 		responders []string
 		certs      []cert
 	}{
-		{"http://demo.sk.ee/ocsp", []string{"TEST_of_SK_OCSP_RESPONDER_2011.pem"}, []cert{
+		{"http://demo.sk.ee/ocsp", []string{"TEST_of_SK_OCSP_RESPONDER_2020.pem"}, []cert{
 			{"good.pem", "", good},
 			{"revoked.pem", "", revoked},
 			{"unknown.pem", "", unknown},
@@ -45,12 +45,12 @@ func TestCheck(t *testing.T) {
 		// not want to include the repository. Provide the certificates
 		// and uncomment to run these tests.
 		//
-		//{"http://aia.sk.ee/esteid2015", nil, []cert{
-		//	{"auth2011.pem", "ESTEID-SK_2011.pem", revoked},
-		//	{"sign2011.pem", "ESTEID-SK_2011.pem", revoked},
-		//	{"auth2015.pem", "ESTEID-SK_2015.pem", good},
-		//	{"sign2015.pem", "ESTEID-SK_2015.pem", good},
-		//}},
+		// {"http://aia.sk.ee/esteid2015", nil, []cert{
+		// 	{"auth2011.pem", "ESTEID-SK_2011.pem", revoked},
+		// 	{"sign2011.pem", "ESTEID-SK_2011.pem", revoked},
+		// 	{"auth2015.pem", "ESTEID-SK_2015.pem", good},
+		// 	{"sign2015.pem", "ESTEID-SK_2015.pem", good},
+		// }},
 	}
 
 	// Define test functions for a single certificate and for a client
@@ -121,7 +121,7 @@ func TestCheck(t *testing.T) {
 
 func TestCheckResponse(t *testing.T) {
 	responder, err := ioutil.ReadFile(
-		filepath.Join("testdata", "TEST_of_SK_OCSP_RESPONDER_2011.pem"))
+		filepath.Join("testdata", "TEST_of_SK_OCSP_RESPONDER_2020.pem"))
 	if err != nil {
 		t.Fatal("failed to read responder certificate:", err)
 	}

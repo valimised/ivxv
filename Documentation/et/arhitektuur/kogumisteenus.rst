@@ -8,7 +8,7 @@ Kogumisteenus
 .. epigraph::
 
    Süsteemi keskne komponent, mida käitab Koguja. Teenus abistab Hääletajat
-   e-hääle koostamisel ning registreerib selle enne salvestamist e-urni.
+   e-hääle koostamisel ning registreerib selle enne salvestamist e-valimiskasti.
    Kogumisteenus kasutab väliseid teenuseid (tuvastamine, allkirjastamine,
    registreerimine). Kogumisteenusel on peale Koguja enda teisigi haldureid
    (Korraldaja, Klienditugi), kelle jaoks on Kogumisteenusel eraldi
@@ -46,7 +46,7 @@ valimisi, Euroopa parlamendi valimisi ning rahvahääletusi.
 Kogumisteenuse komponendid arvestavad virtualiseerimistehnoloogiate
 kasutamisega ning kogumisteenust on võimalik evitada nii ühel virtuaalriistvara
 instantsil, kui ka mikroteenuste kaupa erinevatel instantsidel. Kogumisteenuse
-komponendid on evitatavad Ubuntu LTS 18.04 (Bionic Beaver)
+komponendid on evitatavad Ubuntu 20.04 LTS (Focal Fossa)
 operatsioonisüsteemil 64-bitisel arhitektuuril.
 
 Andmesäilitus on teostatud kasutades võti-väärtus andmebaasi (etcd).
@@ -452,10 +452,13 @@ Veebiliidese funktsioonideks on:
 Kõik rakendusele antud korraldused säilitatakse - ka need mida ei rakendatud.
 Vigaseid (mittevalideeruvaid) korraldusi ei säilitata.
 
-Kogumisteenus võib järgmisi tegevusi teostada automaatselt (vastavalt
-seadistustes määratud aegadele):
+Kogumisteenuse haldusteenus sooritab järgmisi tegevusi automaatselt:
 
-* Talletatud häälte, logide ning seadistuste varundamine varundusteenusesse.
+#. Valijate nimekirjade muudatuste laadimine Valimiste Infosüsteemist;
+
+#. Hääletamise statistika kogumine hääletusteenusest ja eksportimine Valimiste Infosüsteemi;
+
+#. Talletatud häälte, logide ning seadistuste varundamine varundusteenusesse.
 
 
 Haldusteenuse komponendid
@@ -494,7 +497,7 @@ Haldusteenuse komponendid
    #. Üleslaaditavate korralduste salvestamine hilisemaks rakendamiseks
       (seadistuse ja valimisnimekirjade rakendamiseks teenusele);
 
-   #. E-urni allalaadimise vahendamine.
+   #. E-valimiskasti allalaadimise vahendamine.
 
 #. **Agentdeemon** on kasutajakonto ``ivxv-admin``
    õigustes töötav deemon, mille ülesanded on:
@@ -540,7 +543,7 @@ kasutuselolevate väliste teenuste seisundit ja eelneva põhal tuletatud
    haldusteenusesse);
 
 #. **Seadistatud** - kogumisteenus on seadistatud ja töökorras, sellega on
-   võimalik hääletust läbi viia ja e-urni väljastada.
+   võimalik hääletust läbi viia ja e-valimiskasti väljastada.
 
 #. **Osaline tõrge** - kogumisteenus on seadistatud ja osaliselt töökorras,
    mõned alamteenused pole töökorras, kuid see ei takista kogumisteenuse
@@ -605,7 +608,7 @@ Seadistatud
 
 Kõik kogumisteenuse alamteenused on seadistatud ja töökorras. Haldusteenusel on
 kõikidest alamteenustest värsked seisundiraportid. Süsteemiga on võimalik
-hääletust läbi viia ja e-urni väljastada.
+hääletust läbi viia ja e-valimiskasti väljastada.
 
 Kui süsteemis tuvastatakse tõrge, saab süsteemi uueks **Osaline tõrge**.
 
@@ -639,3 +642,39 @@ Eemaldatud
 ''''''''''
 
 Teenus on konfiguratsioonist eemaldatud.
+
+
+Valijate nimekirjade olekud haldusteenuses
+------------------------------------------
+
+Valijate nimekirja olek võib olla:
+
+#. **Rakendamise ootel** - nimekiri on laaditud haldusteenusesse;
+
+#. **Rakendatud** - nimekiri on rakendatud kogumisteenusele;
+
+#. **Vigane** - nimekiri on märgitud vigaseks, haldusteenus uusi valijate
+   nimekirjade muudatusi ei laadi;
+
+#. **Vahele jäetud** - vigane nimekiri on märgitud vahelejätmiseks.
+
+.. figure:: model/management-service/voter-list-status.png
+
+   Valijate nimekirja olekudiagramm
+
+Siirdeprotsessid:
+
+#. Nimekirja laadimine haldusteenusesse:
+
+   Algnimekirja laadib kogumisteenuse operaator, nimekirja olekuks saab
+   **Rakendamise ootel**;
+
+   Muudatusnimekirja laadib haldusteenus. Vastavalt valideerimise tulemusele
+   saab nimekirja olekuks kas **Rakendamise ootel** või **Vigane**;
+
+#. **Rakendamine kogumisteenusele**: viib läbi haldusteenus **rakendamise
+   ootel** olekus nimekirjaga. Õnnestumisel määratakse nimekirja olekuks
+   **Rakendatud**, vea korral **Vigane**;
+
+#. **Vahelejätmine**: operaator määrab olekuga **Vigane** nimekirjale oleku
+   **Vahele jäetud**.

@@ -5,7 +5,6 @@ import json
 import os
 
 import jsonschema
-
 import pkg_resources
 
 from .choices_list import ChoicesListSchema
@@ -14,7 +13,7 @@ from .election_conf import ElectionConfigSchema
 from .tech_conf import CollectorTechnicalConfigSchema
 from .trust_conf import TrustRootSchema
 from .user_management import UserManagementCommandSchema
-from .voters_list import parse_voters_list
+from .voters_list import VoterListChangesetSkipSchema, parse_voters_list
 
 
 def validate_cfg(cfg, schema_name):
@@ -23,8 +22,8 @@ def validate_cfg(cfg, schema_name):
     :param cfg: Configuration data structure
     :type cfg: dict
 
-    :raises: ValueError
-    :raises: schematics.exceptions.DataError
+    :raises ValueError:
+    :raises schematics.exceptions.DataError:
     """
     # validate choices and districts list with jsonschema
     if schema_name in ['choices', 'districts']:
@@ -38,7 +37,7 @@ def validate_cfg(cfg, schema_name):
             raise ValueError(err)
 
     # validate voters list
-    if schema_name == 'voters':
+    if schema_name == "voters" and isinstance(cfg, str):
         return parse_voters_list(cfg)
 
     if not isinstance(cfg, dict):
@@ -52,6 +51,7 @@ def validate_cfg(cfg, schema_name):
         'choices': ChoicesListSchema,
         'districts': DistrictsListSchema,
         'user': UserManagementCommandSchema,
+        "voters": VoterListChangesetSkipSchema,
     }
     validator = schemas[schema_name](cfg.copy())
     validator.validate()

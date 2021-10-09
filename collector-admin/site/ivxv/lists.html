@@ -8,19 +8,18 @@ Collector management service - Web interface - Voting lists management page
 
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
     <title>Valimiste nimekirjad – IVXV Kogumisteenuse haldusteenus</title>
     <!-- Bootstrap Core CSS -->
-    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/javascript/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <!-- MetisMenu CSS -->
     <link href="../vendor/metisMenu/metisMenu.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
     <!-- Custom Fonts -->
-    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="/javascript/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -44,9 +43,9 @@ Collector management service - Web interface - Voting lists management page
                     </a>
                     <ul class="dropdown-menu dropdown-user" style="padding: 10px;">
                         <li><i class="fa fa-user fa-fw"></i> Kasutaja andmed</li>
-                        <li>CN:&nbsp;<span id="user-cn"></span></li>
-                        <li>Isikukood:&nbsp;<span id="user-idcode"></span></li>
-                        <li>Roll:&nbsp;<span id="user-role-description"></span></li>
+                        <li>CN:&nbsp;<span id="user-cn">-</span></li>
+                        <li>Isikukood:&nbsp;<span id="user-idcode">-</span></li>
+                        <li>Roll:&nbsp;<span id="user-role-description">-</span></li>
                     </ul>
                     <!-- /.dropdown-user -->
                 </li>
@@ -72,7 +71,7 @@ Collector management service - Web interface - Voting lists management page
                             <a href="services.html"><i class="fa fa-sitemap fa-fw"></i> Teenused</a>
                         </li>
                         <li>
-                            <a href="ballot-box.html"><i class="fa fa-download fa-fw"></i> E-urn</a>
+                            <a href="downloads.html"><i class="fa fa-download fa-fw"></i> Allalaadimised</a>
                         </li>
                         <li>
                             <a href="config.html"><i class="fa fa-wrench fa-fw"></i> Seadistused</a>
@@ -93,7 +92,7 @@ Collector management service - Web interface - Voting lists management page
 
             <div class="row">
                 <div class="col-lg-12">
-                    <h1 class="page-header">Nimekirjad</h1>
+                    <h1 class="page-header">Valimiste nimekirjad</h1>
                 </div>
                 <!-- /.col-lg-12 -->
             </div>
@@ -170,12 +169,35 @@ Collector management service - Web interface - Voting lists management page
                             <div class="row">
                                 <div id="panel-voters-list-data" class="col-lg-12">
                                     <ul class="list-group">
-                                        <li class="list-group-item"><strong>Valijate nimekirjad:</strong> haldusteenusesse laaditud <span id="list-voters-loaded">-</span>, rakendamise ootel <span id="list-voters-pending">-</span></li>
+                                        <li class="list-group-item">
+                                            <strong>Valijate nimekirjad
+                                                <span id="list-voters-total" class="badge">-</span>
+                                            </strong>
+                                            &nbsp;
+                                            <span class="label label-primary">
+                                            rakendamise ootel <span id="list-voters-pending" class="badge">-</span>
+                                            </span>
+                                            &nbsp;
+                                            <span class="label label-primary">
+                                            rakendatud <span id="list-voters-loaded" class="badge">-</span>
+                                            </span>
+                                            &nbsp;
+                                            <span class="label label-primary">
+                                            vigaseid <span id="list-voters-invalid" class="badge">-</span>
+                                            </span>
+                                            &nbsp;
+                                            <span class="label label-primary">
+                                            vahele jäetud <span id="list-voters-skipped" class="badge">-</span>
+                                            </span>
+                                            &nbsp;
+                                            <span class="label label-info">
+                                            saadaval <span id="list-voters-available" class="badge">-</span>
+                                            </span>
+                                        </li>
                                         <div id="list-list"></div>
                                     </ul>
                                 </div>
                             </div>
-                            <button id="remove-voters-lists" onclick="removeVotersLists()">Eemalda rakendamata nimekirjad</button>
                         </div>
                     </div>
                 </div>
@@ -223,7 +245,7 @@ Collector management service - Web interface - Voting lists management page
                                     <br />
                                     <select>
                                         <option id="choicesoption" value="choices">Valikute nimekiri</option>
-                                        <option value="voters">Valijate nimekiri</option>
+                                        <option id="votersoption" value="voters">Valijate nimekiri</option>
                                         <option value="districts">Ringkondade nimekiri</option>
                                     </select>
                                 </div>
@@ -242,9 +264,9 @@ Collector management service - Web interface - Voting lists management page
     <!-- /#wrapper -->
 
     <!-- jQuery -->
-    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="/javascript/jquery/jquery.min.js"></script>
     <!-- Bootstrap Core JavaScript -->
-    <script src="../vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/javascript/bootstrap/js/bootstrap.min.js"></script>
     <!-- Metis Menu Plugin JavaScript -->
     <script src="../vendor/metisMenu/metisMenu.min.js"></script>
     <!-- Custom Theme JavaScript -->

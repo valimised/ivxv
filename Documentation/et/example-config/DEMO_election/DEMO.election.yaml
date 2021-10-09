@@ -76,34 +76,27 @@ vote:
 
 # enne oli ria asemel EHS
 
-dds:
-  url: https://digidocservice.sk.ee/v2/
-  countrycode: EE
+mid:
+  url: https://mid.sk.ee/mid-api/
+  relyingpartyuuid: 00000000-0000-0000-0000-000000000000
+  relyingpartyname: DEMO
   language: EST
-  servicename: RIA
   authmessage: Mobiil-ID isikutuvastus
   signmessage: Mobiil-ID hääle allkirjastamine
-  idcoderequired: true
-  phonerequired: true
+  messageformat: GSM-7
+  authchallengesize: 64
+  statustimeoutms: 5000
   roots:
     - !container EE_Certification_Centre_Root_CA.pem.crt
   intermediates:
     - !container ESTEID-SK_2011.pem.crt
     - !container ESTEID-SK_2015.pem.crt
   ocsp:
+    url: http://aia.sk.ee/esteid2015
     responders:
       - !container SK_OCSP_RESPONDER_2011.pem.cer
 
 qualification:
-# mis vahe on ocsp ja ocsptm
-  - protocol: ocsp
-    conf:
-      url: http://aia.sk.ee/esteid2015
-      responders:
-      #  - !container ESTEID-SK_2011_AIA_OCSP_RESPONDER_201808.pem.cer
-      #  - !container ESTEID-SK_2015_AIA_OCSP_RESPONDER_201808.pem.cer
-# Lubame ühe korra peale päringu ebaõnnestumist veel proovida
-      retry: 1
   - protocol: tspreg
     conf:
       url: http://tsa.sk.ee
@@ -114,5 +107,14 @@ qualification:
 # allkirjastamise ajavahe on 1h. Ei ole usutav. Jätame 10sek, mis
 # võiks olla enam kui piisav.
       delaytime: 10
+# Lubame ühe korra peale päringu ebaõnnestumist veel proovida
+      retry: 1
+# mis vahe on ocsp ja ocsptm
+  - protocol: ocsp
+    conf:
+      url: http://aia.sk.ee/esteid2015
+      responders:
+      #  - !container ESTEID-SK_2011_AIA_OCSP_RESPONDER_201808.pem.cer
+      #  - !container ESTEID-SK_2015_AIA_OCSP_RESPONDER_201808.pem.cer
 # Lubame ühe korra peale päringu ebaõnnestumist veel proovida
       retry: 1

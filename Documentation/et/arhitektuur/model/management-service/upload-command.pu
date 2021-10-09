@@ -27,8 +27,8 @@ alt Korraldus on valiidne
   Util -> Util : Korralduse valideerimine
   alt Vahetu rakendamine
     Util -> Teenus : Korralduse rakendamine
-  else E-urni väljastamine
-    Teenus -> Util : E-urni laadimine
+  else E-valimiskasti väljastamine
+    Teenus -> Util : E-valimiskasti laadimine
   end
   Util -> Deemon_HTTP : Korralduse \n rakendamise vastus
   Deactivate Util

@@ -39,9 +39,11 @@ func TestBallot(t *testing.T) {
 	}
 
 	// Setup storage client with eligible voters.
+	district := string(storage.EncodeAdminDistrict("100", "1"))
 	rpc.storage = storage.NewWithProtocol(memory.New(map[string]string{
 		"/voters/version":          "0",
-		"/voters/0/eligible voter": "100",
+		"/voters/0/eligible voter": district,
+		"/districts/" + district:   "100.1",
 	}))
 
 	// Helper functions to simplify actual tests.
@@ -72,16 +74,16 @@ signatures:
 signatures:
   - signer: ` + ineligible},
 
-		{"outdated choices", server.ErrOutdatedChoices, "200", `
+		{"outdated choices", server.ErrOutdatedChoices, "200.1", `
 signatures:
   - signer: ` + eligible},
 
-		{"no ballot", server.ErrBadRequest, "100", `
+		{"no ballot", server.ErrBadRequest, "100.1", `
 signatures:
   - signer: ` + eligible + `
 data:`},
 
-		{"extra data", server.ErrBadRequest, "100", `
+		{"extra data", server.ErrBadRequest, "100.1", `
 signatures:
   - signer: ` + eligible + `
 data:
@@ -97,7 +99,7 @@ data:
 	}
 
 	t.Run("OK", func(t *testing.T) {
-		id, err := parse("100", `
+		id, err := parse("100.1", `
 signatures:
   - signer: `+eligible+`
 data:
@@ -118,5 +120,5 @@ func signer(t *testing.T, path string) string {
 	if err != nil {
 		t.Fatal("failed to load test certificate:", err)
 	}
-	return strings.Replace("|\n"+string(b), "\n", "\n      ", -1)
+	return strings.ReplaceAll("|\n"+string(b), "\n", "\n      ")
 }

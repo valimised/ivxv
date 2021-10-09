@@ -36,8 +36,8 @@ data:
           proxy:
             - id:      proxy@localhost
               address: localhost:4440
-          dds:
-            - id:      dds@localhost
+          mid:
+            - id:      mid@localhost
               address: localhost:4441
           choices:
             - id:      choices@localhost

@@ -17,7 +17,7 @@ type getMobileCertificate struct {
 }
 
 type getMobileCertificateResponse struct {
-	// nolint: lll, the XML namespace forces us to use a long line.
+	//nolint:lll // XML namespace forces us to use a long line.
 	XMLName        xml.Name `xml:"http://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl GetMobileCertificateResponse"`
 	SignCertStatus string
 	SignCertData   string

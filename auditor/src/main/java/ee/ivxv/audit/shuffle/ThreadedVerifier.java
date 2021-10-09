@@ -31,68 +31,65 @@ public class ThreadedVerifier extends Verifier {
         this.executor = Executors.newFixedThreadPool(nothreads);
     }
 
-    public GroupElement compute_A_threaded(BigInteger[] e)
+    public GroupElement compute_A_threaded(Progress progress, BigInteger[] e)
             throws MathException, InterruptedException, ExecutionException {
-        return compute_A(get_proof().get_PermutationCommitment().get_u(), e, nothreads, executor);
+        return compute_A(progress, get_proof().get_PermutationCommitment().get_u(), e, nothreads,
+                executor);
     }
 
-    public GroupElement compute_F_threaded(BigInteger[] e)
+    public GroupElement compute_F_threaded(Progress progress, BigInteger[] e)
             throws MathException, InterruptedException, ExecutionException {
-        return compute_F(get_proof().get_ciphertexts(), e, nothreads, executor);
+        return compute_F(progress, get_proof().get_ciphertexts(), e, nothreads, executor);
     }
 
-    public boolean verify_A_threaded(BigInteger v, GroupElement A, GroupElement[] h)
-            throws MathException, InterruptedException, ExecutionException {
-        return verify_A(v, A, get_proof().get_PoSCommitment().get_A_prim(),
+    public boolean verify_A_threaded(Progress progress, BigInteger v, GroupElement A,
+            GroupElement[] h) throws MathException, InterruptedException, ExecutionException {
+        return verify_A(progress, v, A, get_proof().get_PoSCommitment().get_A_prim(),
                 get_proof().get_ProtocolInformation().get_parsed_generator(), h,
                 get_proof().get_PoSReply().get_kA(), get_proof().get_PoSReply().get_kE(), nothreads,
                 executor);
     }
 
-    public boolean verify_B_threaded(BigInteger v, GroupElement[] h)
+    public boolean verify_B_threaded(Progress progress, BigInteger v, GroupElement[] h)
             throws MathException, InterruptedException, ExecutionException {
-        return verify_B(v, get_proof().get_PoSCommitment().get_B(),
+        return verify_B(progress, v, get_proof().get_PoSCommitment().get_B(),
                 get_proof().get_PoSCommitment().get_B_prim(),
                 get_proof().get_ProtocolInformation().get_parsed_generator(),
                 get_proof().get_PoSReply().get_kB(), get_proof().get_PoSReply().get_kE(), h,
                 nothreads, executor);
     }
 
-    public boolean verify_F_threaded(BigInteger v, GroupElement F)
+    public boolean verify_F_threaded(Progress progress, BigInteger v, GroupElement F)
             throws MathException, InterruptedException, ExecutionException {
-        return verify_F(v, F, get_proof().get_PoSCommitment().get_F_prim(),
+        return verify_F(progress, v, F, get_proof().get_PoSCommitment().get_F_prim(),
                 get_proof().get_publickey(), get_proof().get_PoSReply().get_kE(),
                 get_proof().get_PoSReply().get_kF(), get_proof().get_shuffled_ciphertexts(),
                 nothreads, executor);
     }
 
     public boolean verify_all() throws ShuffleException, MathException {
-        console.enter(ShuffleStep.COMPUTE);
+        console.enter(ShuffleStep.VERIFY);
+        console.enter(ShuffleStep.VERIFY_PARAMS);
         byte[] rho = compute_rho();
         GroupElement[] h = compute_h(rho);
+        console.enter(ShuffleStep.VERIFY_NI);
         byte[] s = compute_RO_seed(rho, h);
         BigInteger[] e = compute_e(s);
         BigInteger v = compute_v(rho, s);
+
+        int N = get_proof().get_ciphertexts().length;
+        Progress progress = console.enter(ShuffleStep.VERIFY_PERM, 5 * N + 10 + 3 * nothreads);
         GroupElement A;
         try {
-            A = compute_A_threaded(e);
+            A = compute_A_threaded(progress, e);
         } catch (InterruptedException | ExecutionException ex) {
             executor.shutdown();
             throw new ShuffleException(ex);
         }
-        GroupElement C = compute_C(h);
-        GroupElement D = compute_D(h, e);
-        GroupElement F;
+        GroupElement C = compute_C(progress, h);
+        GroupElement D = compute_D(progress, h, e);
         try {
-            F = compute_F_threaded(e);
-        } catch (InterruptedException | ExecutionException ex) {
-            executor.shutdown();
-            throw new ShuffleException(ex);
-        }
-
-        console.enter(ShuffleStep.VERIFY);
-        try {
-            if (!verify_A_threaded(v, A, h)) {
+            if (!verify_A_threaded(progress, v, A, h)) {
                 throw new ShuffleException("A failed");
             }
         } catch (InterruptedException | ExecutionException ex) {
@@ -100,21 +97,31 @@ public class ThreadedVerifier extends Verifier {
             throw new ShuffleException(ex);
         }
         try {
-            if (!verify_B_threaded(v, h)) {
+            if (!verify_B_threaded(progress, v, h)) {
                 throw new ShuffleException("B failed");
             }
         } catch (InterruptedException | ExecutionException ex) {
             executor.shutdown();
             throw new ShuffleException(ex);
         }
-        if (!verify_C(v, C)) {
+        if (!verify_C(progress, v, C)) {
             throw new ShuffleException("C failed");
         }
-        if (!verify_D(v, D)) {
+        if (!verify_D(progress, v, D)) {
             throw new ShuffleException("D failed");
         }
+        progress.finish();
+        progress = console.enter(ShuffleStep.VERIFY_RERAND, 2 * N
+                + get_proof().get_PoSReply().get_kF().getElements().length + 3 + 2 * nothreads);
+        GroupElement F;
         try {
-            if (!verify_F_threaded(v, F)) {
+            F = compute_F_threaded(progress, e);
+        } catch (InterruptedException | ExecutionException ex) {
+            executor.shutdown();
+            throw new ShuffleException(ex);
+        }
+        try {
+            if (!verify_F_threaded(progress, v, F)) {
                 throw new ShuffleException("F failed");
             }
         } catch (InterruptedException | ExecutionException ex) {
@@ -122,15 +129,15 @@ public class ThreadedVerifier extends Verifier {
             throw new ShuffleException(ex);
         }
         executor.shutdown();
+        progress.finish();
         return true;
     }
 
-    private GroupElement compute_A(GroupElement[] u, BigInteger[] e, int nothreads,
-            ExecutorService executor)
+    private GroupElement compute_A(Progress progress, GroupElement[] u, BigInteger[] e,
+            int nothreads, ExecutorService executor)
             throws MathException, InterruptedException, ExecutionException {
         // the number of computations differ in threaded and non-threaded case. In threaded case we
         // also aggregate the per-thread results.
-        Progress progress = console.enter(ShuffleStep.COMPUTE_A, u.length + nothreads);
         List<Future<GroupElement>> futures = new ArrayList<>();
         for (int i = 0; i < nothreads; i++) {
             FutureTask<GroupElement> ft =
@@ -145,7 +152,6 @@ public class ThreadedVerifier extends Verifier {
             res = res.op(ft.get());
             progress.increase(1);
         }
-        progress.finish();
         log.debug("Collected all compute A worker results");
         return res;
     }
@@ -167,12 +173,11 @@ public class ThreadedVerifier extends Verifier {
         };
     }
 
-    public GroupElement compute_F(GroupElement[] w, BigInteger[] e, int nothreads,
-            ExecutorService executor)
+    public GroupElement compute_F(Progress progress, GroupElement[] w, BigInteger[] e,
+            int nothreads, ExecutorService executor)
             throws MathException, InterruptedException, ExecutionException {
         // the number of computations differ in threaded and non-threaded case. In threaded case we
         // also aggregate the per-thread results.
-        Progress progress = console.enter(ShuffleStep.COMPUTE_F, w.length + nothreads);
         List<Future<GroupElement>> futures = new ArrayList<>();
         for (int i = 0; i < nothreads; i++) {
             FutureTask<GroupElement> ft =
@@ -187,7 +192,6 @@ public class ThreadedVerifier extends Verifier {
             res = res.op(ft.get());
             progress.increase(1);
         }
-        progress.finish();
         log.debug("Collected all compute F worker results");
         return res;
     }
@@ -209,13 +213,12 @@ public class ThreadedVerifier extends Verifier {
         };
     }
 
-    private boolean verify_A(BigInteger v, GroupElement A, GroupElement A_prim, GroupElement g,
-            GroupElement[] h, BigInteger k_A, BigInteger[] k_E, int nothreads,
+    private boolean verify_A(Progress progress, BigInteger v, GroupElement A, GroupElement A_prim,
+            GroupElement g, GroupElement[] h, BigInteger k_A, BigInteger[] k_E, int nothreads,
             ExecutorService executor)
             throws MathException, InterruptedException, ExecutionException {
         // the number of computations differ in threaded and non-threaded case. In threaded case we
         // also aggregate the per-thread results.
-        Progress progress = console.enter(ShuffleStep.VERIFY_A, h.length + 2 + nothreads);
         List<Future<GroupElement>> futures = new ArrayList<>();
         for (int i = 0; i < nothreads; i++) {
             FutureTask<GroupElement> ft =
@@ -236,7 +239,6 @@ public class ThreadedVerifier extends Verifier {
         log.debug("Collected all verify A worker results");
         right = right.op(g.scale(k_A));
         progress.increase(1);
-        progress.finish();
         return left.equals(right);
     }
 
@@ -256,14 +258,13 @@ public class ThreadedVerifier extends Verifier {
         };
     }
 
-    private boolean verify_B(BigInteger v, GroupElement[] B, GroupElement[] B_prim, GroupElement g,
-            BigInteger[] k_B, BigInteger[] k_E, GroupElement[] h, int nothreads,
-            ExecutorService executor)
+    private boolean verify_B(Progress progress, BigInteger v, GroupElement[] B,
+            GroupElement[] B_prim, GroupElement g, BigInteger[] k_B, BigInteger[] k_E,
+            GroupElement[] h, int nothreads, ExecutorService executor)
             throws MathException, InterruptedException, ExecutionException {
         // the number of computations is different in threaded and non-threaded case. In threaded
         // case the thread which sees invalid proof stops and this is propagated to the controlling
         // thread. In non-threaded case, all values are computed and then checked one-by-one.
-        Progress progress = console.enter(ShuffleStep.VERIFY_B, B.length + nothreads);
         GroupElement left = B[0].scale(v).op(B_prim[0]);
         GroupElement right = h[0].scale(k_E[0]).op(g.scale(k_B[0]));
         if (!left.equals(right)) {
@@ -281,13 +282,11 @@ public class ThreadedVerifier extends Verifier {
         log.debug("Collecting verify B worker results");
         for (Future<Boolean> ft : futures) {
             if (!ft.get()) {
-                progress.finish();
                 return false;
             }
             progress.increase(1);
             log.debug("Collected verify B worker result");
         }
-        progress.finish();
         log.debug("Collected all verify B worker results");
         return true;
     }
@@ -315,14 +314,12 @@ public class ThreadedVerifier extends Verifier {
         };
     }
 
-    private boolean verify_F(BigInteger v, GroupElement F, GroupElement F_prim, GroupElement pk,
-            BigInteger[] k_E, ProductGroupElement k_F, GroupElement[] w_prim, int nothreads,
-            ExecutorService executor)
+    private boolean verify_F(Progress progress, BigInteger v, GroupElement F, GroupElement F_prim,
+            GroupElement pk, BigInteger[] k_E, ProductGroupElement k_F, GroupElement[] w_prim,
+            int nothreads, ExecutorService executor)
             throws MathException, InterruptedException, ExecutionException {
         // the number of computations differ in threaded and non-threaded case. In threaded case we
         // also aggregate the per-thread results.
-        Progress progress = console.enter(ShuffleStep.VERIFY_F,
-                w_prim.length + k_F.getElements().length + 3 + nothreads);
         List<Future<GroupElement>> futures = new ArrayList<>();
         for (int i = 0; i < nothreads; i++) {
             FutureTask<GroupElement> ft =
@@ -354,7 +351,6 @@ public class ThreadedVerifier extends Verifier {
         ProductGroupElement tmp = new ProductGroupElement((ProductGroup) pk.getGroup(), tmpl, tmpr);
         right = right.op(tmp);
         progress.increase(1);
-        progress.finish();
         return left.equals(right);
     }
 

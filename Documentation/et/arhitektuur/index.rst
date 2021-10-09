@@ -20,5 +20,4 @@ IVXV arhitektuur
    vallasrezhiim
    tehnoloogiad
 
-   lisad
    viited

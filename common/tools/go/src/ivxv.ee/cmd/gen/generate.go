@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"go/build"
 	"go/format"
-	"text/template"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 )
 
 // header is added to the gen.tmpl template to identify files created by gen.

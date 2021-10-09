@@ -11,8 +11,3 @@ ivxv-admin: binary-without-manpage
 # The package configures /var/www/collector-admin to be the web server document
 # root itself, so we do not care that it is not specified in the FHS.
 ivxv-admin: dir-or-file-in-var-www var/www/collector-admin/*
-
-# These scripts and fonts come vendored in the SB Admin 2 theme and we do not
-# wish to modify it to use symlinks to packaged versions instead.
-ivxv-admin: embedded-javascript-library var/www/collector-admin/vendor/*
-ivxv-admin: duplicate-font-file var/www/collector-admin/vendor/*

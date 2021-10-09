@@ -8,19 +8,18 @@ Collector management service - Web interface - Index (overview) page
 
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
     <title>Üldseisund – IVXV Kogumisteenuse haldusteenus</title>
     <!-- Bootstrap Core CSS -->
-    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/javascript/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <!-- MetisMenu CSS -->
     <link href="../vendor/metisMenu/metisMenu.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
     <!-- Custom Fonts -->
-    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="/javascript/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -44,9 +43,9 @@ Collector management service - Web interface - Index (overview) page
                     </a>
                     <ul class="dropdown-menu dropdown-user" style="padding: 10px;">
                         <li><i class="fa fa-user fa-fw"></i> Kasutaja andmed</li>
-                        <li>CN:&nbsp;<span id="user-cn"></span></li>
-                        <li>Isikukood:&nbsp;<span id="user-idcode"></span></li>
-                        <li>Roll:&nbsp;<span id="user-role-description"></span></li>
+                        <li>CN:&nbsp;<span id="user-cn">-</span></li>
+                        <li>Isikukood:&nbsp;<span id="user-idcode">-</span></li>
+                        <li>Roll:&nbsp;<span id="user-role-description">-</span></li>
                     </ul>
                     <!-- /.dropdown-user -->
                 </li>
@@ -72,7 +71,7 @@ Collector management service - Web interface - Index (overview) page
                             <a href="services.html"><i class="fa fa-sitemap fa-fw"></i> Teenused</a>
                         </li>
                         <li>
-                            <a href="ballot-box.html"><i class="fa fa-download fa-fw"></i> E-urn</a>
+                            <a href="downloads.html"><i class="fa fa-download fa-fw"></i> Allalaadimised</a>
                         </li>
                         <li>
                             <a href="config.html"><i class="fa fa-wrench fa-fw"></i> Seadistused</a>
@@ -194,7 +193,7 @@ Collector management service - Web interface - Index (overview) page
             <!-- /.row -->
             <div class="row">
                 <div class="col-lg-6 col-md-12">
-                    <div class="panel panel-primary">
+                    <div class="panel panel-info">
                         <div class="panel-heading">
                             Haldusteenusesse laaditud seadistuste versioonid:
                         </div>
@@ -208,7 +207,7 @@ Collector management service - Web interface - Index (overview) page
                 </div>
                 <!-- /.col-lg-6 -->
                 <div class="col-lg-6 col-md-12">
-                    <div class="panel panel-primary">
+                    <div class="panel panel-info">
                         <div class="panel-heading">
                             Valimisnimekirjade seisundid ja versioonid:
                         </div>
@@ -227,9 +226,30 @@ Collector management service - Web interface - Index (overview) page
                                 <strong>Ringkondade nimekirja seisund:</strong>
                                 <span id="list-districts-status">-</span></li>
                             <li id="voterslist" class="list-group-item">
-                                <strong>Valijate nimekirjad:</strong>
-                                haldusteenusesse laaditud <span id="list-voters-loaded">-</span>,
-                                rakendamise ootel <span id="list-voters-pending">-</span></li>
+                                <strong>Valijate nimekirjad
+                                <span id="list-voters-total" class="badge">-</span>
+                                </strong>
+                                &nbsp;
+                                <span class="label label-primary">
+                                rakendamise ootel <span id="list-voters-pending" class="badge">-</span>
+                                </span>
+                                &nbsp;
+                                <span class="label label-primary">
+                                rakendatud <span id="list-voters-loaded" class="badge">-</span>
+                                </span>
+                                &nbsp;
+                                <span class="label label-primary">
+                                vigaseid <span id="list-voters-invalid" class="badge">-</span>
+                                </span>
+                                &nbsp;
+                                <span class="label label-primary">
+                                vahele jäetud <span id="list-voters-skipped" class="badge">-</span>
+                                </span>
+                                &nbsp;
+                                <span class="label label-info">
+                                saadaval <span id="list-voters-available" class="badge">-</span>
+                                </span>
+                            </li>
                             <div id="list-list"></div>
                         </ul>
                     </div>
@@ -241,7 +261,7 @@ Collector management service - Web interface - Index (overview) page
 
             <div class="row">
                 <div id="service_summary" style="display: none" class="col-lg-6">
-                    <div class="panel panel-primary">
+                    <div class="panel panel-info">
                         <div class="panel-heading">
                             Teenuste kokkuvõte seisundi järgi
                         </div>
@@ -268,17 +288,24 @@ Collector management service - Web interface - Index (overview) page
                             <div id="missing-debs-list" class="panel-group" style="margin-bottom:0px;"></div>
                         </div>
                         <!-- /.panel -->
-                        <div class="panel panel-primary">
+                        <div class="panel panel-info">
                             <div class="panel-heading">
                                 Kasutajate arv: <span id="user-count"></span>
                             </div>
                             <!-- /.panel-heading -->
                         </div>
                         <!-- /.panel -->
-                        <div class="panel panel-primary">
+                        <div class="panel panel-info">
                             <div class="panel-heading">
-                                Korraldused: <span id="command-count"></span>
-                                    haldusteenusesse laaditud <span id="commands-loaded">-</span>, rakendamise ootel <span id="commands-pending">-</span></li>
+                                Korraldused <span id="command-files-count" class="badge">-</span>
+                                &nbsp;
+                                <span class="label label-primary">
+                                aktiivseid <span id="command-files-active-count" class="badge">-</span>
+                                </span>
+                                &nbsp;
+                                <span class="label label-default">
+                                arhiveeritud <span id="command-files-inactive-count" class="badge">-</span></li>
+                                </span>
                             </div>
                             <!-- /.panel-heading -->
                         </div>
@@ -296,9 +323,9 @@ Collector management service - Web interface - Index (overview) page
     <!-- /#wrapper -->
 
     <!-- jQuery -->
-    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="/javascript/jquery/jquery.min.js"></script>
     <!-- Bootstrap Core JavaScript -->
-    <script src="../vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/javascript/bootstrap/js/bootstrap.min.js"></script>
     <!-- Metis Menu Plugin JavaScript -->
     <script src="../vendor/metisMenu/metisMenu.min.js"></script>
     <!-- Custom Theme JavaScript -->

@@ -1,6 +1,7 @@
 #!/usr/bin/dh-exec
-usr/bin/choices   => usr/bin/ivxv-choices
-usr/bin/choiceimp => usr/bin/ivxv-choiceimp
-usr/bin/voterimp  => usr/bin/ivxv-voterimp
+usr/bin/choices     => usr/bin/ivxv-choices
+usr/bin/choiceimp   => usr/bin/ivxv-choiceimp
+usr/bin/voterimp    => usr/bin/ivxv-voterimp
+usr/bin/districtimp => usr/bin/ivxv-districtimp
 
 usr/lib/systemd/user/ivxv-choices@.service

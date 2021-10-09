@@ -10,7 +10,7 @@ apply plugin: 'java'
 apply plugin: 'org.ysb33r.ivypot'
 
 group 'ee.ivxv'
-version '1.5.1'
+version '1.7.7'
 sourceCompatibility = 1.8
 
 ext.external = "${base}/common/external"
@@ -42,6 +42,9 @@ allprojects {
 }
 
 repositories {
+    if (System.env.SYNC_EXTERNAL) {
+        mavenCentral()
+    }
     ivy {
         url file(external).toURI()
     }
@@ -50,7 +53,7 @@ repositories {
 syncRemoteRepositories {
     repoRoot file(external).absolutePath
     repositories {
-        jcenter()
+        mavenCentral()
         // The 'ivypot' plugin
         maven {
             url "https://plugins.gradle.org/m2/"
@@ -62,8 +65,9 @@ syncRemoteRepositories {
 task jarall(type: Jar) {
   manifest.from jar.manifest
   classifier = 'all'
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
   from {
-    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
   } {
     exclude "META-INF/DEPENDENCIES"
     exclude "META-INF/*.SF"

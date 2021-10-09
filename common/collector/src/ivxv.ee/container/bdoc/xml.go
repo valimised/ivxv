@@ -92,7 +92,7 @@ func (p *parser) token() (xml.Token, error) {
 		// that the untranslated name matches the top of the stack and
 		// undo any namespace bindings.
 		name := tt.Name
-		p.translate(&tt.Name.Space, false) // nolint: errcheck, succeeds if pop does.
+		p.translate(&tt.Name.Space, false) //nolint:errcheck // Succeeds if pop does.
 		t, err = tt, p.pop(name)
 	case xml.Comment:
 		// Skip any comments: they are irrelevant to parsing.

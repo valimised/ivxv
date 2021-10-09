@@ -1,3 +1,123 @@
+ivxv (1.7.7) focal; urgency=medium
+
+  * Documentation
+    - Explain mixnet release
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Sat, 02 Oct 2021 19:12:39 +0000
+
+ivxv (1.7.6) focal; urgency=medium
+
+  * Documentation
+    - Finalised documentation
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Mon, 27 Sep 2021 03:37:31 +0000
+
+ivxv (1.7.5) focal; urgency=medium
+
+  * Collector service:
+    - Added verification.latestonly election configuration option, which if
+      enabled limits verification to the latest vote of a voter only.
+  * Management service:
+    - Grouped download forms in management UI
+    - Added downloading of anonymized voting sessions from Log Monitor
+    - Reduced verbosity of cron tasks if collector is not configured
+    - Fixed config files classification
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Tue, 21 Sep 2021 12:06:39 +0000
+
+ivxv (1.7.4) focal; urgency=medium
+
+  * Collector service:
+    - Require that the OCSP response of a timestamped BDOC signature is
+      produced after the timestamp, up to a configurable delay.
+  * Management service:
+    - Implemented ivxv-voterstats to forward stats to VIS3
+    - Added utility ivxv-generate-processor-input
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Wed, 01 Sep 2021 12:21:34 +0000
+
+ivxv (1.7.3) focal; urgency=medium
+
+  * Changed voter list update management. List updates are now
+    automatically downloaded from the election information system VIS3
+  * Collector service:
+    - Added new election config parameters to define access to VIS3
+    - Increased maximum count of voter lists to 10000
+    - Added new command type to skip invalid voter list
+  * Management service:
+    - Added utility ivxv-voter-list-download
+    - Removed utility ivxv-cmd-remove
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Wed, 18 Aug 2021 06:48:20 +0000
+
+ivxv (1.7.2) focal; urgency=medium
+
+  * Base system changed to Ubuntu 20.04 LTS (Focal Fossa)
+  * Management service:
+    - Do not install etcd packages from Debian buster anymore
+      * Require version 3.2.26 from Ubuntu instead, which is built using a
+        newer golang-google-grpc, so the Debian version is no longer needed
+  * Collector service:
+    - Added election ID consistency validation to ivxv-config-validate
+    - Require district list to be loaded before voters list
+    - Allow explicit SignatureTimeStamp CanonicalizationMmethod attribute in
+      bdoc/asice container signatures
+      * The only allowed value is still "http://www.w3.org/2006/12/xml-c14n11"
+    - Import voter lists from unsigned ZIP in addition to trusted containers
+    - Updated etcd client library version from 3.2.17 to 3.2.26
+    - Use district lists for assigning voters to districts instead of using
+      their administrative unit code directly.
+    - Added VoterForeignEHAK election configuration option used for assigning
+      districts to foreign voters during non-KOV elections.
+    - Removed VoterDistrictEHAK election configuration option.
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Mon, 21 Jun 2021 23:34:46 +0000
+
+ivxv (1.7.1) bionic; urgency=medium
+
+  * Collector service:
+    - Fixed voters list consistency check
+    - Added voterdistrictehak validation pattern for election config
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Thu, 31 Dec 2020 12:30:49 +0000
+
+ivxv (1.7.0) bionic; urgency=medium
+
+  * Documentation:
+    - Fixed national identity number pattern in revocation list schema
+    - Updated voters list format to version 2
+  * Collector service:
+    - Updated voters list format to version 2
+    - Added VoterDistrictEHAK election configuration option necessary for
+      version 2 voter lists during non-KOV elections.
+    - Removed stations from districts list
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Fri, 18 Dec 2020 11:42:16 +0200
+
+ivxv (1.6.0) bionic; urgency=medium
+
+  * Collector service:
+    - Fixed log collector default port
+    - Utility ivxv-copy-log-to-logmon:
+      * Raise error if some rsync process fails
+      * Added process locking
+      * Added logging level
+    - Changed list of supported time-stamping protocol signature algorithms:
+      * Removed "rsaEncryption" and "ecdsa-with-Recommended".
+      * Added "sha256WithRSAEncryption", "sha384WithRSAEncryption",
+        "sha512WithRSAEncryption", "ecdsa-with-SHA256", "ecdsa-with-SHA384",
+        and "ecdsa-with-SHA512".
+      * Old signatures storing timestamps of the now unsupported protocols
+        will no longer validate.
+    - New package ivxv-mid deprecates ivxv-dds
+      * The DigiDocService-based Mobile-ID support service "dds" has been
+        replaced with the SK MID REST interface-based service "mid".
+  * Management service:
+    - Use Bootstrap, DataTables, Font Awesome and jQuery javascript libraries
+      from Ubuntu repository
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Mon, 01 Jun 2020 11:39:19 +0300
+
 ivxv (1.5.1) bionic; urgency=medium
 
   * Management service:

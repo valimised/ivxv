@@ -16,6 +16,7 @@ import (
 )
 
 const (
+	testURL   = "" // Set to URL of DigiDocService to test against.
 	testID    = "60001019906"
 	testPhone = "+37200000766"
 )
@@ -34,7 +35,7 @@ func TestMain(m *testing.M) {
 
 	var err error
 	if testClient, err = New(&Conf{
-		URL:            "https://tsp.demo.sk.ee/v2/",
+		URL:            testURL,
 		Language:       "EST",
 		ServiceName:    "Testimine",
 		AuthMessage:    "Test authentication message.",
@@ -44,7 +45,7 @@ func TestMain(m *testing.M) {
 		Roots:          []string{read("testdata/TEST_of_EE_Certification_Centre_Root_CA.pem")},
 		Intermediates:  []string{read("testdata/TEST_of_ESTEID-SK_2015.pem")},
 		OCSP: ocsp.Conf{
-			Responders: []string{read("testdata/TEST_of_SK_OCSP_RESPONDER_2011.pem")},
+			Responders: []string{read("testdata/TEST_of_SK_OCSP_RESPONDER_2020.pem")},
 		},
 	}); err != nil {
 		fmt.Fprintln(os.Stderr, "failed to create test client:", err)
@@ -57,6 +58,9 @@ func TestMain(m *testing.M) {
 func TestAuthentication(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Short mode on, skipping test against test-DigiDocService")
+	}
+	if testURL == "" {
+		t.Skip("No URL configured, skipping test against test-DigiDocService")
 	}
 	t.Parallel()
 
@@ -88,6 +92,9 @@ func TestCertificate(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Short mode on, skipping test against test-DigiDocService")
 	}
+	if testURL == "" {
+		t.Skip("No URL configured, skipping test against test-DigiDocService")
+	}
 	t.Parallel()
 
 	ctx := log.TestContext(context.Background())
@@ -104,6 +111,9 @@ func TestCertificate(t *testing.T) {
 func TestSigning(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Short mode on, skipping test against test-DigiDocService")
+	}
+	if testURL == "" {
+		t.Skip("No URL configured, skipping test against test-DigiDocService")
 	}
 	t.Parallel()
 

@@ -45,6 +45,15 @@ Korralduste laadimine:
 :CMD_REMOVED:
    Korraldusfaili eemaldamine haldusteenusest;
 
+:VOTER_LIST_DOWNLOADED:
+   Valijate muudatusnimekirja allalaadimine;
+
+:VOTER_LIST_DOWNLOAD_FAILED:
+   Valijate muudatusnimekirja nurjunud allalaadimine;
+
+:VOTER_LIST_NOT_FOUND:
+   Valijate järgmist muudatusnimekirja ei leitud Valimiste Infosüsteemis;
+
 Kasutajaõiguste muutused:
 
 :PERMISSION_SET:

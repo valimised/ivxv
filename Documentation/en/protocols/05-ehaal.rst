@@ -154,8 +154,8 @@ vote. This means that the final qualified vote is in the BDOC-TS format.
 If a vote is signed using an ID card or digital ID, then the original signed
 container is generated in the voter application. If the vote is signed with
 mobile ID, the container is generated in cooperation between the voter
-application and the DigiDoc service relayed by the collector service. In case of
-mobile ID, the collector service uses the DigiDoc service only to get a
+application and the mobile ID service relayed by the collector service. In case of
+mobile ID, the collector service uses the mobile ID service only to get a
 signature for the encrypted ballot.  All elements necessary to qualify a vote
 are requested from relevant services only when the voter application has sent a
 signed vote to be stored. The qualified vote is delivered by the collector
@@ -189,7 +189,7 @@ The element ``SignedProperties`` is generated according to the BDOC 2.1 standard
 If a timestamp is used for qualification, then the element
 ``SignaturePolicyIdentifier`` is not used. No non-obligatory elements are used.
 The time of signing is fixed by the computer filling in the data structure, and
-the voter’s X509 certificate is retrieved from the ID card or using the DigiDoc service.
+the voter’s X509 certificate is retrieved from the ID card or using the mobile ID service.
 
 
 .. literalinclude:: ../../common/xmltemplates/sp.template

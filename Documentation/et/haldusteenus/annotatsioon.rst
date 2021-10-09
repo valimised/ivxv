@@ -13,6 +13,7 @@ ning katab järgnevaid valdkondi:
 
 * Kogumisteenuse seisundi jälgimine;
 
-* Kogumisteenusest e-urni allalaadimine;
+* Kogumisteenuse väljavõtete allalaadimine
+  (e-valimiskast, hääletamise detailstatistika, hääletamisseansside nimekiri);
 
 * Kogumisteenuse haldussündmuste logi jälgimine.

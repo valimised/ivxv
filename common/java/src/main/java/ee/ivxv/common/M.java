@@ -23,10 +23,10 @@ public enum M implements Translatable {
     e_invalid_container, //
 
     e_dist_read_error, //
-    e_dist_station_id_not_unique, //
-    e_dist_station_id_invalid, //
-    e_dist_station_region_unknown, //
-    e_dist_bb_station_missing, //
+    e_dist_parish_id_not_unique, //
+    e_dist_parish_id_invalid, //
+    e_dist_parish_region_unknown, //
+    e_dist_bb_parish_missing, //
 
     e_cand_read_error, //
     e_cand_invalid_dist, //
@@ -35,6 +35,7 @@ public enum M implements Translatable {
     m_election_id, //
     m_datetime_pattern, //
     m_progress_bar, //
+    m_relative_progress_bar, //
 
     m_loading_params, //
     m_params_arg_for_cont, //
@@ -102,6 +103,10 @@ public enum M implements Translatable {
     m_dist_loaded, //
     m_dist_count,
 
+    m_skip_cmd_loading,
+    m_skip_cmd_loaded,
+    m_skip_cmd_arg_for_cont,
+
     m_proof_loading, //
     m_proof_loaded, //
     m_proof_count, //
@@ -110,7 +115,7 @@ public enum M implements Translatable {
     m_out_done, //
 
     r_ivl_description, //
-    r_ivl_station_name, //
+    r_ivl_parish_name, //
     r_ivl_district_name, //
     ;
 

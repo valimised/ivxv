@@ -75,7 +75,7 @@ func expand(p, src string) (expanded []*build.Package, ok bool) {
 	// Compile a regular expression from the slash-separated path with
 	// "..." wildcards.
 	re := regexp.QuoteMeta(filepath.ToSlash(p))
-	re = strings.Replace(re, `\.\.\.`, ".*", -1)
+	re = strings.ReplaceAll(re, `\.\.\.`, ".*")
 	if strings.HasSuffix(re, "/.*") {
 		// Special case: "foo" matches "foo/...".
 		re = re[:len(re)-len("/.*")] + "(/.*)?"
@@ -83,6 +83,8 @@ func expand(p, src string) (expanded []*build.Package, ok bool) {
 	match := regexp.MustCompile("^" + re + "$").MatchString
 
 	// Walk the directory looking for paths that match.
+	//
+	//nolint:errcheck // Only returns nil.
 	filepath.Walk(dir, func(path string, fi os.FileInfo, err error) error {
 		// Ignore faulty or non-directory files.
 		if err != nil || !fi.IsDir() {

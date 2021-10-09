@@ -118,19 +118,20 @@ type accuracy struct {
 	Micros  int `asn1:"tag:1,optional"`
 }
 
-// https://tools.ietf.org/html/rfc5035#page-3
-type signingCertificate struct {
-	Certs    []essCertID
+// https://tools.ietf.org/html/rfc5035#section-3
+type signingCertificateV2 struct {
+	Certs    []essCertIDv2
 	Policies asn1.RawValue `asn1:"optional"`
 }
 
-// https://tools.ietf.org/html/rfc5035#page-6
-type essCertID struct {
+// https://tools.ietf.org/html/rfc5035#section-4
+type essCertIDv2 struct {
+	HashAlgorithm         pkix.AlgorithmIdentifier `asn1:"optional"`
 	CertHash              []byte
 	IssuerAndSerialNumber issuerSerial `asn1:"optional"`
 }
 
-// https://tools.ietf.org/html/rfc5035#page-6
+// https://tools.ietf.org/html/rfc5035#section-4
 type issuerSerial struct {
 	// Although the RFC says SEQUENCE of generalName we will assume 1 name
 	Issuer       generalName
@@ -140,4 +141,10 @@ type issuerSerial struct {
 // https://tools.ietf.org/html/rfc5280#page-38
 type generalName struct {
 	DirectoryName pkix.RDNSequence `asn1:"explicit,tag:4"`
+}
+
+// https://tools.ietf.org/html/rfc6211#section-2
+type cmsAlgorithmProtection struct {
+	DigestAlgorithm    pkix.AlgorithmIdentifier
+	SignatureAlgorithm pkix.AlgorithmIdentifier `asn1:"tag:1"`
 }

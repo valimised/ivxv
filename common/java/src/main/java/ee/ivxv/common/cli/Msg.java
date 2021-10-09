@@ -11,7 +11,7 @@ public enum Msg implements NameHolder {
     e_app_error, e_common_args_invalid, e_multiple_tools, e_tool_args_invalid, e_tool_error, //
     e_tool_missing, e_unknown_arg, e_unknown_args_present, e_unknown_tool, //
 
-    w_test_mode,
+    w_test_mode, w_java_data_model, w_unknown_java_runtime, //
 
     app, tool, row_indent, tool_placeholder, value_placeholder, //
     usage, usage_arg_w_value, usage_arg_names, usage_arg_optional, //

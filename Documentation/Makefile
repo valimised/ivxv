@@ -1,62 +1,118 @@
-DOCS1 :=
-DOCS1 := $(DOCS1) et/uldsisukord
+# This Makefile supports two different invocation "modes".
+#
+# The default mode, invoked via "all", "pdf", or "html", builds all of the
+# documentation with a few exceptions, putting PDF files into $(DESTDIR)/pdf
+# (_build/pdf by default) and HTML files into $(DESTDIR)/html (_build/html by
+# default, "all" builds html only in development mode).
+#
+# Release mode, invoked via "release", builds only the release documents and
+# puts the PDF files, examples, and PDF diffs into a release hierarchy created
+# at $(DESTDIR) (_build/release by default).
 
-DOCS2 :=
-DOCS2 := $(DOCS2) et/arhitektuur
-DOCS2 := $(DOCS2) et/kasutusmall
-DOCS2 := $(DOCS2) et/protokollid
-DOCS2 := $(DOCS2) et/votmerakendus
-DOCS2 := $(DOCS2) en/architecture
-DOCS2 := $(DOCS2) en/protocols
+# Can be overridden from the command line.
+DESTDIR = _build
 
-DOCS3 := $(DOCS3) et/haldusteenus
-DOCS3 := $(DOCS3) et/ivxvapi
-DOCS3 := $(DOCS3) et/seadistuste_koostejuhend
-DOCS3 := $(DOCS3) et/systeemihalduri_juhend
-DOCS3 := $(DOCS3) et/audiitor
+# Build all Estonian and English documentation with a few exceptions.
+DOCS := $(wildcard et/* en/*)
+DOCS := $(filter-out et/example-config,$(DOCS)) # Does not contain reST.
+DOCS := $(filter-out et/formal,$(DOCS))         # Does not contain reST.
+DOCS := $(filter-out et/ivxv-pyapi,$(DOCS))     # Too many Python dependencies.
+DOCS := $(filter-out et/entroopia,$(DOCS))      # Does not have a Makefile?
 
-DESTDIR := _build
-DESTDIR1 := "$(DESTDIR)/1. Ülddokumendid"
-DESTDIR2 := "$(DESTDIR)/2. Spetsifikatsioonid"
-DESTDIR3 := "$(DESTDIR)/3. Juhendid"
-
-PDFDOCS1   := $(DOCS1:%=pdf1-%)
-PDFDOCS2   := $(DOCS2:%=pdf2-%)
-PDFDOCS3   := $(DOCS3:%=pdf3-%)
-
-CLEANDOCS :=
-CLEANDOCS := $(CLEANDOCS) $(DOCS1:%=clean-%)
-CLEANDOCS := $(CLEANDOCS) $(DOCS2:%=clean-%)
-CLEANDOCS := $(CLEANDOCS) $(DOCS3:%=clean-%)
-
+PDFDOCS   := $(DOCS:%=pdf-%)
+HTMLDOCS  := $(DOCS:%=html-%)
 
 .PHONY: all
-all: pdf
+all: pdf $(if $(DEVELOPMENT),html)
 
 .PHONY: pdf
-pdf: $(PDFDOCS1) $(PDFDOCS2) $(PDFDOCS3)
+pdf: $(PDFDOCS)
 
-.PHONY: $(PDFDOCS1)
-$(PDFDOCS1): pdf1-%:
-	$(MAKE) -C $* latexpdf
-	mkdir -p $(DESTDIR1)
-	cp -ru $*/_build/latex/*.pdf $(DESTDIR1)
+.PHONY: $(PDFDOCS)
+$(PDFDOCS): pdf-%:
+	mkdir -p $(DESTDIR)/pdf
+	$(MAKE) -C $* install-pdf DESTDIR=$(abspath $(DESTDIR)/pdf)
 
-.PHONY: $(PDFDOCS2)
-$(PDFDOCS2): pdf2-%:
-	$(MAKE) -C $* latexpdf
-	mkdir -p $(DESTDIR2)
-	cp -ru $*/_build/latex/*.pdf $(DESTDIR2)
+.PHONY: html
+html: $(HTMLDOCS)
 
-.PHONY: $(PDFDOCS3)
-$(PDFDOCS3): pdf3-%:
-	$(MAKE) -C $* latexpdf
-	mkdir -p $(DESTDIR3)
-	cp -ru $*/_build/latex/*.pdf $(DESTDIR3)
+.PHONY: $(HTMLDOCS)
+$(HTMLDOCS): html-%:
+	mkdir -p $(DESTDIR)/html/$(notdir $*) # Drop language prefix.
+	$(MAKE) -C $* install-html DESTDIR=$(abspath $(DESTDIR)/html/$(notdir $*))
+
+
+# Rules for generating release documentation.
+
+RELEASE1 = "$(abspath $(DESTDIR))/1. Ülddokumendid"
+DOCS1 := et/uldsisukord
+
+RELEASE2 = "$(abspath $(DESTDIR))/2. Spetsifikatsioonid"
+DOCS2 := \
+	et/arhitektuur \
+	et/kasutusmall \
+	et/protokollid \
+	et/votmerakendus \
+	en/architecture \
+	en/protocols
+
+RELEASE3 = "$(abspath $(DESTDIR))/3. Juhendid"
+DOCS3 := \
+	et/haldusteenus \
+	et/ivxvapi \
+	et/kogumisteenuse_haldusjuhend \
+	et/seadistuste_koostejuhend \
+	et/audiitor
+
+RELEASE4 = "$(abspath $(DESTDIR))/4. Näited"
+DOCS4 := \
+	et/example-config \
+	et/seadistuste_koostejuhend/config-examples/android-ios-config.json
+
+RELEASE5 = "$(abspath $(DESTDIR))/5. Muudatused"
+
+RELEASEDOCS := $(patsubst %,release-%,$(DOCS1) $(DOCS2) $(DOCS3) $(DOCS4))
+
+# If releasing locally (i.e., no explicit DESTDIR is given), then use
+# _build/release. RELEASE[1-5] must be recursively expanded for this to work.
+$(RELEASEDOCS): DESTDIR := $(DESTDIR)/release
+
+.PHONY: release
+release: $(RELEASEDOCS)
+
+.PHONY: $(RELEASEDOCS)
+$(DOCS1:%=release-%): release-%:
+	mkdir -p $(RELEASE1)
+	$(MAKE) -C $* install-pdf DESTDIR=$(RELEASE1)
+	mkdir -p $(RELEASE5)
+	$(MAKE) -C $* install-diff DESTDIR=$(RELEASE5)
+
+$(DOCS2:%=release-%): release-%:
+	mkdir -p $(RELEASE2)
+	$(MAKE) -C $* install-pdf DESTDIR=$(RELEASE2)
+	mkdir -p $(RELEASE5)
+	$(MAKE) -C $* install-diff DESTDIR=$(RELEASE5)
+
+$(DOCS3:%=release-%): release-%:
+	mkdir -p $(RELEASE3)
+	$(MAKE) -C $* install-pdf DESTDIR=$(RELEASE3)
+	mkdir -p $(RELEASE5)
+	$(MAKE) -C $* install-diff DESTDIR=$(RELEASE5)
+
+$(DOCS4:%=release-%): release-%:
+	mkdir -p $(RELEASE4)
+	cp --recursive --update $* $(RELEASE4)
+
+# Cleanup.
+
+# DOCS already contains DOCS[1-3].
+CLEANDOCS := $(DOCS:%=clean-%)
 
 .PHONY: clean
 clean: $(CLEANDOCS)
-	rm -rf $(DESTDIR)
+	-git worktree remove --force _master
+	rm -rf $(DESTDIR) _master
+	py3clean .
 
 .PHONY: $(CLEANDOCS)
 $(CLEANDOCS): clean-%:

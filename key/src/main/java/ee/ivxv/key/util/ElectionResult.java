@@ -46,7 +46,7 @@ public class ElectionResult {
 
     /**
      * Initialize using values.
-     * 
+     *
      * @param electionName Election identifier
      * @param candidates Candidates list
      * @param districts Districts list
@@ -69,7 +69,7 @@ public class ElectionResult {
      * <p>
      * The worker works in parallel to decryptions and continuously computes the tally. It separates
      * votes which are invalid or are given for invalid candidates
-     * 
+     *
      * @param voteCount
      * @param console
      * @param reporter
@@ -91,7 +91,7 @@ public class ElectionResult {
 
     /**
      * Add a vote for worker to process.
-     * 
+     *
      * @param vote
      */
     public void addVote(Vote vote) {
@@ -100,7 +100,7 @@ public class ElectionResult {
 
     /**
      * Output tally and the corresponding signature.
-     * 
+     *
      * @param outDir Output directory to store the tally and signature.
      * @param signer Protocol for constructing the signature for the tally.
      * @throws Exception When writing or communication with card tokens fail.
@@ -117,7 +117,7 @@ public class ElectionResult {
 
     /**
      * Output proofs of correct decryptions.
-     * 
+     *
      * @param outDir Output directory to store the proofs file.
      * @throws Exception When writing the proofs file fails.
      */
@@ -130,7 +130,7 @@ public class ElectionResult {
 
     /**
      * Output invalid votes.
-     * 
+     *
      * @param outDir Output directory to store the invalid votes.
      * @throws Exception When writing the file fails.
      */
@@ -225,7 +225,7 @@ public class ElectionResult {
 
         private void addVoteToTally(Vote vote, String choice) {
             tallySet.computeIfAbsent(vote.getQuestion(),
-                    q -> new Tally(electionName, candidates, districts)).getByStation()
+                    q -> new Tally(electionName, candidates, districts)).getByParish()
                     .get(vote.getDistrict()).get(vote.getStation())
                     .compute(choice, (c, count) -> count + 1);
         }

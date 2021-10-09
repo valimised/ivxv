@@ -127,8 +127,6 @@ func (r *RPC) Authenticate(args AuthArgs, resp *AuthResponse) (err error) {
 	sess := session{created: time.Now()}
 	resp.SessionCode, resp.ChallengeID, sess.challenge, sess.cert, err =
 		r.dds.MobileAuthenticate(args.Ctx, args.IDCode, args.PhoneNo)
-	// nolint: dupl, ignore duplicate error handling code, this is small
-	// enough to not warrant deduplication.
 	if err != nil {
 		if clierr := ddsToServerError(err); clierr != nil {
 			log.Error(args.Ctx, AuthenticateDDSError{Err: err})
@@ -278,8 +276,6 @@ func (r *RPC) GetCertificate(args CertificateArgs, resp *CertificateResponse) er
 	}
 
 	c, err := r.dds.GetMobileCertificate(args.Ctx, identity, args.PhoneNo)
-	// nolint: dupl, ignore duplicate error handling code, this is small
-	// enough to not warrant deduplication.
 	if err != nil {
 		if clierr := ddsToServerError(err); clierr != nil {
 			log.Error(args.Ctx, GetCertificateDDSError{Err: err})
@@ -326,8 +322,6 @@ func (r *RPC) Sign(args SignArgs, resp *SignResponse) (err error) {
 
 	resp.SessionCode, resp.ChallengeID, err = r.dds.MobileSignHash(
 		args.Ctx, identity, args.PhoneNo, args.Hash)
-	// nolint: dupl, ignore duplicate error handling code, this is small
-	// enough to not warrant deduplication.
 	if err != nil {
 		if clierr := ddsToServerError(err); clierr != nil {
 			log.Error(args.Ctx, SignDDSError{Err: err})
@@ -363,8 +357,6 @@ func (r *RPC) SignStatus(args SignStatusArgs, resp *SignStatusResponse) (err err
 	log.Log(args.Ctx, SignStatusReq{SessionCode: args.SessionCode})
 
 	resp.Signature, err = r.dds.GetMobileSignHashStatus(args.Ctx, args.SessionCode)
-	// nolint: dupl, ignore duplicate error handling code, this is small
-	// enough to not warrant deduplication.
 	if err != nil {
 		if clierr := ddsToServerError(err); clierr != nil {
 			log.Error(args.Ctx, SignStatusDDSError{Err: err})

@@ -33,7 +33,9 @@ public enum Msg implements NameHolder {
     m_convert_bb_to_bt_failed, m_convert_bb_to_bt_succ, m_convert_bt_to_bb_failed, //
     m_convert_bt_to_bb_succ, m_shuffle_step, m_shuffle_read, m_shuffle_read_prot_info, //
     m_shuffle_read_pubkey, m_shuffle_read_pc, m_shuffle_read_posc, m_shuffle_read_posr, //
-    m_shuffle_read_ciphs, m_shuffle_read_shuffled, m_shuffle_compute, m_shuffle_verify;
+    m_shuffle_read_ciphs, m_shuffle_read_shuffled, //
+    m_shuffle_verify, m_shuffle_verify_params, m_shuffle_verify_ni, m_shuffle_verify_permutation, //
+    m_shuffle_verify_rerandomisation;
 
     private final String shortName;
 

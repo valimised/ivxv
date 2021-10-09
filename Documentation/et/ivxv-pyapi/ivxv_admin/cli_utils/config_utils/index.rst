@@ -9,7 +9,7 @@ Config CLI utils
    :caption: Contents:
 
    command_load
-   command_remove
    config_apply
    config_validate
    load_secret_data_file
+   voter_list_download

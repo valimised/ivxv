@@ -144,7 +144,7 @@ skinparam component {
 interface "OCSP" <<External>> as i_sk_ocsp
 interface "Authentication OCSP" <<External>> as i_sk_auth
 interface "RFC3161" <<External>> as i_rfc_3161
-interface "DigiDocService" <<External>> as i_dds
+interface "Mobile ID Service" <<External>> as i_mid
 !endif
 
 
@@ -162,8 +162,8 @@ rfc_3161 -up- i_rfc_3161
 rfc_3161 -down- i_registered_votes
 
 
-[DigiDocService] <<Väline>> as ddoc_service
-ddoc_service -up- i_dds
+[Mobile ID Service] <<Väline>> as ddoc_service
+ddoc_service -up- i_mid
 
 !endif
 
@@ -316,8 +316,8 @@ package "Collector service" as collector {
         mid_auth -up- i_mid
         mid_sign -up- i_mid
 
-        mid_auth -down-> i_dds
-        mid_sign -down-> i_dds
+        mid_auth -down-> i_mid
+        mid_sign -down-> i_mid
     }
 
     rectangle "Extension modules" {

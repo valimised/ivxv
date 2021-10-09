@@ -54,7 +54,7 @@ public class ContextFactory {
     private static ContextFactory createInstance() {
         try {
             Class<?> type = Class.forName(OVERLOAD_CLASS);
-            Object instance = type.newInstance();
+            Object instance = type.getDeclaredConstructor().newInstance();
             ContextFactory result = (ContextFactory) instance;
             log.info("!!!Using overladed context factory {}!!!", OVERLOAD_CLASS);
             return result;

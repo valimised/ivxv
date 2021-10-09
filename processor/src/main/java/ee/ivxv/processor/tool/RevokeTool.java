@@ -52,7 +52,7 @@ public class RevokeTool implements Tool.Runner<RevokeArgs> {
     public boolean run(RevokeArgs args) throws Exception {
         tool.checkBbChecksum(args.bb.value(), args.bbChecksum.value());
 
-        BallotBox bb = tool.readJsonBb(args.bb.value(), BallotBox.Type.RECURRENT_VOTES_REMOVED);
+        BallotBox bb = tool.readJsonBb(args.bb.value(), BallotBox.Type.INVALID_CIPHERTEXTS_REMOVED);
         DistrictList dl = tool.readJsonDistricts(args.districts.value());
         RlLoader loader = new RlLoader(bb);
         Path out = args.out.value();

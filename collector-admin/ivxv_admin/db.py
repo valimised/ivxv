@@ -17,7 +17,7 @@ from . import (COLLECTOR_STATE_NOT_INSTALLED, COLLECTOR_STATES,
                SERVICE_STATES)
 from .config import CONFIG
 
-#: Path do database file
+#: Path to database file
 DB_FILE_PATH = CONFIG['ivxv_db_file_path']
 
 #: Database keys with default values
@@ -40,6 +40,8 @@ DB_KEYS = {
     'list/choices-loaded': '',
     # districts list file version in management service
     'list/districts': '',
+    # districts list file version in choices service
+    'list/districts-loaded': '',
     # election ID
     'election/election-id': '',
     # election start time
@@ -80,7 +82,7 @@ DB_SERVICE_SUBKEYS = {
 #: Database keys for certain service types
 DB_SERVICE_CONDITIONAL_SUBKEYS = {
     # mobile ID identity token key file checksum (sha256)
-    'dds-token-key': '',
+    'mid-token-key': '',
     # TLS certificate file checksum (sha256)
     'tls-cert': '',
     # TLS key file checksum (sha256)
@@ -129,11 +131,10 @@ class IVXVManagerDb:
     def __enter__(self, mode=None):
         """Enter the runtime context, open database."""
         mode = mode or self._db_mode
-        log.debug('Opening management database %s (mode: %s)',
-                  DB_FILE_PATH, mode)
+        log.debug("Opening management database %r (mode: %s)", DB_FILE_PATH, mode)
         retries = self._retries
         if mode != 'n' and not os.path.exists(DB_FILE_PATH):
-            log.error('Database file %s not found', DB_FILE_PATH)
+            log.error("Database file %r not found", DB_FILE_PATH)
             raise FileNotFoundError()
         db_error = OSError()
         while retries > 0:
@@ -188,20 +189,25 @@ class IVXVManagerDb:
         ]:
             pass
         elif key == 'collector/state':
-            assert value in COLLECTOR_STATES, (
-                'Invalid value for %s: %s' % (key, value))
+            assert value in COLLECTOR_STATES, f"Invalid value for {key!r}: {value!r}"
         elif re.match('election/(election|service)(start|stop)$', key):
             assert not value or dateutil.parser.parse(value)
         elif (re.match('election/auth/.+$', key)
               or key == 'election/tsp-qualification'):
             assert value == 'TRUE'
-        elif key in DB_KEYS or re.match(r'list/voters[0-9]{2}(-loaded)?$',
-                                        key):
+        elif key in DB_KEYS or key == "list/voters0000":
             if value != '':
-                assert len(value.split(' ')) == 2
+                assert value.count(" ") == 1, f"Invalid value {value!r}"
                 cn, timestamp = value.split(' ')
                 assert re.match(r'^(.+,){2}\d{11}$', cn)
                 dateutil.parser.parse(timestamp)
+        elif re.match(r"list/voters[0-9]{4}$", key):
+            assert value
+            assert value.count(" ") == 1, f"Invalid value {value!r}"
+            url_or_signature, timestamp = value.split(" ")
+            dateutil.parser.parse(timestamp)
+        elif re.match(r"list/voters[0-9]{4}-state$", key):
+            assert value in ["PENDING", "APPLIED", "INVALID", "SKIPPED"]
         elif re.match(r'host/.+/.+$', key):
             key_type = key.split('/')[2]
             assert key_type in DB_HOST_SUBKEYS, (
@@ -211,17 +217,16 @@ class IVXVManagerDb:
             assert key_type in ALLOWED_SERVICE_KEYS, (
                 'Invalid service key type %s' % key_type)
             if key_type == 'state':
-                assert value in SERVICE_STATES, (
-                    'Invalid value for %s: %s' % (key, value))
+                assert value in SERVICE_STATES, f"Invalid value for {key!r}: {value!r}"
             elif key_type == 'backup-times':
-                assert value == '' or re.match(
-                    r'[0-9]{2}:[0-9]{2}( [0-9]{2}:[0-9]{2})*$',
-                    value), ('Invalid value for %s: %s' % (key, value))
+                assert value == "" or re.match(
+                    r"[0-9]{2}:[0-9]{2}( [0-9]{2}:[0-9]{2})*$", value
+                ), f"Invalid value for {key!r}: {value!r}"
         elif re.match(r'user/.+$', key):
             assert re.match(r'user/(.+,){2}\d{11}$', key), (
-                'Invalid user CN: %s' % key.split('/')[1])
+                f"Invalid user CN {key.split('/')[1]!r}")
         else:
-            raise KeyError('Invalid database field name: ' + key)
+            raise KeyError(f"Invalid database field name {key!r}")
 
         # Safe operation reads value before writing it.
         # This is to avoid unneeded values after database initialization (e.g.
@@ -229,14 +234,14 @@ class IVXVManagerDb:
         if safe:
             self.db[key]
 
-        log.debug('Setting value %s = "%s"', key, value)
+        log.debug("Setting value %r = %r", key, value)
         self.db[key] = value
 
     def rm_value(self, key):
         """Remove database record."""
         assert isinstance(key, str)
 
-        log.debug('Removing record %s', key)
+        log.debug("Removing record %r", key)
         del self.db[key]
 
     def get_all_values(self, section=None):
@@ -266,7 +271,7 @@ class IVXVManagerDb:
     @classmethod
     def reset(cls):
         """Reset database."""
-        log.info('Initializing management database %s', DB_FILE_PATH)
+        log.info("Initializing management database %r", DB_FILE_PATH)
         db = cls()
         db.__enter__(mode='n')
 
@@ -304,6 +309,6 @@ def check_db_dir():
     if os.path.exists(db_path):
         return db_file_path
 
-    log.error('Database directory "%s" does not exist', db_path)
+    log.error('Database directory %r does not exist', db_path)
 
     return None

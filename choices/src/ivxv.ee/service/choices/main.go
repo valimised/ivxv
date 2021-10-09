@@ -22,8 +22,9 @@ import (
 
 // RPC is the handler for choices service calls.
 type RPC struct {
-	storage   *storage.Client
-	forceList string // If set, VoterChoices always returns this list.
+	storage     *storage.Client
+	forceList   string // If set, VoterChoices always returns this list.
+	foreignCode string // Administrative unit code for foreign voters.
 }
 
 // ChoicesArgs are the arguments provided to a call of RPC.Choices.
@@ -53,8 +54,6 @@ func (r *RPC) Choices(args ChoicesArgs, resp *Response) (err error) {
 	log.Log(args.Ctx, ChoicesReq{Choices: args.Choices})
 	resp.Choices = args.Choices
 
-	// nolint: dupl, ignore duplicate code from VoterChoices, deduplicating
-	// this code is not worth the effort and would impact readability.
 	if resp.List, err = r.storage.GetChoices(args.Ctx, args.Choices); err != nil {
 		if errors.CausedBy(err, new(storage.NotExistError)) != nil {
 			log.Error(args.Ctx, BadChoicesError{Err: err})
@@ -85,9 +84,7 @@ func (r *RPC) VoterChoices(args VoterArgs, resp *Response) (err error) {
 	if len(r.forceList) > 0 {
 		resp.Choices = r.forceList
 	} else {
-		_, resp.Choices, err = r.storage.VoterChoices(args.Ctx, voter)
-		// nolint: dupl, ignore duplicate code from Choices, deduplicating
-		// this code is not worth the effort and would impact readability.
+		_, resp.Choices, err = r.storage.VoterChoices(args.Ctx, voter, r.foreignCode)
 		if err != nil {
 			if errors.CausedBy(err, new(storage.NotExistError)) != nil {
 				log.Error(args.Ctx, IneligibleVoterError{Err: err})
@@ -153,6 +150,7 @@ func choicesmain() (code int) {
 		}
 
 		rpc.forceList = strings.TrimSpace(elec.IgnoreVoterList)
+		rpc.foreignCode = strings.TrimSpace(elec.VoterForeignEHAKDefault())
 	}
 
 	var s *server.S

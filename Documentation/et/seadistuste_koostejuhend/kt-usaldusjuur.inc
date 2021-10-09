@@ -86,6 +86,14 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
         Maksimaalne ajanihe ajatempli loomise ja allkirjastamise vahel
         sekundites.
 
+:container.bdoc.tsdelaytime:
+
+        Kasutatakse ainult juhul kui ``container.bdoc.profile`` on ``TS``.
+
+        Maksimaalne ajanihe ajatempli ja kehtivuskinnituse loomise vahel
+        sekundites. Välja puudumise või väärtuse 0 korral peavad mõlemad olema
+        loodud samal sekundil.
+
 :authorizations:
 
         Kohustuslik väli.

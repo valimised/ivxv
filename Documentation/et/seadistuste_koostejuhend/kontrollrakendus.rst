@@ -20,6 +20,7 @@ avalikustamist.
 
 Seadistus koosneb viiest peamisest rühmast
 
+* :token:`versions` - Rakenduse nõutud versioon
 * :token:`texts` - Kasutajaliideses kasutatavad tekstid
 * :token:`errors` - Kasutajaliideses kasutatavad veateated
 * :token:`colors` - Kasutajaliidese värvide koodid
@@ -29,6 +30,18 @@ Seadistus koosneb viiest peamisest rühmast
 
 Kõiki seadistatavaid väärtusi näeb näidisseadistusest. Kõik väärtused
 on kohustuslikud.
+
+Versioonide seadistamine
+------------------------
+
+Kontrollrakenduse versioon peab olema suurem või võrdne seadistuses määratud
+versiooniga. Versioonid kuuluvad rühma :token:`versions`:
+
+* :token:`android_version_code` - Android-rakenduse minimaalne versioonikood.
+  Väärtus peab olema positiivne JSON täisarv.
+* :token:`ios_bundle_version` - iOS-rakenduse minimaalne versioonisõne. Väärtus
+  peab olema JSON sõne, mis koosneb punktidega eraldatud positiivsetest
+  täisarvudest.
 
 Parameetrite seadistamine
 -------------------------
@@ -75,5 +88,5 @@ tekstid on parametriseeritavad:
 Näide
 -----
 
-.. literalinclude:: config-examples/conf_verification_template.json
+.. literalinclude:: config-examples/android-ios-config.json
    :language: json

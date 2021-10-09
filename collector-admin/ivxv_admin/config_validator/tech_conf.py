@@ -29,7 +29,7 @@ class ServicesSchema(Model):
         peeraddress = StringType(regex=r'.+:[0-9]+')
 
     proxy = ListType(ModelType(ServiceSchema))
-    dds = ListType(ModelType(ServiceSchema))
+    mid = ListType(ModelType(ServiceSchema))
     voting = ListType(ModelType(ServiceSchema))
     choices = ListType(ModelType(ServiceSchema))
     verification = ListType(ModelType(ServiceSchema))
@@ -115,15 +115,12 @@ class CollectorTechnicalConfigSchema(Model):
 
         def validate(self, value, context=None):
             if not re.match(r'[0-9]{2}:[0-9]{2}', value):
-                raise ValidationError(
-                    'Value must be in format HH:MM (not "%s")' % value)
+                raise ValidationError(f"Value must be in format HH:MM (not {value!r})")
             hour, minute = value.split(':')
             if int(hour) >= 24:
-                raise ValidationError(
-                    'Hour must be smaller than 24 (not "%s")' % value)
+                raise ValidationError(f"Hour must be smaller than 24 (not {value!r})")
             if int(minute) >= 60:
-                raise ValidationError(
-                    'Minute must be smaller than 60 (not "%s")' % value)
+                raise ValidationError(f"Minute must be smaller than 60 (not {value!r})")
             return super().validate(value, context)
 
     backup = ListType(BackupTimeType)

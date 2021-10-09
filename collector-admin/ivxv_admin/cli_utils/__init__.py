@@ -36,6 +36,9 @@ def init_cli_util(docstr, allow_root=False):
     # validate CLI arguments
     cli_args = docopt(textwrap.dedent(docstr), version=__version__)
 
+    # set log level
+    log.setLevel(cli_args.get('--log-level', 'INFO'))
+
     # check user rights
     if not allow_root and not os.getuid():
         log.error('IVXV collector admin utils cannot be run as root')

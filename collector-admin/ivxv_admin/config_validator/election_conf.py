@@ -7,12 +7,18 @@ Election config validator.
 
 from schematics.exceptions import ValidationError
 from schematics.models import Model
-from schematics.types import (BooleanType, DateTimeType, IntType, ListType,
-                              ModelType, StringType, URLType)
+from schematics.types import (
+    BooleanType,
+    DateTimeType,
+    IntType,
+    ListType,
+    ModelType,
+    StringType,
+    URLType,
+)
 
 from .fields import CertificateType, ElectionIdType, PublicKeyType
-from .schemas import (ContainerSchema, OCSPSchema, OCSPSchemaNoURL, TSPSchema,
-                      protocol_cfg)
+from .schemas import ContainerSchema, OCSPSchema, TSPSchema, protocol_cfg
 
 
 class ElectionConfigSchema(Model):
@@ -24,6 +30,7 @@ class ElectionConfigSchema(Model):
         """Validating schema for election verification config."""
         count = IntType(required=True, min_value=0)
         minutes = IntType(required=True, min_value=0)
+        latestonly = BooleanType(default=False)
 
     verification = ModelType(ElectionVerificationSchema, required=True)
 
@@ -53,6 +60,7 @@ class ElectionConfigSchema(Model):
         servicestop = DateTimeType(required=True)
 
     period = ModelType(ElectionPeriodSchema, required=True)
+    voterforeignehak = StringType(regex=r'^[0-9]{1,10}$')
     ignorevoterlist = StringType()
 
     class VoterListSchema(Model):
@@ -61,10 +69,18 @@ class ElectionConfigSchema(Model):
 
     voterlist = ModelType(VoterListSchema, required=True)
 
+    class VisSchema(Model):
+        """Validating schema for VIS service config."""
+
+        url = URLType(required=True)
+        ca = ListType(CertificateType)
+
+    vis = ModelType(VisSchema, required=True)
+
     class AuthSchema(Model):
         """Validating schema for voter authentication config."""
 
-        # FIXME: If service.dds exists, auth.ticket field must exist
+        # FIXME: If service.mid exists, auth.ticket field must exist
         class TicketAuthSchema(Model):
             """Validating schema for ticket authentication config."""
 
@@ -93,20 +109,21 @@ class ElectionConfigSchema(Model):
 
     vote = ModelType(ContainerSchema, required=True)
 
-    class DDSSchema(Model):
-        """Validating schema for DDS config."""
+    class MIDSchema(Model):
+        """Validating schema for Mobile ID config."""
         url = URLType(required=True)
-        countrycode = StringType(required=True)
+        relyingpartyuuid = StringType(required=True)
+        relyingpartyname = StringType(required=True)
         language = StringType(
             required=True, choices=['EST', 'ENG', 'RUS', 'LIT'])
-        servicename = StringType(required=True, max_length=20)
         authmessage = StringType(required=True, max_length=40)
         signmessage = StringType(required=True, max_length=40)
-        idcoderequired = BooleanType()
-        phonerequired = BooleanType()
+        messageformat = StringType(default='GSM-7', choices=['GSM-7', 'UCS-2'])
+        authchallengesize = IntType(default=32, choices=[32, 48, 64])
+        statustimeoutms = IntType()
         roots = ListType(CertificateType, required=True)
         intermediates = ListType(CertificateType)
-        ocsp = ModelType(OCSPSchemaNoURL)
+        ocsp = ModelType(OCSPSchema)
 
         # pylint: disable=no-self-use
         def validate_phonerequired(self, data, value):
@@ -119,7 +136,7 @@ class ElectionConfigSchema(Model):
                 pass  # error in data structure is catched later
             return value
 
-    dds = ModelType(DDSSchema)
+    mid = ModelType(MIDSchema)
 
     qualification = ListType(
         protocol_cfg({
@@ -143,8 +160,7 @@ class ElectionConfigSchema(Model):
                                    ['electionstart', 'electionstop'],
                                    ['electionstop', 'servicestop']]:
                 if data['period'][point1] >= data['period'][point2]:
-                    raise ValidationError('Value "%s" is bigger than "%s"' %
-                                          (point1, point2))
+                    raise ValidationError(f"Value {point1!r} is bigger than {point2!r}")
         except KeyError:
             pass  # error in data structure is catched later
         return value

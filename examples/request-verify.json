@@ -1,7 +1,0 @@
-{
-	"id": 1,
-	"method": "RPC.Verify",
-	"params": [{
-		"voteid": "8KIw3bdgLb+ET7N3odcH2A=="
-	}]
-}

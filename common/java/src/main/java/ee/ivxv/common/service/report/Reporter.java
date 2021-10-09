@@ -46,6 +46,15 @@ public interface Reporter {
     Record newRevocationRecordForRecurrentVote(String voterId, Ballot b);
 
     /**
+     * Creates and returns new record of revocation report for invalid vote.
+     * 
+     * @param voterId
+     * @param b
+     * @return
+     */
+    Record newRevocationRecordForInvalidVote(String voterId, Ballot b);
+
+    /**
      * Creates and returns new record for revocation report.
      * 
      * @param action
@@ -139,7 +148,7 @@ public interface Reporter {
     }
 
     enum RevokeAction {
-        RECURRENT("korduv e-hääl"), RESTORED("ennistatud"), REVOKED("tühistatud");
+        RECURRENT("korduv e-hääl"), RESTORED("ennistatud"), REVOKED("tühistatud"), INVALID("kehtetu sedel");
 
         final String value;
 

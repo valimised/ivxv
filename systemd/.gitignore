@@ -1,5 +1,5 @@
 ivxv-choices@.service
-ivxv-dds@.service
+ivxv-mid@.service
 ivxv-proxy@.service
 ivxv-storage@.service
 ivxv-verification@.service

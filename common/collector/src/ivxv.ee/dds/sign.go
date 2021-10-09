@@ -57,14 +57,14 @@ func (c *Client) MobileSignHash(ctx context.Context, id, phone string, hash []by
 
 // https://sk-eid.github.io/dds-documentation/api/api_docs/#getmobilesignhashstatusrequest
 type getMobileSignHashStatusRequest struct {
-	// nolint: lll, the XML namespace forces us to use a long line.
+	//nolint:lll // XML namespace forces us to use a long line.
 	XMLName       xml.Name `xml:"http://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl GetMobileSignHashStatusRequest"`
 	Sesscode      string
 	WaitSignature bool
 }
 
 type getMobileSignHashStatusResponse struct {
-	// nolint: lll, the XML namespace forces us to use a long line.
+	//nolint:lll // XML namespace forces us to use a long line.
 	XMLName   xml.Name `xml:"http://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl GetMobileSignHashStatusResponse"`
 	Status    string
 	Signature string

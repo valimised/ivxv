@@ -41,17 +41,17 @@ StatistikaHTTP -> [Agentdeemon]
 
 /' Haldusteenus '/
 [Agentdeemon] --> [Andmefailid] : Kogutud \n andmete \n kirjutamine
-[Haldusdeemon] --> [Andmefailid] : 1. Kasutaja \n lisamine ja \n muutmine \n 2. e-urni \n salvestamine
+[Haldusdeemon] --> [Andmefailid] : 1. Kasutaja \n lisamine ja \n muutmine \n 2. e-valimiskasti \n salvestamine
 
 [Andmefailid] --> [Veebiserver] : Genereeritud \n andmete \n lugemine
 
 [Veebiserver] --> [Andmefailid] : Korralduste \n laadimine
 [Veebiserver] --> HaldusdeemonHTTP : Korralduste \n rakendamine
 
-[Andmefailid] --> [Veebiserver] : E-urni \n laadimine
+[Andmefailid] --> [Veebiserver] : E-valimiskasti \n laadimine
 
 /' Teenusserverid '/
-TeenusSSH --> [Haldusdeemon] : E-urni \n laadimine \n talletusteenusest
+TeenusSSH --> [Haldusdeemon] : E-valimiskasti \n laadimine \n talletusteenusest
 [Utiliidid] --> TeenusSSH : 1. Teenuse paigaldus \n 2. Teenuse seadistamine \n 3. Nimekirja rakendamine
 [Agentdeemon] --> TeenusSSH : Teenuse seire
 

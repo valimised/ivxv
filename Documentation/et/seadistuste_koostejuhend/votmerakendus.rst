@@ -44,24 +44,9 @@ suurem tõenäosus, et neid on sõltumatult kontrollitud.
 parameetrite genereerimist. Antud standardi korral saab kontrollida defineeritud
 parameetrite korrektsust järgneva Sage skriptiga:
 
-   .. code-block:: python
-      :linenos:
-
-      n = 3072
-      p_found = False
-      c = 0
-
-      while not(p_found):
-         if (Mod(c,10000) == 0):
-             print "c is: ",c
-         p = 2^n - 2^(n-64) - 1 + 2^64*(floor(2^(n-130)*pi.n(prec=10000))+c)
-         if is_pseudoprime(p):
-             # print p, " is prime"
-             q = (p-1)/2
-             if is_pseudoprime(q):
-                 print p, " is safe prime"
-                 p_found = True
-         c = c + 1
+.. literalinclude:: genparam.py
+   :language: python
+   :linenos:
 
 
 Uute parameetrite deterministlik ja kontrollitav genereerimine
@@ -271,16 +256,16 @@ dekrüpteerimine võimalik.
 
 :decrypt.anonballotbox:
 
-      Töötlemisrakenduse või miksimisrakenduse poolt loodud e-urn anonüümistatud
+      Töötlemisrakenduse või miksimisrakenduse poolt loodud e-valimiskast anonüümistatud
       häältega.
 
 :decrypt.anonballotbox_checksum:
 
-      Anonüümistatud häältega e-urni allkirjastatud SHA256 kontrollsummafail.
+      Anonüümistatud häältega e-valimiskasti allkirjastatud SHA256 kontrollsummafail.
 
 :decrypt.questioncount:
 
-      Küsimuste arv anonüümistatud e-urnis. Vaikimisi väärtus on 1.
+      Küsimuste arv anonüümistatud e-valimiskastis. Vaikimisi väärtus on 1.
 
 :decrypt.candidates:
 

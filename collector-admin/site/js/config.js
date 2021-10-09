@@ -23,16 +23,22 @@ function loadPageData() {
         'choices', state, state['config-apply']['choices'], 'Valikute nimekiri');
       display_cfg_panel(
         'districts', state, state['list']['districts'], 'Ringkondade nimekiri');
-      var list_no;
+      var changeset_no;
       display_cfg_panel(
-        'voters01', state, state['config-apply']['voters01'], 'Valijate nimekiri (algne)');
-      for (list_no = 2; list_no < 13; list_no++) {
-        var list_id = 'voters' + (list_no < 10 ? '0' : '') + list_no;
-        if (state['config-apply'][list_id] === undefined)
+        'voters0000', state, state['config-apply']['voters0000'], 'Valijate nimekiri (algne)');
+      for (var i = 1; i < 10000; i++) {
+        var iStr = 'voters' + String(i).padStart(4, '0');
+        if (!(iStr + '-state' in state['list']))
           break;
-        display_cfg_panel(
-          list_id, state, state['config-apply'][list_id],
-          'Valijate nimekirja parandus nr. ' + (list_no - 1));
+        if (iStr in state['config-apply']) {
+          display_cfg_panel(
+            iStr, state, state['config-apply'][iStr],
+            'Valijate muudatusnimekiri nr. ' + i);
+        } else {
+          display_cfg_panel(
+            iStr, state, state['list'][iStr],
+            'Valijate muudatusnimekiri nr. ' + i);
+        }
       }
 
       hideErrorMessage();
@@ -114,14 +120,29 @@ function display_cfg_panel(id_prefix, state, cfg, title) {
       panel.addClass('panel-warning');
     }
 
-    panel_body
-      .find('div:first')
-      .html(
-        '<div>Seisund: ' + (cfg['completed'] ? 'rakendatud' : 'rakendamisel') + '</div>' +
-        '<div>Rakendatav versioon: <span id="cfg-ver-' + id_prefix + '">' + cfg['version'] + '</a></div>' +
-        '<div>Rakendamise katseid: ' + cfg['attempts'] + '</div>'
-      );
-    outputCmdVersion('#cfg-ver-' + id_prefix, id_prefix, state)
+    if (id_prefix.startsWith('voters')) {
+      stateStr = voterListStateDescriptions.get(state['list'][id_prefix + '-state']);
+    } else {
+      stateStr = cfg['completed'] ? 'rakendatud' : 'rakendamisel';
+    }
+    if (id_prefix.startsWith('voters') && !(id_prefix in state['config-apply'])) {
+      panel_body
+        .find('div:first')
+        .html(
+          '<div>Seisund: ' + stateStr + '</div>' +
+          '<div>Rakendatav versioon: <span id="cfg-ver-' + id_prefix + '">[ määramata ]</a></div>' +
+          '<div>Rakendamise katseid: 0</div>'
+        );
+    } else {
+      panel_body
+        .find('div:first')
+        .html(
+          '<div>Seisund: ' + stateStr + '</div>' +
+          '<div>Rakendatav versioon: <span id="cfg-ver-' + id_prefix + '">' + cfg['version'] + '</a></div>' +
+          '<div>Rakendamise katseid: ' + cfg['attempts'] + '</div>'
+        );
+      outputCmdVersion('#cfg-ver-' + id_prefix, id_prefix, state);
+    }
 
     if (cfg['attempts']) {
       panel_body.find('button').show('slow');

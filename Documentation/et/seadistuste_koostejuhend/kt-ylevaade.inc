@@ -4,7 +4,8 @@
 --------
 
 Kogumisteenuse juhtimine toimub signeeritud korralduste abil. Korraldused
-koostatakse tekstiredaktori abil ja signeeritakse ID-kaardiga.
+koostatakse operaatori poolt tekstiredaktori abil või imporditakse Valimiste
+Infosüsteemist. Korraldused signeeritakse ID-kaardiga.
 
 Nimekiri kogumisteenuse haldamise korraldustest:
 
@@ -16,9 +17,13 @@ Nimekiri kogumisteenuse haldamise korraldustest:
 
 #. Valikute nimekiri;
 
-#. Valijate nimekiri.
+#. Ringkondade nimekiri;
 
-#. Kasutajate volituste määramine;
+#. Valijate nimekiri;
+
+#. Valijate nimekirja vahelejätmine;
+
+#. Kasutajate volituste määramine.
 
 Lisaks korraldustele tuleb kogumisteenusele genereerida ka komplekt
 krüptovõtmeid.
@@ -83,7 +88,7 @@ Korralduspaki vorming
 Korralduspakk on BDOC-vormingus konteiner, milles on korraldusfail ja
 signatuurid. Üks korralduspakk tohib sisaldada ainult ühte korraldust.
 YAML-vormingus seadistuse (usaldusjuure seadistus, tehniline seadistus ja
-valimiste seadistus) korral võivad failis olla ka seadistusfaili pool
+valimiste seadistus) korral võivad failis olla ka seadistusfaili poolt
 kasutatavad välised failid.
 
 .. vim:syntax=rst:

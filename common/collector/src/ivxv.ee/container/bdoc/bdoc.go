@@ -14,7 +14,6 @@ import (
 	"encoding/asn1"
 	"encoding/base64"
 	"io"
-	"math/big"
 	"net/url"
 	"strings"
 	"time"
@@ -102,6 +101,10 @@ type Conf struct {
 	// TSP is the configuration for the TSP client used to check timestamps
 	// if Profile is TS.
 	TSP tsp.Conf
+
+	// TSDelayTime is the maximum time in seconds that the timestamp and
+	// the OCSP response can differ if Profile is TS.
+	TSDelayTime int64
 }
 
 // Opener is a configured BDOC container opener.
@@ -113,6 +116,7 @@ type Opener struct {
 	ocsp     *ocsp.Client
 	tsp      *tsp.Client
 	profile  Profile
+	tsdelay  time.Duration
 }
 
 // New returns a new BDOC container opener.
@@ -147,6 +151,7 @@ func New(c *Conf) (*Opener, error) {
 		if o.tsp, err = tsp.New(&c.TSP); err != nil {
 			return nil, TSPClientError{Err: err}
 		}
+		o.tsdelay = time.Duration(c.TSDelayTime) * time.Second
 		fallthrough
 	case TM: // Create OCSP client for checking revocation status.
 		if o.ocsp, err = ocsp.New(&c.OCSP); err != nil {
@@ -186,7 +191,7 @@ func (o *Opener) Open(encoded io.Reader) (bdoc *BDOC, err error) {
 	defer func(bdoc *BDOC) {
 		// Close all files on error.
 		if err != nil {
-			bdoc.Close() // nolint: errcheck, always returns nil.
+			bdoc.Close()
 		}
 	}(bdoc)
 
@@ -212,8 +217,8 @@ func (o *Opener) Open(encoded io.Reader) (bdoc *BDOC, err error) {
 
 		// Parse signer certificate.
 		var signer *x509.Certificate
-		if signer, err = parseBase64Certificate(s.KeyInfo.
-			X509Data.X509Certificate.Value); err != nil {
+		if signer, err = cryptoutil.Base64Certificate(strings.TrimSpace(
+			s.KeyInfo.X509Data.X509Certificate.Value)); err != nil {
 
 			return nil, SignerCertificateParseError{
 				FileName:    file.name,
@@ -359,10 +364,20 @@ func (o *Opener) check(s *signature, c *container.Signature, files map[string]*a
 		}
 		err = checkNonce(nonce, sigval)
 	case TS:
-		if _, _, err = checkOCSP(ocsp, c.Signer, c.Issuer, o.ocsp); err != nil {
+		c.SigningTime, err = checkTimestamp(&usp.SignatureTimeStamp, &s.SignatureValue, o.tsp)
+		if err != nil {
 			return err
 		}
-		c.SigningTime, err = checkTimestamp(&usp.SignatureTimeStamp, &s.SignatureValue, o.tsp)
+		producedAt, _, err := checkOCSP(ocsp, c.Signer, c.Issuer, o.ocsp)
+		if err != nil {
+			return err
+		}
+		if diff := producedAt.Sub(c.SigningTime); diff < 0 || diff > o.tsdelay {
+			return TimestampAndOCSPTimeMismatchError{
+				TimestampGenTime: c.SigningTime,
+				OCSPProducedAt:   producedAt,
+			}
+		}
 	}
 	return err
 }
@@ -400,15 +415,11 @@ func checkSignatureValue(s *signature, c *x509.Certificate) (signature []byte, e
 	recode := signature
 	switch x509sa {
 	case x509.ECDSAWithSHA256, x509.ECDSAWithSHA384, x509.ECDSAWithSHA512:
-		var r, s *big.Int
-		if r, s, err = cryptoutil.ParseECDSAXMLSignature(signature); err != nil {
-			return nil, ECDSASignatureParseError{Signature: signature, Err: err}
-		}
-		if recode, err = asn1.Marshal(struct {
-			R *big.Int
-			S *big.Int
-		}{r, s}); err != nil {
-			return nil, ECDSASignatureASN1MarshalError{Err: err}
+		if recode, err = cryptoutil.ReEncodeECDSASignature(signature); err != nil {
+			return nil, ReEncodeECDSASignatureError{
+				Signature: signature,
+				Err:       err,
+			}
 		}
 	}
 
@@ -570,7 +581,7 @@ func checkSigningCertificate(s *signingCertificate, c *x509.Certificate) error {
 	issuer, err := cryptoutil.DecodeRDNSequence(s.Cert.IssuerSerial.X509IssuerName.Value)
 	if err != nil {
 		return SigningCertificateIssuerParseError{
-			Issuer: s.Cert.IssuerSerial.X509IssuerName,
+			Issuer: s.Cert.IssuerSerial.X509IssuerName.Value,
 			Err:    err,
 		}
 	}
@@ -579,7 +590,7 @@ func checkSigningCertificate(s *signingCertificate, c *x509.Certificate) error {
 	if !cryptoutil.RDNSequenceEqual(c.Issuer.ToRDNSequence(), issuer) {
 		return SigningCertificateIssuerError{
 			KeyInfo:            c.Issuer,
-			SigningCertificate: s.Cert.IssuerSerial.X509IssuerName,
+			SigningCertificate: s.Cert.IssuerSerial.X509IssuerName.Value,
 		}
 	}
 	return nil
@@ -677,6 +688,13 @@ func checkNonce(nonce []byte, signature []byte) error {
 func checkTimestamp(timestamp *xadesTimeStamp, sigval *signatureValue, tsp *tsp.Client) (
 	genTime time.Time, err error) {
 
+	c14n := timestamp.CanonicalizationMethod
+	if c14n.XMLElement.isPresent() && c14n.Algorithm != xmlc14n11 {
+		return genTime, UnsupportedTimestampCanonicalizationAlgorithmError{
+			Algorithm: c14n.Algorithm,
+		}
+	}
+
 	value := timestamp.EncapsulatedTimeStamp.Value
 	if len(value) == 0 {
 		return genTime, TimestampMissingError{}
@@ -721,18 +739,6 @@ func checkXMLDigest(method digestMethod, data []byte, digest digestValue) error 
 		return DigestMismatchError{Expected: decoded, Calculated: calculated}
 	}
 	return nil
-}
-
-func parseBase64Certificate(c string) (*x509.Certificate, error) {
-	decoded, err := b64d(c)
-	if err != nil {
-		return nil, Base64DecodeError{Err: err}
-	}
-	cert, err := x509.ParseCertificate(decoded)
-	if err != nil {
-		return nil, CertificateParseError{Err: err}
-	}
-	return cert, nil
 }
 
 func (o *Opener) verifyCertificate(c *x509.Certificate, time time.Time) (

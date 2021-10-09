@@ -1,5 +1,6 @@
 package ee.ivxv.key.protocol.signing.shoup;
 
+import ee.ivxv.common.asn1.RSAParams;
 import ee.ivxv.common.crypto.SignatureUtil;
 import ee.ivxv.common.crypto.rnd.Rnd;
 import ee.ivxv.common.math.LagrangeInterpolation;
@@ -13,9 +14,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.SignatureException;
-import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Set;
+import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 
@@ -67,10 +68,10 @@ public class ShoupSigning implements SigningProtocol {
     @Override
     public byte[] sign(byte[] msg) throws ProtocolException {
 
-        byte[] salt = new byte[SignatureUtil.RSA.getPSSDigestLength()];
+        byte[] salt = new byte[SignatureUtil.RSA.RSA_PSS.HASH_LENGTH];
         byte[] signature;
         byte[][] sigShares;
-        RSAPrivateCrtKey[] parsedKeys;
+        RSAParams[] parsedKeys;
         try {
             parsedKeys = unpackAllBlobs(blobs);
         } catch (InvalidKeySpecException ex) {
@@ -100,22 +101,21 @@ public class ShoupSigning implements SigningProtocol {
         return signature;
     }
 
-    private RSAPrivateCrtKey[] unpackAllBlobs(Set<IndexedBlob> blobs)
-            throws InvalidKeySpecException {
-        RSAPrivateCrtKey[] parsed = new RSAPrivateCrtKey[tparams.getParties()];
+    private RSAParams[] unpackAllBlobs(Set<IndexedBlob> blobs) throws InvalidKeySpecException {
+        RSAParams[] parsed = new RSAParams[tparams.getParties()];
         for (IndexedBlob blob : blobs) {
-            parsed[blob.getIndex() - 1] = SignatureUtil.RSA.bytesToRSAPrivateKeyCrt(blob.getBlob());
+            parsed[blob.getIndex() - 1] = SignatureUtil.RSA.bytesToRSAParams(blob.getBlob());
         }
         return parsed;
     }
 
-    private boolean filterKeys(RSAPrivateCrtKey[] keys) throws ProtocolException {
+    private boolean filterKeys(RSAParams[] keys) throws ProtocolException {
         if (keys.length == 0) {
             throw new ProtocolException("No key shares parsed");
         }
         BigInteger mod = null;
         BigInteger pubexp = null;
-        for (RSAPrivateCrtKey sk : keys) {
+        for (RSAParams sk : keys) {
             if (sk == null) {
                 continue;
             }
@@ -135,14 +135,14 @@ public class ShoupSigning implements SigningProtocol {
         return true;
     }
 
-    private byte[][] generateSignatureShares(byte[] msg, RSAPrivateCrtKey[] keys, byte[] salt)
+    private byte[][] generateSignatureShares(byte[] msg, RSAParams[] keys, byte[] salt)
             throws SignatureException {
         byte[][] shares = new byte[keys.length][];
         for (int i = 0; i < shares.length; i++) {
             if (keys[i] == null) {
                 continue;
             }
-            shares[i] = SignatureUtil.RSA.generatePSSSignature(msg, keys[i], salt);
+            shares[i] = SignatureUtil.RSA.RSA_PSS.generateSignature(msg, keys[i], salt);
         }
         return shares;
     }
@@ -166,15 +166,15 @@ public class ShoupSigning implements SigningProtocol {
         BigInteger[] bezout = MathUtil.extendedEuclidean(e,
                 MathUtil.factorial(BigInteger.valueOf(tparams.getParties())));
         sigShare = sigShare.modPow(bezout[1], n);
-        encShare = SignatureUtil.RSA.PSSEncode(msg, n, salt);
+        encShare = SignatureUtil.RSA.RSA_PSS.encode(msg, n, salt);
         c = new BigInteger(1, encShare);
         c = c.modPow(bezout[0], n);
         sigShare = sigShare.multiply(c).mod(n);
         return sigShare.toByteArray();
     }
 
-    private BigInteger getModulus(RSAPrivateCrtKey[] keys) {
-        for (RSAPrivateCrtKey sk : keys) {
+    private BigInteger getModulus(RSAParams[] keys) {
+        for (RSAParams sk : keys) {
             if (sk == null) {
                 continue;
             }
@@ -183,8 +183,8 @@ public class ShoupSigning implements SigningProtocol {
         return null;
     }
 
-    private BigInteger getPublicExponent(RSAPrivateCrtKey[] keys) {
-        for (RSAPrivateCrtKey sk : keys) {
+    private BigInteger getPublicExponent(RSAParams[] keys) {
+        for (RSAParams sk : keys) {
             if (sk == null) {
                 continue;
             }
@@ -200,7 +200,8 @@ public class ShoupSigning implements SigningProtocol {
      */
     @Override
     public AlgorithmIdentifier getAlgorithmIdentifier() {
-        return new AlgorithmIdentifier(PKCSObjectIdentifiers.sha256WithRSAEncryption);
+        ASN1Primitive params = SignatureUtil.RSA.RSA_PSS.getDefaultAlgorithmIdentifier();
+        return new AlgorithmIdentifier(PKCSObjectIdentifiers.id_RSASSA_PSS, params);
     }
 
     /**

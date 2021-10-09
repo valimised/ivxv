@@ -16,10 +16,17 @@ import urllib.request
 import bottle
 from bottle import request, response
 
-from . import (COLLECTOR_STATE_CONFIGURED, COLLECTOR_STATE_FAILURE,
-               COLLECTOR_STATE_INSTALLED, COLLECTOR_STATE_NOT_INSTALLED,
-               COLLECTOR_STATE_PARTIAL_FAILURE, EVENT_LOG_FILENAME,
-               MANAGEMENT_DAEMON_URL, USER_ROLES)
+from . import (
+    COLLECTOR_STATE_CONFIGURED,
+    COLLECTOR_STATE_FAILURE,
+    COLLECTOR_STATE_INSTALLED,
+    COLLECTOR_STATE_NOT_INSTALLED,
+    COLLECTOR_STATE_PARTIAL_FAILURE,
+    EVENT_LOG_FILENAME,
+    MANAGEMENT_DAEMON_URL,
+    USER_ROLES,
+    __version__,
+)
 from .config import CONFIG, cfg_path
 
 FILE_UPLOAD_PATH = CONFIG['file_upload_path']
@@ -35,7 +42,7 @@ def abort(code=500, text='Unknown Error.'):
     """
     Abort execution and raise a HTTP error.
 
-    :raises: bottle.HTTPResponse
+    :raises bottle.HTTPResponse:
     """
     body = json.dumps(dict(message=text))
     raise bottle.HTTPResponse(
@@ -49,7 +56,7 @@ def log_query():
     if request.forms:
         log.info('POST params: %s', dict(request.forms))
     for key, fileobj in request.files.items():
-        log.info('FILE: field "%s", filename "%s"', key, fileobj.raw_filename)
+        log.info("FILE: field %r, filename %r", key, fileobj.raw_filename)
 
 
 @APP.route('/context.json')
@@ -105,6 +112,7 @@ def context():
                     'stage': state_json['election']['phase']
                 }
             }
+            context_data["collector"]["version"] = __version__
     user_data['permissions'] = sorted(set(user_data['permissions']))
     context_data['current-user'] = user_data
 
@@ -130,17 +138,34 @@ def context():
 
 @APP.post('/download-ballot-box')
 @APP.post('/download-consolidated-ballot-box')
-@APP.post('/remove-voters-lists')
+@APP.post('/skip-voters-list')
+@APP.post('/download-voter-detail-stats')
+@APP.post('/download-voting-sessions')
+@APP.post('/download-processor-input')
 def fwd_request():
     """Forward request to IVXV Management Service Daemon."""
     path = request.fullpath.split('/')[-1]
     daemon_url = MANAGEMENT_DAEMON_URL + path
 
-    with urllib.request.urlopen(daemon_url) as req_fp:
-        daemon_response = req_fp.read(1024)
+    data = urllib.parse.urlencode(request.forms).encode("UTF-8")
+    fwd_request = urllib.request.Request(daemon_url, data=data, method="GET")
+    max_response_size = 1024 * 1024
+    with urllib.request.urlopen(fwd_request) as req_fp:
+        daemon_response = req_fp.read(max_response_size)
+        if len(daemon_response) == max_response_size:
+            response.content_type = "application/json"
+            return json.dumps(
+                {
+                    "success": False,
+                    "message": f"Vastus on suurem kui {max_response_size} baiti",
+                }
+            )
+        response.content_type = req_fp.headers["Content-Type"] or "application/json"
+        for header in ["Content-Length", "Content-Disposition"]:
+            if req_fp.headers[header]:
+                response.set_header(header, req_fp.headers[header])
 
     # start response
-    response.content_type = 'application/json'
     response.expires = EXPIRES_DEFAULT
     return daemon_response
 

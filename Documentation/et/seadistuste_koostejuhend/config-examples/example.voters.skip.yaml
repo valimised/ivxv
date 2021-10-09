@@ -1,0 +1,5 @@
+# Valijate muudatusnimekirja nr. 15 vahelejätmise korralduse näide
+
+election: TESTCONF
+skip_voter_list: "https://vis-ehs-api.ria.ee/ehs-election-voters-changeset 2021-07-22T10:12:49Z"
+changeset: 15

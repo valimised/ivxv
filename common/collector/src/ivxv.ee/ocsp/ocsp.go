@@ -116,7 +116,6 @@ func (c *Client) Check(ctx context.Context, cert, issuer *x509.Certificate, nonc
 	var basic *basicOCSPResponse
 retry:
 	for attempt := uint64(0); ; attempt++ {
-		// nolint: dupl, No need to deduplicate such a small snippet.
 		switch resp, basic, err = c.submitRequest(ctx, reqCert, nonce); {
 		case err == nil:
 			break retry
@@ -197,7 +196,7 @@ func (c *Client) CheckResponse(response []byte, cert, issuer *x509.Certificate, 
 	// Unmarshal the basic response.
 	var basic basicOCSPResponse
 	if err = unmarshalResponse(response, &basic); err != nil {
-		return nil, BasicResponseUnmarshalError{Err: err}
+		return nil, err
 	}
 
 	// Generate the CertID.
@@ -222,6 +221,19 @@ func (c *Client) CheckResponse(response []byte, cert, issuer *x509.Certificate, 
 		Nonce:            respNonce,
 		RevocationReason: int(single.CertStatusRevoked.RevocationReason),
 	}, nil
+}
+
+// ParseTime parses a DER-encoded basic OCSP response and returns the time it
+// was produced at.
+//
+// Warning! ParseTime does not check the validity of the response, it only
+// returns the produced at time value.
+func ParseTime(response []byte) (time.Time, error) {
+	var basic basicOCSPResponse
+	if err := unmarshalResponse(response, &basic); err != nil {
+		return time.Time{}, err
+	}
+	return basic.TBSResponseData.ProducedAt, nil
 }
 
 func (c *Client) submitRequest(ctx context.Context, reqCert *certID, nonce []byte) (
@@ -315,11 +327,7 @@ func (c *Client) submitRequest(ctx context.Context, reqCert *certID, nonce []byt
 
 	// Unmarshal the basic response.
 	basic = new(basicOCSPResponse)
-	if err = unmarshalResponse(resp, basic); err != nil {
-		err = UnmarshalResponseError{Err: err}
-		return
-	}
-
+	err = unmarshalResponse(resp, basic)
 	return
 }
 

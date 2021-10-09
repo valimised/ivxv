@@ -3,7 +3,7 @@
 Annotatsioon
 ------------
 
-Juhend annab suunised IVXV andmeauditi teostamiseks Ubuntu 18.04 platvormil.
+Juhend annab suunised IVXV andmeauditi teostamiseks Ubuntu 20.04 platvormil.
 Kasulik on tutvuda järgmiste dokumentidega.
 
 * https://www.valimised.ee/sites/default/files/uploads/eh/IVXV_raamistiku_yldkirjeldus_29052017.pdf

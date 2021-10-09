@@ -344,8 +344,8 @@ type xadesTimeStamp struct {
 	XMLElement c14n   `xmlx:"http://uri.etsi.org/01903/v1.3.2# SignatureTimeStamp"`
 	ID         string `xmlx:"Id,attr,unique"`
 
-	// Restrict to exactly one EncapsulatedTimeStamp.
-	EncapsulatedTimeStamp encapsulatedTimeStamp
+	CanonicalizationMethod canonicalizationMethod `xmlx:",optional"`
+	EncapsulatedTimeStamp  encapsulatedTimeStamp  // Restrict to exactly one timestamp.
 }
 
 type encapsulatedTimeStamp struct {

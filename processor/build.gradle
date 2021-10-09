@@ -7,9 +7,9 @@ apply from: "${base}/common/java/common-build.gradle"
 apply plugin: 'application'
 
 dependencies {
-    compile project(":common")
+    implementation project(":common")
 
-    testCompile project (path: ":common", configuration: 'tests')
+    testImplementation testFixtures(project(":common"))
 }
 
 mainClassName = "ee.ivxv.processor.Processor"

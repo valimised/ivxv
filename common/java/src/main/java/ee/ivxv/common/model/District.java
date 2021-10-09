@@ -8,22 +8,22 @@ import java.util.List;
 public class District {
 
     private final String name;
-    private final List<String> stations;
+    private final List<String> parish;
 
     @JsonCreator
     public District( //
             @JsonProperty("name") String name, //
-            @JsonProperty("stations") List<String> stations) {
+            @JsonProperty("parish") List<String> parish) {
         this.name = name;
-        this.stations = Collections.unmodifiableList(stations);
+        this.parish = Collections.unmodifiableList(parish);
     }
 
     public String getName() {
         return name;
     }
 
-    public List<String> getStations() {
-        return stations;
+    public List<String> getParish() {
+        return parish;
     }
 
 }

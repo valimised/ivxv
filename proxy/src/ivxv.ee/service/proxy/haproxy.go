@@ -76,7 +76,6 @@ func generate(c *conf.Technical, network string, service *conf.Service, tmpl str
 
 // check calls the HAProxy binary to verify that cfg is valid.
 func check(ctx context.Context, cfg []byte) (code int, err error) {
-	// nolint: gosec, This subprocess launch has been verified as correct.
 	cmd := exec.CommandContext(ctx, "/usr/sbin/haproxy", "-c", "--", "/dev/stdin")
 	cmd.Stdin = bytes.NewReader(cfg)
 	if out, err := cmd.CombinedOutput(); err != nil {
@@ -91,7 +90,6 @@ func check(ctx context.Context, cfg []byte) (code int, err error) {
 
 // readPIDFile opens pidfile and reads the PID of the master process.
 func readPIDFile(pidfile string) (pid int, code int, err error) {
-	// nolint: gosec, Trust pidfile location from command-line.
 	pidb, err := ioutil.ReadFile(pidfile)
 	if err != nil {
 		return 0, exit.NoInput, ReadPIDFileError{Path: pidfile, Err: err}
@@ -169,12 +167,11 @@ func stopPID(ctx context.Context, pid int) error {
 func childPIDs(proc string, pid int) ([]int, error) {
 	ppid := regexp.MustCompile("\nPPid:\t" + strconv.Itoa(pid) + "\n")
 
-	// nolint: gosec, Trust proc filesystem location from command-line.
 	dir, err := os.Open(proc)
 	if err != nil {
 		return nil, OpenProcError{Proc: proc, Err: err}
 	}
-	defer dir.Close() // nolint: errcheck, ignore close failure of read-only dir.
+	defer dir.Close()
 
 	names, err := dir.Readdirnames(-1)
 	if err != nil {
@@ -186,7 +183,6 @@ func childPIDs(proc string, pid int) ([]int, error) {
 		if err != nil {
 			continue // Skip non-integer directory names.
 		}
-		// nolint: gosec, Trust proc filesystem location from command-line.
 		status, err := ioutil.ReadFile(filepath.Join(proc, name, "status"))
 		if err != nil {
 			// Skip processes where we cannot read status (probably

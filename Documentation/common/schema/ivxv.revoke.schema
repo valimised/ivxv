@@ -1,16 +1,18 @@
 {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "definitions": {
         "rev_entry": {
             "type": "string",
-            "pattern": "^[0-9]+\\.[0-9]+$"
+            "pattern": "^[0-9]{11}$",
+            "description": "Personal code of onlinevoter to be revoked"
         }
     },
-
     "type": "object",
     "properties": {
-        "election": {"type": "string"},
+        "election": {
+            "type": "string",
+            "pattern": "^[ \\-,\\+\\.:;=!?&%#<>_/\\'\\*()\\[\\]{}|^A-Za-z0-9]{1,28}$"
+        },
         "type": {"enum": ["revoke", "restore"]},
         "persons": {
             "type": "array",
@@ -19,6 +21,10 @@
             }
         }
     },
-    "required": ["election", "persons", "type"],
+    "required": [
+        "election",
+        "persons",
+        "type"
+    ],
     "additionalProperties": false
 }

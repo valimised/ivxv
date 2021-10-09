@@ -25,7 +25,13 @@ sellel on järgmised funktsioonid:
 
 * Kasutajate haldamine;
 
-* E-urni allalaadimine.
+* Väljavõtete allalaadimine:
+
+  * Hääletamise detailstatistika allalaadimine;
+
+  * Hääletamisseansside nimekirja allalaadimine;
+
+  * E-valimiskasti allalaadimine.
 
 
 Ligipääse haldusliidesele

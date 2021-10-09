@@ -69,9 +69,9 @@ public abstract class DefaultReporter implements Reporter {
     public Record newLog123Record(String voterId, Ballot b, String qid) {
         String time = getCurrentTime();
         LName d = b.getDistrict();
-        LName s = b.getStation();
+        String s = b.getParish();
         return new Record(time, getVoteHash(b.getVotes().get(qid)), d.getRegionCode(),
-                d.getNumber(), s.getRegionCode(), s.getNumber(), voterId);
+                d.getNumber(), voterId);
     }
 
     private String getVoteHash(byte[] bytes) {
@@ -81,6 +81,11 @@ public abstract class DefaultReporter implements Reporter {
     @Override
     public Record newRevocationRecordForRecurrentVote(String voterId, Ballot b) {
         return newRevocationRecord(RevokeAction.RECURRENT, voterId, b, "");
+    }
+
+    @Override
+    public Record newRevocationRecordForInvalidVote(String voterId, Ballot b) {
+        return newRevocationRecord(RevokeAction.INVALID, voterId, b, "");
     }
 
     @Override
@@ -125,7 +130,7 @@ public abstract class DefaultReporter implements Reporter {
         Json.write(jsonIvl, jsonOut);
 
         if (pdfOut != null) {
-            Set<StationBallots> pdfIvl = createIvlDataForPdf(dl, data);
+            Set<ParishBallots> pdfIvl = createIvlDataForPdf(dl, data);
             writeIVoterListPdf(pdfIvl, bb.getElection(), pdfOut);
         }
     }
@@ -135,41 +140,37 @@ public abstract class DefaultReporter implements Reporter {
     }
 
     private IVoterList createIVoterList(SortedIvlData data, String election) {
-        Map<String, Map<String, Map<String, List<?>>>> onlinevoters = new LinkedHashMap<>();
+        Map<String, Map<String, List<String>>> onlinevoters = new LinkedHashMap<>();
 
         data.districts.forEach((did, s) -> s.forEach((sid, ballots) -> ballots.forEach(vb -> {
-            List<Object> record = new ArrayList<>();
-            record.add(vb.ballot.getName());
-
-            if (vb.ballot.getRowNumber() != null) {
-                record.add(vb.ballot.getRowNumber());
-            }
-
             onlinevoters.computeIfAbsent(did, x -> new LinkedHashMap<>())
-                    .computeIfAbsent(sid, x -> new LinkedHashMap<>()).put(vb.voterId, record);
+                    .computeIfAbsent(sid, x -> new ArrayList<String>()).add(vb.voterId);
         })));
 
         return new IVoterList(election, onlinevoters);
     }
 
-    private Set<StationBallots> createIvlDataForPdf(DistrictList dl, SortedIvlData data) {
-        Set<StationBallots> result = new TreeSet<>();
-        Set<String> stations = data.districts.values().stream().flatMap(d -> d.keySet().stream())
+    private Set<ParishBallots> createIvlDataForPdf(DistrictList dl, SortedIvlData data) {
+        Set<ParishBallots> result = new TreeSet<>();
+        Set<String> parish = data.districts.values().stream().flatMap(d -> d.keySet().stream())
                 .collect(Collectors.toSet());
 
-        dl.getDistricts().forEach((did, district) -> district.getStations().forEach(sid -> {
-            LName station = new LName(sid);
-            String regionName = getRegionName(dl.getRegions().get(station.getRegionCode()));
-            String stationName = i18n.get(M.r_ivl_station_name, station.getNumber(), regionName);
+        dl.getDistricts().forEach((did, district) -> district.getParish().forEach(pid -> {
+            String regionName = "";
+            try {
+                regionName = getRegionName(dl.getRegions().get(pid));
+            }catch (Exception e){
+                // pid == "FOREIGN"
+            }
+            String parishName = i18n.get(M.r_ivl_parish_name, pid, regionName);
             String districtName = i18n.get(M.r_ivl_district_name, district.getName());
             SortedSet<VoterBallot> ballots = Optional.ofNullable(data.districts.get(did))
-                    .map(sb -> sb.get(sid)).orElse(new TreeSet<>());
-            stations.remove(sid);
-            result.add(new StationBallots(did + "|" + sid, stationName, districtName, ballots));
+                    .map(sb -> sb.get(pid)).orElse(new TreeSet<>());
+            parish.remove(pid);
+            result.add(new ParishBallots(did + "|" + pid, parishName, districtName, ballots));
         }));
-
-        if (!stations.isEmpty()) {
-            throw new MessageException(M.e_dist_bb_station_missing, stations);
+        if (!parish.isEmpty()) {
+            throw new MessageException(M.e_dist_bb_parish_missing, parish);
         }
 
         return result;
@@ -181,10 +182,10 @@ public abstract class DefaultReporter implements Reporter {
                 .collect(Collectors.joining(", ")); // Join by ','
     }
 
-    private void writeIVoterListPdf(Set<StationBallots> stations, String election, Path out) throws Exception {
+    private void writeIVoterListPdf(Set<ParishBallots> parish, String election, Path out) throws Exception {
         try (OutputStream os = Files.newOutputStream(out); PdfDoc doc = new PdfDoc(os)) {
             AtomicBoolean guard = new AtomicBoolean();
-            stations.forEach(sb -> {
+            parish.forEach(sb -> {
                 try {
                     if (guard.getAndSet(true)) {
                         doc.newPage();
@@ -196,14 +197,12 @@ public abstract class DefaultReporter implements Reporter {
                     doc.newLine();
                     doc.addTitle(sb.districtName, -1, Alignment.LEFT);
                     doc.newLine();
-                    doc.addTitle(sb.stationName, -1, Alignment.LEFT);
+                    doc.addTitle(sb.parishName, -1, Alignment.LEFT);
                     doc.newLine();
 
                     sb.ballots.forEach(vb -> {
                         try {
                             doc.newLine();
-                            doc.addText(vb.ballot.getRowNumber(), 30, Alignment.RIGHT);
-                            doc.tab(40);
                             doc.addText(vb.ballot.getName(), 240, Alignment.LEFT);
                             doc.tab(250);
                             doc.addText(vb.voterId);
@@ -214,7 +213,7 @@ public abstract class DefaultReporter implements Reporter {
                         }
                     });
                 } catch (Exception e) {
-                    log.error("Exception while writing station '{}' to PDF", sb.stationName, e);
+                    log.error("Exception while writing station '{}' to PDF", sb.parishName, e);
                     throw new RuntimeException(e);
                 }
             });
@@ -232,7 +231,7 @@ public abstract class DefaultReporter implements Reporter {
         SortedIvlData(BallotBox bb) {
             bb.getBallots().forEach((voterId, ballots) -> ballots.getBallots().forEach(b -> {
                 districts.computeIfAbsent(b.getDistrictId(), x -> new TreeMap<>())
-                        .computeIfAbsent(b.getStationId(), x -> new TreeSet<>())
+                        .computeIfAbsent(b.getParish(), x -> new TreeSet<>())
                         .add(new VoterBallot(voterId, b));
             }));
         }
@@ -249,40 +248,25 @@ public abstract class DefaultReporter implements Reporter {
 
         @Override
         public int compareTo(VoterBallot o) {
-            // Sort first by row number (null value in the end) then by voterId
-            boolean hasRn1 = ballot.getRowNumber() != null;
-            boolean hasRn2 = o.ballot.getRowNumber() != null;
-            // Both have row numbers
-            if (hasRn1 && hasRn2) {
-                if (ballot.getRowNumber().equals(o.ballot.getRowNumber())) {
-                    return voterId.compareTo(o.voterId);
-                }
-                return ballot.getRowNumber().compareTo(o.ballot.getRowNumber());
-            }
-            // One has row number
-            if (hasRn1 || hasRn2) {
-                return hasRn1 ? -1 : 1;
-            }
-            // Neither have row numbers
             return voterId.compareTo(o.voterId);
         }
     }
 
-    private static class StationBallots implements Comparable<StationBallots> {
+    private static class ParishBallots implements Comparable<ParishBallots> {
         final String districtStationId;
-        final String stationName;
+        final String parishName;
         final String districtName;
         final Set<VoterBallot> ballots;
 
-        StationBallots(String districtStationId, String stationName, String districtName, Set<VoterBallot> ballots) {
+        ParishBallots(String districtStationId, String parishName, String districtName, Set<VoterBallot> ballots) {
             this.districtStationId = districtStationId;
-            this.stationName = stationName;
+            this.parishName = parishName;
             this.districtName = districtName;
             this.ballots = ballots;
         }
 
         @Override
-        public int compareTo(StationBallots o) {
+        public int compareTo(ParishBallots o) {
             return districtStationId.compareTo(o.districtStationId);
         }
     }
@@ -293,17 +277,16 @@ public abstract class DefaultReporter implements Reporter {
      *   "election": "TESTKOV2017",
      *   "onlinevoters": {
      *     "164.1": {
-     *       "164.1": {
-     *         "23074322661": [ "Nimi Nimeste", 1 ],
-     *         "31633238606": [ "Nimi Nimeste", 2 ]
-     *       }
+     *       "164": [
+     *         "23074322661",
+     *         "31633238606"
+     *       ]
      *     },
      *     "296.1": {
-     *       "296.1": {
-     *         "43421413240": [ "Nimi Nimeste", 1 ]
-     *       },
-     *       "296.2": {
-     *         "17368648225": [ "Nimi Nimeste", 1 ],
+     *       "296": [
+     *         "43421413240",
+     *         "17368648225"
+     *         ]
      *       }
      *     }
      *   }
@@ -313,10 +296,10 @@ public abstract class DefaultReporter implements Reporter {
     static class IVoterList {
 
         private final String election;
-        private final Map<String, Map<String, Map<String, List<?>>>> onlinevoters =
+        private final Map<String, Map<String, List<String>>> onlinevoters =
                 new LinkedHashMap<>();
 
-        IVoterList(String election, Map<String, Map<String, Map<String, List<?>>>> onlinevoters) {
+        IVoterList(String election, Map<String, Map<String, List<String>>> onlinevoters) {
             this.election = election;
             this.onlinevoters.putAll(onlinevoters);
         }
@@ -325,7 +308,7 @@ public abstract class DefaultReporter implements Reporter {
             return election;
         }
 
-        public Map<String, Map<String, Map<String, List<?>>>> getOnlinevoters() {
+        public Map<String, Map<String, List<String>>> getOnlinevoters() {
             return onlinevoters;
         }
     }

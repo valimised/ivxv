@@ -71,7 +71,7 @@ options:`)
 		}
 		return code, fmt.Errorf("failed to open container: %v", err)
 	}
-	defer c.Close() // nolint: errcheck, ignore close failure of read-only container.
+	defer c.Close()
 
 	for _, s := range c.Signatures() {
 		fmt.Println(s.Signer.Subject.CommonName, s.SigningTime.Format(time.RFC3339))

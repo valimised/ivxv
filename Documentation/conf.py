@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-#
-# IVXV arhitektuur
-#
 # Configuration file for the Sphinx documentation builder.
 #
-# This file does only contain a selection of the most common options. For a
-# full list see the documentation:
-# http://www.sphinx-doc.org/en/master/config
+# This file only contains a selection of the most common options. For a full
+# list see the documentation:
+# https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # -- Path setup --------------------------------------------------------------
 
@@ -27,16 +23,16 @@ copyright = documents.copyright
 author = documents.author
 release = documents.release
 
-mydocument = os.environ['MYDOCUMENT']
+document = os.environ['IVXV_DOCUMENT']
 
-version = documents.get(mydocument, 'version')
-today = documents.get(mydocument, 'changed')
-document_prefix = documents.get(mydocument, 'document_prefix')
-document_type = documents.get(mydocument, 'document_type')
-document_title = documents.get(mydocument, 'document_title')
-document_target_name = documents.get(mydocument, 'document_target_name')
+version = documents.get(document, 'version')
+today = documents.get(document, 'changed')
+document_prefix = documents.get(document, 'document_prefix')
+document_type = documents.get(document, 'document_type')
+document_title = documents.get(document, 'document_title')
+document_target_name = documents.get(document, 'document_target_name')
 
-language = documents.get(mydocument, 'lang')
+language = documents.get(document, 'lang')
 
 document_number = f'{document_prefix}-{version}'
 
@@ -49,14 +45,16 @@ numfig_format = {
 
 # -- General configuration ---------------------------------------------------
 
-# If your documentation needs a minimal Sphinx version, state it here.
-#
-# needs_sphinx = ''
-
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.todo', 'sphinx.ext.imgmath']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.imgmath',
+    'sphinx.ext.todo',
+    'sphinx_rtd_theme',
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -78,11 +76,8 @@ master_doc = 'index'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path .
+# This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-
-# The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
@@ -94,12 +89,6 @@ todo_include_todos = False
 #
 html_theme = 'sphinx_rtd_theme'
 
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-#
-# html_theme_options = {}
-
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
 
@@ -108,37 +97,16 @@ html_theme = 'sphinx_rtd_theme'
 #
 html_title = f'{document_title} v{release}'
 
-# A shorter title for the navigation bar.  Default is the same as html_title.
-#
-# html_short_title = None
-
-# The name of an image file (relative to this directory) to place at the top
-# of the sidebar.
-#
-html_logo = '_static/ivxv.png'
-
-# The name of an image file (relative to this directory) to use as a favicon of
-# the docs.  This file should be a Windows icon file (.ico) being 16x16 or
-# 32x32 pixels large.
-#
-# html_favicon = None
-
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-html_style = 'custom.css'
 
-# Custom sidebar templates, must be a dictionary that maps document names
-# to template names.
-#
-# The default sidebars (for documents that don't match any pattern) are
-# defined by theme itself.  Builtin themes are using these templates by
-# default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
-# 'searchbox.html']``.
-#
-# html_sidebars = {}
+# List of CSS files.
+html_css_files = ['custom.css']
 
+# HTML logo image.
+html_logo = '_static/ivxv.png'
 
 # -- Options for LaTeX output ------------------------------------------------
 
@@ -189,11 +157,6 @@ latex_additional_files = [
 #
 latex_logo = html_logo
 
-# For "manual" documents, if this is true, then toplevel headings are parts,
-# not chapters.
-#
-# latex_use_parts = False
-
 # If true, show page references after internal links.
 #
 latex_show_pagerefs = False
@@ -202,10 +165,6 @@ latex_show_pagerefs = False
 #
 
 latex_show_urls = 'footnote'
-
-# Documents to append as an appendix to all manuals.
-#
-# latex_appendices = []
 
 
 # -- Options for Texinfo output ----------------------------------------------

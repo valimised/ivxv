@@ -33,6 +33,7 @@ from .cli_utils import init_cli_util
 from .config import cfg_path
 from .db import DB_FILE_PATH, IVXVManagerDb
 from .event_log import register_service_event
+from .lib.lockfile import PidLocker
 from .service.service import Service
 
 # create logger
@@ -40,6 +41,8 @@ log = logging.getLogger(__name__)
 
 #: Service ping interval in seconds.
 PING_INTERVAL = 60
+#: State file path.
+STATE_FILEPATH = cfg_path("admin_ui_data_path", "status.json")
 #: Stats file path.
 STATS_FILEPATH = cfg_path('admin_ui_data_path', 'stats.json')
 #: Maximum count of automatic attempts to apply config
@@ -53,16 +56,24 @@ def main_loop():
     args = init_cli_util("""
         IVXV Collector Management Service agent daemon.
 
-        Usage: ivxv-agent-daemon [--get-stats]
+        Usage: ivxv-agent-daemon [--get-stats] [--register-status]
 
         Options:
-            --get-stats     Copy statistics from Log Monitor to
-                            Management Service without daemonizing.
+            --get-stats         Copy statistics from Log Monitor to
+                                Management Service without daemonizing.
+            --register-status   Register collector state (if not registered).
     """)
 
     # copy stats and finish process
+    if args['--get-stats'] and args["--register-status"]:
+        log.error('Conflicting options: --get-stats and --register-status')
+        return 1
     if args['--get-stats']:
         return generate_stats_data(force=True)
+    if args["--register-status"]:
+        with IVXVManagerDb(for_update=True) as db:
+            register_collector_state(db)
+        return 0
 
     # daemon process
     log.info('Starting Collector Management Service agent daemon')
@@ -74,7 +85,7 @@ def main_loop():
         # generate stats/state data
         state = None
         try:
-            lib.PidLocker.rm_stale_pidfile('ivxv-config-apply.pid')
+            PidLocker.rm_stale_pidfile('ivxv-config-apply.pid')
             state = generate_state_data()
             generate_stats_data()
         except OSError as err:
@@ -134,21 +145,20 @@ def generate_state_data():
     # generate config applying state
     state['config-apply'] = {}
     for cfg_key in ['trust', 'technical', 'election', 'choices', 'districts']:
-        _get_cfg_applying_state(cfg_key, state)
-    for list_no in range(1, 100):
-        if not _get_cfg_applying_state(f'voters{list_no:02}', state):
+        get_cfg_applying_state(cfg_key, state)
+    for changeset_no in range(10_000):
+        if not get_cfg_applying_state(f"voters{changeset_no:04}", state):
             break
 
     # write state data to file
-    state_filename = cfg_path('admin_ui_data_path', 'status.json')
     state['meta'] = get_agent_metadata()
-    with open(state_filename, 'w') as fp:
+    with open(STATE_FILEPATH, "w") as fp:
         fp.write(json.dumps(state, indent=4, sort_keys=True))
 
     return state
 
 
-def _get_cfg_applying_state(cfg_key, state):
+def get_cfg_applying_state(cfg_key, state):
     """Get config applying state.
 
     :return: True if config file exist and state data is generated,
@@ -157,7 +167,9 @@ def _get_cfg_applying_state(cfg_key, state):
     cfg_filepath = lib.get_loaded_cfg_file_path(cfg_key)
     if cfg_filepath is None:
         return False
-    state_file_filepath = cfg_filepath.replace('.bdoc', '.json')
+    state_file_filepath = cfg_filepath.replace(
+        os.path.splitext(cfg_filepath)[1], ".json"
+    )
 
     try:
         with open(state_file_filepath) as fp:
@@ -184,17 +196,16 @@ def get_agent_metadata():
 
 def apply_cfg(state):
     """Apply config files."""
-    _apply_cfg_for_services('technical', 'technical', state)
+    apply_cfg_for_services("technical", "technical", state)
     if state['config']['technical']:
         for cfg_key in ['election', 'choices']:
-            _apply_cfg_for_services(cfg_key, cfg_key, state)
-    for list_no in range(1, 100):
-        if _apply_cfg_for_services(
-                'voters', f'voters{list_no:02}', state) is None:
+            apply_cfg_for_services(cfg_key, cfg_key, state)
+    for changeset_no in range(10_000):
+        if apply_cfg_for_services("voters", f"voters{changeset_no:04}", state) is None:
             break
 
 
-def _apply_cfg_for_services(cfg_type, cfg_key, state):
+def apply_cfg_for_services(cfg_type, cfg_key, state):
     """Apply config for services.
 
     :return: None if config file does not exist,
@@ -205,7 +216,9 @@ def _apply_cfg_for_services(cfg_type, cfg_key, state):
     if cfg_filepath is None:
         return None
 
-    state_file_filepath = cfg_filepath.replace('.bdoc', '.json')
+    state_file_filepath = cfg_filepath.replace(
+        os.path.splitext(cfg_filepath)[1], ".json"
+    )
     with open(state_file_filepath) as fp:
         state = json.load(fp)
 
@@ -214,7 +227,7 @@ def _apply_cfg_for_services(cfg_type, cfg_key, state):
             or state['attempts'] >= MAX_AUTO_ATTEMPTS):
         return False
 
-    if lib.PidLocker.pidfile_exists('ivxv-config-apply.pid'):
+    if PidLocker.pidfile_exists('ivxv-config-apply.pid'):
         log.info('Can\'t start automatic applying of %s, pidfile exists',
                  CMD_DESCR[cfg_type])
         return False
@@ -232,7 +245,7 @@ def ping_service(service_id, service_data):
     service = Service(service_id, service_data)
     service_ok = service.ping()
 
-    if not _is_db_accessible(service.get_db_key('last-data')):
+    if not is_db_accessible(service.get_db_key("last-data")):
         return False
 
     # register result in database
@@ -292,11 +305,9 @@ def generate_stats_data(force=False):
         with open(STATS_FILEPATH) as fp:
             stats = json.load(fp)
     except json.decoder.JSONDecodeError as err:
-        log.error('Invalid JSON in existing stats file %s: %s',
-                  STATS_FILEPATH, err)
+        log.error("Invalid JSON in existing stats file %r: %s", STATS_FILEPATH, err)
     except OSError as err:
-        log.error('Cannot load existing stats JSON file %s: %s',
-                  STATS_FILEPATH, err)
+        log.error("Cannot load existing stats JSON file %r: %s", STATS_FILEPATH, err)
     stats.setdefault('data', {})
 
     # import stats file from Log Monitor
@@ -313,7 +324,7 @@ def generate_stats_data(force=False):
             if 'error' in stats_data:
                 stats['error'] = stats_data['error']
             else:
-                _normalize_stats(stats_data)
+                normalize_stats(stats_data)
                 stats['data'] = stats_data
                 try:
                     del stats['error']
@@ -331,7 +342,7 @@ def generate_stats_data(force=False):
         fp.write(json.dumps(stats, indent=4, sort_keys=True))
 
 
-def _normalize_stats(stats_data):
+def normalize_stats(stats_data):
     """Normalize Log Monitor stats.
 
     Convert dictionaries to sorted lists.
@@ -383,7 +394,8 @@ def query_logmon_stats(address):
 
     log.debug('Querying stats from Log Monitor')
     proc = subprocess.run(
-        ssh_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ssh_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False
+    )
 
     stats = {}
     if proc.returncode:
@@ -403,7 +415,7 @@ def query_logmon_stats(address):
             log.error('Error while parsing JSON stats from Log Monitor: %s',
                       errmsg)
 
-    if _is_db_accessible('logmonitor/last-data'):
+    if is_db_accessible("logmonitor/last-data"):
         with IVXVManagerDb(for_update=True) as db:
             db.set_value('logmonitor/last-data',
                          datetime.datetime.now().strftime(RFC3339_DATE_FORMAT))
@@ -485,7 +497,7 @@ def register_collector_state(db):
     return state
 
 
-def _is_db_accessible(check_value):
+def is_db_accessible(check_value):
     """Try to read field value from database before writing it.
 
     If this fails, then something is happened with database (e.g. database is
@@ -495,7 +507,7 @@ def _is_db_accessible(check_value):
         try:
             db.get_value(check_value)
         except KeyError:
-            log.warning('Cannot read value "%s" from database', check_value)
+            log.warning("Cannot read value %r from database", check_value)
             return False
 
     return True

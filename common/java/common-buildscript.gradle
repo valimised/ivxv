@@ -8,18 +8,18 @@
 def external = file('../external').absolutePath
 
 repositories {
-    // The location of the 'ivypot' plugin for offline case
-    ivy {
-        url file("${external}").toURI()
-    }
     // The location of the 'ivypot' plugin for bootstrapping (initial download)
     if (!System.getenv('RESTRICTED')) {
         maven {
             url "https://plugins.gradle.org/m2/"
         }
     }
+    // The location of the 'ivypot' plugin for offline case
+    ivy {
+        url file("${external}").toURI()
+    }
 }
 
 dependencies {
-    classpath 'org.ysb33r.gradle:ivypot:0.4'
+    classpath 'org.ysb33r.gradle:ivypot:0.12'
 }

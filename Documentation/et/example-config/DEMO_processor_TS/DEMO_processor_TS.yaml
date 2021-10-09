@@ -1,4 +1,4 @@
-# check         - I etapp: e-urni tervikluse kontroll ja e-hääletanute nimekirja väljastamine
+# check         - I etapp: e-valimiskasti tervikluse kontroll ja e-hääletanute nimekirja väljastamine
 check:
 # Hääled - tulevad Kogujalt ehk RIA-st ************ KONTROLLI FAILI NIME **************
   ballotbox: DEMO_votes.zip
@@ -6,7 +6,7 @@ check:
 
 # ajatemplid, tulevad SK-st ************ KONTROLLI FAILI NIME **************
 # Registreerimisteenusest pärit registreerimisandmed.
-# Kui määramata, siis ei kontrollita e-urnis sisalduvate häälte vastavust registreerimisandmetega.
+# Kui määramata, siis ei kontrollita e-valimiskastis sisalduvate häälte vastavust registreerimisandmetega.
   registrationlist: exporter_output_20181221.zip
   registrationlist_checksum: exporter_output_20181221.zip.sha256sum.bdoc
 
@@ -62,7 +62,7 @@ export:
   ballotbox_checksum: DEMO_votes.zip.sha256sum.bdoc
   out: DEMO_fullvotes
 
-#  stats         - E-urni statistika genereerimine
+#  stats         - E-valimiskasti statistika genereerimine
 stats:
   ballotbox: DEMO_votes.zip
   #election_day Valimispäev. Kõikide e-hääletanute vanused arvutatakse statistika tarbeks selle kuupäeva suhtes.
@@ -79,7 +79,7 @@ stats:
        signature: DEMO_valijate_nimekiri.txt.signature
   out: DEMO_stats
 
-#  statsdiff     - E-urni statistika võrdlemine
+#  statsdiff     - E-valimiskasti statistika võrdlemine
 statsdiff:
 #Statistika võrdluse alusfail JSON-vormingus.
   compare: DEMO_stats/DEMO-stats.json

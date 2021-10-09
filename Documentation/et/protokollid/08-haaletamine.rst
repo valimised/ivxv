@@ -62,8 +62,8 @@ autentimissertifikaati.
    :linenos:
 
 Päring ``RPC.VoterChoices`` Mobiil-ID'ga autentimise korral - päringu
-sooritamiseks tuleb eelnevalt kasutada DigiDocService vahendusteenuse (SNI
-``dds.ivxv.invalid``) abi allkirjastatud autentimistõendi saamiseks.
+sooritamiseks tuleb eelnevalt kasutada Mobiil-ID vahendusteenuse (SNI
+``mid.ivxv.invalid``) abi allkirjastatud autentimistõendi saamiseks.
 
 :params.AuthToken: Autentimisteenuse vahendusel allkirjastatud tõend, mis
                    sisaldab endas valija unikaalset identifikaatorit.
@@ -174,8 +174,8 @@ Võimalikud veateated päringu ``RPC.Vote`` korral.
 Hääletamine Mobiil-ID'ga
 ------------------------
 
-Mobiil-ID kasutamine allkirjastamis- ning autentimisvahendina tingib teenusega
-DigiDocService liidestuva abiteenuse (SNI ``dds.ivxv.invalid``) kasutamise
+Mobiil-ID kasutamine allkirjastamis- ning autentimisvahendina tingib Mobiil-ID
+teenusega liidestuva abiteenuse (SNI ``mid.ivxv.invalid``) kasutamise
 autentimistõendi hankimiseks enne valikute nimekirja hankimist ning hääle
 allkirjastamiseks enne talletamist.
 
@@ -187,13 +187,15 @@ Valijarakendus teeb päringu ``RPC.Authenticate`` Mobiil-ID autentimise
 algatamiseks.
 
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
+:params.IDCode: Mobiil-ID kasutaja isikukood.
 :params.PhoneNo: Mobiil-ID kasutaja telefoninumber.
 
 .. literalinclude:: ../../common/examples/mid.rpc.authenticate.query.json
    :language: json
    :linenos:
 
-:result.ChallengeID: Mobiil-ID kontrollkood valijarakenduses kuvamiseks
+:result.Challenge: Räsi, millest arvutada Mobiil-ID kontrollkood valijarakenduses
+                   kuvamiseks
 :result.SessionCode: Mobiil-ID seansiidentifikaator edasiste poll-päringute
                      jaoks
 
@@ -205,8 +207,6 @@ Võimalikud veateated päringu ``RPC.Authenticate`` korral.
 
 :BAD_REQUEST: Vigane päring.
 :INTERNAL_SERVER_ERROR: Viga serveri sisemises töös.
-:MID_BAD_CERTIFICATE: Viga valija Mobiil-ID isikutuvastussertifikaadiga.
-:MID_NOT_USER: Telefoninumber ei kuulu Mobiil-ID kliendile.
 :VOTING_END: Hääletusperiood on lõppenud.
 
 Valijarakendus teeb päringu ``RPC.AuthenticateStatus`` autentimisprotsessi oleku
@@ -242,6 +242,10 @@ Võimalikud veateated päringu ``RPC.AuthenticateStatus`` korral.
 
 :BAD_REQUEST: Vigane päring.
 :INTERNAL_SERVER_ERROR: Viga serveri sisemises töös.
+:MID_BAD_CERTIFICATE: Viga valija Mobiil-ID isikutuvastussertifikaadiga.
+:MID_NOT_USER: Telefoninumber ei kuulu Mobiil-ID kliendile.
+:MID_OPERATOR: Probleem valija mobiiltelefoni SIM kaardiga, mille lahendamiseks
+               tuleb pöörduda mobiilioperaatori poole.
 :MID_ABSENT: Valija mobiiltelefon ei ole kättesaadav.
 :MID_CANCELED: Valija katkestas Mobiil-ID seansi.
 :MID_EXPIRED: Mobiil-ID seanss on aegunud.
@@ -282,10 +286,13 @@ Võimalikud veateated päringu ``RPC.GetCertificate`` korral.
 
 
 Valijarakendus teeb päringu ``RPC.Sign`` hääle allkirjastamise algatamiseks.
+Mobiil-ID kontrollkoodi arvutab valijarakendus andmevälja ``Hash`` väärtusest.
 
 :params.AuthMethod: Toetatud ainult autentimismeetod ``ticket``.
 :params.AuthToken: Mobiil-ID autentimistõend.
-:params.Hash: BASE64-kodeeritud elektroonilise hääle SHA-256 räsi
+:params.Hash: BASE64-kodeeritud elektroonilise hääle räsi
+:params.HashType: Räsifunktsiooni nimi Mobiil-ID teenusele edastamiseks, kas
+                  ``SHA256``, ``SHA384`` või  ``SHA512``
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
 :params.PhoneNo: Hääle allkirjastaja telefoninumber
 
@@ -293,7 +300,6 @@ Valijarakendus teeb päringu ``RPC.Sign`` hääle allkirjastamise algatamiseks.
    :language: json
    :linenos:
 
-:result.ChallengeID: Mobiil-ID kontrollkood kuvamiseks valijarakenduses
 :result.SessionCode: Mobiil-ID seansiidentifikaator edasiste poll-päringute
                      jaoks.
 
@@ -305,8 +311,6 @@ Võimalikud veateated päringu ``RPC.Sign`` korral.
 
 :BAD_REQUEST: Vigane päring.
 :INTERNAL_SERVER_ERROR: Viga serveri sisemises töös.
-:MID_BAD_CERTIFICATE: Viga valija Mobiil-ID allkirjastamissertifikaadiga.
-:MID_NOT_USER: Telefoninumber ei kuulu Mobiil-ID kliendile.
 :VOTING_END: Hääletusperiood on lõppenud.
 
 
@@ -322,6 +326,11 @@ hindamiseks.
 
 :result.Signature: Juhul kui vastuse ``Status`` väli on ``OK``, BASE-64 kodeeritud
                    PKCS1-vormingus signatuur, vastasel juhul ``null``.
+:result.Algorithm: Juhul kui vastuse ``Status`` väli on ``OK``, Mobiil-ID teenuse
+                   poolt tagastatud signatuuri algoritm. Võimalikud väärtused on
+                   ``SHA256WithECEncryption``, ``SHA256WithRSAEncryption``,
+                   ``SHA384WithECEncryption``, ``SHA384WithRSAEncryption``,
+                   ``SHA512WithECEncryption`` ja ``SHA512WithRSAEncryption``.
 :result.Status: Päringu staatus - ``POLL`` viitab vajadusele päringut korrata, ``OK``
                 viitab edukale allkirjastamisele. Vastuse muud väljad sisaldavad
                 infot vaid siis kui väärtus on ``OK``.
@@ -340,6 +349,8 @@ Võimalikud veateated päringu ``RPC.SignStatus`` korral.
 :INTERNAL_SERVER_ERROR: Viga serveri sisemises töös.
 :MID_ABSENT: Valija mobiiltelefon ei ole kättesaadav.
 :MID_BAD_CERTIFICATE: Viga valija Mobiil-ID allkirjastamissertifikaadiga.
+:MID_OPERATOR: Probleem valija mobiiltelefoni SIM kaardiga, mille lahendamiseks
+               tuleb pöörduda mobiilioperaatori poole.
 :MID_CANCELED: Valija katkestas Mobiil-ID seansi.
 :MID_EXPIRED: Mobiil-ID seanss on aegunud.
 :MID_GENERAL: Viga Mobiil-ID teenuse töös.

@@ -15,7 +15,7 @@ class DistrictsListSchema(Model):
     class DistrictSchema(Model):
         """Validating schema for district record config."""
         name = StringType(required=True)
-        stations = ListType(StringType, required=True)
+        parish = ListType(StringType, required=True)
 
     class RegionSchema(Model):
         """Validating schema for region record config."""
@@ -26,3 +26,4 @@ class DistrictsListSchema(Model):
     election = ElectionIdType(required=True)
     districts = DictType(ModelType(DistrictSchema))
     regions = DictType(ModelType(RegionSchema))
+    counties = DictType(ListType(StringType))

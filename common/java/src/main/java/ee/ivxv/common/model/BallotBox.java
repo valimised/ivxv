@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * 
+ *
  */
 public class BallotBox implements IBallotBox {
 
@@ -59,9 +59,28 @@ public class BallotBox implements IBallotBox {
         return ballots.values().stream().mapToInt(vb -> vb.getBallots().size()).sum();
     }
 
+
+    /**
+     * Removes invalid ciphertexts
+     *
+     * @param filter The filter to apply to all votes using parallel processing.
+     */
+    public void removeInvalidCiphertexts(VoteFilter filter) {
+        requireType(Type.RECURRENT_VOTES_REMOVED);
+        ballots.entrySet().parallelStream()
+                .flatMap(ve -> Vote.streamOf(ve.getKey(), ve.getValue().getLatest())) // All votes
+                .forEach(v -> v.ballot.setInvalidState(!filter.accept(v.voterId, v.ballot, v.questionId, v.vote)));
+
+        // Remove ballots marked invalid by the filter
+        ballots.values().removeIf(vb -> vb.getLatest().isInvalid());
+
+        type = Type.INVALID_CIPHERTEXTS_REMOVED;
+    }
+
+
     /**
      * Removes recurrent ballots, i.e. retains only the latest ballot for each voter.
-     * 
+     *
      * @param cb Callback to be called on every removal of recurrent ballot.
      */
     public void removeRecurrentVotes(BiConsumer<String, Ballot> cb) {
@@ -75,44 +94,46 @@ public class BallotBox implements IBallotBox {
      * every revocation activity (revoke or restore). Revocation activity can be either successful
      * or unsuccessful. The latter case happens when voter or ballot does not exist or the ballot
      * has unexpected state - revoking a revoked ballot or restoring a non-revoked ballot.
-     * 
+     *
      * @param rls Revocation lists
      * @param cb Callback to be called on every revocation activity.
      */
     public void revokeDoubleVotes(Stream<Supplier<RevocationList>> rls, RevokeCallback cb) {
         // Check type
-        requireType(Type.RECURRENT_VOTES_REMOVED);
+        requireType(Type.INVALID_CIPHERTEXTS_REMOVED);
         // Mark voters' latest ballot revoked/restored according to revocation lists and report
         rls.forEach(rlSupplier -> {
             RevocationList rl = rlSupplier.get();
             rl.getPersons().forEach(vid -> {
-                Ballot ballot = ballots.containsKey(vid) ? ballots.get(vid).getLatest() : null;
-                boolean success = ballot != null && ballot.setRevokedState(rl.isRevoke());
+                VoterBallots vb = ballots.containsKey(vid) ? ballots.get(vid) : null;
+                boolean success = vb != null && vb.setRevokedState(rl.isRevoke());
+                Ballot ballot = null;
+                if (vb != null) {
+                    ballot = vb.getLatest();
+                }
                 cb.call(vid, ballot, rl.isRevoke(), success);
             });
         });
-        // Remove voters with revoked latest ballot
-        ballots.values().removeIf(vb -> vb.getLatest().isRevoked());
+        // Remove voters who were marked revoked in the revocation list
+        ballots.values().removeIf(vb -> vb.isRevoked());
         // Change type
         type = Type.DOUBLE_VOTERS_REMOVED;
     }
 
     /**
-     * @param filter The filter to apply to all votes using parallel processing.
      * @return Returns an anonymous ballot box with the latest votes of this ballot box.
      */
-    public AnonymousBallotBox anonymize(VoteFilter filter) {
+    public AnonymousBallotBox anonymize() {
         requireType(Type.DOUBLE_VOTERS_REMOVED);
 
         Map<String, Map<String, Map<String, List<byte[]>>>> anonymous = new LinkedHashMap<>();
 
         ballots.entrySet().parallelStream()
                 .flatMap(ve -> Vote.streamOf(ve.getKey(), ve.getValue().getLatest())) // All votes
-                .filter(v -> filter.accept(v.voterId, v.ballot, v.questionId, v.vote)) // Filter
                 .collect(Collectors.toList()).stream() // Join threads, restore initial order
                 .forEach(v -> anonymous
                         .computeIfAbsent(v.ballot.getDistrictId(), d -> new LinkedHashMap<>())
-                        .computeIfAbsent(v.ballot.getStationId(), s -> new LinkedHashMap<>())
+                        .computeIfAbsent(v.ballot.getParish(), p -> new LinkedHashMap<>())
                         .computeIfAbsent(v.questionId, q -> new ArrayList<>()) //
                         .add(v.vote));
 

@@ -72,8 +72,6 @@ func choiceimpmain() (code int) {
 
 	// Open the choice list container file.
 	cnt, err := c.Conf.Container.OpenFile(path)
-	// nolint: dupl, ignore duplicate from voterimp, extracting this
-	// snippet of code to a common function is not worth the effort.
 	if err != nil {
 		code = exit.DataErr
 		if perr := errors.CausedBy(err, new(os.PathError)); perr != nil {
@@ -84,7 +82,7 @@ func choiceimpmain() (code int) {
 		return c.Error(code, OpenContainerError{Container: path, Err: err},
 			"failed to open choice list container:", err)
 	}
-	defer cnt.Close() // nolint: errcheck, ignore close failure of read-only container.
+	defer cnt.Close()
 
 	// Ensure that the container is signed and log the signatures.
 	signatures := cnt.Signatures()

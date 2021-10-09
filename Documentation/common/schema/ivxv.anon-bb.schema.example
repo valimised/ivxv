@@ -1,18 +1,23 @@
 {
-  "election": "TESTKOV",
-  "districts": {
-    "164.1": {
-      "164.1": {
-        "TESTKOV.1": [ "MDkxOS4xMDUK", "MDkxOS4xMDQK", "MDkxOS4xMDEK", "MDkxOS4xMDMK" ]
-      }
-    },
-    "296.1": {
-      "296.1": {
-        "TESTKOV.1": [ "MDkxOS4xMDQK", "MDkxOS4xMDQK" ]
-      },
-      "296.2": {
-        "TESTKOV.1": [ "MDExMi4xMDEK", "MDExMi4xMDQK", "MDExMi4xMDMK" ]
-      }
+    "election": "TESTKOV",
+    "districts": {
+        "0164.1": {
+            "0164": {
+                "TESTKOV.1": [
+                    "MDkxOS4xMDUK",
+                    "MDkxOS4xMDQK",
+                    "MDkxOS4xMDEK",
+                    "MDkxOS4xMDMK"
+                ]
+            }
+        },
+        "0296.1": {
+            "0296": {
+                "TESTKOV.1": [
+                    "MDkxOS4xMDQK",
+                    "MDkxOS4xMDQK"
+                ]
+            }
+        }
     }
-  }
 }

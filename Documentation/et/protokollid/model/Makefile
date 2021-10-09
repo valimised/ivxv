@@ -2,8 +2,6 @@ PLANTUML=env -u DISPLAY plantuml
 
 all: phase1.png phase2.png phase3.png
 
-clean: ;
-
 phase1.png: sequence.pu
 	$(PLANTUML) -DPHASE_1 $<
 	mv sequence.png $@

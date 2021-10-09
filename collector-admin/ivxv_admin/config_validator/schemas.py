@@ -88,6 +88,7 @@ class BDocSchema(Model):
     profile = StringType(choices=['BES', 'TM', 'TS'], required=True)
     ocsp = ModelType(OCSPSchemaNoURL)
     tsp = ModelType(TSPSchemaNoURL)
+    tsdelaytime = IntType(default=0, min_value=0)
 
     def validate_tsp(self, data, value):
         """Check that tsp exists if profile is TS."""

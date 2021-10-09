@@ -8,6 +8,7 @@ import ee.ivxv.common.cli.Tool;
 import ee.ivxv.common.crypto.CryptoUtil.PublicKeyHolder;
 import ee.ivxv.common.model.BallotBox;
 import ee.ivxv.common.model.DistrictList;
+import ee.ivxv.common.model.SkipCommand;
 import ee.ivxv.common.model.LName;
 import ee.ivxv.common.model.Voter;
 import ee.ivxv.common.model.VoterList;
@@ -31,11 +32,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 
 public class StatsTool implements Tool.Runner<StatsArgs> {
 
-    private static final ASN1ObjectIdentifier VL_KEY_ALG_ID = PKCSObjectIdentifiers.rsaEncryption;
+    private static final ASN1ObjectIdentifier VL_KEY_ALG_ID = X9ObjectIdentifiers.id_ecPublicKey;
     private static final LName DUMMY_LNAME = new LName("0.0");
 
     private static final String OUT_JSON_TMPL = "stats.json";
@@ -55,15 +56,17 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
 
     @Override
     public boolean run(StatsArgs args) throws Exception {
+        String elid = "ELECTION";
+
         // If there is no district list, then only report total statistics. Otherwise statistics are
         // reported per district.
         DistrictList dl = null;
         if (args.districts.isSet()) {
             dl = tool.readJsonDistricts(args.districts.value());
+            elid = dl.getElection();
         }
 
         Statistics stats;
-        String elid;
         if (args.bb.value().toString().endsWith(".json")) {
             // Do not use tool.readJsonBb, since it forces us to specify a ballot box type,
             // but we want to be able to compute statistics from any type.
@@ -73,7 +76,6 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
         } else {
             VoterProvider vp = getVoterProvider(args, dl);
             reporter.writeVlErrors(args.out.value());
-            elid = dl.getElection();
 
             BboxHelper.IntegrityChecked<?> bb = checkBallotBox(args.bb.value());
             reporter.writeBbErrors(args.out.value());
@@ -114,8 +116,8 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
 
             // Ballot does not contain voter code so assemble new voter. Cannot reuse for
             // all ballots, since district or station may change.
-            Voter v = new Voter(vid, ballot.getName(), null, ballot.getDistrict(),
-                    ballot.getStation(), ballot.getRowNumber());
+            Voter v = new Voter(vid, ballot.getName(), null,
+                    ballot.getParish(), ballot.getDistrict());
             stats.countVoteFrom(v);
         }));
         console.println(Msg.m_stats_generated);
@@ -124,17 +126,18 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
     }
 
     private VoterProvider getVoterProvider(StatsArgs args, DistrictList dl) {
-        if (!args.voterLists.isSet()) {
+        if (dl == null) {
             // Use dummy VoterProvider for reporting total statistics only.
-            return (voter, version) -> new Voter(voter, "", "", DUMMY_LNAME, DUMMY_LNAME, 0l);
+            return (voter, version) -> new Voter(voter, "", "", "",new LName("",""));
+        }
+
+        if (!args.voterLists.isSet()) {
+            // Cannot report per district statistics for Zip ballot box without voter lists.
+            throw new MessageException(Msg.e_vl_voterlists_missing);
         }
 
         if (!args.vlKey.isSet()) {
             throw new MessageException(Msg.e_vl_vlkey_missing);
-        }
-
-        if (dl == null) {
-            throw new MessageException(Msg.e_vl_districts_missing);
         }
 
         console.println();
@@ -145,10 +148,25 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
         console.println();
         console.println(Msg.m_read);
         // NB! Must process voter lists in certain order. Using the order of input values.
+        // TODO add conf parameter?
         args.voterLists.value().forEach(vl -> {
-            VoterList list = loader.load(vl.path.value(), vl.signature.value());
+            SkipCommand skip_cmd = null;
+            if (vl.skip_cmd.value() != null) {
+                try {
+                    skip_cmd = tool.readSkipCommand(vl.skip_cmd.value());
+                }
+                catch (Exception e) {
+                    throw new MessageException(Msg.e_skip_cmd_loading);
+                }
+            }
+
+            VoterList list = loader.load(vl.path.value(), vl.signature.value(),
+                    vl.skip_cmd.value(), skip_cmd, args.foreignEHAK.value());
             console.println(Msg.m_vl, list.getName());
-            console.println(Msg.m_vl_type, list.getType());
+            console.println(Msg.m_vl_type, list.getChangeset());
+            if (skip_cmd != null) {
+                console.println(Msg.m_vl_skipped);
+            }
             console.println(Msg.m_vl_total_added, list.getAdded().size());
             console.println(Msg.m_vl_total_removed, list.getRemoved().size());
             console.println();
@@ -202,6 +220,7 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
         Arg<PublicKeyHolder> vlKey = Arg.aPublicKey(Msg.arg_vlkey, VL_KEY_ALG_ID).setOptional();
         Arg<List<VoterListEntry>> voterLists =
                 new TreeList<>(Msg.arg_voterlists, VoterListEntry::new).setOptional();
+        Arg<String> foreignEHAK = Arg.aString(Msg.arg_voterforeignehak).setOptional();
 
         Arg<Path> out = Arg.aPath(Msg.arg_out, false, null);
 
@@ -213,6 +232,7 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
             args.add(districts);
             args.add(vlKey);
             args.add(voterLists);
+            args.add(foreignEHAK);
             args.add(out);
         }
 
@@ -221,10 +241,12 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
     static class VoterListEntry extends Args {
         Arg<Path> path = Arg.aPath(Msg.arg_path, true, false);
         Arg<Path> signature = Arg.aPath(Msg.arg_signature, true, false);
+        Arg<Path> skip_cmd = Arg.aPath(Msg.arg_skip_cmd, true, false).setOptional();
 
         VoterListEntry() {
             args.add(path);
             args.add(signature);
+            args.add(skip_cmd);
         }
     }
 

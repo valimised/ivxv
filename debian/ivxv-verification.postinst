@@ -30,13 +30,13 @@ case "$1" in
 
         # prepare ssh directory for user account
         test -d ~ivxv-verification/.ssh ||
-	    mkdir --parents ~ivxv-verification/.ssh
-	chmod 700 ~ivxv-verification/.ssh
-	chown ivxv-verification:ivxv ~ivxv-verification/.ssh
-	test -e ~ivxv-verification/.ssh/authorized_keys ||
-	    touch ~ivxv-verification/.ssh/authorized_keys
-	chmod 600 ~ivxv-verification/.ssh/authorized_keys
-	chown ivxv-verification:ivxv ~ivxv-verification/.ssh/authorized_keys
+        mkdir --parents ~ivxv-verification/.ssh
+        chmod 700 ~ivxv-verification/.ssh
+        chown ivxv-verification:ivxv ~ivxv-verification/.ssh
+        test -e ~ivxv-verification/.ssh/authorized_keys ||
+            touch ~ivxv-verification/.ssh/authorized_keys
+        chmod 600 ~ivxv-verification/.ssh/authorized_keys
+        chown ivxv-verification:ivxv ~ivxv-verification/.ssh/authorized_keys
 
         # enable user to automatically start service
         loginctl enable-linger ivxv-verification

@@ -42,7 +42,7 @@ public enum Msg implements NameHolder {
 
     // error
     e_testencryption_fail, e_quorum_test_fail, e_no_cardterminals_found, //
-    e_abb_invalid_question_count, e_illegal_vote_district, e_illegal_vote_station,
+    e_abb_invalid_question_count, e_illegal_vote_district, e_illegal_vote_parish,
 
     // messages
     m_id, m_name, m_with_card, m_yes, m_no, m_quorum_test_ok, m_gen_group_params, //

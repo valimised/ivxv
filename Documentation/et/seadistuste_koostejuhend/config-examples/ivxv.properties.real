@@ -1,3 +1,3 @@
-ca = EE_Certification_Centre_Root_CA.pem.crt, esteid2018.pem.crt, EE-GovCA2018.pem.crt, ESTEID-SK_2011.pem.crt, ESTEID-SK_2015.pem.crt
-ocsp = SK_OCSP_RESPONDER_2011.pem.cer
-tsa = SK_TIMESTAMPING_AUTHORITY.pem.cer
+ca = EE-GovCA2018.pem.crt, ESTEID2018.pem.crt, ESTEID-SK_2015.pem.crt
+ocsp = SK_OCSP_RESPONDER_2011.pem.crt
+tsa = SK_TIMESTAMPING_AUTHORITY_2019.pem.crt, SK_TIMESTAMPING_AUTHORITY_2020.pem.crt, SK_TIMESTAMPING_AUTHORITY_2021.pem.crt

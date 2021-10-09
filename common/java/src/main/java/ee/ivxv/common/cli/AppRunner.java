@@ -84,6 +84,29 @@ public class AppRunner<T extends AppContext<?>> {
         boolean result = false;
         long t = System.currentTimeMillis();
 
+        // For performance reasons we want to ensure that the application is run with
+        // 64-bit JVM. For OpenJDK and Oracle Java the property sun.arch.data.model gives
+        // the architecture of the JVM quite reliably. Other JVMs may, but do not have to
+        // have the property set.
+        // We also want to have OpenJDK or Oracle Java as we are using javax.smartcardio,
+        // which is not widely implemented (e.g.
+        // https://android.googlesource.com/platform/libcore/+/jb-mr2-release/expectations/brokentests.txt#522)
+
+        String data_model = System.getProperty("sun.arch.data.model", "N/A");
+        switch(data_model) {
+            case "N/A":
+                // unknown Java runtime
+                console.println(Msg.w_unknown_java_runtime);
+                break;
+            case "64":
+                // supported model
+                break;
+            default:
+                // unknown data model
+                console.println(Msg.w_java_data_model);
+                break;
+        }
+
         try {
             MDC.put(SESSION_ID, ictx.sessionId);
             PerformanceLog.log.info("STARTING application '{}'", app.name.getName());

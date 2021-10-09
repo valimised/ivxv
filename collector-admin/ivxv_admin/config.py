@@ -7,7 +7,7 @@ import configparser
 import logging
 import logging.config
 import os
-
+import sys
 
 #: Config file name.
 CFG_FILE_NAME = 'ivxv-collector-admin.conf'
@@ -34,6 +34,11 @@ CFG_DEFAULTS = {
     'ivxv_db_path': '%(ivxv_admin_data_path)s/db',
     # management database file path
     'ivxv_db_file_path': '%(ivxv_db_path)s/ivxv-management.db',
+    # directory for other service related data files
+    "service_path": "%(ivxv_admin_data_path)s/service",
+    # directory for VIS related data files (used to download voter list
+    # changesets)
+    "vis_path": "%(ivxv_admin_data_path)s/vis",
 }
 CFG_PARSER = configparser.ConfigParser(defaults=CFG_DEFAULTS)
 CFG_FILES_USED = []
@@ -57,9 +62,11 @@ for FILE_PATH in CFG_PATHS:
 # check config files read
 if not CFG_FILES_USED:
     log = logging.getLogger(__name__)
-    log.error('IVXV collector admin utils config file %s not found '
-              'in the search paths %s',
-              CFG_FILE_NAME, CFG_PATHS)
+    log.error(
+        "IVXV collector admin utils config file %r not found in the search paths %s",
+        CFG_FILE_NAME,
+        CFG_PATHS,
+    )
 
 CONFIG = CFG_PARSER['DEFAULT']
 
@@ -73,4 +80,4 @@ if __name__ == '__main__':
     log = logging.getLogger(__name__)
     log.info('Loading config file(s) %s succeeded',
              ', '.join((CFG_FILES_USED)))
-    exit()
+    sys.exit()

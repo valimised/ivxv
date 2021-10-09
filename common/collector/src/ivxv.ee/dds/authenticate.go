@@ -30,7 +30,7 @@ type mobileAuthenticate struct {
 }
 
 type mobileAuthenticateResponse struct {
-	// nolint: lll, the XML namespace forces us to use a long line.
+	//nolint:lll // XML namespace forces us to use a long line.
 	XMLName         xml.Name `xml:"http://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl MobileAuthenticateResponse"`
 	Sesscode        int
 	Status          string
@@ -176,14 +176,14 @@ func (c *Client) MobileAuthenticate(ctx context.Context, idCode, phone string) (
 
 // https://sk-eid.github.io/dds-documentation/api/api_docs/#getmobileauthenticatestatus
 type getMobileAuthenticateStatus struct {
-	// nolint: lll, the XML namespace forces us to use a long line.
+	//nolint:lll // XML namespace forces us to use a long line.
 	XMLName       xml.Name `xml:"http://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl GetMobileAuthenticateStatus"`
 	Sesscode      int
 	WaitSignature bool
 }
 
 type getMobileAuthenticateStatusResponse struct {
-	// nolint: lll, the XML namespace forces us to use a long line.
+	//nolint:lll // XML namespace forces us to use a long line.
 	XMLName   xml.Name `xml:"http://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl GetMobileAuthenticateStatusResponse"`
 	Status    string
 	Signature string

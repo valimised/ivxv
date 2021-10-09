@@ -39,8 +39,9 @@ järgneva käsuga:
 
 .. code-block:: shell-session
 
-   $ openssl req -newkey rsa:2048 -x509 -nodes -days 365 -out ca.pem -keyout ca.key
-     -utf8 -subj "/C=EE/O=Example/OU=IVXV Test Certificates/CN=Service CA"
+   $ openssl req -newkey ec -pkeyopt ec_paramgen_curve:P-256 -x509 -nodes
+     -days 365 -out ca.pem -keyout ca.key -utf8
+     -subj "/C=EE/O=Example/OU=IVXV Test Certificates/CN=Service CA"
 
 Käsu väljundiks on failid :file:`ca.key` (võti) ja :file:`ca.pem` (sertifikaat).
 
@@ -53,8 +54,8 @@ käsuga:
 
 .. code-block:: shell-session
 
-   $ openssl req -newkey rsa:2048 -nodes -keyout <teenuse-id>-tls.key
-     -out etcd-<teenuse-id>-tls.csr -utf8
+   $ openssl req -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes
+     -out <teenuse-id>-tls.csr -keyout <teenuse-id>-tls.key -utf8
      -subj "/C=EE/O=Example/OU=IVXV Test Certificates/CN=<teenuse-id>"
 
 Käsu väljundiks on failid :file:`<teenuse-id>-tls.key` (võti) ja
@@ -66,12 +67,12 @@ Käsu väljundiks on failid :file:`<teenuse-id>-tls.key` (võti) ja
    identifikaatori asemel hostinimi: erinevalt teistest teenustest ei kasutata
    talletusteenuse puhul alternatiivset TLS nime.
 
-Talletusteenuse isendi TLS-sertifikaadi genereerimine toimub järgneva käsuga:
+Teenuse isendi TLS-sertifikaadi genereerimine toimub järgneva käsuga:
 
 .. code-block:: shell-session
 
    $ openssl x509 -req -days 365 -CA ca.pem -CAkey ca.key -set_serial 1
-     -extfile service-cert-openssl.conf -extensions ext_<teenuse-tüüp>
+     -extfile service-cert-openssl.cnf -extensions ext_<teenuse-tüüp>
      -in <teenuse-id>-tls.csr -out <teenuse-id>-tls.pem
 
 Käsu väljundiks on fail :file:`<teenuse-id>-tls.pem`.
@@ -101,8 +102,8 @@ genereeritakse järgneva käsuga:
 
 .. code-block:: shell-session
 
-   $ openssl req -new -x509 -nodes -days 365 -out tspreg.pem -key tspreg.key
-     -utf8 -subj "/C=EE/O=Example/OU=IVXV Test Certificates/CN=Collector Registration"
+   $ openssl req -x509 -nodes -days 365 -out tspreg.pem -key tspreg.key -utf8
+     -subj "/C=EE/O=Example/OU=IVXV Test Certificates/CN=Collector Registration"
 
 Käsu väljundiks on fail :file:`tspreg.pem`.
 

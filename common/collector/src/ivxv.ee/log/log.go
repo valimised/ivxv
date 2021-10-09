@@ -152,7 +152,7 @@ type Sensitive []byte
 func Debug(ctx context.Context, entry Entry) {
 	l := fromctx(ctx)
 	if atomic.LoadUint32(&l.debug) == 1 {
-		l.w.Debug(format(ctx, entry)) // nolint: errcheck, gosec, ignore logging errors.
+		l.w.Debug(format(ctx, entry)) //nolint:errcheck // Ignore logging errors.
 	}
 }
 
@@ -232,7 +232,7 @@ func Debug(ctx context.Context, entry Entry) {
 // logged instead, containing the time, connection ID, session ID, entry ID,
 // and the error that occurred. The unencoded entry will not be included.
 func Log(ctx context.Context, entry Entry) {
-	fromctx(ctx).w.Info(format(ctx, entry)) // nolint: errcheck, gosec, ignore logging errors.
+	fromctx(ctx).w.Info(format(ctx, entry)) //nolint:errcheck // Ignore logging errors.
 }
 
 // Error logs an error entry. By default, the entry is logged with severity
@@ -249,7 +249,7 @@ func Error(ctx context.Context, entry ErrorEntry) {
 	if errors.CausedBy(entry, new(alert)) != nil {
 		f = l.w.Alert
 	}
-	f(format(ctx, entry)) // nolint: errcheck, gosec, ignore logging errors.
+	f(format(ctx, entry)) //nolint:errcheck // Ignore logging errors.
 }
 
 type alert struct {

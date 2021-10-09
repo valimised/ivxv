@@ -39,8 +39,8 @@ elections, European Parliament elections and referendums.
 The components of the collector service consider the use of virtualization
 technologies, and the collector service can be implemented on both one virtual
 hardware instance as well as by microservices on different instances.  Collector
-service components can be implemented in the Ubuntu LTS 16.04 operation system
-64-bit architecture.
+service components can be implemented in the Ubuntu 20.04 LTS (Focal Fossa)
+operation system 64-bit architecture.
 
 Data retention has been implemented using the key-value database (etcd). For
 test purposes, data has also been stored in the file system and memory, but it

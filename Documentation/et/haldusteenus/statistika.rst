@@ -4,6 +4,9 @@ Statistika jälgimine
 ====================
 
 Statistika jälgimise leht avaneb menüüvalikust ``Statistika``.
+Hääletamise detailstatistika allalaadimine on kirjeldatud lõigus
+:ref:`allalaadimised`.
+
 
 Statistika genereerimine
 ------------------------

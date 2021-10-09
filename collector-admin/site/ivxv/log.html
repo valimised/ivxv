@@ -8,23 +8,22 @@ Collector management service - Web interface - Event log watching page
 
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-    <title>Halduse sündmuste logi – IVXV Kogumisteenuse haldusteenus</title>
+    <title>Haldussündmuste logi – IVXV Kogumisteenuse haldusteenus</title>
     <!-- Bootstrap Core CSS -->
-    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/javascript/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <!-- MetisMenu CSS -->
     <link href="../vendor/metisMenu/metisMenu.min.css" rel="stylesheet">
     <!-- DataTables CSS -->
-    <link href="../vendor/datatables-plugins/dataTables.bootstrap.css" rel="stylesheet">
+    <link href="/javascript/jquery-datatables/css/dataTables.bootstrap.css" rel="stylesheet">
     <!-- DataTables Responsive CSS -->
-    <link href="../vendor/datatables-responsive/dataTables.responsive.css" rel="stylesheet">
+    <link href="/javascript/jquery-datatables-extensions/Responsive/css/responsive.dataTables.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
     <!-- Custom Fonts -->
-    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="/javascript/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -48,9 +47,9 @@ Collector management service - Web interface - Event log watching page
                     </a>
                     <ul class="dropdown-menu dropdown-user" style="padding: 10px;">
                         <li><i class="fa fa-user fa-fw"></i> Kasutaja andmed</li>
-                        <li>CN:&nbsp;<span id="user-cn"></span></li>
-                        <li>Isikukood:&nbsp;<span id="user-idcode"></span></li>
-                        <li>Roll:&nbsp;<span id="user-role-description"></span></li>
+                        <li>CN:&nbsp;<span id="user-cn">-</span></li>
+                        <li>Isikukood:&nbsp;<span id="user-idcode">-</span></li>
+                        <li>Roll:&nbsp;<span id="user-role-description">-</span></li>
                     </ul>
                     <!-- /.dropdown-user -->
                 </li>
@@ -76,7 +75,7 @@ Collector management service - Web interface - Event log watching page
                             <a href="services.html"><i class="fa fa-sitemap fa-fw"></i> Teenused</a>
                         </li>
                         <li>
-                            <a href="ballot-box.html"><i class="fa fa-download fa-fw"></i> E-urn</a>
+                            <a href="downloads.html"><i class="fa fa-download fa-fw"></i> Allalaadimised</a>
                         </li>
                         <li>
                             <a href="config.html"><i class="fa fa-wrench fa-fw"></i> Seadistused</a>
@@ -156,15 +155,15 @@ Collector management service - Web interface - Event log watching page
     <!-- /#wrapper -->
 
     <!-- jQuery -->
-    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="/javascript/jquery/jquery.min.js"></script>
     <!-- Bootstrap Core JavaScript -->
-    <script src="../vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/javascript/bootstrap/js/bootstrap.min.js"></script>
     <!-- Metis Menu Plugin JavaScript -->
     <script src="../vendor/metisMenu/metisMenu.min.js"></script>
     <!-- DataTables JavaScript -->
-    <script src="../vendor/datatables/js/jquery.dataTables.min.js"></script>
-    <script src="../vendor/datatables-plugins/dataTables.bootstrap.min.js"></script>
-    <script src="../vendor/datatables-responsive/dataTables.responsive.js"></script>
+    <script src="/javascript/jquery-datatables/jquery.dataTables.min.js"></script>
+    <script src="/javascript/jquery-datatables/dataTables.bootstrap.min.js"></script>
+    <script src="/javascript/jquery-datatables-extensions/Responsive/js/dataTables.responsive.js"></script>
     <!-- Custom Theme JavaScript -->
     <script src="../dist/js/sb-admin-2.js"></script>
     <!-- IVXV JavaScript -->

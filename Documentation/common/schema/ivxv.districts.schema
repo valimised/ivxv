@@ -1,71 +1,109 @@
 {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-
-    "definitions": {
-        "region" : {
-            "type": "object",
-            "properties": {
-                "state": { "type": "string" },
-                "county": { "type": "string" },
-                "parish": { "type": "string" }
-            },
-            "additionalProperties": false,
-            "minProperties": 1
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "region": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string"
         },
-
-        "region_dict": {
-            "type": "object",
-            "patternProperties": {
-                "^[0-9]+$": {
-                    "$ref": "#/definitions/region"
-                }
-            },
-            "additionalProperties": false,
-            "minProperties": 1
+        "county": {
+          "type": "string"
         },
-
-        "station": {
-            "type": "string",
-            "pattern": "^[0-9]+\\.[0-9]+$"
-        },
-
-        "district": {
-            "type": "object",
-            "properties": {
-                "name": { "type": "string" },
-                "stations": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/station"
-                    }
-                }
-            },
-            "required": ["stations"]
-        },
-
-        "district_dict": {
-            "type": "object",
-            "patternProperties": {
-                "^[0-9]+\\.[0-9]+$": {
-                    "$ref": "#/definitions/district"
-                }
-            },
-            "additionalProperties": false,
-            "minProperties": 1
+        "parish": {
+          "type": "string"
         }
-
-   },
-
-    "type": "object",
-    "properties": {
-        "election": {"type": "string"},
-        "districts": {
-            "$ref": "#/definitions/district_dict"
-        },
-        "regions": {
-            "$ref": "#/definitions/region_dict"
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "Value - parish - is absent in case of Tallinn and Tartu cities as they are marked as counties. Parish represents city district in case of Tallinn. Parish and county are absent in case of Välisriik and RK, EP and RH elections"
+    },
+    "region_dict": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]{4}$": {
+          "$ref": "#/definitions/region"
         }
-   },
-    "required": ["districts", "regions", "election"],
-    "additionalProperties": false
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "Parishes EHAK code; city district code in case of Tallinn; 0000 for foreign state in case of RK, EP and RH elections"
+    },
+    "parish": {
+      "type": "string",
+      "pattern": "^[0-9]{4}$",
+      "description": "Parishes in election district of county. 0000 value in represents foreign state in case of RK, EP and RH elections for each election district in districts block"
+    },
+    "district": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "parish": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/parish"
+          }
+        }
+      },
+      "required": [
+        "parish"
+      ],
+      "description": "Object includes parishes or city districts that belong to this election district"
+    },
+    "district_dict": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]{4}.[0-9]{1,2}$": {
+          "$ref": "#/definitions/district"
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1
+    },
+    "counties": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/parish"
+      },
+      "description": "Object includes parishes or city districts that belong into this election district",
+      "additionalProperties": false,
+      "minProperties": 1
+    },
+    "county_dict": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]{4}$": {
+          "$ref": "#/definitions/counties"
+        }
+      },
+      "description": "Object contains parishes or city districts inside county. Tallinn is defined as county and contains city districts, Tartu linn is both county and parish",
+      "additionalProperties": false,
+      "minProperties": 1
+    }
+  },
+  "type": "object",
+  "properties": {
+    "election": {
+      "type": "string",
+      "pattern": "^[ \\-,\\+\\.:;=!?&%#<>_/\\'\\*()\\[\\]{}|^A-Za-z0-9]{1,28}$"
+    },
+    "districts": {
+      "$ref": "#/definitions/district_dict"
+    },
+    "regions": {
+      "$ref": "#/definitions/region_dict"
+    },
+    "counties": {
+      "$ref": "#/definitions/county_dict"
+    }
+  },
+  "required": [
+    "districts",
+    "regions",
+    "counties",
+    "election"
+  ],
+  "additionalProperties": false
 }

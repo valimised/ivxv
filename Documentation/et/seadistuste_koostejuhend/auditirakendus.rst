@@ -27,15 +27,6 @@ koosneb tööriistadest *convert*, *mixer* ja *decrypt*.
 E-häälte korrektse kokkulugemise kontrolliks on vajalik ja piisav
 kasutada kõiki kolme auditirakenduse tööriista.
 
-Suurte e-urni ja tõendite korral võib olla tarvilik suurendada rakenduse
-mälupiirangut. Vaikimisi mälupiiranguks on seatud 8GB.
-
-Seda saab teha kasutades keskkonnamuutujat ``AUDITOR_OPTS``, mis defineerib
-täiendavad argumendid Java virtuaalmasinale. Protsessi mälupiirangu
-suurendamiseks tuleb kasutada argumenti ``-Xmx{N}G``, kus ``{N}`` on
-mälupiirangu suurus gigabaitides. Näiteks 10 gigabaidi mälu eraldamiseks tuleb
-seada ``AUDITOR_OPTS=-Xmx10G``.
-
 Kõigi tööriistade kasutamine eeldab allkirjastatud usaldusjuure ja
 konkreetse tööriista seadistuste olemasolu. Alljärgnevalt kirjeldame
 konkreetsete tööriistade seadistusi.
@@ -54,9 +45,9 @@ teisenduste korrektsuse kontrolliks.
 Tööriist *convert* kontrollib, et Verificatumi poolt väljastatud
 miksimistõend vastab failidele IVXV raamistikus.
 
-:convert.input_bb: IVXV miksimiseelse e-urni asukoht.
+:convert.input_bb: IVXV miksimiseelse e-valimiskasti asukoht.
 
-:convert.output_bb: IVXV miksimisjärgse e-urni asukoht.
+:convert.output_bb: IVXV miksimisjärgse e-valimiskasti asukoht.
 
 :convert.pub: IVXV avaliku võtme asukoht.
 

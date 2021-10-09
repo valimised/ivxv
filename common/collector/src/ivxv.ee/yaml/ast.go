@@ -137,9 +137,6 @@ func (s Sequence) apply(v reflect.Value) {
 	}
 }
 
-// nolint: dupl, the linter thinks that this function is a duplicate of
-// Mapping.equal. Although they are syntactically the same, they differ
-// semantically because one works on slices and the other on maps.
 func (s Sequence) equal(other Node) bool {
 	o, ok := other.(Sequence)
 	if !ok || len(s.elements) != len(o.elements) || s.path != o.path {
@@ -215,9 +212,6 @@ func (m Mapping) apply(v reflect.Value) {
 	}
 }
 
-// nolint: dupl, the linter thinks that this function is a duplicate of
-// Sequence.equal. Although they are syntactically the same, they differ
-// semantically because one works on slices and the other on maps.
 func (m Mapping) equal(other Node) bool {
 	o, ok := other.(Mapping)
 	if !ok || len(m.pairs) != len(o.pairs) || m.path != o.path {

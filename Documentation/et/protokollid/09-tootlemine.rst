@@ -1,8 +1,8 @@
 ..  IVXV protokollid
 
-=================
-E-urni töötlemine
-=================
+=========================
+E-valimiskasti töötlemine
+=========================
 
 
 Tühistus- ja ennistusnimekiri
@@ -65,8 +65,8 @@ Näide:
 
 
 
-E-urn
------
+E-valimiskast
+-------------
 
 Fail sisaldab kogumisteenuse poolt vastu võetud hääli koos häälte juurde
 kuuluvate andmetega.
@@ -93,7 +93,7 @@ kus:
   ``yyyymmddhhmmssmmm±zzzz``;
 
   * see kellaaeg kajastab hetke, mil päring kogumisteenusesse tehti, ja on
-    antud lihtsalt urni inimloetavuse parandamiseks; hääle tegelik ajamärk või
+    antud lihtsalt valimiskasti inimloetavuse parandamiseks; hääle tegelik ajamärk või
     -tempel on mõne kvalifitseeriva vastuse sees;
 
 * ``<vote type>`` on valikute konteineri tüüp, Eesti puhul BDOC;
@@ -135,13 +135,13 @@ kus:
    üks.
 
 
-Anonüümistatud e-urn
---------------------
+Anonüümistatud e-valimiskast
+----------------------------
 
 Valimisringkondade ja jaoskondade järgi grupeeritud krüpteeritud hääled.
-Anonüümistatud e-urnis puudub informatsioon valijate kohta.
+Anonüümistatud e-valimiskastis puudub informatsioon valijate kohta.
 
-Anonüümistatud e-urn on töötlemisrakenduse väljund ning võtmerakenduse
+Anonüümistatud e-valimiskast on töötlemisrakenduse väljund ning võtmerakenduse
 dekrüpteerimise tööriista sisend.
 
 .. literalinclude:: ../../common/schema/ivxv.anon-bb.schema

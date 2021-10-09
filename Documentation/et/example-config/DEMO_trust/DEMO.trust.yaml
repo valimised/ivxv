@@ -15,6 +15,7 @@ container:
       signers:
         - !container SK_TIMESTAMPING_AUTHORITY.pem.cer
       delaytime: 10
+    tsdelaytime: 60
 authorizations:
     - M,T,3
     - L,I,3

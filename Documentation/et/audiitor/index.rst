@@ -15,6 +15,7 @@ IVXV audiitori juhend
    :maxdepth: 2
    :numbered:
 
+   ylevaade
    annotatsioon
    audit
    history

@@ -6,23 +6,19 @@ public class Voter {
 
     private final String code;
     private final String name;
+    private final String parish;
     private final LName district;
-    private final LName station;
-    private final Long rowNumber;
     private final boolean isAddition;
 
-    Voter(String code, String name, String activity, String districtId, String stationId,
-            Long rowNumber) {
-        this(code, name, activity, new LName(districtId), new LName(stationId), rowNumber);
+    Voter(String code, String name, String activity, String parish, String district) {
+        this(code, name, activity, parish, new LName(district));
     }
 
-    public Voter(String code, String name, String activity, LName district, LName station,
-            Long rowNumber) {
+    public Voter(String code, String name, String activity, String parish, LName district) {
         this.code = code;
         this.name = name;
+        this.parish = parish;
         this.district = district;
-        this.station = station;
-        this.rowNumber = rowNumber;
         isAddition = ACTIVITY_ADDITION.equals(activity);
     }
 
@@ -38,12 +34,8 @@ public class Voter {
         return district;
     }
 
-    public LName getStation() {
-        return station;
-    }
-
-    public Long getRowNumber() {
-        return rowNumber;
+    public String getParish() {
+        return parish;
     }
 
     public boolean isAddition() {

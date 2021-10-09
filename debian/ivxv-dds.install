@@ -1,4 +1,0 @@
-#!/usr/bin/dh-exec
-usr/bin/dds => usr/bin/ivxv-dds
-
-usr/lib/systemd/user/ivxv-dds@.service

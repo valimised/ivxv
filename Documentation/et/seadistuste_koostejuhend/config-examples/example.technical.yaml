@@ -22,9 +22,9 @@ network:
       proxy:
         - id:          proxy@proxy1.ivxv.ee
           address:     proxy1.ivxv.ee:443
-      dds:
-        - id:          dds@dds1.ivxv.ee
-          address:     dds1.ivxv.ee:443
+      mid:
+        - id:          mid@mid1.ivxv.ee
+          address:     mid1.ivxv.ee:443
       choices:
         - id:          choices@choices1.ivxv.ee
           address:     choices1.ivxv.ee:443

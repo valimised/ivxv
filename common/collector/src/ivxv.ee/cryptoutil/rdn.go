@@ -48,7 +48,7 @@ func rdnEqual(a, b pkix.RelativeDistinguishedNameSET) bool {
 	// Comparing non-comparable attribute values panics, so defer recover.
 	// We can safely say that a and b are not equal if a panic was caused.
 	defer func() { // defer recover() does not work.
-		recover() // nolint: errcheck, discard the panic.
+		recover() //nolint:errcheck // Discard the panic.
 	}()
 next:
 	for _, aatv := range a {
@@ -73,21 +73,16 @@ var (
 	//
 	// Keep these sorted by OID for easier tracking.
 	shortnames = map[string]asn1.ObjectIdentifier{
-		"emailAddress": {1, 2, 840, 113549, 1, 9, 1},
-		"CN":           {2, 5, 4, 3},
-		"SN":           {2, 5, 4, 4},
-		"serialNumber": {2, 5, 4, 5},
-		"C":            {2, 5, 4, 6},
-		"L":            {2, 5, 4, 7},
-		"ST":           {2, 5, 4, 8},
-		"O":            {2, 5, 4, 10},
-		"OU":           {2, 5, 4, 11},
-		"GN":           {2, 5, 4, 42},
-
-		// Keep an empty line here, since starting with Go 1.11 the fmt
-		// alignment algorithm changed. This causes gofmt (from Go 1.9)
-		// and goimports (compiled with the latest Go) to conflict.
-		// https://go.googlesource.com/go/+/542ea5ad91367d2b40589942cc5757a4d5f43f97
+		"emailAddress":           {1, 2, 840, 113549, 1, 9, 1},
+		"CN":                     {2, 5, 4, 3},
+		"SN":                     {2, 5, 4, 4},
+		"serialNumber":           {2, 5, 4, 5},
+		"C":                      {2, 5, 4, 6},
+		"L":                      {2, 5, 4, 7},
+		"ST":                     {2, 5, 4, 8},
+		"O":                      {2, 5, 4, 10},
+		"OU":                     {2, 5, 4, 11},
+		"GN":                     {2, 5, 4, 42},
 		"organizationIdentifier": {2, 5, 4, 97},
 	}
 
@@ -156,7 +151,7 @@ func encodeATV(buf *bytes.Buffer, atv pkix.AttributeTypeAndValue) error {
 		return nil
 	}
 	s = bsEscapeRE.ReplaceAllString(s, `\$1`)
-	s = strings.Replace(s, "\x00", "\\00", -1)
+	s = strings.ReplaceAll(s, "\x00", "\\00")
 	buf.WriteString(s)
 	return nil
 }

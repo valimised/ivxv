@@ -1,7 +1,0 @@
-{
-	"id": 1,
-	"method": "RPC.Choices",
-	"params": [{
-		"choices": "100.1"
-	}]
-}

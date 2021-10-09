@@ -5,6 +5,7 @@ collector-admin/ivxv-collector-admin.conf etc/ivxv/
 
 # IVXV admin interface
 collector-admin/site/index.html      var/www/collector-admin/
+collector-admin/site/favicon.ico     var/www/collector-admin/
 collector-admin/site/ivxv            var/www/collector-admin/
 # WSGI application
 collector-admin/site/ivxv-admin.wsgi var/www/collector-admin/

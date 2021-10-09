@@ -30,13 +30,13 @@ case "$1" in
 
         # prepare ssh directory for user account
         test -d ~ivxv-storage/.ssh ||
-	    mkdir --parents ~ivxv-storage/.ssh
-	chmod 700 ~ivxv-storage/.ssh
-	chown ivxv-storage:ivxv ~ivxv-storage/.ssh
-	test -e ~ivxv-storage/.ssh/authorized_keys ||
-	    touch ~ivxv-storage/.ssh/authorized_keys
-	chmod 600 ~ivxv-storage/.ssh/authorized_keys
-	chown ivxv-storage:ivxv ~ivxv-storage/.ssh/authorized_keys
+        mkdir --parents ~ivxv-storage/.ssh
+        chmod 700 ~ivxv-storage/.ssh
+        chown ivxv-storage:ivxv ~ivxv-storage/.ssh
+        test -e ~ivxv-storage/.ssh/authorized_keys ||
+            touch ~ivxv-storage/.ssh/authorized_keys
+        chmod 600 ~ivxv-storage/.ssh/authorized_keys
+        chown ivxv-storage:ivxv ~ivxv-storage/.ssh/authorized_keys
 
         # enable user to automatically start service
         loginctl enable-linger ivxv-storage

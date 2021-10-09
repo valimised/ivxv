@@ -19,6 +19,8 @@ import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 import javax.smartcardio.ResponseAPDU;
 import javax.xml.bind.DatatypeConverter;
+
+import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1OctetString;
@@ -537,7 +539,12 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
         if (seq.size() != 1) {
             throw new PKCS15Exception("Invalid ASN1 structure");
         }
-        DEROctetString octetString = (DEROctetString) seq.getObjectAt(0);
+        ASN1Encodable el = seq.getObjectAt(0);
+        if (el instanceof DERSequence) {
+            // newer Aventra myEID driver creates different structure
+            el = ((DERSequence) el).getObjectAt(0);
+        }
+        DEROctetString octetString = (DEROctetString) el;
         return octetString.getOctets();
     }
 

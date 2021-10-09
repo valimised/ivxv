@@ -97,7 +97,28 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
         Hääle kontrollimise perioodi kestus minutites. Pärast hääle
         andmist on selle perioodi vältel võimalik häält kontrollida.
 
+:verification.latestonly:
+
+        Tõeväärtus, kas kontrollida saab ainult valija viimati antud häält. Kui
+        väärtus on väär või puudu, siis saab kontrollida kõiki valija hääli
+        (teiste piirangute raames).
+
 ----
+
+:voterforeignehak:
+
+        Alaliselt välisriigis elavate valijate ringkonnakuuluvuse tuvastamiseks
+        kasutatav EHAK-kood.
+
+        Kui parameeter on määratud, siis alaliselt välisriigis elavad valijad
+        kuuluvad ringkondadesse, kuhu kuulub ka parameetris määratud
+        EHAK-koodile vastav haldusüksus. Täiendavalt peab ringkondade nimekiri
+        sisaldama sellise EHAK-koodiga haldusüksust.
+
+        Kui parameeter on määramata, siis kasutatakse EHAK-koodi "0000". Kui
+        parameeter on määramata ning ringkondade nimekiri ei sisalda
+        vaikekoodile vastavat haldusüksust, siis valijate nimekiri ei tohi
+        sisaldada alaliselt välisriigis elavaid valijaid.
 
 :ignorevoterlist:
 
@@ -117,8 +138,20 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 :voterlist.key:
 
         Kohustuslik väli.
-        RSA-võtmepaari avalik võti valijate nimekirjade allkirja
+        ECDSA-võtmepaari avalik võti valijate nimekirjade allkirja
         kontrollimiseks.
+
+:vis:
+        Alamblokk, mis sisaldab Valimiste Infosüsteemi seadistust.
+
+:vis.url:
+
+        Kohustuslik väli.
+        Valimiste Infosüsteemi URL.
+
+:vis.ca:
+
+        Valimiste Infosüsteemi TLS-sertifikaadi usaldusahel.
 
 ----
 
@@ -132,7 +165,7 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
         Alamblokk, mis sisaldab piletipõhise valija tuvastamise seadistust.
 
         Piletipõhist valija tuvastamist kasutatakse Mobiil-ID puhul, kus
-        ``dds`` teenus tuvastab valija ning väljastab talle pileti, millega
+        ``mid`` teenus tuvastab valija ning väljastab talle pileti, millega
         teistele teenustele ennast tuvastada.
 
         See alamblokk on tühi, aga tema olemasolek või puudumine määrab, kas
@@ -276,69 +309,85 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 
 ----
 
-:dds:
+:mid:
 
         Alamblokk, mis sisaldab Mobiil-ID teenusepakkuja seadistust.
 
-:dds.url:
+:mid.url:
 
         Kohustuslik väli.
         Mobiil-ID teenusepakkuja asukoht.
 
-:dds.countrycode:
+:mid.relyingpartyuuid:
 
         Kohustuslik väli.
-        Mobiil-ID kasutajate riigi kood ISO 3166-1 alpha-2 stiilis. Edastatakse
-        teenusepakkujale kirjeldamaks, mis riigi isikukoode kasutatakse.
+        Mobiil-ID teenusepakkujaga kokkulepitud kliendi identifikaator.
 
-:dds.language:
+:mid.relyingpartyname:
+
+        Kohustuslik väli.
+        Mobiil-ID teenusepakkujaga kokkulepitud kliendi nimi.
+
+:mid.language:
 
         Kohustuslik väli.
         Mobiil-ID kasutajale kuvatavate sõnumite keel. Võimalikud väärtused
         ``EST``, ``ENG``, ``RUS`` ja ``LIT``.
 
-:dds.servicename:
-
-        Kohustuslik väli.
-        Mobiil-ID teenusepakkujaga kokkulepitud teenusenimi.
-
-:dds.authmessage:
+:mid.authmessage:
 
         Kohustuslik väli.
         Sõnum, mida Mobiil-ID kasutajale kuvada autentimise käigus.
 
-:dds.signmessage:
+:mid.signmessage:
 
         Kohustuslik väli.
         Sõnum, mida Mobiil-ID kasutajale kuvada allkirjastamise käigus.
 
-:dds.idcoderequired:
+:mid.messageformat:
 
-        Tõeväärtus, mis määrab kas Mobiil-ID autentimiseks on isikukood nõutud.
+        Autentimise ning allkirjastamise käigus kasutajale kuvatava sõnumi
+        vorming. Võimalikud väärtused ``GSM-7`` (Mobiil-ID poolt kasutatav
+        vaikeväärtus) ja ``UCS-2``.
 
-        Vähemalt üks seadistustest ``dds.idcoderequired`` või
-        ``dds.phonerequired`` peab olema tõene.
+:mid.authchallengesize:
 
-:dds.phonerequired:
+        Autentimise käigus Mobiil-ID teenusele saadetava pretensiooni pikkus.
+        Võimalikud väärtused ``32`` (vaikeväärtus), ``48`` ja ``64``.
 
-        Tõeväärtus, mis määrab kas Mobiil-ID autentimiseks on telefoni number
-        nõutud.
+:mid.statustimeoutms:
 
-        Vähemalt üks seadistustest ``dds.idcoderequired`` või
-        ``dds.phonerequired`` peab olema tõene.
+        Parameeter, mis edastatakse autentimise ja allkirjastamise staatuse
+        päringu korral Mobiil-ID teenusele ning millega saab kontrollida, kui
+        kaua ootab Mobiil-ID teenus kasutaja poolse tegevuse lõpptulemust, enne
+        kui vastab, et tegevus on pooleli. Väärtuse puudumisel oodatakse
+        võimalikult vähe: täpne aeg sõltub Mobiil-ID teenusest.
 
-:dds.roots:
+        Antud parameetri abil saab vähendada ühe autentimise või allkirjastamise
+        käigus Mobiil-ID teenusele saadetavate päringute arvu.
+
+:mid.roots:
 
         Kohustuslik väli.
         Mobiil-ID sertifikaatide usaldusjuured.
 
-:dds.intermediates:
+:mid.intermediates:
 
         Mobiil-ID sertifikaatide vahesertifikaadid. Mobiil-ID autentimiseks
         peab nende sertifikaatide abil olema võimalik luua ahel Mobiil-ID
         sertifikaadist usaldusjuureni.
 
-:dds.ocsp.responders:
+:mid.ocsp:
+
+        Alamblokk, mis sisaldab valija Mobiil-ID sertifikaatide oleku
+        kontrollimise seadistust.
+
+:mid.ocsp.url:
+
+        Kohustuslik väli.
+        Valija Mobiil-ID sertifikaatide kehtivuskinnitusteenuse aadress.
+
+:mid.ocsp.responders:
 
         Mobiil-ID sertifikaatide OCSP responderi sertifikaadid. Kui nende
         hulgast responderi sertifikaati ei leita, siis otsitakse vastuses

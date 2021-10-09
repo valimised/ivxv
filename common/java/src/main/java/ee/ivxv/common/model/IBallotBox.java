@@ -26,6 +26,7 @@ public interface IBallotBox {
         UNORGANIZED, //
         BACKUP, //
         INTEGRITY_CONTROLLED, //
+        INVALID_CIPHERTEXTS_REMOVED, //
         RECURRENT_VOTES_REMOVED, //
         DOUBLE_VOTERS_REMOVED, //
         ANONYMIZED;

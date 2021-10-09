@@ -22,6 +22,7 @@ function loadPageData() {
         $('#panel-choices-list').attr('class', 'panel panel-red');
       } else {
         $('#choicesoption').hide();
+        $('#votersoption').parent().val('voters');
         $('#drop').find('option[value="voters"]').prop('selected', true);
         if (!state['list']['choices-loaded']) {
           $('#list-choices-status').text('Laaditud haldusteenusesse');
@@ -33,29 +34,26 @@ function loadPageData() {
       }
 
       // voters lists
-      $('#list-voters-loaded').text(state['list']['voters-list-loaded']);
-      $('#list-voters-pending').text(state['list']['voters-list-pending']);
-      $('#panel-voters-list').attr('class', 'panel panel-warning');
-      $('#remove-voters-lists').hide();
-      if (state['list']['voters-list-pending'] > 0) {
-        $('#remove-voters-lists').show();
-        $('#remove-voters-lists').prop('disabled', false);
+      if (state['list']['voters-list-applied']) {
+        $('#votersoption').contents().replaceWith('Valijate muudatusnimekirja vahelejätmine');
       }
+      fillVoterListStateCounters(state['list']);
+      $('#panel-voters-list').attr('class', 'panel panel-warning');
 
-      if (state['list']['voters-list-loaded'] === 0) {
+      if (state['list']['voters-list-applied'] === 0) {
         $('#panel-voters-list').attr('class', 'panel panel-red');
       } else if (state['list']['voters-list-pending'] === 0) {
         $('#panel-voters-list').attr('class', 'panel panel-success');
 
         $('#list-list').empty();
-        for (var i = 0; i < state['list']['voters-list-loaded']; i++) {
-          var iStr = 'voters' + (i < 10 ? '0' : '') + (i + 1);
-          var listStatus =
-            state['list'][iStr] === state['list'][iStr + '-loaded'] ?
-            'LAADITUD' : 'OOTEL';
+        for (var changeset_no = 0; changeset_no < 10000; changeset_no++) {
+          var iStr = 'voters' + String(changeset_no).padStart(4, '0');
+          if (!(iStr + '-state' in state['list']))
+            break;
+          var listStatus = voterListStateDescriptions.get(state['list'][iStr + '-state']);
           $('#list-list').append(
             '<li class="list-group-item" style="padding-left:25px">' +
-            (i + 1) + '. ' + listStatus + ': ' + state['list'][iStr] +
+            (changeset_no + 1) + '. ' + listStatus + ': ' + state['list'][iStr] +
             '</li>'
           );
         }
@@ -153,25 +151,6 @@ function uploadFiles(event) {
         .html(jqXHR.responseText)
         .addClass('alert-danger')
         .show();
-    }
-  });
-}
-
-/**
- * Send a request to remove loaded but not applied voter lists
- */
-function removeVotersLists() {
-  $('#remove-voters-lists').prop('disabled', true);
-  $.ajax({
-    method: 'POST',
-    url: '/ivxv/cgi/remove-voters-lists',
-    success: function(resp) {
-      alert(resp.message);
-      loadPageData();
-    },
-    error: function(resp) {
-      alert(resp.message);
-      loadPageData();
     }
   });
 }

@@ -14,13 +14,14 @@ var (
 	ErrUnauthenticated = errors.New("UNAUTHENTICATED")
 	ErrVotingEnd       = errors.New("VOTING_END")
 
-	// DDS errors.
+	// Mobile ID errors.
 	ErrMIDAbsent      = errors.New("MID_ABSENT")
 	ErrMIDCanceled    = errors.New("MID_CANCELED")
 	ErrMIDCertificate = errors.New("MID_BAD_CERTIFICATE")
 	ErrMIDExpired     = errors.New("MID_EXPIRED")
 	ErrMIDGeneral     = errors.New("MID_GENERAL")
 	ErrMIDNotUser     = errors.New("MID_NOT_USER")
+	ErrMIDOperator    = errors.New("MID_OPERATOR")
 
 	// Vote errors.
 	ErrIdentityMismatch = errors.New("IDENTITY_MISMATCH")

@@ -1,31 +1,32 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-
     "definitions": {
         "choice": {
-            "type": "string"
+            "type": "string",
+            "description": "Candidate's name in case of RK, EP, KOV. Possible answer in case of RH"
         },
         "list_choices": {
             "type": "object",
             "patternProperties": {
-                "^[0-9]+\\.[0-9]+$": {
+                "^[0-9]{4}\\.[0-9]{3,4}$": {
                     "$ref": "#/definitions/choice"
                 }
             },
             "additionalProperties": false,
             "minProperties": 1
         },
-        "district_choices" : {
+        "district_choices": {
             "type": "object",
             "additionalProperties": {
                 "$ref": "#/definitions/list_choices"
             },
-            "minProperties": 1
+            "minProperties": 1,
+            "description": "Political unions and independent candidates in district, in case of RH - question"
         },
         "district_dict": {
             "type": "object",
             "patternProperties": {
-                "^[0-9]+\\.[0-9]+$": {
+                "^[0-9]{4}\\.[0-9]{1,2}$": {
                     "$ref": "#/definitions/district_choices"
                 }
             },
@@ -33,14 +34,19 @@
             "minProperties": 1
         }
     },
-
     "type": "object",
     "properties": {
-        "election": {"type": "string"},
+        "election": {
+            "type": "string",
+            "pattern": "^[ \\-,\\+\\.:;=!?&%#<>_/\\'\\*()\\[\\]{}|^A-Za-z0-9]{1,28}$"
+        },
         "choices": {
             "$ref": "#/definitions/district_dict"
         }
     },
-    "required": ["election", "choices"],
+    "required": [
+        "election",
+        "choices"
+    ],
     "additionalProperties": false
 }

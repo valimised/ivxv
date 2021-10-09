@@ -40,21 +40,24 @@ Lists state:
                            'LOADED TO SERVICE' or 'PENDING' }}
 {% endif %}
     Districts list: {{ list.districts or '-' }}
-    Voters lists: {{ '%s loaded'|format(list['voters-list-loaded'])
-                  }}, {{
-                     '%s pending'|format(list['voters-list-pending'])
-                  }}
-{%- if not list['voters01'] %}
+{%- if list.districts %}
+    Districts list state: {{ list.districts == list['districts-loaded'] and
+                           'LOADED TO SERVICE' or 'PENDING' }}
+{% endif %}
+    Voters lists: {{ list['voters-list-total']
+        }} [ APPLIED {{ list['voters-list-applied']
+        }} ; PENDING {{ list['voters-list-pending']
+        }} ; INVALID {{ list['voters-list-invalid']
+        }} ; SKIPPED {{ list['voters-list-skipped']
+        }} ]
+{%- if not list['voters0000'] %}
         [No voter lists loaded]
-{% else -%}
-{% for list_no in range(1, list['voters-list-loaded'] + list['voters-list-pending'] + 1) %}
-{%- set registered_list_key = "voters%02d"|format(list_no) %}
-{%- set loaded_list_key = registered_list_key + '-loaded' %}
-        {{ list_no
-        }}. {{
-            list[registered_list_key] == list[loaded_list_key] and
-            'LOADED' or 'PENDING'
-        }}: {{ list[registered_list_key] }}
+{% else %}
+{%- set ns = namespace(changeset_no=0) %}
+{%- for key in list if key.startswith('voters') and key.endswith('-state') %}
+        {% set ns.changeset_no = ns.changeset_no + 1 -%}
+        {% set prefix = key|replace('-state', '') -%}
+        {{ ns.changeset_no }}. {{ "%-7s"|format(list[prefix + '-state']) }} {{ list[prefix] }}
 {%- endfor %}
 {%- endif %}
 {% endif %}
@@ -84,8 +87,8 @@ Services: {{ service|count }} services in {{ network|count }} network(s)
           Service TLS key: {{ service['tls-key'] or '-' }}
           Service TLS certificate: {{ service['tls-cert'] or '-' }}
 {%- endif %}
-{%- if 'dds-token-key' in service %}
-          Mobile ID identity token: {{ service['dds-token-key'] or '-' }}
+{%- if 'mid-token-key' in service %}
+          Mobile ID identity token: {{ service['mid-token-key'] or '-' }}
 {%- endif %}
 {%- if 'tspreg-key' in service %}
           PKIX TSP registration key: {{ service['tspreg-key'] or '-' }}
@@ -109,9 +112,17 @@ Data storage:
 {%- endif %}
     Users count: {{ user|count }}
     Commands: {{
-        storage.command_files|count }} loaded ({{
-        storage.command_files_applied|count }} applied, {{
-        storage.command_files_pending|count }} pending)
+        storage.command_files_active|count + storage.command_files_inactive|count }} loaded ({{
+        storage.command_files_active|count }} active, {{
+        storage.command_files_inactive|count }} inactive)
+        Active commands:
+        {%- for command_file in storage.command_files_active %}
+            {{ loop.index }}. {{ command_file }}
+        {%- endfor %}
+        Inactive commands:
+        {%- for command_file in storage.command_files_inactive %}
+            {{ loop.index }}. {{ command_file }}
+        {%- endfor %}
 {% endif %}
 {#-
 vim:ft=jinja:

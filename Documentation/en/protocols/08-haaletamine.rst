@@ -67,7 +67,7 @@ authentication certificate of the ID card.
    :linenos:
 
 Request ``RPC.VoterChoices`` when authenticating with mobile ID – before making
-the request, the DigiDocService proxy service (SNI ``dds.ivxv.invalid``) has to
+the request, the mobile ID proxy service (SNI ``mid.ivxv.invalid``) has to
 be used to retrieve a signed authentication certificate.
 
 :params.AuthToken: Certificate signed using the authentication service,
@@ -184,7 +184,7 @@ Voting with Mobile ID
 ------------------------
 
 Using mobile ID as a means of signing and authentication means that a support
-service (SNI ``dds.ivxv.invalid``) that integrates with the service DigiDocService
+service (SNI ``mid.ivxv.invalid``) that integrates with the mobile ID service
 has to be used to retrieve an authentication certificate before the list of
 choices is retrieved and to sign the vote before storing it.
 
@@ -196,6 +196,7 @@ The voter application makes the request ``RPC.Authenticate`` to start mobile ID
 authentication.
 
 :params.OS: The operation system in which the voter application is used.
+:params.IDCode: The personal identification code of the person using the mobile ID.
 :params.PhoneNo: The mobile phone number of the person using the mobile ID.
 
 .. literalinclude:: ../../common/examples/mid.rpc.authenticate.query.json

@@ -47,11 +47,11 @@ All components used in the collector service have an open source code.
 
    *  - Name
       - Version
-      - License
+      - License (SPDX)
       - Usage need
 
    *  - `Bootstrap <http://getbootstrap.com>`_
-      - 3.3.7
+      - 3.4.1
       - MIT
       - Design of the user interface of the collector service administration service
 
@@ -61,7 +61,7 @@ All components used in the collector service have an open source code.
       - ASN1 handling, support functions of the data type BigInteger
 
    *  - `Bottle <https://bottlepy.org/>`_
-      - 0.12.13
+      - 0.12.15
       - MIT
       - Framework for executing the collector service administration service web interface
 
@@ -71,8 +71,8 @@ All components used in the collector service have an open source code.
       - Multilanguage support, translation file validation
 
    *  - Digidoc 4j
-      - 2.1.0.
-      - LGPL
+      - 2.1.0
+      - LGPL-2.1-only
       - BDoc container handling
 
    *  - Digidoc 4j DSS
@@ -80,149 +80,140 @@ All components used in the collector service have an open source code.
       - LGPL
       - Digidoc 4j dependency
 
-   *  - Apache Commons (cli 1.4, codec 1.10, collections 4.1, io 2.5, lang 3.6, logging 1.2, compress 1.3)
+   *  - Apache Commons (cli 1.4, codec 1.10, collections4 4.1, io 2.5, lang3 3.6, logging 1.2, compress 1.3)
       - -
-      - Apache License v2.0
+      - Apache-2.0
       - Digidoc 4j and PDFBox dependencies
 
    *  - Apache HttpComponents
       - 4.5.3
-      - Apache License v2.0
+      - Apache-2.0
       - Digidoc 4j dependency
 
    *  - Apache Santuario
       - 2.0.9
-      - Apache License v2.0
+      - Apache-2.0
       - Digidoc 4j dependency
 
    *  - Google Guava
       - 20.0
-      - Apache License v2.0
+      - Apache-2.0
       - Digidoc 4j dependency
 
    *  - JDigiDoc
       - 3.12.1
-      - LGPL
+      - LGPL-2.1-only
       - Digidoc 4j dependency
 
    *  - StaX
       - 1.0-2
-      - Apache License v2.0
+      - Apache-2.0
       - Digidoc 4j dependency
 
    *  - log4j
       - 1.2.6
-      - Apache License 2.0
+      - Apache-2.0
       - Digidoc 4j dependency
 
    *  - Woodstox
       - 4.4.1
-      - Apache License 2.0
+      - Apache-2.0
       - Digidoc 4j dependency
 
    *  - Xalan-Java
       - 2.7.2
-      - Apache License 2.0
+      - Apache-2.0
       - Digidoc 4j dependency
 
    *  - Xml Apis
       - 1.3.04
-      - Apache License 2.0
+      - Apache-2.0
       - Digidoc 4j dependency
 
    *  - `Docopt <http://docopt.org/>`_
       - 0.6.2
       - MIT
-      - Execution of the command line interface of the collector service administration utilities
+      - Execution of the command line interface of the collector management
+        service utilities
+
+   *  - `Fasteners <https://github.com/harlowja/fasteners>`_
+      - 0.14.1
+      - Apache-2.0
+      - Process locking module for collector management service
 
    *  - `etcd <https://coreos.com/etcd>`_
-      - 3.2.17
-      - Apache License v2.0
+      - 3.2.26
+      - Apache-2.0
       - Distributed key value database used as a storage service
 
-   *  - `github.com/ghodss/yaml <https://github.com/ghodss/yaml>`_
-      - 73d445a
-      - MIT
-      - etcd client library dependency
-
-   *  - `gopkg.in/yaml.v2 <https://gopkg.in/yaml.v2>`_
-      - 4c78c97
-      - Apache License v2.0
-      - github.com/ghodss/yaml dependency
-
    *  - `github.com/golang/protobuf <https://github.com/golang/protobuf>`_
-      - 224aaba
-      - BSD 2.0
+      - 1.3.2
+      - BSD-3-Clause
       - etcd client library dependency
 
-   *  - `github.com/grpc-ecosystem/go-grpc-prometheus <https://github.com/grpc-ecosystem/go-grpc-prometheus>`_
-      - 6b7015e
-      - Apache License v2.0
-      - etcd client library dependency
+   *  - Glassfish JAXB
+      - 2.3.3
+      - BSD-3-Clause
+      - Java XML library
 
-   *  - `github.com/grpc-ecosystem/grpc-gateway <https://github.com/grpc-ecosystem/grpc-gateway>`_
-      - 6863684
-      - BSD 2.0
+   *  - `google.golang.org/genproto <https://google.golang.org/genproto>`_
+      - 58ce757
+      - Apache-2.0
       - etcd client library dependency
 
    *  - `google.golang.org/grpc <https://google.golang.org/grpc>`_
-      - 1.0.4
-      - Apache License v2.0
+      - 1.22.1
+      - Apache-2.0
       - etcd client library dependency
 
    *  - `golang.org/x/net <https://golang.org/x/net>`_
-      - f249948
-      - BSD 2.0
+      - 74dc4d7
+      - BSD-3-Clause
       - etcd client library dependency
 
-   *  - `Prometheuse klientteek <https://prometheus.io>`_
-      - 0.8
-      - Apache License v2.0
+   *  - `golang.org/x/sys <https://golang.org/x/sys>`_
+      - fc99dfb
+      - BSD-3-Clause
       - etcd client library dependency
 
-   *  - `github.com/beorn7/perks/quantile <https://github.com/beorn7/perks>`_
-      - 4c0e845
-      - MIT
-      - Prometheus client library dependency
-
-   *  - `github.com/matttproud/golang_protobuf_extensions <https://github.com/matttproud/golang_protobuf_extensions>`_
-      - 1.0.0
-      - Apache License v2.0
-      - Prometheus client library dependency
+   *  - `golang.org/x/text <https://golang.org/x/text>`_
+      - 0.3.2
+      - BSD-3-Clause
+      - etcd client library dependency
 
    *  - Gradle
-      - 3.0
-      - Apache License v2.0
+      - 6.4
+      - Apache-2.0
       - Java applications build tool
 
    *  - `HAProxy <http://www.haproxy.org/>`_
-      - 1.8.8
-      - GPL v2
+      - 2.0.13
+      - GPL-2.0-or-later
       - TCP proxy used as a proxy service
 
    *  - IvyPot
-      - 0.4
-      - Apache License v2.0
+      - 0.12
+      - Apache-2.0
       - A Gradle build tool extension for managing dependencies and building applications offline
 
    *  - Jackson
       - 2.8.9
-      - Apache License v2.0
+      - Apache-2.0
       - Reading and writing JSON files
 
    *  - `jQuery <https://jquery.org/>`_
-      - 3.1.0
+      - 3.3.1
       - MIT
       - User interface of the collector service administration service
 
    *  - Logback
       - 1.2.3
-      - Eclipse Public License v1.0 or LGPL v2.1
+      - EPL-1.0 or LGPL-v2.1-only
       - Logging API SLF4J implementation
 
    *  - Logback JSON
       - 0.1.5
-      - Eclipse Public License v1.0 or LGPL v2.1
+      - EPL-1.0 or LGPL-v2.1-only
       - Logback logger extension for compiling log entries in the JSON schema format using the Jackson library
 
    *  - `metisMenu <https://github.com/onokumus/metisMenu>`_
@@ -232,17 +223,17 @@ All components used in the collector service have an open source code.
 
    *  - PDFBox
       - 2.0.8
-      - Apache License v2.0
+      - Apache-2.0
       - PDF report generation support for Java applications
 
    *  - `PyYAML <http://pyyaml.org/>`_
-      - 3.12
+      - 5.3.1
       - MIT
       - Collector service configuration files’ processing support for the administration service
 
    *  - `Schematics <https://github.com/schematics/schematics>`_
       - 2.0.1
-      - BSD
+      - BSD-3-Clause
       - Collector service configuration files’ validation support for the administration service
 
    *  - SLF4J
@@ -252,7 +243,7 @@ All components used in the collector service have an open source code.
 
    *  - SnakeYAML
       - 1.18
-      - Apache License v2.0
+      - Apache-2.0
       - Reading data in the YAML format
 
    *  - `SB Admin 2 <https://github.com/BlackrockDigital/startbootstrap-sb-admin-2>`_
@@ -276,12 +267,12 @@ All components used in the collector service have an open source code.
 
    *  - JUnit
       - 4.12
-      - Eclipse Public License v1.0
+      - EPL-1.0
       - Java testing framework
 
    *  - JUnitParams
       - 1.1.0
-      - Apache License v2.0
+      - Apache-2.0
       - Test parameterization support
 
    *  - Mockito
@@ -290,24 +281,29 @@ All components used in the collector service have an open source code.
       - Support for mocking the dependencies of the code being tested
 
    *  - Byte Buddy
-      - 1.6.14
-      - Apache License v2.0
+      - 1.9.10
+      - Apache-2.0
       - Mockito dependency
 
    *  - Objenesis
-      - 2.5
-      - Apache License v2.0
+      - 2.6
+      - Apache-2.0
       - Mockito dependency
 
-   *  - libdigidoc2
-      - 3.10.4.1218
-      - LGPL
+   *  - libdigidocpp-tools
+      - 3.14.5.1404
+      - LGPL-2.1-or-later
       - Generating test data
 
-   *  - libdigidocpp-tools
-      - 3.13.6.1371
-      - LGPL
-      - Generating test data
+   *  - PyTest
+      - 6.2.3
+      - MIT
+      - Üksuste testimise tugi Pythonile
+
+   *  - Requests
+      - 2.25.1
+      - Apache 2.0
+      - HTTP päringute moodul Pythoni testidele
 
 .. list-table::
    Third-party tools used to develop and/or test the IVXV framework
@@ -315,25 +311,25 @@ All components used in the collector service have an open source code.
 
    *  - Name
       - Version
-      - License
+      - License (SPDX)
       - Usage need
 
    *  - `Behave <https://github.com/behave/behave>`_
       - 1.2.6
-      - BSD
+      - BSD-2-Clause
       - Regression test driver (*Behavior-driven development*)
 
    *  - `Docker <http://www.docker.com/>`_
       - 18.06 (or newer)
-      - Apache License 2.0
+      - Apache-2.0
       - Environment for conducting regression tests – software containers
 
    *  - `Docker Compose <http://www.docker.com/>`_
-      - 1.22.0
-      - Apache License 2.0
+      - 1.28.6
+      - Apache-2.0
       - Environment for conducting regression tests – software container management
 
    *  - `Sphinx <http://www.sphinx-doc.org/>`_
-      - 1.8.2
+      - 3.4.3
       - BSD
       - Environment for document generation

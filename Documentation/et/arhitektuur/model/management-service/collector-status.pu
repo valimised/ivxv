@@ -18,9 +18,9 @@ Paigaldatud : Valimiste seadistust pole rakendatud.
 
 state Seadistatud <<OK>>
 Seadistatud : Kogumisteenusele on rakendatud
-Seadistatud : valimiste seaditused ja sellega
+Seadistatud : valimiste seadistused, teenusega
 Seadistatud : on võimalik hääletust läbi viia
-Seadistatud : ja e-urni väljastada.
+Seadistatud : ja e-valimiskasti väljastada.
 
 state Tõrge <<Error>>
 Tõrge : Üks või mitu alamteenust ei tööta,

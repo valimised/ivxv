@@ -6,17 +6,18 @@ import os
 import shutil
 import sys
 
-from .. import init_cli_util, log
 from ... import (CFG_TYPES, CMD_TYPES, SERVICE_STATE_CONFIGURED,
                  SERVICE_TYPE_PARAMS, lib)
 from ...command_file import load_collector_cmd_file
 from ...config import cfg_path
 from ...db import IVXVManagerDb
+from ...lib.lockfile import PidLocker
 from ...service import generate_service_list, get_service_cfg_state
 from ...service.service import Service
+from .. import init_cli_util, log
 
 #: config types in applying order
-CFG_TYPES_DEFAULT = ('technical', 'election', 'choices', 'voters')
+CFG_TYPES_DEFAULT = ("technical", "election", "choices", "districts", "voters")
 
 
 def main():
@@ -31,6 +32,7 @@ def main():
                          - election: election config file
                          - technical: collector technical config file
                          - choices: choices list
+                         - districts: districts list
                          - voters: voters list
     """)
 
@@ -45,9 +47,9 @@ def main():
 
     # load config data
     with IVXVManagerDb() as db:
-        cfg_data = _get_cfg_data(db)
+        cfg_data = get_cfg_data(db)
     try:
-        tech_cfg = _load_tech_cfg(
+        tech_cfg = load_tech_cfg(
             cfg_data['technical']['version'],
             cfg_data['election']['version'],
             'election' in cfg_types)
@@ -60,27 +62,29 @@ def main():
     if not args['--type']:
         if not cfg_data.get('choices', {}).get('version'):
             cfg_types.remove('choices')
-        if not cfg_data.get('voters01', {}).get('version'):
+        if not cfg_data.get('districts', {}).get('version'):
+            cfg_types.remove('districts')
+        if not cfg_data.get('voters0000', {}).get('version'):
             cfg_types.remove('voters')
 
     # generate service list from tech config
     services = generate_service_list(tech_cfg['network'], service_ids)
     if services is None:
         return 1
-    services = _prepare_service_list(services, service_ids)
+    services = prepare_service_list(services, service_ids)
 
     # create pidfile to avoid running of multiple instances
     pidfile_path = cfg_path('ivxv_admin_data_path', 'ivxv-config-apply.pid')
-    log.debug('Creating pidfile %s', pidfile_path)
+    log.debug("Creating pidfile %r", pidfile_path)
     try:
-        lib.PidLocker(pidfile_path)
+        PidLocker(pidfile_path)
     except IOError:
-        log.error('Creating pidfile %s failed. Is another %s running?',
+        log.error("Creating pidfile %r failed. Is another %s running?",
                   pidfile_path, os.path.basename(sys.argv[0]))
-        exit(1)
+        sys.exit(1)
 
     # apply config
-    apply_result = _apply_cfg(
+    apply_result = apply_cfg(
         cfg_types=cfg_types,
         services=services,
         tech_cfg=tech_cfg,
@@ -88,7 +92,7 @@ def main():
     return int(not apply_result)
 
 
-def _get_cfg_data(db):
+def get_cfg_data(db):
     """Load config versions from database.
 
     :rtype: dict
@@ -104,13 +108,18 @@ def _get_cfg_data(db):
         'choices': {
             'version': db.get_value('list/choices') or None
         },
+        'districts': {
+            'version': db.get_value('list/districts') or None
+        },
     }
     if not cfg_data['choices']['version']:
         del cfg_data['choices']
+    if not cfg_data['districts']['version']:
+        del cfg_data['districts']
     try:
-        for list_no in range(1, 100):
-            cfg_data[f'voters{list_no:02}'] = {
-                'version': db.get_value(f'list/voters{list_no:02}') or None
+        for changeset_no in range(10_000):
+            cfg_data[f"voters{changeset_no:04}"] = {
+                "version": db.get_value(f"list/voters{changeset_no:04}") or None
             }
     except KeyError:
         pass
@@ -118,13 +127,16 @@ def _get_cfg_data(db):
     # get config applying report filenames
     for cmd_type in cfg_data:
         cfg_filepath = lib.get_loaded_cfg_file_path(cmd_type)
-        cfg_data[cmd_type]['state_file'] = (
-            cfg_filepath.replace('.bdoc', '.json') if cfg_filepath else None)
+        cfg_data[cmd_type]["state_file"] = (
+            cfg_filepath.replace(os.path.splitext(cfg_filepath)[1], ".json")
+            if cfg_filepath
+            else None
+        )
 
     return cfg_data
 
 
-def _load_tech_cfg(tech_cfg_ver, election_cfg_ver, has_election_cfg):
+def load_tech_cfg(tech_cfg_ver, election_cfg_ver, has_election_cfg):
     """Load technical config.
 
     * Load technical config
@@ -156,7 +168,7 @@ def _load_tech_cfg(tech_cfg_ver, election_cfg_ver, has_election_cfg):
     return tech_cfg
 
 
-def _prepare_service_list(services, service_ids):
+def prepare_service_list(services, service_ids):
     """Prepare service list for applying config to services.
 
     Return services that are in service_ids list.
@@ -182,22 +194,22 @@ def _prepare_service_list(services, service_ids):
     return services
 
 
-def _apply_cfg(cfg_types, services, tech_cfg, cfg_data):
+def apply_cfg(cfg_types, services, tech_cfg, cfg_data):
     """Apply config to services."""
     results = dict([i, {}] for i in cfg_types)
     for cfg_type in CFG_TYPES_DEFAULT:
         if cfg_type not in cfg_types:
             continue
-        # disallow applying choices or voters list
+        # disallow applying choices/districts/voters list
         # if required services aren't operational
-        if cfg_type in ['choices', 'voters']:
+        if cfg_type in ["choices", "districts", "voters"]:
             list_services = lib.get_services(
                 include_types=['choices', 'storage'],
                 service_state=[SERVICE_STATE_CONFIGURED])
             if not list_services:
                 log.error('Choices and/or storage services are not configured')
                 return False
-        result_by_service = _apply_cfg_to_services(
+        result_by_service = apply_cfg_to_services(
             services=services,
             cfg_type=cfg_type,
             tech_cfg=tech_cfg,
@@ -218,10 +230,10 @@ def _apply_cfg(cfg_types, services, tech_cfg, cfg_data):
                 json.dump(cfg_state, fp, indent=4, sort_keys=True)
             shutil.move(tmp_filepath, state_filepath)
 
-    return _aggregate_results(results)
+    return aggregate_results(results)
 
 
-def _apply_cfg_to_services(services, cfg_type, tech_cfg, cfg_data):
+def apply_cfg_to_services(services, cfg_type, tech_cfg, cfg_data):
     """Helper to apply config to services.
 
     :param services: Service list
@@ -280,7 +292,7 @@ def _apply_cfg_to_services(services, cfg_type, tech_cfg, cfg_data):
         if cfg_type == 'technical':
             # initialize service host if required
             if not host_state[service.hostname]:
-                log.info('Initializing service host "%s"', service.hostname)
+                log.info("Initializing service host %r", service.hostname)
                 success = service.init_service_host()
                 if not success:
                     results[service_id] = False
@@ -310,10 +322,10 @@ def _apply_cfg_to_services(services, cfg_type, tech_cfg, cfg_data):
             report_applying_result()
             service.update_apply_state()
 
-        # apply choices list
-        elif (cfg_type == 'choices' and service_type == 'choices'
-              and 'choices' not in applied_lists):
-            log.info('Service %s: Applying choices list', service_id)
+        # apply choices/districts list
+        elif (cfg_type in ["choices", "districts"] and service_type == "choices"
+              and cfg_type not in applied_lists):
+            log.info("Service %s: Applying %s list", service_id, cfg_type)
             cfg_version = cfg_data[cfg_type]['version']
             attempt_no = service.load_apply_state(
                 cfg_data[cfg_type]['state_file'], attempt_no)
@@ -325,14 +337,17 @@ def _apply_cfg_to_services(services, cfg_type, tech_cfg, cfg_data):
         # apply voters lists
         elif (cfg_type == 'voters' and service_type == 'voting'
               and 'voters' not in applied_lists):
-            for list_no in service_cfg_state[service_id]['voters']:
-                log.info('Service %s: Applying voters list #%d',
-                         service_id, list_no)
-                voters_list_id = f'voters{list_no:02}'
+            for changeset_no in service_cfg_state[service_id]["voters"]:
+                log.info(
+                    "Service %s: Applying voter list changeset #%d",
+                    service_id,
+                    changeset_no,
+                )
+                voters_list_id = f"voters{changeset_no:04}"
                 cfg_version = cfg_data[voters_list_id]['version']
                 attempt_no = service.load_apply_state(
                     cfg_data[voters_list_id]['state_file'])
-                cfg_success = service.apply_list(cfg_type, list_no)
+                cfg_success = service.apply_list(cfg_type, changeset_no)
                 report_applying_result()
                 service.update_apply_state(completed=True)
                 applied_lists.append('voters')
@@ -340,7 +355,7 @@ def _apply_cfg_to_services(services, cfg_type, tech_cfg, cfg_data):
     return results
 
 
-def _aggregate_results(results):
+def aggregate_results(results):
     """Aggregate and output collector config applying results for services.
 
     :rtype: bool

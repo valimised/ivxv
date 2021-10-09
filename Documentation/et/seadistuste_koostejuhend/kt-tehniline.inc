@@ -34,8 +34,8 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 
 :filter.tls.ciphersuites:
         Kohustuslik väli.
-        TLS-protokollis rakendamiseks lubatud šifrikomplektid. Hetkel toetatud
-        valikud on::
+        TLS-protokolli versioonis 1.2 rakendamiseks lubatud šifrikomplektid.
+        Hetkel toetatud valikud on::
 
             TLS_RSA_WITH_AES_128_CBC_SHA
             TLS_RSA_WITH_AES_256_CBC_SHA
@@ -49,6 +49,14 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
             TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
             TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
             TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+
+        Kui TLS-kätluse käigus lepitakse kokku TLS-protokolli versioonis 1.3,
+        siis šifrikomplekti seadistada ei saa ning kõik serveri poolt toetatud
+        turvalised šifrid on lubatud. Hetkel on nendeks::
+
+            TLS_AES_128_GCM_SHA256
+            TLS_AES_256_GCM_SHA384
+            TLS_CHACHA20_POLY1305_SHA256
 
 :filter.codec:
         Kohustuslik väli.
@@ -92,7 +100,7 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 :network.*.services.proxy:
         Loetelu, mis sisaldab vahendusteenuste isendite seadistust.
 
-:network.*.services.dds:
+:network.*.services.mid:
         Loetelu, mis sisaldab Mobiil-ID toeteenuste isendite seadistust.
 
 :network.*.services.choices:

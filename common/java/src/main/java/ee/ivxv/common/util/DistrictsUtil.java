@@ -2,7 +2,6 @@ package ee.ivxv.common.util;
 
 import ee.ivxv.common.M;
 import ee.ivxv.common.model.DistrictList;
-import ee.ivxv.common.model.LName;
 import ee.ivxv.common.service.i18n.MessageException;
 import java.io.InputStream;
 import java.util.HashSet;
@@ -27,22 +26,22 @@ public class DistrictsUtil {
     }
 
     static void validateDistricts(DistrictList dl) {
-        Set<String> stationIds = new HashSet<>();
-
-        dl.getDistricts().forEach((d, sl) -> sl.getStations().forEach(sid -> {
-            if (!stationIds.add(d + "|" + sid)) {
-                log.error("Voting station id '{}' not unique", sid);
-                throw new MessageException(M.e_dist_station_id_not_unique, sid);
+        Set<String> parishIds = new HashSet<>();
+        dl.getDistricts().forEach((d, sl) -> sl.getParish().forEach(pid -> {
+            if (pid.equals("FOREIGN")){
+                pid = "0000";
             }
-            LName s = new LName(sid);
-            if (s.getNumber() == null || s.getNumber().isEmpty()) {
-                log.error("Voting station number is null, i.e the station code {} is invalid", sid);
-                throw new MessageException(M.e_dist_station_id_invalid, sid);
+            if (!parishIds.add(d + "|" + pid)) {
+                log.error("Voting station id '{}' not unique", pid);
+                throw new MessageException(M.e_dist_parish_id_not_unique, pid);
             }
-            if (!dl.getRegions().containsKey(s.getRegionCode())) {
-                log.error("Voting station '{}' region code '{}' does not conform to any region",
-                        sid, s.getRegionCode());
-                throw new MessageException(M.e_dist_station_region_unknown, sid, s.getRegionCode());
+            if (pid == null || pid.isEmpty()) {
+                log.error("Voting parish {} is invalid", pid);
+                throw new MessageException(M.e_dist_parish_id_invalid, pid);
+            }
+            if (!dl.getRegions().containsKey(pid)) {
+                log.error("Voting parish '{}' does not conform to any region", pid);
+                throw new MessageException(M.e_dist_parish_region_unknown, pid);
             }
         }));
     }

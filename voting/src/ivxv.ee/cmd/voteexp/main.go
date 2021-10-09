@@ -34,7 +34,7 @@ If there were non-fatal errors, e.g. there were some partial votes in storage,
 then voteexp exits with code 2.`
 
 var (
-	optionalp = flag.String("optional", "tspreg",
+	optionalp = flag.String("optional", "tspreg,ocsp",
 		// End with newline for printing default value.
 		"comma-separated `list` of vote fields which are optional\n")
 
@@ -173,7 +173,7 @@ func export(ctx context.Context, s *storage.Client, qps []q11n.Protocol,
 	const logstep = 10000 // Log progress after each logstep.
 	for vote := range c {
 		prefix := fmt.Sprintf("votes/%s/%s.", vote.Voter,
-			strings.Replace(vote.Time.Format("20060102150405.000-0700"), ".", "", -1))
+			strings.ReplaceAll(vote.Time.Format("20060102150405.000-0700"), ".", ""))
 
 		if err = addFile(w, vote.Time, prefix+"version", []byte(vote.Version)); err != nil {
 			return AddVersionError{VoteID: vote.VoteID, Prefix: prefix, Err: err}
@@ -202,9 +202,11 @@ func export(ctx context.Context, s *storage.Client, qps []q11n.Protocol,
 }
 
 func addFile(w *zip.Writer, mod time.Time, name string, value []byte) error {
-	h := &zip.FileHeader{Name: name, Method: zip.Deflate}
-	h.SetModTime(mod) // nolint: megacheck, staticcheck, Use deprecated API to support Go 1.9.
-	f, err := w.CreateHeader(h)
+	f, err := w.CreateHeader(&zip.FileHeader{
+		Name:     name,
+		Method:   zip.Deflate,
+		Modified: mod,
+	})
 	if err != nil {
 		return AddFileCreateError{Name: name, Err: err}
 	}

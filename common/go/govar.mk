@@ -1,28 +1,16 @@
 # govar.mk: Sets the GO environment variable to the location of the go binary.
 # Intended to be included from Makefiles that invoke go.
 
-fallback := /usr/lib/go-1.9/bin/go
-GO := $(shell which go || echo $(fallback))
+GO := /usr/lib/go-1.14/bin/go
 
-ifneq ($(GO),$(fallback))
-	# Check the version of $(GO). If 1.9 or newer except for Go 1.10, then
-	# use that (useful for newer Go versions or non-Ubuntu platforms),
-	# otherwise use the fallback location. This is needed because even if
-	# you install golang-1.9-go on Ubuntu, it will not update /usr/bin/go
-	# (which is handled by golang-go).
-	#
-	# Explicitly exclude Go 1.10, because it has an issue that breaks X.509
-	# with Estonian ID-cards and the fix done in Go 1.11 will no be
-	# backported (see https://github.com/golang/go/issues/24151).
-	minimal := go1.9
-	exclude := go1.10
-	gover := $(shell $(GO) version | cut -d' ' -f3)
-	ifneq ($(gover),$(minimal))
-		newer := $(shell echo "$(gover)\n$(minimal)" | sort -V | tail -n1)
-
-		# If minimal is equal to newer or newer contains exclude then
-		# use fallback location.
-		ifneq (,$(or $(filter $(minimal),$(newer)),$(findstring $(exclude),$(newer))))
+# Prefer to use the exact Go version, but if it does not exist then attempt to
+# fallback to a go binary on PATH, given it is at least version 1.14.
+ifeq ($(shell which $(GO)),)
+	fallback := $(shell which go)
+	ifneq ($(fallback),)
+		version := $(shell $(fallback) version | cut -d' ' -f3)
+		newer := $(shell echo "go1.14\n$(version)" | sort --version-sort | tail --lines=1)
+		ifeq ($(version),$(newer))
 			GO := $(fallback)
 		endif
 	endif

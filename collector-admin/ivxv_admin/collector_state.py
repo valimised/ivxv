@@ -5,6 +5,7 @@ Collector state for collector management service.
 
 import datetime
 import json
+import logging
 import os
 
 import dateutil.parser
@@ -17,6 +18,10 @@ from . import (COLLECTOR_PKG_FILENAMES, COLLECTOR_STATE_CONFIGURED,
                SERVICE_TYPE_PARAMS)
 from .config import CONFIG, cfg_path
 from .service import generate_service_hints
+
+
+# create logger
+log = logging.getLogger(__name__)
 
 
 def generate_collector_state(db):
@@ -36,12 +41,11 @@ def generate_collector_state(db):
 
     # check package files
     assert 'storage' not in state
-    state['storage'] = {
-        'debs_exists': [],
-        'debs_missing': [],
-        'command_files': [],
-        'command_files_applied': [],
-        'command_files_pending': [],
+    state["storage"] = {
+        "debs_exists": [],
+        "debs_missing": [],
+        "command_files_active": [],
+        "command_files_inactive": [],
     }
     for pkg_filename in COLLECTOR_PKG_FILENAMES.values():
         pkg_filepath = cfg_path('deb_pkg_path', pkg_filename)
@@ -49,25 +53,34 @@ def generate_collector_state(db):
         state['storage'][key].append(pkg_filepath)
 
     # collect command files state
-    for filename in os.listdir(CONFIG['command_files_path']):
-        filepath = cfg_path('command_files_path', filename)
-        if os.path.splitext(filename)[1] == '.json':
-            continue
-        try:
-            with open('{}.json'.format(os.path.splitext(filepath)[0])) as fp:
-                cmd_state = json.load(fp)
-            state_key = (
-                'command_files_applied' if cmd_state['completed']
-                else 'command_files_pending')
-        except FileNotFoundError:
-            state_key = 'command_files_applied'
-        state['storage']['command_files'].append(filepath)
-        state['storage'][state_key].append(filepath)
+    command_filepaths = [
+        cfg_path("command_files_path", filename)
+        for filename in os.listdir(CONFIG["command_files_path"])
+        if not filename.endswith(".json")
+    ]
+    for filename in os.listdir(CONFIG["active_config_files_path"]):
+        filepath = os.path.join(CONFIG["active_config_files_path"], filename)
+        if os.path.islink(filepath):
+            try:
+                command_filepaths.remove(os.readlink(filepath))
+            except ValueError:
+                log.warning(
+                    "Unresolved config file link %r -> %r",
+                    filepath,
+                    os.readlink(filepath),
+                )
+            state["storage"]["command_files_active"].append(
+                os.path.basename(os.readlink(filepath))
+            )
+    state["storage"]["command_files_active"].sort()
+    state["storage"]["command_files_inactive"] = sorted(
+        os.path.basename(filename) for filename in command_filepaths
+    )
 
     # detect collector state
     state['collector_state'] = detect_collector_state(state)
 
-    generate_voters_list_state(state)
+    generate_voter_list_state(state)
     generate_election_state(state)
 
     return state
@@ -124,17 +137,39 @@ def detect_collector_state(state):
     return COLLECTOR_STATE_PARTIAL_FAILURE
 
 
-def generate_voters_list_state(state):
-    """Generate voters list block for collector state data."""
-    state['list'].update({'voters-list-loaded': 0, 'voters-list-pending': 0})
-    for voter_list_no in range(1, 100):
-        key = f'voters{voter_list_no:02d}'
+def generate_voter_list_state(state):
+    """Generate voter list block for collector state data."""
+    state["list"].update(
+        {
+            "voters-list-total": 0,
+            "voters-list-available": 0,
+            "voters-list-pending": 0,
+            "voters-list-applied": 0,
+            "voters-list-invalid": 0,
+            "voters-list-skipped": 0,
+        }
+    )
+    for changeset_no in range(10_000):
+        key = f"voters{changeset_no:04d}-state"
         if key not in state['list']:
             break
-        if state['list'][key] == state['list'][f'{key}-loaded']:
-            state['list']['voters-list-loaded'] += 1
-        else:
-            state['list']['voters-list-pending'] += 1
+        list_state = state["list"][key].lower()
+        state["list"][f"voters-list-{list_state}"] += 1
+        state["list"]["voters-list-total"] += 1
+
+    # compare with VIS changeset data
+    vis_changesets_filepath = f"{CONFIG.get('vis_path')}/voters-changesets.json"
+    if state["list"]["voters-list-total"] and os.path.exists(vis_changesets_filepath):
+        with open(vis_changesets_filepath) as fd:
+            changesets = json.load(fd)
+
+        for changeset_no, changeset in enumerate(changesets["changesets"]):
+            key = f"voters{changeset_no:04d}"
+            if key not in state["list"]:
+                state["list"]["voters-list-available"] += 1
+                state["list"].update(
+                    {key: "[version not registered]", f"{key}-state": "AVAILABLE"}
+                )
 
 
 def generate_election_state(state):

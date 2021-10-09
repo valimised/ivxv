@@ -31,7 +31,7 @@ IVXV java applications have 2 levels of build systems:
 
 * *make* - the build system facade. Must be installed on the user's machine.
 * *gradle* - the implementation of the build system. Gradle is located under
-  ``common/external/gradle-3.0``, with the executable ``bin/gradle(.bat)``.
+  ``common/external/gradle-6.4``, with the executable ``bin/gradle(.bat)``.
 
 Building:
 
@@ -159,7 +159,7 @@ configuration preparation documentation for the example configurations.
   corresponding smart card to the corresponding smart card reader. If PIN-code
   for storing and accessing the blobs on smart card is required, then it is
   asked from the user.
-  
+
   In case of lazy-initialization, if card change is needed in the reader, the
   application instructs the user to remove the smart card from the smart card
   reader and insert another card. The PIN-codes are not stored between

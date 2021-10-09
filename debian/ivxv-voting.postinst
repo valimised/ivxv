@@ -30,13 +30,13 @@ case "$1" in
 
         # prepare ssh directory for user account
         test -d ~ivxv-voting/.ssh ||
-	    mkdir --parents ~ivxv-voting/.ssh
-	chmod 700 ~ivxv-voting/.ssh
-	chown ivxv-voting:ivxv ~ivxv-voting/.ssh
-	test -e ~ivxv-voting/.ssh/authorized_keys ||
-	    touch ~ivxv-voting/.ssh/authorized_keys
-	chmod 600 ~ivxv-voting/.ssh/authorized_keys
-	chown ivxv-voting:ivxv ~ivxv-voting/.ssh/authorized_keys
+        mkdir --parents ~ivxv-voting/.ssh
+        chmod 700 ~ivxv-voting/.ssh
+        chown ivxv-voting:ivxv ~ivxv-voting/.ssh
+        test -e ~ivxv-voting/.ssh/authorized_keys ||
+            touch ~ivxv-voting/.ssh/authorized_keys
+        chmod 600 ~ivxv-voting/.ssh/authorized_keys
+        chown ivxv-voting:ivxv ~ivxv-voting/.ssh/authorized_keys
 
         # enable user to automatically start service
         loginctl enable-linger ivxv-voting

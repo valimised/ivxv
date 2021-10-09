@@ -4,9 +4,6 @@ all: example.png processing.png collector_microservices.png \
 	collector_extension.png monitoring.png app_modules.png key.png audit.png
 	$(MAKE) -C management-service -j
 
-clean:
-	$(MAKE) -C management-service $@
-
 collector_extension.png: development.pu
 	$(PLANTUML) -DCOLLECTOR_EXTENSION $<
 	mv development.png collector_extension.png

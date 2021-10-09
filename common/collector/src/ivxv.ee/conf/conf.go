@@ -23,6 +23,7 @@ import (
 	"ivxv.ee/errors"
 	"ivxv.ee/identity"
 	"ivxv.ee/log"
+	"ivxv.ee/mid"
 	"ivxv.ee/q11n"
 	"ivxv.ee/server"
 	"ivxv.ee/storage"
@@ -57,9 +58,15 @@ type Election struct {
 	}
 
 	Verification struct {
-		Count   uint64 // How many times a vote can be verified? 0 means unlimited.
-		Minutes uint64 // How much time is given to verify a vote? 0 means unlimited.
+		Count      uint64 // How many times a vote can be verified? 0 means unlimited.
+		Minutes    uint64 // How much time is given to verify a vote? 0 means unlimited.
+		LatestOnly bool   // If true, then only the latest vote of a voter can be verified.
 	}
+
+	// VoterForeignEHAK specifies the administrative unit code (EHAK) to
+	// use for determining voter districts if the voter is foreign. If
+	// VoterForeignEHAK is empty, then the default value "0000" is used.
+	VoterForeignEHAK string
 
 	// IgnoreVoterList is an option used for public testing and should NOT
 	// be set during production! If not empty, then voter lists will be
@@ -78,6 +85,7 @@ type Election struct {
 	Age           age.Conf
 	Vote          container.Conf
 	DDS           dds.Conf
+	MID           mid.Conf
 	Qualification q11n.Conf
 }
 
@@ -101,6 +109,15 @@ func (e Election) ServiceStopTime() (time.Time, error) {
 	return time.Parse(time.RFC3339, e.Period.ServiceStop)
 }
 
+// VoterForeignEHAKDefault returns e.VoterForeignEHAK or its default value if
+// it is not specified.
+func (e Election) VoterForeignEHAKDefault() string {
+	if e.VoterForeignEHAK != "" {
+		return e.VoterForeignEHAK
+	}
+	return "0000"
+}
+
 // Technical contains the collector services' technical parameters.
 type Technical struct {
 	Debug bool // Should debug logging be enabled?
@@ -119,6 +136,7 @@ type Technical struct {
 type Services struct {
 	Proxy        []*Service
 	DDS          []*Service
+	MID          []*Service
 	Choices      []*Service
 	Voting       []*Service
 	Verification []*Service
@@ -224,13 +242,11 @@ func New(ctx context.Context, trust, election, technical string) (c *C, code int
 
 func (c *C) trust(ctx context.Context, path string) (code int, err error) {
 	// First open trust without verifying signatures.
-	//
-	// nolint: gosec, Allow path from variable, assume correct and safe.
 	fp, err := os.Open(path)
 	if err != nil {
 		return exit.NoInput, OpenTrustFileError{Err: err}
 	}
-	defer fp.Close() // nolint: errcheck, ignore close failure of read-only fd.
+	defer fp.Close()
 
 	// Check the extension after we have ensured that the file even exists.
 	t := container.Type(strings.TrimPrefix(filepath.Ext(path), "."))
@@ -242,7 +258,7 @@ func (c *C) trust(ctx context.Context, path string) (code int, err error) {
 	if err != nil {
 		return exit.DataErr, OpenTrustError{Err: err}
 	}
-	defer cnt.Close() // nolint: errcheck, ignore close failure of read-only container.
+	defer cnt.Close()
 
 	var conf struct {
 		Container container.Conf
@@ -264,7 +280,7 @@ func (c *C) trust(ctx context.Context, path string) (code int, err error) {
 	if err != nil {
 		return exit.DataErr, VerifyTrustError{Err: err}
 	}
-	defer cnt.Close() // nolint: errcheck, ignore close failure of read-only container.
+	defer cnt.Close()
 
 	c.Version.Trust = version.Signatures(cnt.Signatures())
 	if len(c.Version.Trust) == 0 {
@@ -289,7 +305,7 @@ func (c *C) parse(ctx context.Context, path, key string, v interface{}) (
 		}
 		return nil, code, ConfigurationContainerError{Err: err}
 	}
-	defer cnt.Close() // nolint: errcheck, ignore close failure of read-only container.
+	defer cnt.Close()
 
 	signatures = version.Signatures(cnt.Signatures())
 	if len(signatures) == 0 {

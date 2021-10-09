@@ -1,10 +1,10 @@
 sudo apt update
 sudo apt upgrade
 tar xvf audit-examples.tar
-sudo apt-get install --no-install-recommends -y autoconf automake build-essential libgmp-dev libtool git openjdk-8-jdk-headless python unzip zip wget make gradle
+sudo apt-get install --no-install-recommends -y autoconf automake build-essential libgmp-dev libtool git openjdk-11-jdk-headless python unzip zip wget make
 java -version
 javac -version
-sudo apt install openjdk-8-jre-headless
+sudo apt install openjdk-11-jre-headless
 sudo update-alternatives --config java
 java -version
 javac -version
@@ -20,19 +20,13 @@ unzip master.zip
 rm master.zip
 mv ivxv-master/ ivxv
 cd ivxv/common/external/
-wget -O gradle-3.0.zip https://services.gradle.org/distributions/gradle-3.0-bin.zip
-unzip gradle-3.0.zip
-rm gradle-3.0.zip
+wget -O gradle-6.4.zip https://services.gradle.org/distributions/gradle-6.4-bin.zip
+unzip gradle-6.4.zip
+rm gradle-6.4.zip
 cd ..
 cd java/
-../external/gradle-3.0/bin/gradle syncRemoteRepositories
+make sync
 ls ../external/
-cd ../external/
-cd commons-codec/commons-codec/1.10/
-wget -O commons-codec-1.10.jar https://search.maven.org/remotecontent?filepath=commons-codec/commons-codec/1.10/commons-codec-1.10.jar
-cd ..
-cd xml-apis/xml-apis/1.3.04/
-wget -O xml-apis-1.3.04.jar https://search.maven.org/remotecontent?filepath=xml-apis/xml-apis/1.3.04/xml-apis-1.3.04.jar
 cd ..
 cd ..
 make clean-java
@@ -54,22 +48,22 @@ git clone https://github.com/verificatum/vmgj
 git clone https://github.com/verificatum/vcr
 git clone https://github.com/verificatum/vmn
 cd gmpmee/
-git checkout d781e4a
+git checkout 4aafc31
 rm -rf .git/
 cd ..
 ./intcheck/src/intcheck.py verify gmpmee ivxv-verificatum/doc/gmpmee.dirsha256sum
 cd vmgj/
-git checkout 82b57dd
+git checkout 8d7d412
 rm -rf .git/
 cd ..
 ./intcheck/src/intcheck.py verify vmgj ivxv-verificatum/doc/vmgj.dirsha256sum
 cd vcr/
-git checkout 6dba049
+git checkout af9fd82
 rm -rf .git/
 cd ..
 ./intcheck/src/intcheck.py verify vcr ivxv-verificatum/doc/vcr.dirsha256sum
 cd vmn/
-git checkout 2a0719e
+git checkout bb00543
 rm -rf .git
 cd ..
 ./intcheck/src/intcheck.py verify vmn ivxv-verificatum/doc/vmn.dirsha256sum
@@ -77,6 +71,13 @@ cd ivxv-verificatum/
 make zipext
 cd ..
 ./vcr/bin/vog -rndinit RandomDevice /dev/urandom
+openssl verify -CAfile initout/RK2051-sign.pem -check_ss_sig initout/RK2051-sign.pem
+openssl verify -CAfile initout/RK2051-sign.pem -check_ss_sig initout/RK2051-enc.pem
+openssl asn1parse -in initout/RK2051-enc.pem
+openssl asn1parse -in initout/RK2051-enc.pem -strparse 156 -noout -out extracted.der
+diff -s extracted.der initout/RK2051-pub.der
+openssl asn1parse -in initout/RK2051-pub.pem -noout -out converted.der
+diff -s converted.der initout/RK2051-pub.der
 diff decout/RK2051.1.tally pdecout/RK2051.1.tally
 openssl x509 -in initout/RK2051-sign.pem -noout -pubkey > sign.pub
 openssl dgst -sha256 -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:32 -sigopt rsa_mgf1_md:sha256 -verify sign.pub -signature decout/RK2051.1.tally.signature decout/RK2051.1.tally

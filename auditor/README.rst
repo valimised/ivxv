@@ -30,7 +30,7 @@ IVXV java applications have 2 levels of build systems:
 
 * *make* - the build system facade. Must be installed on the user's machine.
 * *gradle* - the implementation of the build system. Gradle is located under
-  ``common/external/gradle-3.0``, with the executable ``bin/gradle(.bat)``.
+  ``common/external/gradle-6.4``, with the executable ``bin/gradle(.bat)``.
 
 Building:
 
@@ -47,24 +47,21 @@ Distributable application packages are provided under ``build/distributions/``.
 Sample executions
 -----------------
 
-An example configuration is provided in the examples directory. The example
-configuration uses unit-test data which is not available in distribution
-releases.
+As the command-line arguments have to be defined precisely for correct
+operation, we strongly recommend using a parameters file. Refer to the
+configuration preparation documentation for the example configurations.
 
 * Verify the correctness of file format conversion::
 
-    auditor convert --conf ../examples/app-conf.bdoc --params
-    ../examples/auditor-app-conf.bdoc
+    auditor convert --conf app-conf.bdoc --params auditor-app-conf.bdoc
 
 * Verify the correcntess of the shuffle::
 
-    auditor mixer --conf ../examples/app-conf.bdoc --params
-    ../examples/auditor-app-conf.bdoc
+    auditor mixer --conf app-conf.bdoc --params auditor-app-conf.bdoc
 
 * Verify the correctness of decryption::
 
-    auditor mixer --conf ../examples/app-conf.bdoc --params
-    ../examples/auditor-app-conf.bdoc
+    auditor mixer --conf app-conf.bdoc --params auditor-app-conf.bdoc
 
 Sample configuration
 --------------------

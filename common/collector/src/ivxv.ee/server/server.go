@@ -143,8 +143,8 @@ func (s *S) Serve(ctx context.Context) error {
 	if err := s.status.serving(); err != nil {
 		return ServeStatusServingError{Err: err}
 	}
-	// nolint: errcheck, only returns nil or context canceled errors.
-	go wait(ctx, s.end, func(ctx context.Context) error {
+	//nolint:errcheck // Only returns nil or context canceled errors.
+	go wait(ctx, s.end, func(ctx context.Context) error { //nolint:unparam // Required by wait.
 		if err := s.status.ended(); err != nil {
 			log.Error(ctx, ServeStatusEndedError{Err: err})
 		}
@@ -199,7 +199,7 @@ func (s *S) Serve(ctx context.Context) error {
 						// Ensure c is closed. This is
 						// a last resort close without
 						// any TLS cleanup.
-						c.Close() // nolint: errcheck
+						c.Close()
 					}
 				}()
 				s.filters.next(ctx, c)

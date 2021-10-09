@@ -15,11 +15,39 @@ voting:
   ratelimitminutes:  5
 
 verification:
-  count:    3
-  minutes: 30
+  count:       3
+  minutes:    30
+  latestonly: false
 
 voterlist:
   key: !container rr_pub.key
+
+vis:
+  url: https://vis-mock.local/vis3/
+  ca:
+    - |
+      -----BEGIN CERTIFICATE-----
+      MIIDmzCCAoOgAwIBAgIDOBFTMA0GCSqGSIb3DQEBCwUAMFcxCzAJBgNVBAYTAkVF
+      MRIwEAYDVQQKDAlTQ0NFSVYgT1kxHzAdBgNVBAsMFklWWFYgVGVzdCBDZXJ0aWZp
+      Y2F0ZXMxEzARBgNVBAMMClNlcnZpY2UgQ0EwIBcNMjEwNjE3MTIwNTI0WhgPMjEy
+      MTA1MjQxMjA1MjRaMFsxCzAJBgNVBAYTAkVFMRIwEAYDVQQKDAlTQ0NFSVYgT1kx
+      HzAdBgNVBAsMFklWWFYgVGVzdCBDZXJ0aWZpY2F0ZXMxFzAVBgNVBAMMDnZpcy1t
+      b2NrLmxvY2FsMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzZW7yXGO
+      SEt4qavm/vNJj9otKf9j8runLJcmoTGR61A5As2gluRnj3z6/U8An/VsX1dUG2qL
+      sJecEXUkvXBSTw2IIyfA6lJNtaov44ytRB4fKpuFx+lb00WmuRf99uC0Tpp5K0Of
+      7D5NO5dgtMXLrdpzuyJD6NP2xrp8Dio5a1TosHcQEVWJvR/dwCr02TmcQjvILOVN
+      vJFr038Dg77NQKojOsag60KRrHcKc1WukgUPu4AJ2VFCmn67rCfp39tusbcndsNs
+      EX7zGNghOk85CMoGWlYfnJm94oAoKUsYtpF1hinfBN/EikXZwJbsVFoSg4mo/te2
+      MfwzK7E5j17JWwIDAQABo2owaDAdBgNVHQ4EFgQUI2yfomatZq3HLyL+DpqeBYO9
+      /1EwHwYDVR0jBBgwFoAUbyNWl77jkIGrjVtW7Eu4+qpDXxYwDgYDVR0PAQH/BAQD
+      AgOoMBYGA1UdJQEB/wQMMAoGCCsGAQUFBwMBMA0GCSqGSIb3DQEBCwUAA4IBAQCA
+      RsgmPcL4NaHxQGRxPS2agw2ihLPgkmZcUJhJ0ObnmVYBjCCpYxaNd0vCWBYejChj
+      Q2cblFAuKUtc+pwSC2WDPV9rRwLNOQn/PR2dzeNRP7L0UmNyPcH5pwmltAJLFQqW
+      OdnlXL8ehXSLeIdzlBkqNYZCrj4Ulv4W8cLosjCrmwTZ8OW2E/GSTY7YljsPZZt0
+      uI5Sxz8VtlMJsVh0HWCQ4oAawp6BOgUAGdE9PIo2UlDHyUHBSDXDuZKTGut+yv1T
+      NOq+xK3YM/CRFf/ujIuc1zx+dzkM9l72VJT2BQ6+LKeS5qzduJTG/8dJJFzgNB9p
+      vo7reW+FURRS+CQI633D
+      -----END CERTIFICATE-----
 
 auth:
   ticket:
@@ -32,7 +60,7 @@ auth:
     ocsp:
       url: http://demo.sk.ee/ocsp
       responders:
-        - !container TEST_of_SK_OCSP_RESPONDER_2011.pem
+        - !container TEST_of_SK_OCSP_RESPONDER_2020.pem
       retry: 2
 
 identity: pnoee
@@ -53,35 +81,37 @@ vote:
       - !container TEST_of_ESTEID-SK_2015.pem
     profile: BES
 
-dds:
-  url: https://tsp.demo.sk.ee/v2/
-  countrycode: EE
+mid:
+  url: https://tsp.demo.sk.ee/mid-api/
+  relyingpartyuuid: 00000000-0000-0000-0000-000000000000
+  relyingpartyname: DEMO
   language:    EST
-  servicename: Testimine
   authmessage: Mobiil-ID autentimise testimine.
   signmessage: Mobiil-ID allkirjastamise testimine.
-  idcoderequired: true
-  phonerequired:  true
+  messageformat: GSM-7
+  authchallengesize: 64
+  statustimeoutms: 5000
   roots:
     - !container TEST_of_EE_Certification_Centre_Root_CA.pem
   intermediates:
     - !container TEST_of_ESTEID-SK_2011.pem
     - !container TEST_of_ESTEID-SK_2015.pem
   ocsp:
+    url: http://demo.sk.ee/ocsp
     responders:
-      - !container TEST_of_SK_OCSP_RESPONDER_2011.pem
+      - !container TEST_of_SK_OCSP_RESPONDER_2020.pem
 
 qualification:
-  - protocol: ocsptm
-    conf:
-      url: http://demo.sk.ee/ocsp
-      responders:
-        - !container TEST_of_SK_OCSP_RESPONDER_2011.pem
-      retry: 2
   - protocol: tspreg
     conf:
       url: http://demo.sk.ee/tsa
       signers:
-        - !container DEMO_of_SK_TSA_2014.pem
+        - !container DEMO_SK_TIMESTAMPING_AUTHORITY_2020.pem
       delaytime: 1
+      retry: 2
+  - protocol: ocsp
+    conf:
+      url: http://demo.sk.ee/ocsp
+      responders:
+        - !container TEST_of_SK_OCSP_RESPONDER_2020.pem
       retry: 2

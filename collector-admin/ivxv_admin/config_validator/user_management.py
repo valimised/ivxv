@@ -26,7 +26,7 @@ class UserManagementCommandSchema(Model):
         # pylint: disable=not-an-iterable
         for role in self.roles:
             if role not in USER_ROLES:
-                raise DataError({'roles': 'Unknown role "%s"' % role})
+                raise DataError({"roles": f"Unknown role {role!r}"})
         if len(self.roles) != len(set(self.roles)):
             raise DataError({'roles': 'Duplicate roles'})
         # pylint: disable=unsupported-membership-test

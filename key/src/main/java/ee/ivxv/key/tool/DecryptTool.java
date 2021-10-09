@@ -232,14 +232,14 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
     }
 
     private void verifyAbb(AnonymousBallotBox abb, DistrictList districts) {
-        abb.getDistricts().forEach((d, sMap) -> {
+        abb.getDistricts().forEach((d, pMap) -> {
             District dist = districts.getDistricts().get(d);
             if (dist == null) {
                 throw new MessageException(Msg.e_illegal_vote_district, d);
             }
-            sMap.keySet().forEach(s -> {
-                if (!dist.getStations().contains(s)) {
-                    throw new MessageException(Msg.e_illegal_vote_station, s);
+            pMap.keySet().forEach(s -> {
+                if (!dist.getParish().contains(s)) {
+                    throw new MessageException(Msg.e_illegal_vote_parish, s);
                 }
             });
         });

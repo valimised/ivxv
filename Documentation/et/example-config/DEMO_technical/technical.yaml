@@ -20,8 +20,8 @@ network:
       proxy:
         - id:          proxy@proxy1.ivxv.ee
           address:     ivxv-rp1:443
-      dds:
-        - id:          dds@dds1.ivxv.ee
+      mid:
+        - id:          mid@mid1.ivxv.ee
           address:     ivxv1:4441
       choices:
         - id:          choices@choices1.ivxv.ee
@@ -41,8 +41,8 @@ network:
       proxy:
         - id:          proxy@proxy2.ivxv.ee
           address:     ivxv-rp2:443
-      dds:
-        - id:          dds@dds2.ivxv.ee
+      mid:
+        - id:          mid@mid2.ivxv.ee
           address:     ivxv2:4441
       choices:
         - id:          choices@choices2.ivxv.ee
@@ -62,8 +62,8 @@ network:
       proxy:
         - id:          proxy@proxy3.ivxv.ee
           address:     ivxv-rp3:443
-      dds:
-        - id:          dds@dds3.ivxv.ee
+      mid:
+        - id:          mid@mid3.ivxv.ee
           address:     ivxv3:4441
       choices:
         - id:          choices@choices3.ivxv.ee
@@ -82,7 +82,7 @@ network:
     services:
       log:
         - id:          log@log1.ivxv.ee
-          address:     log1:2514
+          address:     log1:20514
       backup:
         - id:          backup@backup.ivxv.ee
           address:     backup

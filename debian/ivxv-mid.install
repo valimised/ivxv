@@ -1,0 +1,4 @@
+#!/usr/bin/dh-exec
+usr/bin/mid => usr/bin/ivxv-mid
+
+usr/lib/systemd/user/ivxv-mid@.service

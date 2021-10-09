@@ -69,31 +69,32 @@ data:
           responders:
             - |
               -----BEGIN CERTIFICATE-----
-              MIIEijCCA3KgAwIBAgIQaI8x6BnacYdNdNwlYnn/mzANBgkqhkiG9w0BAQUFADB9
+              MIIEzjCCA7agAwIBAgIQa7w4iGoiIOtfrn0fG/hc1zANBgkqhkiG9w0BAQUFADB9
               MQswCQYDVQQGEwJFRTEiMCAGA1UECgwZQVMgU2VydGlmaXRzZWVyaW1pc2tlc2t1
               czEwMC4GA1UEAwwnVEVTVCBvZiBFRSBDZXJ0aWZpY2F0aW9uIENlbnRyZSBSb290
-              IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwHhcNMTEwMzA3MTMyMjQ1WhcN
-              MjQwOTA3MTIyMjQ1WjCBgzELMAkGA1UEBhMCRUUxIjAgBgNVBAoMGUFTIFNlcnRp
+              IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwHhcNMjAxMTEzMTIzMzM1WhcN
+              MjQwNjEzMTEzMzM1WjCBgzELMAkGA1UEBhMCRUUxIjAgBgNVBAoMGUFTIFNlcnRp
               Zml0c2VlcmltaXNrZXNrdXMxDTALBgNVBAsMBE9DU1AxJzAlBgNVBAMMHlRFU1Qg
-              b2YgU0sgT0NTUCBSRVNQT05ERVIgMjAxMTEYMBYGCSqGSIb3DQEJARYJcGtpQHNr
-              LmVlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0cw6Cja17BbYbHi6
-              frwccDI4BIQLk/fiCE8L45os0xhPgEGR+EHE8LPCIqofPgf4gwN1vDE6cQNUlK0O
-              d+Ush39i9Z45esnfpGq+2HsDJaFmFr5+uC1MEz5Kn1TazEvKbRjkGnSQ9BertlGe
-              r2BlU/kqOk5qA5RtJfhT0psc1ixKdPipv59wnf+nHx1+T+fPWndXVZLoDg4t3w8l
-              IvIE/KhOSMlErvBIHIAKV7yH1hOxyeGLghqzMiAn3UeTEOgoOS9URv0C/T5C3mH+
-              Y/uakMSxjNuz41PneimCzbEJZJRiEaMIj8qPAubcbL8GtY03MWmfNtX6/wh6u6TM
-              fW8S2wIDAQABo4H+MIH7MBYGA1UdJQEB/wQMMAoGCCsGAQUFBwMJMB0GA1UdDgQW
-              BBR9/5CuRokEgGiqSzYuZGYAogl8TzCBoAYDVR0gBIGYMIGVMIGSBgorBgEEAc4f
-              AwEBMIGDMFgGCCsGAQUFBwICMEweSgBBAGkAbgB1AGwAdAAgAHQAZQBzAHQAaQBt
-              AGkAcwBlAGsAcwAuACAATwBuAGwAeQAgAGYAbwByACAAdABlAHMAdABpAG4AZwAu
-              MCcGCCsGAQUFBwIBFhtodHRwOi8vd3d3LnNrLmVlL2FqYXRlbXBlbC8wHwYDVR0j
-              BBgwFoAUtTQKnaUvEMXnIQ6+xLFlRxsDdv4wDQYJKoZIhvcNAQEFBQADggEBAAba
-              j7kTruTAPHqToye9ZtBdaJ3FZjiKug9/5RjsMwDpOeqFDqCorLd+DBI4tgdu0g4l
-              haI3aVnKdRBkGV18kqp84uU97JRFWQEf6H8hpJ9k/LzAACkP3tD+0ym+md532mV+
-              nRz1Jj+RPLAUk9xYMV7KPczZN1xnl2wZDJwBbQpcSVH1DjlZv3tFLHBLIYTS6qOK
-              4SxStcgRq7KdRczfW6mfXzTCRWM3G9nmDei5Q3+XTED41j8szRWglzYf6zOv4djk
-              ja64WYraQ5zb4x8Xh7qTCk6UupZ7je+0oRfuz0h/3zyRdjcRPkjloSpQp/NG8Rmr
-              cnr874p8d9fdwCrRI7U=
+              b2YgU0sgT0NTUCBSRVNQT05ERVIgMjAyMDEYMBYGCSqGSIb3DQEJARYJcGtpQHNr
+              LmVlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz6U1uMvi5P6bycik
+              gOFp1QdIdt2R/x/+WbRVNLNjDTMS0t70BVl6+Z7c5jqZUNIBZ5qlr3K8v5bIv0rd
+              r1H/By0wFMWsWksZnQLIsb/lU+HeuSIDY2ESs0YzvZW4AB3tDrMFOrtuImmsUxhs
+              z00KcRt9o+/o0RD9v5qxhJaqj6+Pr/8fZJK67Wuiqli2vVtuStaTb5zpjA1MJtu9
+              OM4jk/FaL1FaST72XPTzpMVNJR/Rk63t0wL4l4f4s3y0ZI+JPzXu3jyeH+g3ZVLb
+              wB2ccwgqfDPKXoxfNtcDxjUZz16OQQp2Rp14h/n8If0jyHfiNHHCDKaSPFyyJJMg
+              RrQkiwIDAQABo4IBQTCCAT0wEwYDVR0lBAwwCgYIKwYBBQUHAwkwHQYDVR0OBBYE
+              FIGteMcJzpGYrEl+MRkb+QpBx6XFMIGgBgNVHSAEgZgwgZUwgZIGCisGAQQBzh8D
+              AQEwgYMwWAYIKwYBBQUHAgIwTB5KAEEAaQBuAHUAbAB0ACAAdABlAHMAdABpAG0A
+              aQBzAGUAawBzAC4AIABPAG4AbAB5ACAAZgBvAHIAIAB0AGUAcwB0AGkAbgBnAC4w
+              JwYIKwYBBQUHAgEWG2h0dHA6Ly93d3cuc2suZWUvYWphdGVtcGVsLzAfBgNVHSME
+              GDAWgBS1NAqdpS8QxechDr7EsWVHGwN2/jBDBgNVHR8EPDA6MDigNqA0hjJodHRw
+              czovL3d3dy5zay5lZS9yZXBvc2l0b3J5L2NybHMvdGVzdF9lZWNjcmNhLmNybDAN
+              BgkqhkiG9w0BAQUFAAOCAQEAKR+ssgVTDDkGl+sLwz5OwaBMUOPEscr7DcCXmjmR
+              aC+KjTe8kCuXZwnMH7tMf0mDyF22USJ/o2m0MFW1k8zjH1yr1/2JghttRfi5mCvo
+              MHNXVM/ST1C/6rrymaYA27RxIj201USwTQp35YvhUUIZO3Xby/60yXZyt7wCS7xA
+              nH65U/0LnkT5w5DLC8EdXlH3QF600Z74fm8z54lY80IoSgIEPmFZlLe4YR822G24
+              mawGRQKIbhPK2DO6sGtLZDAfee4B6TGmPcunztsYaUoc1spfCKrx5EBthieSgAp0
+              dh0kMBAR/AGh7fSwl5zyASFgYmtVP4FZS6w6ETlXU7Bg3g==
               -----END CERTIFICATE-----
 
     identity: pnoee
@@ -108,15 +109,16 @@ data:
         trusted:
           - ÅLT-DELETÈ,CØNTROLINA,48908209998
 
-    dds:
-      url: https://tsp.demo.sk.ee/v2/
-      countrycode: EE
+    mid:
+      url: https://tsp.demo.sk.ee/mid-api
+      relyingpartyuuid: 00000000-0000-0000-0000-000000000000
+      relyingpartyname: DEMO
       language: EST
-      servicename: Testimine
-      authmessage: Mobiil-ID autentimise testimine.
-      signmessage: Mobiil-ID allkirjastamise testimine.
-      idcoderequired: true
-      phonerequired: true
+      authmessage: Mobiil-ID isikutuvastus
+      signmessage: Mobiil-ID hääle allkirjastamine
+      messageformat: GSM-7
+      authchallengesize: 64
+      statustimeoutms: 5000
       roots:
         - |
           -----BEGIN CERTIFICATE-----
@@ -146,126 +148,141 @@ data:
       intermediates:
         - |
           -----BEGIN CERTIFICATE-----
-          MIIEuzCCA6OgAwIBAgIQSxRID7FoIaNNdNhBeucLvDANBgkqhkiG9w0BAQUFADB9
+          MIIGgzCCBWugAwIBAgIQEDb9gCZi4PdWc7IoNVIbsTANBgkqhkiG9w0BAQwFADB9
           MQswCQYDVQQGEwJFRTEiMCAGA1UECgwZQVMgU2VydGlmaXRzZWVyaW1pc2tlc2t1
           czEwMC4GA1UEAwwnVEVTVCBvZiBFRSBDZXJ0aWZpY2F0aW9uIENlbnRyZSBSb290
-          IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwHhcNMTEwMzA3MTMwNjA5WhcN
-          MjMwOTA3MTIwNjA5WjBsMQswCQYDVQQGEwJFRTEiMCAGA1UECgwZQVMgU2VydGlm
-          aXRzZWVyaW1pc2tlc2t1czEfMB0GA1UEAwwWVEVTVCBvZiBFU1RFSUQtU0sgMjAx
-          MTEYMBYGCSqGSIb3DQEJARYJcGtpQHNrLmVlMIIBIjANBgkqhkiG9w0BAQEFAAOC
-          AQ8AMIIBCgKCAQEA0SMr+A2QGMJuNpu60MgqKG0yLL7JfvjNtgs2hqWADDn1AQeD
-          79o+8r4SRYp9kowSFA8E1v38XXTHRq3nSZeToOC5DMAWjsKlm4x8hwwp31BXCs/H
-          rl9VmikIgAlaHvv3Z+MzS6qeLdzyYi/glPVrY42A6/kBApOJlOVLvAFdySNmFkY+
-          Ky7MZ9jbBr+Nx4py/V7xm9VD62Oe1lku4S4qd+VYcQ5jftbr4OFjBp9Nn58/5svQ
-          xrLjv3B67i19d7sNh7UPnMiO6BeBb6yb3P1lqdHofE1lElStIPViJlzjPOh4puxW
-          adHDvVYUCJgW2aM58mTfjFhZbVfcrVn5OyIiTQIDAQABo4IBRjCCAUIwDwYDVR0T
-          AQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwgZkGA1UdIASBkTCBjjCBiwYKKwYB
-          BAHOHwMBATB9MFgGCCsGAQUFBwICMEweSgBBAGkAbgB1AGwAdAAgAHQAZQBzAHQA
-          aQBtAGkAcwBlAGsAcwAuACAATwBuAGwAeQAgAGYAbwByACAAdABlAHMAdABpAG4A
-          ZwAuMCEGCCsGAQUFBwIBFhVodHRwczovL3d3dy5zay5lZS9DUFMwHQYDVR0OBBYE
-          FEG2/sWxsbRTE4z6+mLQNG1tIjQKMB8GA1UdIwQYMBaAFLU0Cp2lLxDF5yEOvsSx
-          ZUcbA3b+MEMGA1UdHwQ8MDowOKA2oDSGMmh0dHBzOi8vd3d3LnNrLmVlL3JlcG9z
-          aXRvcnkvY3Jscy90ZXN0X2VlY2NyY2EuY3JsMA0GCSqGSIb3DQEBBQUAA4IBAQBd
-          h5R23K7qkrO78j51xN6CR2qwxUcK/cgcTLWv0obPmJ7jRax3PX0pFhaUE6EhAR0d
-          gS4u6XZrjPgVrt/mwq1h8lJP1MF2ueAHKyS0SGj7aFLkcC+ULwu1k6yiortFJ0Ds
-          49ZGA+ioGzYWPQ+g1Zl4wSDIz52ot0cHUijnf39Szq7E2z7MDfZkYg8HZeHrO493
-          EFghXcnSH7J7z47cgP3GWFNUKv1V2c0eVE4OxRulZ3KmBLPWbJKZ0TyGa/Aooc+T
-          orEjxz//WzcF/Sklp4FeD0MU39UURIlg7LfEcm832bPzZzVGFd4drBd5Dy0Uquu6
-          3kW7RDqr+wQFSxKr9DIH
+          IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwIBcNMTUxMjE4MDcxMzQ0WhgP
+          MjAzMDEyMTcyMzU5NTlaMGsxCzAJBgNVBAYTAkVFMSIwIAYDVQQKDBlBUyBTZXJ0
+          aWZpdHNlZXJpbWlza2Vza3VzMRcwFQYDVQRhDA5OVFJFRS0xMDc0NzAxMzEfMB0G
+          A1UEAwwWVEVTVCBvZiBFU1RFSUQtU0sgMjAxNTCCAiIwDQYJKoZIhvcNAQEBBQAD
+          ggIPADCCAgoCggIBAMTeAFvLxmAeaOsRKaf+hlkOhW+CdEilmUIKWs+qCWVq+w8E
+          8PA/TohAZdUcO4KFXothmPDmfOCb0ExXcnOPCr2NndavzB39htlyYKYxkOkZi3pL
+          z8bZg/HvpBoy8KIg0sYdbhVPYHf6i7fuJjDac4zN1vKdVQXA6Tv5wS/e90/ZyF95
+          5vycxdNLticdozm5yCDMNgsEji6QNA1zIi3+C2YmnDXx6VyxhuC2R3q0xNkwtJ4e
+          zs1RZGxWokTNPzQc3ilGhEJlVsS8vP624hUHwufQnwrKWpc3+D+plMIO0j3E+hmh
+          46gIadDRweFR/dzb+CIBHRaFh0LEBjd/cDFQlBI+E8vpkhqeWp6rp1xwnhCL201M
+          3E1E1Mw+51Xqj7WOfY0TzjOmQJy8WJPEwU2m44KxW1SnpeEBVkgb4XYFeQHAllc7
+          J7JDv50BoIPpecgaqn1vKR7l//wDsL0MN1tDlBhl3x7TJ/fwMnwB1E3zVZR74TUZ
+          h5J49CAcFrfM4RmP/0hcDW8+4wNWMg2Qgst2qmPZmHCI/OJt5yMt0Ud5yPF8AWxV
+          ot3TxOBGjMiM8m6WsksFsQxp5WtA0DANGXIIfydTaTV16Mg+KpYVqFKxkvFBmfVp
+          6xApMaFl3dY/m56O9JHEqFpBDF+uDQIMjFJxJ4Pt7Mdk40zfL4PSw9Qco2T3AgMB
+          AAGjggINMIICCTAfBgNVHSMEGDAWgBS1NAqdpS8QxechDr7EsWVHGwN2/jAdBgNV
+          HQ4EFgQUScDyRDll1ZtGOw04YIOx1i0ohqYwDgYDVR0PAQH/BAQDAgEGMGYGA1Ud
+          IARfMF0wMQYKKwYBBAHOHwMBATAjMCEGCCsGAQUFBwIBFhVodHRwczovL3d3dy5z
+          ay5lZS9DUFMwDAYKKwYBBAHOHwMBAjAMBgorBgEEAc4fAwEDMAwGCisGAQQBzh8D
+          AQQwEgYDVR0TAQH/BAgwBgEB/wIBADBBBgNVHR4EOjA4oTYwBIICIiIwCocIAAAA
+          AAAAAAAwIocgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwJwYDVR0l
+          BCAwHgYIKwYBBQUHAwkGCCsGAQUFBwMCBggrBgEFBQcDBDCBiQYIKwYBBQUHAQEE
+          fTB7MCUGCCsGAQUFBzABhhlodHRwOi8vZGVtby5zay5lZS9jYV9vY3NwMFIGCCsG
+          AQUFBzAChkZodHRwOi8vd3d3LnNrLmVlL2NlcnRzL1RFU1Rfb2ZfRUVfQ2VydGlm
+          aWNhdGlvbl9DZW50cmVfUm9vdF9DQS5kZXIuY3J0MEMGA1UdHwQ8MDowOKA2oDSG
+          Mmh0dHBzOi8vd3d3LnNrLmVlL3JlcG9zaXRvcnkvY3Jscy90ZXN0X2VlY2NyY2Eu
+          Y3JsMA0GCSqGSIb3DQEBDAUAA4IBAQDBOYTpbbQuoJKAmtDPpAomDd9mKZCarIPx
+          AH8UXphSndMqOmIUA4oQMrLcZ6a0rMyCFR8x4NX7abc8T81cvgUAWjfNFn8+bi6+
+          DgbjhYY+wZ010MHHdUo2xPajfog8cDWJPkmz+9PAdyjzhb1eYoEnm5D6o4hZQCiR
+          yPnOKp7LZcpsVz1IFXsqP7M5WgHk0SqY1vs+Yhu7zWPSNYFIzNNXGoUtfKhhkHiR
+          WFX/wdzr3fqeaQ3gs/PyD53YuJXRzFrktgJJoJWnHEYIhEwbai9+OeKr4L4kTkxv
+          PKTyjjpLKcjUk0Y0cxg7BuzwevonyBtL72b/FVs6XsXJJqCa3W4T
           -----END CERTIFICATE-----
       ocsp:
+        url: http://demo.sk.ee/ocsp
         responders:
           - |
             -----BEGIN CERTIFICATE-----
-            MIIEijCCA3KgAwIBAgIQaI8x6BnacYdNdNwlYnn/mzANBgkqhkiG9w0BAQUFADB9
+            MIIEzjCCA7agAwIBAgIQa7w4iGoiIOtfrn0fG/hc1zANBgkqhkiG9w0BAQUFADB9
             MQswCQYDVQQGEwJFRTEiMCAGA1UECgwZQVMgU2VydGlmaXRzZWVyaW1pc2tlc2t1
             czEwMC4GA1UEAwwnVEVTVCBvZiBFRSBDZXJ0aWZpY2F0aW9uIENlbnRyZSBSb290
-            IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwHhcNMTEwMzA3MTMyMjQ1WhcN
-            MjQwOTA3MTIyMjQ1WjCBgzELMAkGA1UEBhMCRUUxIjAgBgNVBAoMGUFTIFNlcnRp
+            IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwHhcNMjAxMTEzMTIzMzM1WhcN
+            MjQwNjEzMTEzMzM1WjCBgzELMAkGA1UEBhMCRUUxIjAgBgNVBAoMGUFTIFNlcnRp
             Zml0c2VlcmltaXNrZXNrdXMxDTALBgNVBAsMBE9DU1AxJzAlBgNVBAMMHlRFU1Qg
-            b2YgU0sgT0NTUCBSRVNQT05ERVIgMjAxMTEYMBYGCSqGSIb3DQEJARYJcGtpQHNr
-            LmVlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0cw6Cja17BbYbHi6
-            frwccDI4BIQLk/fiCE8L45os0xhPgEGR+EHE8LPCIqofPgf4gwN1vDE6cQNUlK0O
-            d+Ush39i9Z45esnfpGq+2HsDJaFmFr5+uC1MEz5Kn1TazEvKbRjkGnSQ9BertlGe
-            r2BlU/kqOk5qA5RtJfhT0psc1ixKdPipv59wnf+nHx1+T+fPWndXVZLoDg4t3w8l
-            IvIE/KhOSMlErvBIHIAKV7yH1hOxyeGLghqzMiAn3UeTEOgoOS9URv0C/T5C3mH+
-            Y/uakMSxjNuz41PneimCzbEJZJRiEaMIj8qPAubcbL8GtY03MWmfNtX6/wh6u6TM
-            fW8S2wIDAQABo4H+MIH7MBYGA1UdJQEB/wQMMAoGCCsGAQUFBwMJMB0GA1UdDgQW
-            BBR9/5CuRokEgGiqSzYuZGYAogl8TzCBoAYDVR0gBIGYMIGVMIGSBgorBgEEAc4f
-            AwEBMIGDMFgGCCsGAQUFBwICMEweSgBBAGkAbgB1AGwAdAAgAHQAZQBzAHQAaQBt
-            AGkAcwBlAGsAcwAuACAATwBuAGwAeQAgAGYAbwByACAAdABlAHMAdABpAG4AZwAu
-            MCcGCCsGAQUFBwIBFhtodHRwOi8vd3d3LnNrLmVlL2FqYXRlbXBlbC8wHwYDVR0j
-            BBgwFoAUtTQKnaUvEMXnIQ6+xLFlRxsDdv4wDQYJKoZIhvcNAQEFBQADggEBAAba
-            j7kTruTAPHqToye9ZtBdaJ3FZjiKug9/5RjsMwDpOeqFDqCorLd+DBI4tgdu0g4l
-            haI3aVnKdRBkGV18kqp84uU97JRFWQEf6H8hpJ9k/LzAACkP3tD+0ym+md532mV+
-            nRz1Jj+RPLAUk9xYMV7KPczZN1xnl2wZDJwBbQpcSVH1DjlZv3tFLHBLIYTS6qOK
-            4SxStcgRq7KdRczfW6mfXzTCRWM3G9nmDei5Q3+XTED41j8szRWglzYf6zOv4djk
-            ja64WYraQ5zb4x8Xh7qTCk6UupZ7je+0oRfuz0h/3zyRdjcRPkjloSpQp/NG8Rmr
-            cnr874p8d9fdwCrRI7U=
+            b2YgU0sgT0NTUCBSRVNQT05ERVIgMjAyMDEYMBYGCSqGSIb3DQEJARYJcGtpQHNr
+            LmVlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz6U1uMvi5P6bycik
+            gOFp1QdIdt2R/x/+WbRVNLNjDTMS0t70BVl6+Z7c5jqZUNIBZ5qlr3K8v5bIv0rd
+            r1H/By0wFMWsWksZnQLIsb/lU+HeuSIDY2ESs0YzvZW4AB3tDrMFOrtuImmsUxhs
+            z00KcRt9o+/o0RD9v5qxhJaqj6+Pr/8fZJK67Wuiqli2vVtuStaTb5zpjA1MJtu9
+            OM4jk/FaL1FaST72XPTzpMVNJR/Rk63t0wL4l4f4s3y0ZI+JPzXu3jyeH+g3ZVLb
+            wB2ccwgqfDPKXoxfNtcDxjUZz16OQQp2Rp14h/n8If0jyHfiNHHCDKaSPFyyJJMg
+            RrQkiwIDAQABo4IBQTCCAT0wEwYDVR0lBAwwCgYIKwYBBQUHAwkwHQYDVR0OBBYE
+            FIGteMcJzpGYrEl+MRkb+QpBx6XFMIGgBgNVHSAEgZgwgZUwgZIGCisGAQQBzh8D
+            AQEwgYMwWAYIKwYBBQUHAgIwTB5KAEEAaQBuAHUAbAB0ACAAdABlAHMAdABpAG0A
+            aQBzAGUAawBzAC4AIABPAG4AbAB5ACAAZgBvAHIAIAB0AGUAcwB0AGkAbgBnAC4w
+            JwYIKwYBBQUHAgEWG2h0dHA6Ly93d3cuc2suZWUvYWphdGVtcGVsLzAfBgNVHSME
+            GDAWgBS1NAqdpS8QxechDr7EsWVHGwN2/jBDBgNVHR8EPDA6MDigNqA0hjJodHRw
+            czovL3d3dy5zay5lZS9yZXBvc2l0b3J5L2NybHMvdGVzdF9lZWNjcmNhLmNybDAN
+            BgkqhkiG9w0BAQUFAAOCAQEAKR+ssgVTDDkGl+sLwz5OwaBMUOPEscr7DcCXmjmR
+            aC+KjTe8kCuXZwnMH7tMf0mDyF22USJ/o2m0MFW1k8zjH1yr1/2JghttRfi5mCvo
+            MHNXVM/ST1C/6rrymaYA27RxIj201USwTQp35YvhUUIZO3Xby/60yXZyt7wCS7xA
+            nH65U/0LnkT5w5DLC8EdXlH3QF600Z74fm8z54lY80IoSgIEPmFZlLe4YR822G24
+            mawGRQKIbhPK2DO6sGtLZDAfee4B6TGmPcunztsYaUoc1spfCKrx5EBthieSgAp0
+            dh0kMBAR/AGh7fSwl5zyASFgYmtVP4FZS6w6ETlXU7Bg3g==
             -----END CERTIFICATE-----
 
     qualification:
-      - protocol: ocsptm
-        conf:
-          url: http://demo.sk.ee/ocsp
-          responders:
-            - |
-              -----BEGIN CERTIFICATE-----
-              MIIEijCCA3KgAwIBAgIQaI8x6BnacYdNdNwlYnn/mzANBgkqhkiG9w0BAQUFADB9
-              MQswCQYDVQQGEwJFRTEiMCAGA1UECgwZQVMgU2VydGlmaXRzZWVyaW1pc2tlc2t1
-              czEwMC4GA1UEAwwnVEVTVCBvZiBFRSBDZXJ0aWZpY2F0aW9uIENlbnRyZSBSb290
-              IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwHhcNMTEwMzA3MTMyMjQ1WhcN
-              MjQwOTA3MTIyMjQ1WjCBgzELMAkGA1UEBhMCRUUxIjAgBgNVBAoMGUFTIFNlcnRp
-              Zml0c2VlcmltaXNrZXNrdXMxDTALBgNVBAsMBE9DU1AxJzAlBgNVBAMMHlRFU1Qg
-              b2YgU0sgT0NTUCBSRVNQT05ERVIgMjAxMTEYMBYGCSqGSIb3DQEJARYJcGtpQHNr
-              LmVlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0cw6Cja17BbYbHi6
-              frwccDI4BIQLk/fiCE8L45os0xhPgEGR+EHE8LPCIqofPgf4gwN1vDE6cQNUlK0O
-              d+Ush39i9Z45esnfpGq+2HsDJaFmFr5+uC1MEz5Kn1TazEvKbRjkGnSQ9BertlGe
-              r2BlU/kqOk5qA5RtJfhT0psc1ixKdPipv59wnf+nHx1+T+fPWndXVZLoDg4t3w8l
-              IvIE/KhOSMlErvBIHIAKV7yH1hOxyeGLghqzMiAn3UeTEOgoOS9URv0C/T5C3mH+
-              Y/uakMSxjNuz41PneimCzbEJZJRiEaMIj8qPAubcbL8GtY03MWmfNtX6/wh6u6TM
-              fW8S2wIDAQABo4H+MIH7MBYGA1UdJQEB/wQMMAoGCCsGAQUFBwMJMB0GA1UdDgQW
-              BBR9/5CuRokEgGiqSzYuZGYAogl8TzCBoAYDVR0gBIGYMIGVMIGSBgorBgEEAc4f
-              AwEBMIGDMFgGCCsGAQUFBwICMEweSgBBAGkAbgB1AGwAdAAgAHQAZQBzAHQAaQBt
-              AGkAcwBlAGsAcwAuACAATwBuAGwAeQAgAGYAbwByACAAdABlAHMAdABpAG4AZwAu
-              MCcGCCsGAQUFBwIBFhtodHRwOi8vd3d3LnNrLmVlL2FqYXRlbXBlbC8wHwYDVR0j
-              BBgwFoAUtTQKnaUvEMXnIQ6+xLFlRxsDdv4wDQYJKoZIhvcNAQEFBQADggEBAAba
-              j7kTruTAPHqToye9ZtBdaJ3FZjiKug9/5RjsMwDpOeqFDqCorLd+DBI4tgdu0g4l
-              haI3aVnKdRBkGV18kqp84uU97JRFWQEf6H8hpJ9k/LzAACkP3tD+0ym+md532mV+
-              nRz1Jj+RPLAUk9xYMV7KPczZN1xnl2wZDJwBbQpcSVH1DjlZv3tFLHBLIYTS6qOK
-              4SxStcgRq7KdRczfW6mfXzTCRWM3G9nmDei5Q3+XTED41j8szRWglzYf6zOv4djk
-              ja64WYraQ5zb4x8Xh7qTCk6UupZ7je+0oRfuz0h/3zyRdjcRPkjloSpQp/NG8Rmr
-              cnr874p8d9fdwCrRI7U=
-              -----END CERTIFICATE-----
       - protocol: tspreg
         conf:
           url: http://demo.sk.ee/tsa
           signers:
             - |
               -----BEGIN CERTIFICATE-----
-              MIIEFTCCAv2gAwIBAgIQTqz7bCP8W45UBZa7tztTTDANBgkqhkiG9w0BAQsFADB9
+              MIIEgzCCA2ugAwIBAgIQcGzJsYR4QLlft+S73s/WfTANBgkqhkiG9w0BAQsFADB9
               MQswCQYDVQQGEwJFRTEiMCAGA1UECgwZQVMgU2VydGlmaXRzZWVyaW1pc2tlc2t1
               czEwMC4GA1UEAwwnVEVTVCBvZiBFRSBDZXJ0aWZpY2F0aW9uIENlbnRyZSBSb290
-              IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwHhcNMTQwOTAyMTAwNjUxWhcN
-              MjQwOTAyMTAwNjUxWjBdMQswCQYDVQQGEwJFRTEiMCAGA1UECgwZQVMgU2VydGlm
-              aXRzZWVyaW1pc2tlc2t1czEMMAoGA1UECwwDVFNBMRwwGgYDVQQDDBNERU1PIG9m
-              IFNLIFRTQSAyMDE0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAysgr
-              VnVPxH8jNgCsJw0y+7fmmBDTM/tNB+xielnP9KcuQ+nyTgNu1JMpnry7Rh4ndr54
-              rPLXNGVdb/vsgsi8B558DisPVUn3Rur3/8XQ+BCkhTQIg1cSmyCsWxJgeaQKJi6W
-              GVaQWB2he35aVhL5F6ae/gzXT3sGGwnWujZkY9o5RapGV15+/b7Uv+7jWYFAxcD6
-              ba5jI00RY/gmsWwKb226Rnz/pXKDBfuN3ox7y5/lZf5+MyIcVe1qJe7VAJGpJFjN
-              q+BEEdvfqvJ1PiGQEDJAPhRqahVjBSzqZhJQoL3HI42NRCFwarvdnZYoCPxjeYpA
-              ynTHgNR7kKGX1iQ8OQIDAQABo4GwMIGtMA4GA1UdDwEB/wQEAwIGwDAWBgNVHSUB
-              Af8EDDAKBggrBgEFBQcDCDAdBgNVHQ4EFgQUJwScZQxzlzySVqZXviXpKZDV5Nww
-              HwYDVR0jBBgwFoAUtTQKnaUvEMXnIQ6+xLFlRxsDdv4wQwYDVR0fBDwwOjA4oDag
-              NIYyaHR0cHM6Ly93d3cuc2suZWUvcmVwb3NpdG9yeS9jcmxzL3Rlc3RfZWVjY3Jj
-              YS5jcmwwDQYJKoZIhvcNAQELBQADggEBAIq02SVKwP1UolKjqAQe7SVY/Kgi++G2
-              kqAd40UmMqa94GTu91LFZR5TvdoyZjjnQ2ioXh5CV2lflUy/lUrZMDpqEe7IbjZW
-              5+b9n5aBvXYJgDua9SYjMOrcy3siytqq8UbNgh79ubYgWhHhJSnLWK5YJ+5vQjTp
-              OMdRsLp/D+FhTUa6mP0UDY+U82/tFufkd9HW4zbalUWhQgnNYI3oo0CsZ0HExuyn
-              OOZmM1Bf8PzD6etlLSKkYB+mB77Omqgflzz+Jjyh45o+305MRzHDFeJZx7WxC+XT
-              NWQ0ZFTFfc0ozxxzUWUlfNfpWyQh3+4LbeSQRWrNkbNRfCpYotyM6AY=
+              IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwHhcNMjAxMTMwMjEwMDAwWhcN
+              MjUxMTMwMjEwMDAwWjB/MSwwKgYDVQQDDCNERU1PIFNLIFRJTUVTVEFNUElORyBB
+              VVRIT1JJVFkgMjAyMDEXMBUGA1UEYQwOTlRSRUUtMTA3NDcwMTMxDDAKBgNVBAsM
+              A1RTQTEbMBkGA1UECgwSU0sgSUQgU29sdXRpb25zIEFTMQswCQYDVQQGEwJFRTCC
+              ASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMz8yTHQyp8gzyPnKt/CQg+0
+              7c/ogDl4V1SmyFGPT+lQaYZvXIKNNZyJlzII+vNnsok6hIRvAX5ffDZs8dkeNdo8
+              QOuQ81QbLn5JJT2VuSppvpnqpFCiL+uWY0/nnwNmyiDueMkUDDJavbSPCkWwmW+a
+              QZCNGd+krSTL/zNHCfOt7cAVDQAL9C4Ue7olufIZoDCTqRA00S8bGbTQPyTS8uUM
+              EuwWc4JYZqEu4c24bIGhbKoCOSR60WrD6cBoZXLlqwDbWdkX5SLjJ9dTCxGW+pLp
+              nAWx+KqJY3HkDiSZCT46JXOaoVzmcFx3l7eqQfqWgkzRZs9TJvqQSLQ+vgSAOREC
+              AwEAAaOB/DCB+TAOBgNVHQ8BAf8EBAMCBsAwFgYDVR0lAQH/BAwwCgYIKwYBBQUH
+              AwgwHQYDVR0OBBYEFJ8v3/rNs6jK0l3BxyVSixDYEOJHMB8GA1UdIwQYMBaAFLU0
+              Cp2lLxDF5yEOvsSxZUcbA3b+MIGOBggrBgEFBQcBAQSBgTB/MCEGCCsGAQUFBzAB
+              hhVodHRwOi8vZGVtby5zay5lZS9haWEwWgYIKwYBBQUHMAKGTmh0dHBzOi8vd3d3
+              LnNrLmVlL3VwbG9hZC9maWxlcy9URVNUX29mX0VFX0NlcnRpZmljYXRpb25fQ2Vu
+              dHJlX1Jvb3RfQ0EuZGVyLmNydDANBgkqhkiG9w0BAQsFAAOCAQEAWWkQKAbEAT77
+              n8L42gw5ql7BO1fdmUgRJRRwWL9Vo9l1c50lqieR8MUToF4wpF6D0PJUx9FDcKL0
+              fbURFTRuETCgGekYmCjMbVQCiv6W38vMsIdJLBWjo2oT2AjtJ2VakwkrzzSxOSBr
+              F5u0hPsAkP0VkBhmW1E0DHfm1Bti2xk5t9OsJMJqfTTl8v1HXktlnxi6WdUzLBcS
+              dknFePDnSYoT3xOfOz1IlB3Ta729bgglAjVBEoWyrKX4kTjZPChxseMntXaW/pN+
+              Agm3Xa9hniXdK4KamzX8d8LJ+qObxmc9TXmksbWZVup0ktfJYWIHCwZjmQukAed/
+              pIX8UV3N9w==
               -----END CERTIFICATE-----
           delaytime: 1
+      - protocol: ocsp
+        conf:
+          url: http://demo.sk.ee/ocsp
+          responders:
+            - |
+              -----BEGIN CERTIFICATE-----
+              MIIEzjCCA7agAwIBAgIQa7w4iGoiIOtfrn0fG/hc1zANBgkqhkiG9w0BAQUFADB9
+              MQswCQYDVQQGEwJFRTEiMCAGA1UECgwZQVMgU2VydGlmaXRzZWVyaW1pc2tlc2t1
+              czEwMC4GA1UEAwwnVEVTVCBvZiBFRSBDZXJ0aWZpY2F0aW9uIENlbnRyZSBSb290
+              IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwHhcNMjAxMTEzMTIzMzM1WhcN
+              MjQwNjEzMTEzMzM1WjCBgzELMAkGA1UEBhMCRUUxIjAgBgNVBAoMGUFTIFNlcnRp
+              Zml0c2VlcmltaXNrZXNrdXMxDTALBgNVBAsMBE9DU1AxJzAlBgNVBAMMHlRFU1Qg
+              b2YgU0sgT0NTUCBSRVNQT05ERVIgMjAyMDEYMBYGCSqGSIb3DQEJARYJcGtpQHNr
+              LmVlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz6U1uMvi5P6bycik
+              gOFp1QdIdt2R/x/+WbRVNLNjDTMS0t70BVl6+Z7c5jqZUNIBZ5qlr3K8v5bIv0rd
+              r1H/By0wFMWsWksZnQLIsb/lU+HeuSIDY2ESs0YzvZW4AB3tDrMFOrtuImmsUxhs
+              z00KcRt9o+/o0RD9v5qxhJaqj6+Pr/8fZJK67Wuiqli2vVtuStaTb5zpjA1MJtu9
+              OM4jk/FaL1FaST72XPTzpMVNJR/Rk63t0wL4l4f4s3y0ZI+JPzXu3jyeH+g3ZVLb
+              wB2ccwgqfDPKXoxfNtcDxjUZz16OQQp2Rp14h/n8If0jyHfiNHHCDKaSPFyyJJMg
+              RrQkiwIDAQABo4IBQTCCAT0wEwYDVR0lBAwwCgYIKwYBBQUHAwkwHQYDVR0OBBYE
+              FIGteMcJzpGYrEl+MRkb+QpBx6XFMIGgBgNVHSAEgZgwgZUwgZIGCisGAQQBzh8D
+              AQEwgYMwWAYIKwYBBQUHAgIwTB5KAEEAaQBuAHUAbAB0ACAAdABlAHMAdABpAG0A
+              aQBzAGUAawBzAC4AIABPAG4AbAB5ACAAZgBvAHIAIAB0AGUAcwB0AGkAbgBnAC4w
+              JwYIKwYBBQUHAgEWG2h0dHA6Ly93d3cuc2suZWUvYWphdGVtcGVsLzAfBgNVHSME
+              GDAWgBS1NAqdpS8QxechDr7EsWVHGwN2/jBDBgNVHR8EPDA6MDigNqA0hjJodHRw
+              czovL3d3dy5zay5lZS9yZXBvc2l0b3J5L2NybHMvdGVzdF9lZWNjcmNhLmNybDAN
+              BgkqhkiG9w0BAQUFAAOCAQEAKR+ssgVTDDkGl+sLwz5OwaBMUOPEscr7DcCXmjmR
+              aC+KjTe8kCuXZwnMH7tMf0mDyF22USJ/o2m0MFW1k8zjH1yr1/2JghttRfi5mCvo
+              MHNXVM/ST1C/6rrymaYA27RxIj201USwTQp35YvhUUIZO3Xby/60yXZyt7wCS7xA
+              nH65U/0LnkT5w5DLC8EdXlH3QF600Z74fm8z54lY80IoSgIEPmFZlLe4YR822G24
+              mawGRQKIbhPK2DO6sGtLZDAfee4B6TGmPcunztsYaUoc1spfCKrx5EBthieSgAp0
+              dh0kMBAR/AGh7fSwl5zyASFgYmtVP4FZS6w6ETlXU7Bg3g==
+              -----END CERTIFICATE-----
 
 # vim: set ft=yaml sw=2:

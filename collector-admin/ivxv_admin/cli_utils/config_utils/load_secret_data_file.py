@@ -5,7 +5,6 @@ import hashlib
 
 import OpenSSL
 
-from .. import init_cli_util, log
 from ... import (COLLECTOR_STATE_CONFIGURED, COLLECTOR_STATE_FAILURE,
                  COLLECTOR_STATE_INSTALLED, COLLECTOR_STATE_PARTIAL_FAILURE,
                  SERVICE_SECRET_TYPES, SERVICE_STATE_CONFIGURED,
@@ -14,6 +13,7 @@ from ... import (COLLECTOR_STATE_CONFIGURED, COLLECTOR_STATE_FAILURE,
 from ...event_log import register_service_event
 from ...lib import IvxvError
 from ...service.service import Service
+from .. import init_cli_util, log
 
 
 def main():
@@ -41,8 +41,8 @@ def main():
 
             Key file must be in PEM format and must be not password protected.
 
-        dds-token-key - Mobile ID identity token for
-                        choices, dds and voting services.
+        mid-token-key - Mobile ID identity token for
+                        choices, mobile-id and voting services.
 
             Key file must be 32 bytes long.
 
@@ -51,7 +51,7 @@ def main():
     secret_type = args['<secret-type>'].lower()
     filepath = args['<keyfile>']
     if secret_type not in SERVICE_SECRET_TYPES:
-        log.error('Invalid secret type "%s"', secret_type)
+        log.error("Invalid secret type %r", secret_type)
         log.info('Supported secret types are: %s',
                  ', '.join(SERVICE_SECRET_TYPES))
         return 1
@@ -63,12 +63,12 @@ def main():
         with open(filepath, 'rb') as fp:
             file_content = fp.read()
     except (FileNotFoundError, PermissionError) as err:
-        log.error('Unable to load file "%s": %s', filepath, err.strerror)
+        log.error("Unable to load file %r: %s", filepath, err.strerror)
         return 1
 
     # validate file
     try:
-        _validate_secret_file(secret_type, file_content, args['--service'])
+        validate_secret_file(secret_type, file_content, args["--service"])
     except IvxvError as err:
         log.error('Error while validating %s: %s', secret_descr, err)
         return 1
@@ -81,7 +81,7 @@ def main():
         'tls-cert': 'require_tls',
         'tls-key': 'require_tls',
         'tsp-regkey': 'tspreg',
-        'dds-token-key': 'dds',
+        'mid-token-key': 'mobile_id',
     }[secret_type]
     service_types_affected = sorted(
         set(
@@ -140,23 +140,28 @@ def main():
     return 0
 
 
-def _validate_secret_file(secret_type, file_content, service_id):
+def validate_secret_file(secret_type, file_content, service_id):
     """Validate secret data file.
 
-    :raises: IvxvError
+    :raises IvxvError:
     """
     if secret_type in ('tls-cert', 'tls-key') and not service_id:
-        raise IvxvError(f'Service ID is not specified')
-    if secret_type == 'dds-token-key' and len(file_content) != 32:
+        raise IvxvError("Service ID is not specified")
+    if secret_type == 'mid-token-key' and len(file_content) != 32:
         raise IvxvError(
             f'File is not 32 bytes long '
             f'(actual size: {len(file_content)} bytes)')
     if secret_type == 'tsp-regkey':
         try:
-            OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM,
-                                           file_content)
+            privkey = OpenSSL.crypto.load_privatekey(
+                OpenSSL.crypto.FILETYPE_PEM, file_content
+            )
         except OpenSSL.crypto.Error as err:
             err_lib, err_func, err_reason = err.args[0][0]
             raise IvxvError(
                 f'Error in {err_lib} library {err_func} '
                 f'function: {err_reason}')
+        with open("/var/lib/ivxv/service/tspreg-pubkey.pem", "wb") as fd:
+            fd.write(
+                OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, privkey)
+            )

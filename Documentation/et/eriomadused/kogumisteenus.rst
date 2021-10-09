@@ -65,7 +65,7 @@ Kogumisteenuse funktsionaalsus
 Kogumisteenuse andmestruktuurid ja protokollid
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#. E-urni edastamiseks kasutatakse nõuetekohast protokolli;
+#. E-valimiskasti edastamiseks kasutatakse nõuetekohast protokolli;
 
 #. Kogumisteenuse komponentide vahelised protokollid
    võimaldavad mõlemapoolset autentimist;
@@ -82,7 +82,7 @@ Kogumisteenuse andmestruktuurid ja protokollid
 Kogumisteenuse evitamine
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-#. Kogumisteenus on paigaldatav Ubuntu LTS 18.04 (Bionic Beaver) platvormile;
+#. Kogumisteenus on paigaldatav Ubuntu 20.04 LTS (Focal Fossa) platvormile;
 
 #. Kogumisteenuse platvorm sobitub turulolevate
    pilveteenustega (Amazon Web Services);
@@ -143,11 +143,11 @@ Kogumisteenuse liidesed
 
 #. Kogumisteenuse tuvastusteenus toetab OCSP liidest;
 
-#. Kogumisteenuse tuvastusteenus toetab DigiDocService liidest;
+#. Kogumisteenuse tuvastusteenus toetab Mobiil-ID liidest;
 
 #. Kogumisteenuse kehtivuskinnitusteenus toetab OCSP liidest;
 
-#. Kogumisteenuse allkirjastamisteenus toetab DigiDocService liidest;
+#. Kogumisteenuse allkirjastamisteenus toetab Mobiil-ID liidest;
 
 #. Kogumisteenusel on klienditeenindaja liides;
 
@@ -234,7 +234,7 @@ Monitooringu liidesed
 Kogumisteenuse varundamine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#. Varundada on võimalik e-urni, logifaile ja süsteemi seadistusi;
+#. Varundada on võimalik e-valimiskasti, logifaile ja süsteemi seadistusi;
 
 #. Varundada on võimalik irdmeediale (ja muule selleks ettenähtud meediale);
 

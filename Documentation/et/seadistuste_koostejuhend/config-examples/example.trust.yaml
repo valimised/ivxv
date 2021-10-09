@@ -12,11 +12,12 @@ container:
     profile: TS
     ocsp:
       responders:
-        - !container TEST_of_SK_OCSP_RESPONDER_2011.pem
+        - !container TEST_of_SK_OCSP_RESPONDER_2020.pem
     tsp:
       signers:
-        - !container DEMO_of_SK_TSA_2014.pem
+        - !container DEMO_SK_TIMESTAMPING_AUTHORITY_2020.pem
       delaytime: 1
+    tsdelaytime: 60
 
 authorizations:
     - ORAV,IVAN,30809010001

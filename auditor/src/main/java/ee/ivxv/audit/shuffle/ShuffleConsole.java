@@ -33,7 +33,7 @@ public class ShuffleConsole {
 
     public Progress enter(ShuffleStep step, long length) {
         enter(step);
-        return console.startProgress(length);
+        return console.startProgress(length, true);
     }
 
     public static enum ShuffleStep {
@@ -45,15 +45,11 @@ public class ShuffleConsole {
         READ_CIPHS(READ, Msg.m_shuffle_read_ciphs), //
         READ_SHUFFLED(READ, Msg.m_shuffle_read_shuffled),
 
-        COMPUTE(Msg.m_shuffle_compute), //
-        COMPUTE_RHO(COMPUTE, "rho"), COMPUTE_RO_SEED(COMPUTE, "RO_seed"), //
-        COMPUTE_E(COMPUTE, "e"), COMPUTE_H(COMPUTE, "h"), COMPUTE_V(COMPUTE, "v"), //
-        COMPUTE_A(COMPUTE, "A"), COMPUTE_C(COMPUTE, "C"), COMPUTE_D(COMPUTE, "D"), //
-        COMPUTE_F(COMPUTE, "F"),
-
         VERIFY(Msg.m_shuffle_verify), //
-        VERIFY_A(VERIFY, "A"), VERIFY_B(VERIFY, "B"), VERIFY_C(VERIFY, "C"), //
-        VERIFY_D(VERIFY, "D"), VERIFY_F(VERIFY, "F");
+        VERIFY_PARAMS(VERIFY, Msg.m_shuffle_verify_params), //
+        VERIFY_NI(VERIFY, Msg.m_shuffle_verify_ni), //
+        VERIFY_PERM(VERIFY, Msg.m_shuffle_verify_permutation), //
+        VERIFY_RERAND(VERIFY, Msg.m_shuffle_verify_rerandomisation);
 
         final String msg;
         final Translatable i18msg;
@@ -76,14 +72,6 @@ public class ShuffleConsole {
         ShuffleStep(ShuffleStep parent, Translatable msg) {
             this.msg = null;
             this.i18msg = msg;
-            this.parent = parent;
-            parent.appendSubStep(this);
-        }
-
-
-        ShuffleStep(ShuffleStep parent, String msg) {
-            this.msg = msg;
-            this.i18msg = null;
             this.parent = parent;
             parent.appendSubStep(this);
         }

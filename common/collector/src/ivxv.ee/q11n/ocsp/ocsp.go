@@ -30,8 +30,8 @@ import (
 )
 
 func init() {
-	q11n.Register(q11n.OCSP, newreg(false))
-	q11n.Register(q11n.OCSPTM, newreg(true))
+	q11n.Register(q11n.OCSP, newreg(false), ocsp.ParseTime)
+	q11n.Register(q11n.OCSPTM, newreg(true), ocsp.ParseTime)
 }
 
 type client struct {

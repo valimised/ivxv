@@ -10,6 +10,7 @@ package q11n // import "ivxv.ee/q11n"
 import (
 	"context"
 	"sync"
+	"time"
 
 	"ivxv.ee/container"
 	"ivxv.ee/yaml"
@@ -26,6 +27,12 @@ const (
 	TSP    Protocol = "tsp"    // import "ivxv.ee/q11n/tsp"
 	TSPREG Protocol = "tspreg" // import "ivxv.ee/q11n/tsp"
 )
+
+// CanonicalOrder is the order of qualification protocols that is used for
+// determining the canonical time of a set of qualifying properties. It lists
+// protocols with properties that embed a qualification time in descending
+// order of priority.
+var CanonicalOrder = []Protocol{TSPREG, TSP, OCSPTM, OCSP}
 
 // Qualifier is used for requesting qualifying properties for signature
 // containers.
@@ -64,18 +71,33 @@ var (
 // used to pass private keys and other sensitive information to the qualifier.
 type NewFunc func(yaml.Node, string) (Qualifier, error)
 
+// ParseTimeFunc is the type of functions that parse a qualifying property and
+// return the embedded qualification time. A ParseTimeFunc only parses
+// qualifying properties of a specific qualification protocol.
+type ParseTimeFunc func([]byte) (time.Time, error)
+
+type regentry struct {
+	newQualifier NewFunc
+	parseTime    ParseTimeFunc
+}
+
 var (
 	reglock  sync.RWMutex
-	registry = make(map[Protocol]NewFunc)
+	registry = make(map[Protocol]regentry)
 )
 
 // Register registers a signature container qualifier implementation. It is
 // intended to be called from init functions of packages that implement
 // qualifiers.
-func Register(p Protocol, n NewFunc) {
+//
+// newFunc is a constructor function used to create qualifiers with a specified
+// configuration. parseTimeFunc is a time parsing function for reading the
+// qualification times of properties issued by qualifers. If the protocol does
+// not support such a function, then parseTimeFunc must be nil.
+func Register(p Protocol, newFunc NewFunc, parseTimeFunc ParseTimeFunc) {
 	reglock.Lock()
 	defer reglock.Unlock()
-	registry[p] = n
+	registry[p] = regentry{newQualifier: newFunc, parseTime: parseTimeFunc}
 }
 
 // Conf is the qualifier set configuration. It contains an ordered list of
@@ -106,14 +128,14 @@ func Configure(c Conf, sensitive string) (qs Qualifiers, err error) {
 	defer reglock.RUnlock()
 	for i, p := range c {
 		// ...check if it is linked ...
-		n, ok := registry[p.Protocol]
+		entry, ok := registry[p.Protocol]
 		if !ok {
 			return nil, UnlinkedProtocolError{Protocol: p.Protocol}
 		}
 		qs[i].Protocol = p.Protocol
 
 		// ...and if creating the qualifier succeeds.
-		qs[i].Qualifier, err = n(p.Conf, sensitive)
+		qs[i].Qualifier, err = entry.newQualifier(p.Conf, sensitive)
 		if err != nil {
 			return nil, ConfigureProtocolError{Protocol: p.Protocol, Err: err}
 		}
@@ -125,3 +147,34 @@ func Configure(c Conf, sensitive string) (qs Qualifiers, err error) {
 // a convenience type to be used outside of q11n to store the results of
 // qualification.
 type Properties map[Protocol][]byte
+
+// CanonicalTime returns the canonical qualification time of a set of
+// qualifying properties. The canonical time is determined by checking for
+// properties in CanonicalOrder and returning the qualification time of the
+// first property that is present. If none of the properties are present, then
+// the zero time is returned instead.
+func CanonicalTime(properties Properties) (time.Time, error) {
+	reglock.RLock()
+	defer reglock.RUnlock()
+	for _, protocol := range CanonicalOrder {
+		property, ok := properties[protocol]
+		if !ok {
+			continue // Check next protocol.
+		}
+
+		entry, ok := registry[protocol]
+		if !ok {
+			return time.Time{}, CanonicalTimeUnlinkedProtocolError{Protocol: protocol}
+		}
+		if entry.parseTime == nil {
+			panic(protocol + " in CanonicalOrder without ParseTimeFunc")
+		}
+
+		ctime, err := entry.parseTime(property)
+		if err != nil {
+			return time.Time{}, CanonicalTimeParseError{Protocol: protocol, Err: err}
+		}
+		return ctime, nil
+	}
+	return time.Time{}, nil // No canonical time protocol in properties.
+}

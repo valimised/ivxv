@@ -1,68 +1,86 @@
 {
-  "districts": {
-    "164.1": {
-      "name": "Valimisringkond nr. 1", 
-      "stations": [
-        "164.1"
-      ]
-    }, 
-    "296.1": {
-      "name": "Valimisringkond nr. 1", 
-      "stations": [
-        "296.1", 
-        "296.2"
-      ]
-    }, 
-    "784.6": {
-      "name": "Valimisringkond nr. 6", 
-      "stations": [
-        "524.68"
-      ]
-    }, 
-    "784.8": {
-      "name": "Valimisringkond nr. 8", 
-      "stations": [
-        "614.85", 
-        "614.86", 
-        "614.87"
-      ]
-    }, 
-    "795.1": {
-      "name": "Valimisringkond nr. 1", 
-      "stations": [
-        "795.1", 
-        "795.2"
-      ]
-    }
-  }, 
-  "election": "TESTKOV", 
+  "election": "KOV2034",
   "regions": {
-    "164": {
-      "county": "Ida-Viru maakond", 
-      "parish": "Avinurme vald", 
+    "0809": {
+      "parish": "Tori vald",
+      "county": "Pärnu maakond",
       "state": "Eesti Vabariik"
-    }, 
-    "296": {
-      "county": "Harju maakond", 
-      "parish": "Keila linn", 
+    },
+    "0624": {
+      "parish": "Pärnu linn",
+      "county": "Pärnu maakond",
       "state": "Eesti Vabariik"
-    }, 
-    "524": {
-      "county": "Tallinn", 
-      "parish": "N\u00f5mme linnaosa", 
+    },
+    "0524": {
+      "parish": "Nõmme linnaosa",
+      "county": "Tallinn",
       "state": "Eesti Vabariik"
-    }, 
-    "614": {
-      "county": "Tallinn", 
-      "parish": "P\u00f5hja-Tallinna linnaosa", 
+    },
+    "0784": {
+      "county": "Tallinn",
       "state": "Eesti Vabariik"
-    }, 
-    "784": {
-      "county": "Tallinn"
-    }, 
-    "795": {
-      "county": "Tartu linn", 
+    },
+    "0796": {
+      "parish": "Tartu vald",
+      "county": "Tartu maakond",
+      "state": "Eesti Vabariik"
+    },
+    "0793": {
+      "county": "Tartu linn",
       "state": "Eesti Vabariik"
     }
+  },
+  "districts": {
+    "0809.1": {
+      "name": "Valimisringkond nr. 1",
+      "parish": [
+        "0809"
+      ]
+    },
+    "0809.2": {
+      "name": "Valimisringkond nr. 2",
+      "parish": [
+        "0809"
+      ]
+    },
+    "0624.1": {
+      "name": "Valimisringkond nr. 1",
+      "parish": [
+        "0624"
+      ]
+    },
+    "0784.6": {
+      "name": "Valimisringkond nr. 6",
+      "parish": [
+        "0524"
+      ]
+    },
+    "0796.1": {
+      "name": "Valimisringkond nr. 1",
+      "parish": [
+        "0796"
+      ]
+    },
+    "0793.1": {
+      "name": "Valimisringkond nr. 1",
+      "parish": [
+        "0793"
+      ]
+    }
+  },
+  "counties": {
+    "0068": [
+      "0809",
+      "0624"
+    ],
+    "0784": [
+      "0524"
+    ],
+    "0079": [
+      "0796"
+    ],
+    "0793": [
+      "0793"
+    ]
   }
 }

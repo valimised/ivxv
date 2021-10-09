@@ -198,7 +198,7 @@ func proxyFilter(ctx context.Context, c net.Conn, chain connFilters) context.Con
 // TLSConf is the TLS filter configuration.
 type TLSConf struct {
 	HandshakeTimeout int64    // TLS handshake timeout in seconds.
-	CipherSuites     []string // Supported cipher suites.
+	CipherSuites     []string // Supported cipher suites, TLS 1.2 only.
 }
 
 // tlsFilter creates a new TLS connection that uses c as the underlying
@@ -323,7 +323,7 @@ func (f *codecFilter) filter(ctx context.Context, c net.Conn, _ connFilters) con
 	// information to the client (the third case): the codec and filters
 	// must be sure to make any returned errors generic enough, that they
 	// can be sent to the client.
-	f.server.ServeRequest(codec) // nolint: errcheck, Read above.
+	f.server.ServeRequest(codec) //nolint:errcheck // Read above.
 	close(ctx, codec, nil)
 	return ctx
 }

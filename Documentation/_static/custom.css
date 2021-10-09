@@ -4,8 +4,6 @@
  * Sphinx stylesheet for HTML documentation
  */
 
-@import url("css/theme.css");
-
 .figure {
   background-color: rgba(128, 128, 128, 0.1);
   border: thin dotted gray;
@@ -18,9 +16,9 @@
 /* Highlight target section */
 
 .section:target {
-  background-color: rgba(200, 200, 150, 0.1);
-  padding-left: 10px;
-  border: thin dashed gray;
+  background-color: rgba(220, 220, 255, 0.2);
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
+  padding: 10px 5px 5px 5px;
 }
 
 /*

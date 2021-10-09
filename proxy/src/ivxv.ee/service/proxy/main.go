@@ -45,6 +45,7 @@ func reload(ctx context.Context, c *conf.Technical,
 	}
 
 	if until >= command.Execute {
+		//nolint:gosec // Keep the configuration file permissions.
 		if err = ioutil.WriteFile(*cfgp, cfg, 0644); err != nil {
 			return exit.CantCreate, WriteConfigurationError{Err: err}
 		}

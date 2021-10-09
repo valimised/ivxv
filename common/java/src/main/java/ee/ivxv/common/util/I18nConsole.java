@@ -32,10 +32,20 @@ public class I18nConsole {
     }
 
     public Progress startProgress(long total) {
-        return console.startProgress(i18n.get(M.m_progress_bar), total);
+        return this.startProgress(total, false);
+    }
+
+    public Progress startProgress(long total, boolean relative_only) {
+        M bar = relative_only ? M.m_relative_progress_bar : M.m_progress_bar;
+        return console.startProgress(i18n.get(bar), total);
     }
 
     public Progress startInfiniteProgress(long total) {
-        return console.startInfiniteProgress(i18n.get(M.m_progress_bar), total);
+        return this.startInfiniteProgress(total, false);
+    }
+
+    public Progress startInfiniteProgress(long total, boolean relative_only) {
+        M bar = relative_only ? M.m_relative_progress_bar : M.m_progress_bar;
+        return console.startInfiniteProgress(i18n.get(bar), total);
     }
 }

@@ -200,7 +200,7 @@ public class TestKeyTool implements Tool.Runner<TestKeyArgs> {
             throws ProtocolException {
         ShoupSigning shoupSign = new ShoupSigning(quorum, tparams, rnd);
         byte[] signature = shoupSign.sign(message.getMessage());
-        boolean res = SignatureUtil.RSA.verifyPSSSignature(message.getMessage(), rsaPub, signature);
+        boolean res = SignatureUtil.RSA.RSA_PSS.verifySignature(message.getMessage(), rsaPub, signature);
         if (res) {
             console.println(Msg.m_quorum_test_ok, quorum);
             log.debug("Signature creation test succeeded with quorum: {}", quorum);

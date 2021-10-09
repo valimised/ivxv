@@ -1,0 +1,84 @@
+{
+  "appConfig": {
+    "versions": {
+      "android_version_code": 28,
+      "ios_bundle_version": "2.1.1"
+    },
+    "texts": {
+      "loading": "Laen...",
+      "welcome_message": "Hääle kontollimiseks suunake nutiseadme kaamera arvuti ekraanil kuvatavale QR-koodile",
+      "lbl_vote": "Hääle kontrollimine",
+      "lbl_vote_txt": "Teie QR-koodile vastav hääl on talletatud valimiste serveris",
+      "lbl_vote_signer": "Hääle allkirjastaja: ",
+      "btn_next": "Edasi",
+      "btn_more": "AbiInfo",
+      "btn_packet_data": "Andmeside",
+      "btn_wifi": "Wifi",
+      "btn_verify": "Kuva minu valik",
+      "lbl_no_choice": "Valikut ei tehtud",
+      "lbl_choice": "Tuvastatud valik",
+      "lbl_close_timeout": "Rakendus suletakse XX sekundi pärast!",
+      "notification_title": "Valimisteenistus",
+      "notification_message": "Kontrollimine lõpetatud"
+    },
+    "errors": {
+      "no_network_message": "Veenduge, et nutiseadme andmeside on võimaldatud",
+      "get_config_message": "Valimiste seadistuse laadimine ebaõnnestus",
+      "bad_config_message": "Valimiste seadistuse viga",
+      "bad_version_message": "Rakendus on aegunud",
+      "problem_qrcode_message": "QR koodi ei õnnestunud tuvastada",
+      "close_qrcode_message": "QR koodi ei õnnestunud tuvastada",
+      "send_server_request_message": "Valimiste süsteemiga ühendamine ebaõnnestus",
+      "bad_server_response_message": "Tehniline viga, palun teavitage valimiste läbiviijat",
+      "bad_device_message": "Selle seadmega pole võimalik häält kontrollida",
+      "bad_verification_message": "Valiku tuvastamine krüptogrammist ebaõnnestus",
+      "camera_permission_required_message": "Rakenduse kasutamiseks peab olema kaamera kasutamine lubatud"
+    },
+    "colors": {
+      "frame_background": "#AA444444",
+      "main_window_foreground": "#FFFFFF",
+      "error_window_foreground": "#FFFFFF",
+      "loading_window_background": "#33B5E5",
+      "loading_window_foreground": "#FFFFFF",
+      "main_window": "#33B5E5",
+      "main_window_shadow": "#005777",
+      "error_window": "#FF0000",
+      "error_window_shadow": "#770000",
+      "btn_background": "#F0F0F0",
+      "btn_foreground": "#727272",
+      "btn_verify_foreground": "#FFFFFF",
+      "btn_verify_background_start": "#30B4E5",
+      "btn_verify_background_center": "#1AABE1",
+      "btn_verify_background_end": "#00A1DC",
+      "lbl_background": "#33B5E5",
+      "lbl_foreground": "#FFFFFF",
+      "lbl_shadow": "#008EC2",
+      "lbl_outer_container_background": "#EAEAEA",
+      "lbl_outer_container_foreground": "#878686",
+      "lbl_inner_container_background": "#FFFFFF",
+      "lbl_inner_container_foreground": "#878686",
+      "lbl_close_timeout_foreground": "#454444",
+      "lbl_close_timeout_background_start": "#FEEC00",
+      "lbl_close_timeout_background_center": "#F9D303",
+      "lbl_close_timeout_background_end": "#F7C804",
+      "lbl_close_timeout_shadow": "#C6A002",
+      "lbl_outer_inner_container_divider": "#E9E9E9"
+    },
+    "params": {
+      "verification_url": ["collector1:port", "collector2:port", "collector3:port"],
+      "verification_tls": ["<collector1_tls_pem>", "<collector2_tls_pem>", "<collector3_tls_pem>"],
+      "help_url": "https://eh.valimised.ee/apps/help/index.html",
+      "close_timeout": 30000,
+      "close_interval": 1000,
+      "con_timeout_1": 3000,
+      "con_timeout_2": 15000,
+      "public_key": "<valimiste_avalik_võti_pem>",
+      "tspreg_service_cert": "<SK_TIMESTAMPING_AUTHORITY_CERT>",
+      "ocsp_service_cert": [],
+      "tspreg_client_cert": "<collector_tspreg_cert_pem>"
+    },
+    "elections": {
+      "question-1": "Milline on looduskauneim koht?"
+    }
+  }
+}

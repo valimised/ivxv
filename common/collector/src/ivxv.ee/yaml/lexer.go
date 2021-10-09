@@ -203,7 +203,7 @@ func (l *lexer) discardBOM() {
 	switch bom, err := l.b.Peek(3); err {
 	case nil:
 		if bytes.Equal(bom, []byte{0xef, 0xbb, 0xbf}) {
-			// nolint: errcheck, l.b.Discard(3) is guaranteed to
+			//nolint:errcheck // l.b.Discard(3) is guaranteed to
 			// work after l.b.Peek(3), since l.b.Buffered() >= 3.
 			l.b.Discard(3)
 		}
@@ -223,7 +223,7 @@ func (l *lexer) rune() (r rune, eof bool) {
 	switch rn, err := l.b.Peek(2); err {
 	case nil:
 		if rn[0] == '\r' && rn[1] == '\n' {
-			// nolint: errcheck, l.b.Discard(1) is guaranteed to
+			//nolint:errcheck // l.b.Discard(1) is guaranteed to
 			// work after l.b.Peek(2), since l.b.Buffered() >= 1.
 			l.b.Discard(1)
 		}
@@ -268,17 +268,12 @@ func (l *lexer) peek() (r rune, eof bool) {
 
 // while reads all following runes from input until one that is not present in
 // set is found.
-//
-// nolint: unparam, while is currently only used for spaces, but we want to
-// keep it generic.
 func (l *lexer) while(set string) (read string, next rune, eof bool) {
 	return l.whileEq(set, true)
 }
 
 // until reads all following runes from input until one that is present in set
 // is found.
-//
-// nolint: unparam, eof is currently not used, but still keep it for the future.
 func (l *lexer) until(set string) (read string, next rune, eof bool) {
 	return l.whileEq(set, false)
 }

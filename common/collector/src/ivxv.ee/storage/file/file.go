@@ -34,8 +34,6 @@ func init() {
 		if err = yaml.Apply(n, &f); err != nil {
 			return nil, ConfigurationError{Err: err}
 		}
-		// nolint: gosec, we want group permissions so that all
-		// services access the files.
 		if err = os.MkdirAll(f.WD, 0770); err != nil {
 			return nil, WorkingDirectoryError{Path: f.WD, Err: err}
 		}
@@ -50,8 +48,6 @@ type F struct {
 
 // Put implements the storage.PutGetter interface.
 func (f F) Put(ctx context.Context, key string, value []byte) (err error) {
-	// nolint: gosec, we want group permissions so that all services can
-	// access the files.
 	fp, err := os.OpenFile(filepath.Join(f.WD, encode(key)),
 		os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0660)
 	if err != nil {
@@ -98,7 +94,7 @@ func (f F) GetWithPrefix(ctx context.Context, prefix string) (
 			errc <- log.Alert(GetWithPrefixOpenWDError{Err: err})
 			return
 		}
-		defer d.Close() // nolint: errcheck, ignore close failure of read-only fd.
+		defer d.Close()
 
 		for {
 			// Read next set of keys. Do not read all at once in

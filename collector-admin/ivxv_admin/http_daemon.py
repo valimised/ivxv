@@ -37,13 +37,14 @@ def upload_cmd_file():
     original_filename = request.forms.get('original_filename')
     cmd_type = request.forms.get('cmd_type')
     file_path = cfg_path('file_upload_path', filename)
-    log.info('Uploading command file "%s" (type: %s)', filename, cmd_type)
+    log.info("Uploading command file %r (type: %s)", filename, cmd_type)
 
     # execute command loading utility
     cmd = ['ivxv-cmd-load', '--autoapply', cmd_type, file_path]
     log.info('Executing command: %s', ' '.join(cmd))
     proc = subprocess.run(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False
+    )
     log.info('Command finished with exit code %d', proc.returncode)
 
     # report upload result
@@ -52,10 +53,9 @@ def upload_cmd_file():
         'log': proc.stdout.decode('utf-8').split('\n'),
     }
     if proc.returncode:  # error
-        body['message'] = f'Viga faili "{original_filename}" üleslaadimisel'
+        body["message"] = f"Viga faili {original_filename!r} üleslaadimisel"
     else:  # command loaded
-        body['message'] = (
-            f'Fail "{original_filename}" on edukalt üles laaditud')
+        body["message"] = f"Fail {original_filename!r} on edukalt üles laaditud"
 
     # start response
     response.content_type = 'application/json'
@@ -92,13 +92,113 @@ def download_ballots():
     return json.dumps('OK')
 
 
-@get('/remove-voters-lists')
-def remove_voters_lists():
+@get("/download-voter-detail-stats")
+def download_voter_stats():
+    """Download voter stats."""
+    cmd = ["ivxv-voterstats", "detail"]
+    log.info("Executing command: %s", " ".join(cmd))
+    proc = subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False
+    )
+    log.info("Command finished with exit code %d", proc.returncode)
+
+    # report result
+    if proc.returncode:  # error
+        body = {
+            "success": True,
+            "log": proc.stdout.decode("utf-8").split("\n"),
+            "message": "Viga statistika hankimisel",
+        }
+    else:  # success
+        with open("/var/lib/ivxv/admin-ui-data/voterstats-detail.json") as fd:
+            body = json.load(fd)
+
+    # start response
+    response.content_type = 'application/json'
+    return json.dumps(body)
+
+
+@get("/download-processor-input")
+def download_processor_input():
+    """Download processor input."""
+    timestamp = "{:%Y.%m.%d_%H.%M}".format(datetime.datetime.now())
+    filename = f"processor-cfg-{timestamp}.zip"
+    output_filepath = f"/var/lib/ivxv/admin-ui-data/{filename}"
+    try:
+        os.unlink(output_filepath)
+    except FileNotFoundError:
+        pass
+    cmd = ["ivxv-generate-processor-input", output_filepath]
+    log.info("Executing command: %s", " ".join(cmd))
+    proc = subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False
+    )
+    log.info("Command finished with exit code %d", proc.returncode)
+
+    # report result
+    if proc.returncode:  # error
+        body = {
+            "success": True,
+            "log": proc.stdout.decode("utf-8").split("\n"),
+            "message": "Viga töötlemisrakenduse sisendi aluse genereerimisel",
+        }
+        response.content_type = 'application/json'
+        return json.dumps(body)
+
+    # success
+    with open(output_filepath, "rb") as fd:
+        body = fd.read()
+    response.content_type = "application/zip"
+    response.set_header("Content-Disposition", f'attachment; filename="{filename}"')
+    return body
+
+
+@get("/download-voting-sessions")
+def download_voting_sessions():
+    """Download voting sessions."""
+    cmd = ["ivxv-voting-sessions"]
+    filename = "voting-sessions"
+    if request.forms.get("verifications"):
+        cmd.append("verify")
+        filename += "-with-verifications"
+    else:
+        cmd.append("vote")
+    if request.forms.get("anonymize"):
+        cmd.append("--anonymize")
+        filename += "-anonymized"
+    filename += "-{:%Y.%m.%d_%H.%M}.csv".format(datetime.datetime.now())  # timestamp
+    filepath = f"/var/lib/ivxv/admin-ui-data/{filename}"
+    cmd.append(filepath)
+    log.info("Executing command: %s", " ".join(cmd))
+    proc = subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False
+    )
+    if proc.returncode:  # error
+        body = {
+            "success": False,
+            "log": proc.stdout.decode("utf-8").split("\n"),
+            "message": "Viga hääletamise seansside hankimisel",
+        }
+        response.content_type = "application/json"
+        return json.dumps(body)
+
+    # success
+    log.info("Command finished with exit code %d", proc.returncode)
+
+    response.content_type = "text/csv"
+    response.set_header("Content-Disposition", f'attachment; filename="{filename}"')
+    with open(filepath) as fd:
+        return fd.read()
+
+
+@get('/skip-voters-list')
+def skip_voters_lists():
     """Remove loaded but unapplied voters lists"""
-    cmd = ['ivxv-cmd-remove', 'voters']
+    cmd = ["ivxv-voter-list-skip"]
     log.info('Executing command: %s', ' '.join(cmd))
     proc = subprocess.run(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False
+    )
     log.info('Command finished with exit code %d', proc.returncode)
 
     # report result
@@ -108,9 +208,9 @@ def remove_voters_lists():
     }
 
     if proc.returncode:  # error
-        body['message'] = 'Viga nimekirjade eemaldamisel'
+        body["message"] = "Viga nimekirja märkimisel vahelejätmiseks"
     else:  # command loaded
-        body['message'] = 'Nimekirjad edukalt eemaldatud'
+        body["message"] = "Nimekiri on märgitud vahelejätmiseks"
 
     # start response
     response.content_type = 'application/json'

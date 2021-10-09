@@ -250,7 +250,7 @@ func decompress(file *zip.File, limit int64) (*asiceFile, error) {
 	if err != nil {
 		return nil, OpenZIPFileError{Err: err}
 	}
-	defer fd.Close() // nolint: errcheck, ignore close failure of read-only file.
+	defer fd.Close()
 
 	asice := &asiceFile{name: file.Name, data: buffer()}
 	size, err := asice.data.ReadFrom(safereader.New(fd, limit))

@@ -1,54 +1,55 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-
     "definitions": {
-        "onlinevoters": {
-            "type": "object",
-            "patternProperties": {
-                "^[0-9]+$": {
-                    "type": "array",
-                    "items": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "number"
-                        }
-                    ],
-                    "additionalItems": false
-                }
-            },
-            "additionalProperties": false
+        "onlinevoters_entry": {
+            "type": "string",
+            "pattern": "^[0-9]{11}$",
+            "additionalItems": false
         },
-        "stations": {
+
+        "onlinevoters": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/onlinevoters_entry"
+            },
+            "additionalItems": false
+        },
+
+        "parish": {
             "type": "object",
             "patternProperties": {
-                "^[0-9]+.[0-9]+$": {
+                "^[0-9]{4}$": {
                     "$ref": "#/definitions/onlinevoters"
                 }
             },
             "additionalProperties": false,
             "minProperties": 1
         },
+
         "districts": {
             "type": "object",
             "patternProperties": {
-                "^[0-9]+.[0-9]+$": {
-                    "$ref": "#/definitions/stations"
+                "^[0-9]{4}\\.[0-9]{1,2}$": {
+                    "$ref": "#/definitions/parish"
                 }
             },
             "additionalProperties": false,
             "minProperties": 1
         }
     },
-
     "type": "object",
     "properties": {
-        "election": {"type": "string"},
+        "election": {
+            "type": "string",
+            "pattern": "^[ \\-,\\+\\.:;=!?&%#<>_/\\'\\*()\\[\\]{}|^A-Za-z0-9]{1,28}$"
+        },
         "onlinevoters": {
             "$ref": "#/definitions/districts"
         }
     },
-    "required": ["election", "onlinevoters"],
+    "required": [
+        "election",
+        "onlinevoters"
+    ],
     "additionalProperties": false
 }

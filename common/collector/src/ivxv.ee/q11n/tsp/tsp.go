@@ -36,8 +36,8 @@ import (
 )
 
 func init() {
-	q11n.Register(q11n.TSP, newreg(false))
-	q11n.Register(q11n.TSPREG, newreg(true))
+	q11n.Register(q11n.TSP, newreg(false), tsp.ParseTime)
+	q11n.Register(q11n.TSPREG, newreg(true), tsp.ParseTime)
 }
 
 type client struct {
@@ -58,8 +58,6 @@ func newreg(reg bool) func(yaml.Node, string) (q11n.Qualifier, error) {
 		}
 
 		if reg {
-			// nolint: gosec, Allow sensitive directory location
-			// from variable, assume correct and safe.
 			pem, err := ioutil.ReadFile(filepath.Join(sensitive, "tspreg.key"))
 			if err != nil {
 				return nil, ReadPrivateKeyError{Err: err}

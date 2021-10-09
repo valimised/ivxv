@@ -3,7 +3,6 @@ package tsp
 import (
 	"bytes"
 	"crypto"
-	"crypto/sha1" // nolint: gosec, Required by RFC 2634.
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -25,8 +24,13 @@ const (
 	idSHA384 = "2.16.840.1.101.3.4.2.2"
 	idSHA512 = "2.16.840.1.101.3.4.2.3"
 
-	idRSA   = "1.2.840.113549.1.1.1"
-	idECDSA = "1.2.840.10045.4.2" // XXX: Is this the correct OID for ECDSA?
+	idSHA256WithRSAEncryption = "1.2.840.113549.1.1.11"
+	idSHA384WithRSAEncryption = "1.2.840.113549.1.1.12"
+	idSHA512WithRSAEncryption = "1.2.840.113549.1.1.13"
+
+	idECDSAWithSHA256 = "1.2.840.10045.4.3.2"
+	idECDSAWithSHA384 = "1.2.840.10045.4.3.3"
+	idECDSAWithSHA512 = "1.2.840.10045.4.3.4"
 
 	// https://tools.ietf.org/html/rfc5652#section-11
 	idContentType   = "1.2.840.113549.1.9.3"
@@ -35,6 +39,12 @@ const (
 
 	// https://tools.ietf.org/html/rfc2634#section-5.4
 	idSigningCert = "1.2.840.113549.1.9.16.2.12"
+
+	// https://tools.ietf.org/html/rfc5035#section-3
+	idSigningCertV2 = "1.2.840.113549.1.9.16.2.47"
+
+	// https://tools.ietf.org/html/rfc6211#section-2
+	idCMSAlgorithmProtection = "1.2.840.113549.1.9.52"
 )
 
 var (
@@ -46,17 +56,24 @@ var (
 
 	// TODO: We should have unit tests that cover all of these cases to
 	//       ensure that we are using correct OIDs.
-	signatureAlgs = map[string]map[string]x509.SignatureAlgorithm{
-		idRSA: {
-			idSHA256: x509.SHA256WithRSA,
-			idSHA384: x509.SHA384WithRSA,
-			idSHA512: x509.SHA512WithRSA,
-		},
-		idECDSA: {
-			idSHA256: x509.ECDSAWithSHA256,
-			idSHA384: x509.ECDSAWithSHA384,
-			idSHA512: x509.ECDSAWithSHA512,
-		},
+	signatureAlgs = map[string]x509.SignatureAlgorithm{
+		idSHA256WithRSAEncryption: x509.SHA256WithRSA,
+		idSHA384WithRSAEncryption: x509.SHA384WithRSA,
+		idSHA512WithRSAEncryption: x509.SHA512WithRSA,
+
+		idECDSAWithSHA256: x509.ECDSAWithSHA256,
+		idECDSAWithSHA384: x509.ECDSAWithSHA384,
+		idECDSAWithSHA512: x509.ECDSAWithSHA512,
+	}
+
+	signatureDigestOIDs = map[string]string{
+		idSHA256WithRSAEncryption: idSHA256,
+		idSHA384WithRSAEncryption: idSHA384,
+		idSHA512WithRSAEncryption: idSHA512,
+
+		idECDSAWithSHA256: idSHA256,
+		idECDSAWithSHA384: idSHA384,
+		idECDSAWithSHA512: idSHA512,
 	}
 
 	// https://tools.ietf.org/html/rfc5652#section-5.1
@@ -199,8 +216,16 @@ func (c *Client) checkSignedAttributes(sInfo signerInfo, encap encapsulatedConte
 				return CheckSigningTimeError{Err: err}
 			}
 		case idSigningCert:
-			if err = checkSigningCert(value, signer); err != nil {
+			if err = checkSigningCert(value, signer, false); err != nil {
 				return CheckSigningCertError{Err: err}
+			}
+		case idSigningCertV2:
+			if err = checkSigningCert(value, signer, true); err != nil {
+				return CheckSigningCertV2Error{Err: err}
+			}
+		case idCMSAlgorithmProtection:
+			if err = checkCMSAlgorithmProtection(value, sInfo); err != nil {
+				return CheckCMSAlgorithmProtectionError{Err: err}
 			}
 		default:
 			return UnknownAttributeError{Attr: attrID}
@@ -215,7 +240,7 @@ func (c *Client) checkSignedAttributes(sInfo signerInfo, encap encapsulatedConte
 	if !attrMap[idSigningTime] {
 		return NoSignedGenTimeError{}
 	}
-	if !attrMap[idSigningCert] {
+	if !attrMap[idSigningCert] && !attrMap[idSigningCertV2] {
 		return NoSigningCertError{}
 	}
 	return
@@ -286,8 +311,10 @@ func (c *Client) checkSigningTime(value []byte, gen time.Time) (err error) {
 	return
 }
 
-func checkSigningCert(value []byte, signer *x509.Certificate) (err error) {
-	var signingCert signingCertificate
+func checkSigningCert(value []byte, signer *x509.Certificate, v2 bool) (err error) {
+	// Since the SigningCertificateV2 structure is backwards-compatible to
+	// v1 we can use it in both cases.
+	var signingCert signingCertificateV2
 	rest, err := asn1.Unmarshal(value, &signingCert)
 	if err != nil {
 		return SigningCertUnmarshalError{Err: err}
@@ -300,16 +327,42 @@ func checkSigningCert(value []byte, signer *x509.Certificate) (err error) {
 		return SigningCertAttrCertsMissing{}
 	}
 
-	// https://tools.ietf.org/html/rfc2634#section-5.4
+	// https://tools.ietf.org/html/rfc5035#section-3
 	// "The first certificate identified in the sequence of certificate
 	// identifiers MUST be the certificate used to verify the signature."
-	// We ignore all other chain certificates, because we receive the trusted
-	// certificate via the configuration.
+	// We ignore all other chain certificates, because we receive the
+	// trusted certificate via the configuration.
 	essCert := signingCert.Certs[0]
 
 	// Check the signed attribute hash to the certificate hash
-	certHash := sha1.Sum(signer.Raw) // nolint: gosec, SHA1 required by RFC 2634.
-	if !bytes.Equal(certHash[:], essCert.CertHash) {
+	hashOID := essCert.HashAlgorithm.Algorithm
+	var chash crypto.Hash
+	if v2 {
+		// For a SigningCertificateV2 attribute, the hash algorithm
+		// defaults to SHA-256, but can be explicitly provided.
+		chash = crypto.SHA256
+		if hashOID != nil {
+			var ok bool
+			if chash, ok = digestAlgs[hashOID.String()]; !ok {
+				return SigningCertUnsupportedDigestAlgorithm{
+					Algoritm: hashOID.String(),
+				}
+			}
+		}
+	} else {
+		// For a SigningCertificateV1 attribute, the hash algorithm is
+		// SHA-1 and no algorithm must be provided.
+		chash = crypto.SHA1
+		if hashOID != nil {
+			return SigningCertV1AttributeAlgorithmError{
+				Algorithm: hashOID.String(),
+			}
+		}
+	}
+	hash := chash.New()
+	hash.Write(signer.Raw)
+	certHash := hash.Sum(nil)
+	if !bytes.Equal(certHash, essCert.CertHash) {
 		return SingingCertAttrHashMismatch{
 			SigningAttrHash: essCert.CertHash,
 			CertificateHash: certHash,
@@ -332,22 +385,53 @@ func checkSigningCert(value []byte, signer *x509.Certificate) (err error) {
 	return
 }
 
+func checkCMSAlgorithmProtection(value []byte, sInfo signerInfo) (err error) {
+	var protection cmsAlgorithmProtection
+	rest, err := asn1.Unmarshal(value, &protection)
+	if err != nil {
+		return CMSAlgorithmProtectionUnmarshalError{Err: err}
+	}
+	if len(rest) > 0 {
+		return CMSAlgorithmProtectionUnmarshalExcessBytesError{Bytes: rest}
+	}
+
+	if !cryptoutil.AlgorithmIdentifierCmp(
+		sInfo.DigestAlgorithm, protection.DigestAlgorithm) {
+
+		return SignedAttrCMSAlgorithmProtectionDigestMismatchError{
+			SignerInfo:             sInfo.DigestAlgorithm.Algorithm,
+			CMSAlgorithmProtection: protection.DigestAlgorithm.Algorithm,
+		}
+	}
+
+	if !cryptoutil.AlgorithmIdentifierCmp(
+		sInfo.SignatureAlgorithm, protection.SignatureAlgorithm) {
+
+		return SignedAttrCMSAlgorithmProtectionSignatureMismatchError{
+			SignerInfo:             sInfo.SignatureAlgorithm.Algorithm,
+			CMSAlgorithmProtection: protection.SignatureAlgorithm.Algorithm,
+		}
+	}
+	return nil
+}
+
 func checkSignature(sInfo signerInfo, cert *x509.Certificate) (err error) {
 	if len(sInfo.Signature) == 0 {
 		return NoSignatureError{}
 	}
 
-	digMap, ok := signatureAlgs[sInfo.SignatureAlgorithm.Algorithm.String()]
+	signatureOID := sInfo.SignatureAlgorithm.Algorithm.String()
+	algo, ok := signatureAlgs[signatureOID]
 	if !ok {
-		return SigAlgorithmNotSupported{
+		return SigAlgorithmNotSupportedError{
 			Algorithm: sInfo.SignatureAlgorithm.Algorithm,
 		}
 	}
 
-	algo, ok := digMap[sInfo.DigestAlgorithm.Algorithm.String()]
-	if !ok {
-		return SigDigestAlgorithmNotSupported{
-			Algorithm: sInfo.DigestAlgorithm.Algorithm,
+	if sInfo.DigestAlgorithm.Algorithm.String() != signatureDigestOIDs[signatureOID] {
+		return SigDigestAlgorithmMismatchError{
+			Signature: sInfo.SignatureAlgorithm.Algorithm,
+			Digest:    sInfo.DigestAlgorithm.Algorithm,
 		}
 	}
 

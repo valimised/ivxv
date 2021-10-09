@@ -95,8 +95,8 @@ Hääletamisperioodi tegevused
 Hääletamisperioodile järgnevad tegevused
 ****************************************
 
-E-urni töötlemine
-^^^^^^^^^^^^^^^^^
+E-valimiskasti töötlemine
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. :numref:`processor-check`
 #. :numref:`processor-squash`

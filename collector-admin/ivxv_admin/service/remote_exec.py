@@ -28,7 +28,11 @@ def exec_remote_cmd(cmd, **kw):
 
     # execute command
     log.debug('Executing command: %s', ' '.join(cmd))
-    proc = subprocess.run(cmd, **kw)
+    try:
+        check = kw.pop('check')
+    except KeyError:
+        check = False
+    proc = subprocess.run(cmd, **kw, check=check)
     if proc.returncode:
         log.debug('Command finished with error code %d', proc.returncode)
     else:

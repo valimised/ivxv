@@ -237,7 +237,7 @@ Põhiprotsess
    #. Koguja viib Kogumisteenuse hääletamisetappi
    #. Korraldaja annab Valijarakenduse abil ühe või mitu häält
    #. Korraldaja kontrollib Kontrollrakenduse abil hääli
-   #. Koguja peatab Kogumisteenuse ja väljastab e-urni
+   #. Koguja peatab Kogumisteenuse ja väljastab e-valimiskasti
    #. Töötleja genereerib e-hääletanute nimekirja
    #. Töötleja loob lugemisele minevate anonüümistatud e-häälte nimekirja
    #. Lugeja koos Võtmehalduritega aktiveerib Võtmerakenduse ja häälte avamise võtme
@@ -385,46 +385,6 @@ Järeltingimus
 Kui hääle kontrollimisega ületatakse lubatud kontrollimiste limiit, siis Kogumisteenus rohkem häält kontrollida ei võimalda.
 
 
-Korraldaja - Valijate nimekirja uuendamine
-``````````````````````````````````````````
-
-Kirjeldus
-'''''''''
-Valijate nimekirja loomine toimub Kogumisteenuse seadistamise käigus. Enne e-hääletamise algust on võimalik teostada valijate nimekirja kõiki uuendusi (lisamine, muutmine = kustutamine + lisamine, kustutamine suvalisel põhjusel). Peale e-hääletamise algust saab valijate nimekirja valijaid lisada, valijale tõkendit rakendada ja valijat ühest jaoskonnast teise tõsta. Valijate nimekiri on signeeritud.
-
-Eeltingimus
-'''''''''''
-
-#. Kogumisteenus on seadistatud algse valijate nimekirjaga.
-#. Kogumisteenus on Rahvastikuregistrist laadinud valijate nimekirja uuenduse.
-#. Kogumisteenus on kontrollinud nimekirja signatuuri, nimekirja uuenduse vormingut ning kooskõlalisust juba laaditud konfiguratsiooniga ning on valmis uuendust rakendama.
-
-Päästik
-'''''''
-Korraldaja valib Haldusteenusest valijate nimekirja uuenduse kinnitamise funktsionaalsuse.
-
-Põhiprotsess
-''''''''''''
-#. Korraldaja valib Haldusteenuses rakendatava nimekirja.
-#. Kogumisteenus nõuab Korraldajalt korralduse kinnitamist digitaalallkirjaga
-#. Korraldaja allkirjastab korralduse oma digitaalallkirja andmise vahendiga
-#. Kogumisteenus kontrollib Korraldaja allkirja ja volitusi süsteemis
-#. Kogumisteenus eemaldab muudatuste nimekirjas eemaldamiskirjega identifitseeritud valijad.
-#. Kogumisteenus lisab muudatuste nimekirjas lisamiskirjega identifitseeritud valijad, kontrollides valija unikaalsust isikukoodi alusel ning valimisjaoskonna olemasolu.
-#. Kogumisteenus esitab lisatud ja eemaldatud valijate arvu ning nimekirja töötlemisel toimunud vigade logi.
-
-Laiendid
-''''''''
-- Kui põhiprotsessi sammus 4 Korraldaja allkirja verifitseerimine või volituse kontroll ebaõnnestuvad, siis väljastatakse veateade nii Haldusteenuses kui logis. Ühtegi muudatust ei rakendata.
-- Kui põhiprotsessi  sammus 5 kustutavat valijat ei leita isikukoodi alusel, siis kasutajale väljastatakse veateade, sündmus logitakse nimekirjade uuendamise aruandesse ning jätkatakse järgmise kirje töötlemist.
-- Kui põhiprotsessi  sammus 6 lisatav valija isikukoodi alusel juba eksisteerib, siis kasutajale väljastatakse veateade, sündmus logitakse nimekirjade uuendamise aruandesse ning jätkatakse järgmise kirje töötlemist.
-- Kui põhiprotsessi sammus 6 lisatakse valija mitte-eksisteerivasse jaoskonda, siis kasutajale väljastatakse veateade, sündmus logitakse nimekirjade uuendamise aruandesse ning jätkatakse järgmise kirje töötlemist.
-- Tehniliste vigade tekkimisel kõigis põhivoo sammudes logitakse sündmus tehniliste vigade logisse. Kasutajale väljastatakse teade veasituatsiooni kohta, kõik muudatused võetakse tagasi.
-
-Järeltingimus
-'''''''''''''
-Valijate nimekirja uuendused, mis olid Kogumisteenuse olekuga kooskõlalised, on Kogumisteenusesse laaditud, ebaõnnestunud uuenduste kohta on olemas raport.
-
 Kogumisteenuse Haldur - Kogumisteenuse seisundi kuvamine
 ````````````````````````````````````````````````````````
 
@@ -473,13 +433,13 @@ Kogumisteenus ei võta enam uusi hääli vastu.
 Töötlusetapp
 ------------
 
-Koguja - E-urni väljastamine
-````````````````````````````
+Koguja - E-valimiskasti väljastamine
+````````````````````````````````````
 
 Kirjeldus
 '''''''''
 
-Koguja ekspordib e-urni Kogumisteenuse andmebaasist.
+Koguja ekspordib e-valimiskasti Kogumisteenuse andmebaasist.
 
 Eeltingimus
 '''''''''''
@@ -489,7 +449,7 @@ Elektrooniline hääletamine on lõpetatud.
 Päästik
 '''''''
 
-Koguja valib Haldusteenusest e-urni eksportimise funktsionaalsuse.
+Koguja valib Haldusteenusest e-valimiskasti eksportimise funktsionaalsuse.
 
 Põhiprotsess
 ''''''''''''
@@ -499,21 +459,21 @@ Põhiprotsess
 Järeltingimus
 '''''''''''''
 
-E-urn on eksporditud.
+E-valimiskast on eksporditud.
 
 
-Töötleja - E-urni verifitseerimine
-``````````````````````````````````
+Töötleja - E-valimiskasti verifitseerimine
+``````````````````````````````````````````
 
 Kirjeldus
 '''''''''
 
-Töötleja verifitseerib Kogujalt saadud e-urni kooskõlalisust ning selle vastavust Registreerimisteenuselt saadud informatsioonile.
+Töötleja verifitseerib Kogujalt saadud e-valimiskasti kooskõlalisust ning selle vastavust Registreerimisteenuselt saadud informatsioonile.
 
 Eeltingimus
 '''''''''''
 
-- E-urn on väljastatud
+- E-valimiskast on väljastatud
 - Registreerimiskinnitused on väljastatud
 
 Päästik
@@ -527,21 +487,21 @@ Põhiprotsess
 #. Töötlemisrakendus laadib seadistused
 #. Töötlemisrakendus kontrollib seadistuste digitaalallkirja
 #. Töötlamisrakendus kontrollib seadistuste kooskõlalisust
-#. Töötlemisrakendus laadib e-urni
+#. Töötlemisrakendus laadib e-valimiskasti
 #. Töötlemisrakendus kontrollib e-häälte digitaalallkirja
 #. Töötlemisrakendus laadib registreerimiskinnitused
 #. Töötlemisrakendus verifitseerib registreerimiskinnitused
-#. Töötlemisrakendus kontrollib e-urni ja registreerimiskinnituste kooskõlalisust
+#. Töötlemisrakendus kontrollib e-valimiskasti ja registreerimiskinnituste kooskõlalisust
 
 Laiendid
 ''''''''
 - Tehniliste vigade tekkimisel kõigis põhiprotsessi sammudes logitakse sündmus tehniliste vigade logisse. Kasutajale väljastatakse  teade veasituatsiooni kohta ning protsess peatatakse.
-- Kasutajal on võimalus viia protsess läbi selliselt et vigadega seotud Hääletajad eraldatakse muust e-urnist. Tulemuseks on probleemsete häälte raport ja puhastatud e-urn.
+- Kasutajal on võimalus viia protsess läbi selliselt et vigadega seotud Hääletajad eraldatakse muust e-valimiskastist. Tulemuseks on probleemsete häälte raport ja puhastatud e-valimiskast.
 
 Järeltingimus
 '''''''''''''
 
-E-urni verifitseerimise raport identifitseerib üheselt korrektsed ja probleemsed hääled.
+E-valimiskasti verifitseerimise raport identifitseerib üheselt korrektsed ja probleemsed hääled.
 
 
 Töötleja - Elektrooniliselt hääletanute nimekirja koostamine
@@ -553,7 +513,7 @@ Peale hääletamisperioodi lõppu koostab Töötleja valimisjaoskondade kaupa ni
 Eeltingimus
 '''''''''''
 
-E-urn on edukalt verifitseeritud.
+E-valimiskast on edukalt verifitseeritud.
 
 Päästik
 '''''''
@@ -589,7 +549,7 @@ Töötleja rakendab tühistus- ja ennistusnimekirju ning loob lugemisele minevat
 Eeltingimus
 '''''''''''
 
-E-urn on edukalt verifitseeritud ning elektrooniliselt hääletanute nimekiri koostatud.
+E-valimiskast on edukalt verifitseeritud ning elektrooniliselt hääletanute nimekiri koostatud.
 
 Päästik
 '''''''

@@ -11,6 +11,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"ivxv.ee/command"
@@ -51,7 +52,8 @@ type RPC struct {
 	// votes and are not counted.
 	start time.Time
 
-	skipEligible bool // Should we skip checking voter eligibility?
+	skipEligible bool   // Should we skip checking voter eligibility?
+	foreignCode  string // Administrative unit code for foreign voters.
 }
 
 // Args are the arguments provided to a call of RPC.Vote.
@@ -99,7 +101,6 @@ func (r *RPC) Vote(args Args, resp *Response) error {
 	// Verify the vote container and get the signer.
 	votec, signer, version, err := r.verify(args.Ctx, args.Choices, args.Type, args.Vote)
 	if votec != nil {
-		// nolint: errcheck, ignore close failure of read-only container.
 		defer votec.Close()
 	}
 	if err != nil {
@@ -176,25 +177,27 @@ func (r *RPC) Vote(args Args, resp *Response) error {
 		logq11n[q.Protocol] = prop
 	}
 
-	// Check if the vote submissal time, which is before vote
-	// qualification, was before election start: if so, report to the voter
-	// that this is a test vote.
-	//
-	// Note that this can produce false positives if the election start
-	// time is between vote submissal and before one of the qualification
-	// protocols registers the vote. This is better than checking the time
-	// after registration and producing false negatives. It is quite
-	// difficult to eliminate both cases because registration happens in an
-	// external service.
-	if submitted.Before(r.start) {
+	ctime := submitted
+	if q11nTime, err := q11n.CanonicalTime(resp.Qualification); err != nil {
+		log.Error(args.Ctx, QualificationTimeError{Err: log.Alert(err)})
+		// Do not return an error here: as fas as the voter is
+		// concerned, they voted successfully.
+	} else if !q11nTime.IsZero() {
+		log.Log(args.Ctx, QualificationTime{Time: q11nTime})
+		ctime = q11nTime
+	}
+
+	// Check if the vote canonical time was before election start: if so,
+	// report to the voter that this is a test vote.
+	if ctime.Before(r.start) {
 		log.Log(args.Ctx, TestVote{VoteID: resp.VoteID})
 		resp.TestVote = true
-	} else {
-		if err := r.storage.SetVoted(args.Ctx, signer); err != nil {
-			log.Error(args.Ctx, SetVotedError{Err: log.Alert(err)})
-			// Do not return an error here: as fas as the voter is
-			// concerned, they voted successfully.
-		}
+	}
+
+	if err := r.storage.SetVoted(args.Ctx, resp.VoteID, ctime, resp.TestVote); err != nil {
+		log.Error(args.Ctx, SetVotedError{Err: log.Alert(err)})
+		// Do not return an error here: as fas as the voter is
+		// concerned, they voted successfully.
 	}
 
 	log.Log(args.Ctx, VoteResp{
@@ -215,9 +218,9 @@ func (r *RPC) ratelimit(ctx context.Context, voter string, submitted time.Time) 
 	// this happens, then try from the beginning, but still use the same
 	// submission time.
 	for {
-		submissions, last, err := r.storage.GetVoteStats(ctx, voter)
+		submissions, last, err := r.storage.GetVoterRateStats(ctx, voter)
 		if err != nil {
-			log.Error(ctx, GetVoteStatsError{Err: log.Alert(err)})
+			log.Error(ctx, GetVoterRateStatsError{Err: log.Alert(err)})
 			return server.ErrInternal
 		}
 
@@ -242,14 +245,14 @@ func (r *RPC) ratelimit(ctx context.Context, voter string, submitted time.Time) 
 
 		// Only update statistics if the rate limit was not applied: do
 		// not to refresh the timeout if a new vote came too early.
-		if err = r.storage.SetVoteStats(ctx, voter,
+		if err = r.storage.SetVoterRateStats(ctx, voter,
 			submissions, last, timestamp); err != nil {
 
 			if errors.CausedBy(err, new(storage.UnexpectedValueError)) != nil {
 				log.Log(ctx, ConcurrentVotingWarning{Err: err})
 				continue
 			}
-			log.Error(ctx, SetVoteStatsError{Err: log.Alert(err)})
+			log.Error(ctx, SetVoterRateStatsError{Err: log.Alert(err)})
 			return server.ErrInternal
 		}
 		return nil
@@ -299,19 +302,21 @@ func (r *RPC) verify(ctx context.Context, choices string, t container.Type, cont
 	// Verify voter eligibility and choices, unless skipEligible is set.
 	version = "N/A" // Mock voter list version used when the voter list is ignored.
 	if !r.skipEligible {
-		if version, err = r.storage.EligibleVoter(ctx, identity, choices); err != nil {
+		var current string
+		version, current, err = r.storage.VoterChoices(ctx, identity, r.foreignCode)
+		if err != nil {
 			if errors.CausedBy(err, new(storage.NotExistError)) != nil {
 				log.Error(ctx, IneligibleVoterError{Err: err})
 				err = server.ErrIneligible
 				return
 			}
-			if errors.CausedBy(err, new(storage.OutdatedVoterChoicesError)) != nil {
-				log.Error(ctx, OutdatedChoicesError{Err: err})
-				err = server.ErrOutdatedChoices
-				return
-			}
-			log.Error(ctx, EligibleVoterError{Err: log.Alert(err)})
+			log.Error(ctx, VoterChoicesError{Err: log.Alert(err)})
 			err = server.ErrInternal
+			return
+		}
+		if choices != current {
+			log.Error(ctx, OutdatedChoicesError{Choices: choices, Current: current})
+			err = server.ErrOutdatedChoices
 			return
 		}
 		log.Log(ctx, VoterEligible{Version: version})
@@ -383,6 +388,9 @@ func votemain() (code int) {
 
 		// Skip voter eligibility if we are told to ignore it.
 		rpc.skipEligible = len(elec.IgnoreVoterList) > 0
+
+		// Set administrative unit code to use for foreign voters.
+		rpc.foreignCode = strings.TrimSpace(elec.VoterForeignEHAKDefault())
 
 		// Check voting rate limit values. Non-zero start indicates
 		// that rate limiting is desired, but zero minutes disables it.

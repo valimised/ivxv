@@ -3,10 +3,21 @@
 
 import re
 
+import dateutil.parser
+from schematics.models import Model
+from schematics.types import IntType, StringType
+
 from .fields import ElectionIdType
 
-VOTERS_LIST_TYPES = ['algne', 'muudatused']
-VOTER_ACTION_TYPES = ['lisamine', 'kustutamine']
+ISOPARSER = dateutil.parser.isoparser("T")
+
+
+class VoterListChangesetSkipSchema(Model):
+    """Validating schema for voter list changeset skipping command."""
+
+    election = ElectionIdType(required=True)
+    skip_voter_list = StringType(regex=r"^[^ ]+ [^ ]+$", required=True)
+    changeset = IntType(required=True)
 
 
 def parse_voters_list(list_content):
@@ -15,10 +26,10 @@ def parse_voters_list(list_content):
     :return: Voters list data
     :rtype: dict
 
-    :raises: ValueError
+    :raises ValueError:
     """
     lines = list_content.split('\n')
-    if len(lines) < 3:
+    if len(lines) < 4:
         raise ValueError(f'Too few lines in voters list ({len(lines)})')
 
     # parse header
@@ -27,27 +38,44 @@ def parse_voters_list(list_content):
     try:
         data['election'].encode('ASCII')
     except UnicodeEncodeError:
-        raise ValueError(f'Election ID contains non-ASCII characters')
-    data['list_type'] = lines[2].rstrip('\r')
+        raise ValueError('Election ID contains non-ASCII characters')
+    data['changeset'] = lines[2].rstrip('\r')
+    data['period'] = lines[3].rstrip('\r')
+    timestamps = data['period'].split('\t')
+    if len(timestamps) != 2:
+        raise ValueError('Period does not contain two tab-separated fields')
+    data['period_from'] = timestamps[0]
+    data['period_to'] = timestamps[1].rstrip('\r')
 
     # validate header
-    if data['version'] != '1':
+    # version-no = "2"
+    if data["version"] != "2":
         raise ValueError(
-            'Invalid voters list version "{}" in line 1. Expected value: "1"'
-            .format(data['version']))
+            f"Invalid voters list version {data['version']!r} in line 1. "
+            "Expected value: 2"
+        )
     ElectionIdType(required=True).validate(data['election'])
-    if data['list_type'] not in VOTERS_LIST_TYPES:
+    # changeset = integer
+    if not data['changeset'].isdigit():
         raise ValueError(
-            'Unknown voters list type "{}" in line 3. Expected values: {}'
-            .format(data['list_type'], ', '.join(VOTERS_LIST_TYPES)))
+            f"Unknown voters list changeset {data['changeset']!r} in line 3. "
+            "Must be an integer"
+        )
+    # period_from, period_to = RFC 3339 timestamp
+    try:
+        # FIXME: Accepts all ISO 8601 timestamps, not only RFC 3339.
+        ISOPARSER.isoparse(data['period_from'])
+        ISOPARSER.isoparse(data['period_to'])
+    except ValueError as err:
+        raise ValueError(f'Period contains invalid timestamp: {err.args[0]}')
 
     # parse list
-    is_original_list = data['list_type'] == 'algne'
+    is_original_list = data['changeset'] == '0'
     data['voters'] = []
     for line_no, line in enumerate(lines[:-1], 1):
         if '\r' in line:
             raise ValueError(f'Line #{line_no}: Invalid character <CR>')
-        if line_no < 4:
+        if line_no < 5:
             continue
         fields = line.split('\t')
         try:
@@ -65,39 +93,30 @@ def parse_voters_list(list_content):
 def validate_voter_record(fields, is_original_list):
     """Validate voter record in voters list."""
     # field count
-    if len(fields) != 9:
+    try:
+        voter_personalcode, voter_name, action, adminunit_code, no_district = fields
+    except ValueError:
+        raise ValueError(f"Invalid field count {len(fields)}, expected 5 fields")
+    # voter-personalcode = 11DIGIT
+    if not re.match(r"[0-9]{11}$", voter_personalcode):
+        raise ValueError(f"Invalid voter-personalcode {voter_personalcode!r}")
+    # voter-name = 1*100UTF-8-CHAR
+    if not voter_name:
+        raise ValueError("voter-name is empty")
+    if len(voter_name) > 100:
+        raise ValueError(f"voter-name lenght {len(voter_name)} exceeds 100 chars")
+    # action = "lisamine" | "kustutamine"
+    if action not in ["lisamine", "kustutamine"]:
         raise ValueError(
-            'Invalid field count {}, expected 9 fields'.format(len(fields)))
-    # field #1 - voter-personalcode
-    if not re.match(r'[0-9]{11}$', fields[0]):
-        raise ValueError('Invalid ID code "{}"'.format(fields[0]))
-    # field #2 - voter-name
-    if not fields[1]:
-        raise ValueError('Empty person name')
-    # field #3 - action
-    if fields[2] not in VOTER_ACTION_TYPES:
-        raise ValueError('Unknown action "{}". Expected values are {}'
-                         .format(fields[2], VOTER_ACTION_TYPES))
-    if is_original_list and fields[2] != 'lisamine':
-        raise ValueError('Action "{}" is not allowed in initial list'
-                         .format(fields[2]))
-    # field #4...7 - station-legacy
-    for field_no in 3, 4, 5, 6:
-        try:
-            int(fields[field_no])
-        except ValueError:
-            raise ValueError('Invalid district/station number "{}"'
-                             .format(fields[field_no]))
-    # field #8 - line-no
-    if is_original_list:
-        try:
-            int(fields[7])
-        except ValueError:
-            raise ValueError('Invalid voter line number "{}"'
-                             .format(fields[7]))
-
-    # field #9 - reason
-    if is_original_list and fields[8] != '':
-        raise ValueError(
-            'Invalid reason "{}". Must be empty for original list.'
-            .format(fields[8]))
+            f"Unknown action {action!r}. Must be 'lisamine' or 'kustutamine'"
+        )
+    if is_original_list and action != "lisamine":
+        raise ValueError(f"Action {action!r} is not allowed in initial list")
+    # adminunit-code = 1*4UTF-8-CHAR | "FOREIGN"
+    if not adminunit_code:
+        raise ValueError("Missing adminunit-code")
+    if len(adminunit_code) > 4 and adminunit_code != "FOREIGN":
+        raise ValueError(f"adminunit-code {adminunit_code!r} is longer than 4 chars")
+    # no-district = 1*10DIGIT
+    if not re.match(r"[0-9]{1,10}$", no_district):
+        raise ValueError(f"Invalid no-district {no_district!r}")

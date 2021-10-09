@@ -103,7 +103,9 @@ public class ReportHelper {
             console.println(Msg.m_writing_ivoter_list);
             ctx.reporter.writeIVoterList(jsonOut, pdfOut, bb, dl);
             console.println(Msg.m_output_file, jsonOut);
-            console.println(Msg.m_output_file, pdfOut);
+            if (pdfOut != null) {
+                console.println(Msg.m_output_file, pdfOut);
+            }
         } catch (Exception e) {
             throw new MessageException(e, Msg.e_writing_ivoter_list, e);
         }
@@ -191,6 +193,8 @@ public class ReportHelper {
                 return Msg.e_ballot_missing_voter_signature;
             case VOTER_NOT_FOUND:
                 return Msg.e_active_voter_not_found;
+            case VOTERLIST_NOT_FOUND:
+                return Msg.e_active_voterlist_not_found;
             case TIME_BEFORE_START:
                 return Msg.e_time_before_start;
             case REG_RESP_INVALID:

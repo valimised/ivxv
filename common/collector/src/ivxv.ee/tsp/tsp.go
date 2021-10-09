@@ -109,7 +109,6 @@ func (c *Client) Create(ctx context.Context, data, nonce []byte) ([]byte, error)
 	var err error
 retry:
 	for attempt := uint64(0); ; attempt++ {
-		// nolint: dupl, No need to deduplicate such a small snippet.
 		switch tst, err = c.submitRequest(ctx, data, nonce); {
 		case err == nil:
 			break retry
@@ -160,12 +159,8 @@ func shouldRetry(err error) bool {
 // token must match that value.
 func (c *Client) Check(response, data, nonce []byte) (time.Time, error) {
 	var tsToken timeStampToken
-	rest, err := asn1.Unmarshal(response, &tsToken)
-	if err != nil {
-		return time.Time{}, TSTokenUnmarshalError{Err: err}
-	}
-	if len(rest) > 0 {
-		return time.Time{}, TSTokenExcessBytes{ExcessBytes: rest}
+	if err := unmarshalTSToken(response, &tsToken); err != nil {
+		return time.Time{}, err
 	}
 
 	info, err := checkTSTInfo(tsToken, data, nonce)
@@ -175,6 +170,23 @@ func (c *Client) Check(response, data, nonce []byte) (time.Time, error) {
 
 	if err = c.checkSignedData(tsToken, info.GenTime); err != nil {
 		return time.Time{}, CheckSignedDataCheckError{Err: err}
+	}
+	return info.GenTime, nil
+}
+
+// ParseTime parses a DER-encoded timestamp token and returns the time it was
+// generated.
+//
+// Warning! ParseTime does not check the validity of the timestamp, it only
+// returns the generation time value.
+func ParseTime(response []byte) (time.Time, error) {
+	var tsToken timeStampToken
+	if err := unmarshalTSToken(response, &tsToken); err != nil {
+		return time.Time{}, err
+	}
+	var info tstInfo
+	if err := unmarshalTSTInfo(tsToken, &info); err != nil {
+		return time.Time{}, err
 	}
 	return info.GenTime, nil
 }
@@ -292,18 +304,36 @@ func (c *Client) submitRequest(ctx context.Context, data, nonce []byte) (
 	return
 }
 
-func checkTSTInfo(tst timeStampToken, data, nonce []byte) (info tstInfo, err error) {
+func unmarshalTSToken(data []byte, tsToken *timeStampToken) error {
+	rest, err := asn1.Unmarshal(data, tsToken)
+	if err != nil {
+		return TSTokenUnmarshalError{Err: err}
+	}
+	if len(rest) > 0 {
+		return TSTokenExcessBytesError{Bytes: rest}
+	}
+	return nil
+}
+
+func unmarshalTSTInfo(tst timeStampToken, info *tstInfo) error {
 	encap := tst.Content.EncapContentInfo
 	if !encap.EContentType.Equal(idCTTSTInfo) {
-		return info, UnexpectedEcontentType{Type: encap.EContentType}
+		return UnexpectedEcontentType{Type: encap.EContentType}
 	}
 
-	rest, err := asn1.Unmarshal(encap.EContent, &info)
+	rest, err := asn1.Unmarshal(encap.EContent, info)
 	if err != nil {
-		return info, EContentUnmarshalError{Err: err}
+		return EContentUnmarshalError{Err: err}
 	}
-	if len(rest) != 0 {
-		return info, EContentUnmarshalExcessBytes{Bytes: rest}
+	if len(rest) > 0 {
+		return EContentUnmarshalExcessBytesError{Bytes: rest}
+	}
+	return nil
+}
+
+func checkTSTInfo(tst timeStampToken, data, nonce []byte) (info tstInfo, err error) {
+	if err := unmarshalTSTInfo(tst, &info); err != nil {
+		return info, err
 	}
 
 	// https://tools.ietf.org/html/rfc3161#page-8

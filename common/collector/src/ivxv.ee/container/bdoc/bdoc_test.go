@@ -54,46 +54,72 @@ func TestOpen(t *testing.T) {
 		expectedFailure   bool
 		expectedFileCount int
 	}{
-		// TS signatures
-		{"TS", []string{"JÕEORG,JAAK-KRISTJAN,38001085718"}, BES, false, 1},
-		{"TS", []string{"JÕEORG,JAAK-KRISTJAN,38001085718"}, TM, true, 1},
-		{"TS", []string{"JÕEORG,JAAK-KRISTJAN,38001085718"}, TS, false, 1},
-		// TM signatures
-		{"EID", []string{"MÄNNIK,MARI-LIIS,47101010033"}, TM, false, 1},
-		{"MID", []string{"O’CONNEŽ-ŠUSLIK,MARY ÄNN,11412090004"}, TM, false, 1},
+		// ID-card signature with TS profile and AIA OCSP response is
+		// valid for BES and TS, but not TM.
+		{"EIDTS", []string{"JÕEORG,JAAK-KRISTJAN,38001085718"}, BES, false, 1},
+		{"EIDTS", []string{"JÕEORG,JAAK-KRISTJAN,38001085718"}, TS, false, 1},
+		{"EIDTS", []string{"JÕEORG,JAAK-KRISTJAN,38001085718"}, TM, true, 1},
+
+		// Mobile-ID signature with TS profile and TM OCSP response is
+		// valid for BES and TS, but not TM (because of
+		// SignaturePolicyIdentifier).
+		{"MIDTS", []string{"O’CONNEŽ-ŠUSLIK TESTNUMBER,MARY ÄNN,60001018800"}, BES, false, 1},
+		{"MIDTS", []string{"O’CONNEŽ-ŠUSLIK TESTNUMBER,MARY ÄNN,60001018800"}, TS, false, 1},
+		{"MIDTS", []string{"O’CONNEŽ-ŠUSLIK TESTNUMBER,MARY ÄNN,60001018800"}, TM, true, 1},
+
+		// ID-card signature with TM profile is valid for TM, but not
+		// BES (because of SignaturePolicyIdentifier) and TS.
+		{"EIDTM", []string{"MÄNNIK,MARI-LIIS,47101010033"}, TM, false, 1},
+		{"EIDTM", []string{"MÄNNIK,MARI-LIIS,47101010033"}, BES, true, 1},
+		{"EIDTM", []string{"MÄNNIK,MARI-LIIS,47101010033"}, TS, true, 1},
+
+		// Mobile-ID signature with TM profile is valid for TM, but not
+		// BES (because of SignaturePolicyIdentifier) and TS.
+		{"MIDTM", []string{"O’CONNEŽ-ŠUSLIK,MARY ÄNN,11412090004"}, TM, false, 1},
+		{"MIDTM", []string{"O’CONNEŽ-ŠUSLIK,MARY ÄNN,11412090004"}, BES, true, 1},
+		{"MIDTM", []string{"O’CONNEŽ-ŠUSLIK,MARY ÄNN,11412090004"}, TS, true, 1},
+
+		// ID-card signature with no qualification is valid for BES,
+		// but not TM and TS.
+		{"EIDBES", []string{"ŽAIKOVSKI,IGOR,37101010021"}, BES, false, 1},
+		{"EIDBES", []string{"ŽAIKOVSKI,IGOR,37101010021"}, TM, true, 1},
+		{"EIDBES", []string{"ŽAIKOVSKI,IGOR,37101010021"}, TS, true, 1},
+
+		// Containers with multiple signers and files.
 		{
 			"MultipleSigners",
 			[]string{"MÄNNIK,MARI-LIIS,47101010033", "ŽAIKOVSKI,IGOR,37101010021"},
 			TM, false, 1,
 		},
 		{"MultipleFiles", []string{"ŽAIKOVSKI,IGOR,37101010021"}, TM, false, 2},
-		{"EID", []string{"MÄNNIK,MARI-LIIS,47101010033"}, TS, true, 1},
-		// BES signatures
-		{"CheckOCSP", []string{"ŽAIKOVSKI,IGOR,37101010021"}, BES, false, 1},
-		{"CheckOCSP", []string{"ŽAIKOVSKI,IGOR,37101010021"}, TM, true, 1},
-		{"CheckOCSP", []string{"ŽAIKOVSKI,IGOR,37101010021"}, TS, true, 1},
-		// Missing files
+
+		// Containers with missing files.
 		{"NoManifest", nil, BES, true, 1},
 		{"NoSignatures", nil, BES, true, 1},
 		{"NoFiles", []string{"ŽAIKOVSKI,IGOR,37101010021"}, BES, true, 0},
+
+		// Containers with invalid OCSP response times.
+		{"OCSPOld", nil, TS, true, 1},
+		{"OCSPDelayed", nil, TS, true, 1},
 	}
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s as %s", test.name, test.profile), func(t *testing.T) {
 			// Open test bdoc file
 			file, err := os.Open(filepath.Join("testdata",
 				fmt.Sprintf("test%s.bdoc", test.name)))
 			if err != nil {
 				t.Fatal("Failed to open BDOC:", err)
 			}
-			defer file.Close() // nolint: errcheck, ignore close failure of read-only fd.
+			defer file.Close()
 
 			testOpener.profile = test.profile
 			bdoc, err := testOpener.Open(file)
-			if test.expectedFailure && err == nil {
-				t.Fatal("Expected failure verifying BDOC")
-			} else if test.expectedFailure && err != nil {
+			switch {
+			case test.expectedFailure && err != nil:
 				return
-			} else if !test.expectedFailure && err != nil {
+			case test.expectedFailure && err == nil:
+				t.Fatal("Expected failure verifying BDOC")
+			case !test.expectedFailure && err != nil:
 				t.Fatalf("Failure verifying BDOC: %v", err)
 			}
 

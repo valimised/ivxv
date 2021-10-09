@@ -13,6 +13,7 @@ public class VoterBallots {
     private final String voterId;
     private final List<Ballot> ballots;
     private final Ballot latest;
+    private boolean isRevoked;
 
     @JsonCreator
     public VoterBallots( //
@@ -49,6 +50,24 @@ public class VoterBallots {
         while (ballots.size() > 1) {
             cb.accept(voterId, ballots.remove(0));
         }
+    }
+
+    boolean isRevoked() {
+        return isRevoked;
+    }
+
+    /**
+     * Sets the revoked status of the voterballot if the status is not already the same as the parameter.
+     *
+     * @param isRevoked
+     * @return Returns whether the operation was successful.
+     */
+    boolean setRevokedState(boolean isRevoked) {
+        if (this.isRevoked == isRevoked) {
+            return false;
+        }
+        this.isRevoked = isRevoked;
+        return true;
     }
 
 }

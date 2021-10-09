@@ -43,7 +43,7 @@ Protokoll eeldab, et valimise korraldaja on defineerinud valimise ning
 genereerinud häälte salastamise võtmepaari, mille avalik komponent on tehtud
 valijarakendusele kättesaadavaks.
 
-Protokolli vahendusel liigub valija tahe kogumisteenuses talletatavasse e-urni
+Protokolli vahendusel liigub valija tahe kogumisteenuses talletatavasse e-valimiskasti
 ning võetakse tulemuse kujunemisel arvesse järgmist sündmusterida pidi:
 
 #. Valija kasutab valijarakendust oma tahteavalduse elektrooniliseks
@@ -69,13 +69,13 @@ ning võetakse tulemuse kujunemisel arvesse järgmist sündmusterida pidi:
    käitlemises kogumisteenuse poolt;
 
 #. Hääletamisperioodi lõppedes väljastab kogumisteenus valimise korraldajale
-   e-urni ning registreerimisteenus loendi kogumisteenuse poolt registreeritud
+   e-valimiskasti ning registreerimisteenus loendi kogumisteenuse poolt registreeritud
    häältest;
 
 #. Valimise korraldaja arvutab hääletamistulemuse:
 
    #. veendutakse, et kõik registreerimisteenuses registreeritud hääled on
-      e-urni koosseisus üle antud;
+      e-valimiskasti koosseisus üle antud;
 
    #. eraldatakse krüpteeritud hääled ja digitaalallkirjad;
 

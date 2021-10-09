@@ -156,8 +156,8 @@ vormingus.
 Kui hääl allkirjastatakse ID-kaardi või Digi-ID'ga, siis toimub algse
 allkirjastatud konteineri moodustamine valijarakenduses. Kui hääl
 allkirjastatakse Mobiil-ID'ga, siis toimub konteineri moodustamine
-valijarakenduse ning kogumisteenuse poolt vahendatava DigiDoc-teenuse koostöös.
-Mobiil-ID juhtumil kasutab kogumisteenus DigiDoc-teenust ainult signatuuri
+valijarakenduse ning kogumisteenuse poolt vahendatava Mobiil-ID teenuse koostöös.
+Mobiil-ID juhtumil kasutab kogumisteenus Mobiil-ID teenust ainult signatuuri
 saamiseks krüpteeritud sedelile. Kõik hääle kvalifitseerimiseks vajalikud
 elemendid hangitakse vastavatelt teenustelt alles siis kui valijarakendus on
 saatnud signeeritud hääle talletamiseks. Kvalifitseeritud hääl esitatakse
@@ -193,7 +193,7 @@ Element ``SignedProperties`` moodustatakse kooskõlas BDOC 2.1 standardiga. Kui
 kvalifitseerimisel kasutatakse ajatemplit, siis elementi
 ``SignaturePolicyIdentifier`` ei kasutata. Ühtegi mitte-kohustuslikku elementi
 ei kasutata. Allkirjastamise kellaaja fikseerib andmestruktuuri täitev arvuti
-ning valija X509-sertifikaat saadakse kas ID-kaardilt või DigiDoc-teenuse
+ning valija X509-sertifikaat saadakse kas ID-kaardilt või Mobiil-ID teenuse
 vahendusel.
 
 

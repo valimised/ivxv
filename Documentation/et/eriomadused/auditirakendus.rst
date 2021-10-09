@@ -30,7 +30,7 @@ Auditirakenduse omadused
 Auditeerimine
 ^^^^^^^^^^^^^
 
-#. Auditirakendus võimaldab läbi viia e-urni andmeauditit;
+#. Auditirakendus võimaldab läbi viia e-valimiskasti andmeauditit;
 
 #. Auditirakendus verifitseerib häälte kokkulugemise korrektsust;
 

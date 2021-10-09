@@ -1,17 +1,17 @@
 # Mixneti teisenduse kontrollimine
 convert:
-# IVXV segamise-eelse e-urni asukoht.
+# IVXV segamise-eelse e-valimiskasti asukoht.
   input_bb: DEMO_bb-4.json
-# IVXV segamise-järgse e-urni asukoht.
+# IVXV segamise-järgse e-valimiskasti asukoht.
   output_bb: DEMO_shuffled.json
   pub: DEMO_pub.pem
-#  Verificatumi segamistõendi protokollifaili asukoht.
+#  Verificatumi miksimistõendi protokollifaili asukoht.
   protinfo: DEMO_proof/prot.xml
-# Verificatumi segamistõendi asukoht.
+# Verificatumi miksimistõendi asukoht.
   proofdir: DEMO_proof/mixnet/
 
 # Miksimistõendi kontrollimine
-# Tööriist mixer kontrollib Verificatumi lugemistõendi korrektsust.
+# Tööriist mixer kontrollib Verificatumi miksimistõendi korrektsust.
 mixer:
   protinfo: DEMO_proof/prot.xml
   proofdir: DEMO_proof/mixnet/

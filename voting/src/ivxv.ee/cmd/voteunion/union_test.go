@@ -81,13 +81,13 @@ func zipequal(t *testing.T, expected, result string) {
 	if err != nil {
 		t.Fatal("open expected error:", err)
 	}
-	defer e.Close() // nolint: errcheck, ignore close failure of read-only fd.
+	defer e.Close()
 
 	r, err := zip.OpenReader(result)
 	if err != nil {
 		t.Fatal("open result error:", err)
 	}
-	defer r.Close() // nolint: errcheck, ignore close failure of read-only fd.
+	defer r.Close()
 
 	if len(e.File) != len(r.File) {
 		for _, f := range r.File {
@@ -106,7 +106,7 @@ func zipequal(t *testing.T, expected, result string) {
 		if err != nil {
 			t.Fatal("open expected file error:", err)
 		}
-		defer ep.Close() // nolint: errcheck, ignore close failure of read-only fd.
+		defer ep.Close()
 		ec, err := ioutil.ReadAll(ep)
 		if err != nil {
 			t.Fatal("read expected file error:", err)
@@ -116,7 +116,7 @@ func zipequal(t *testing.T, expected, result string) {
 		if err != nil {
 			t.Fatal("open result file error:", err)
 		}
-		defer rp.Close() // nolint: errcheck, ignore close failure of read-only fd.
+		defer rp.Close()
 		rc, err := ioutil.ReadAll(rp)
 		if err != nil {
 			t.Fatal("read result file error:", err)

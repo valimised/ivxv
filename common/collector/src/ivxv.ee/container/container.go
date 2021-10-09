@@ -105,12 +105,11 @@ func (o Opener) Open(t Type, container io.Reader) (c Container, err error) {
 // OpenFile opens the file at path, and passes its contents to Open. The path
 // must have an extension corresponding to the container type to use.
 func (o Opener) OpenFile(path string) (c Container, err error) {
-	// nolint: gosec, Allow path from variable, assume correct and safe.
 	fp, err := os.Open(path)
 	if err != nil {
 		return nil, OpenFileError{Path: path, Err: err}
 	}
-	defer fp.Close() // nolint: errcheck, ignore close failure of read-only fd.
+	defer fp.Close()
 
 	ext := strings.TrimPrefix(filepath.Ext(path), ".")
 	if len(ext) == 0 {

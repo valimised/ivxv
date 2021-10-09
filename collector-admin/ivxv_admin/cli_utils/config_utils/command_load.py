@@ -7,17 +7,25 @@ import re
 import shutil
 import subprocess
 
-from .. import init_cli_util, log
 from ... import CFG_TYPES, CMD_DESCR, CMD_TYPES, VOTING_LIST_TYPES
-from ...command_file import (check_cmd_signature, load_cfg_file_content,
-                             load_collector_cmd_file)
+from ...command_file import (
+    check_cmd_signature,
+    load_cfg_file_content,
+    load_collector_cmd_file,
+)
 from ...config import cfg_path
 from ...db import IVXVManagerDb
 from ...event_log import register_service_event
-from ...lib import (IvxvError, detect_voters_list_order_no,
-                    manage_db_dds_fields, manage_db_tsp_fields,
-                    populate_user_permissions, register_tech_cfg_items)
+from ...lib import (
+    IvxvError,
+    get_current_voter_list_changeset_no,
+    manage_db_mid_fields,
+    manage_db_tsp_fields,
+    populate_user_permissions,
+    register_tech_cfg_items,
+)
 from ...service.backup_service import remove_backup_crontab
+from .. import init_cli_util, log
 
 
 def main():
@@ -34,7 +42,7 @@ def main():
                             - trust: trust root config
                             - choices: choices list
                             - districts: districts list
-                            - voters: voters list
+                            - voters: voters list or voters list skipping
                             - user: user account and role(s)
         --autoapply         Apply command file automatically (by Agent Daemon).
         --show-version      Output config file version and exit.
@@ -43,7 +51,7 @@ def main():
     # validate CLI arguments
     cmd_type = args['<type>'].lower()
     if cmd_type not in CMD_TYPES:
-        log.error('Invalid command type "%s". Possible values are: %s',
+        log.error("Invalid command type %r. Possible values are: %s",
                   cmd_type, ', '.join(CMD_TYPES))
         return 1
     cfg_filename = args['FILE']
@@ -58,7 +66,7 @@ def main():
         return 1
 
     # output config version
-    log.info('Config file version is "%s"', cfg_version)
+    log.info("Config file version is %r", cfg_version)
     if args['--show-version']:
         return 0
 
@@ -66,20 +74,19 @@ def main():
     if cmd_type in CFG_TYPES:
         with IVXVManagerDb() as db:
             if db.get_value(f'config/{cmd_type}') == cfg_version:
-                log.error('%s version "%s" is already loaded',
+                log.error("%s version %r is already loaded",
                           CFG_TYPES[cmd_type].capitalize(), cfg_version)
                 return 1
 
     # load config (includes config validation)
-    log.info('Loading command "%s" from file %s',
-             CMD_DESCR[cmd_type], cfg_filename)
+    log.info("Loading command %r from file %r", CMD_DESCR[cmd_type], cfg_filename)
     cfg_data = load_collector_cmd_file(cmd_type, args['FILE'])
     if cfg_data is None:
         return 1
 
     # validate voting lists consistency
     if cmd_type in VOTING_LIST_TYPES:
-        if not _validate_lists_consistency(cmd_type, args['FILE']):
+        if not validate_lists_consistency(cmd_type, args['FILE']):
             return 1
 
     register_service_event(
@@ -104,44 +111,57 @@ def main():
         districts_list = sorted(
             [[dist_id, f'{dist_id} - {val["name"]}']
              for dist_id, val in cfg_data['districts'].items()])
-        log.info('Writing simplified district list to %s', districts_filename)
+        log.info("Writing simplified district list to %r", districts_filename)
         with open(districts_filename, 'w') as fp:
             json.dump(districts_list, fp)
 
     # register loaded config
+    cfg_state = None
+    if cmd_type == "voters":
+        cfg_state = "SKIPPED" if "skip_voter_list" in cfg_data else "PENDING"
     register_cfg(
-        cmd_type, cfg_data, cfg_filename, cfg_timestamp, cfg_version,
-        args['--autoapply'])
+        cmd_type,
+        cfg_data,
+        cfg_filename,
+        cfg_timestamp,
+        cfg_version,
+        args["--autoapply"],
+        state=cfg_state,
+    )
     register_service_event(
         'CMD_LOADED', params={'cmd_type': cmd_type, 'version': cfg_version})
 
     return 0
 
 
-def register_cfg(cmd_type,
-                 cfg_data,
-                 cfg_filename,
-                 cfg_timestamp,
-                 cfg_version,
-                 autoapply):
+def register_cfg(
+    cmd_type, cfg_data, cfg_filename, cfg_timestamp, cfg_version, autoapply, state
+):
     """Register config version in database and file system."""
     db_key = 'config' if cmd_type in CFG_TYPES else 'list'
+    cfg_file_ext = "bdoc"
 
     # connect to management service database
     with IVXVManagerDb(for_update=True) as db:
         # detect order number for voters list
         if cmd_type == 'voters':
-            voter_list_no = detect_voters_list_order_no(db) + 1
-            active_cfg_filename = f'{cmd_type}{voter_list_no:02}.bdoc'
-            db_key += f'/{cmd_type}{voter_list_no:02}'
+            if state == "SKIPPED":
+                changeset_no = cfg_data["changeset"]
+            else:
+                changeset_no = get_current_voter_list_changeset_no(db) + 1
+                if changeset_no:
+                    cfg_file_ext = "zip"
+            active_cfg_filename = f"voters{changeset_no:04}.{cfg_file_ext}"
+            db_key += f"/voters{changeset_no:04}"
         else:
             active_cfg_filename = f'{cmd_type}.bdoc'
             db_key += '/' + cmd_type
 
         # write config file to admin ui data path
         cmd_filepath = cfg_path(
-            'command_files_path', f'{cmd_type}-{cfg_timestamp}.bdoc')
-        log.debug('Copying file %s to %s', cfg_filename, cmd_filepath)
+            "command_files_path", f"{cmd_type}-{cfg_timestamp}.{cfg_file_ext}"
+        )
+        log.debug("Copying file %r to %r", cfg_filename, cmd_filepath)
         shutil.copy(cfg_filename, cmd_filepath)
         log.info('%s file loaded successfully',
                  CMD_DESCR[cmd_type].capitalize())
@@ -150,7 +170,7 @@ def register_cfg(cmd_type,
         if cmd_type in CFG_TYPES or cmd_type in VOTING_LIST_TYPES:
             db.set_value(db_key, cfg_version)
             if cmd_type == 'voters':
-                db.set_value(db_key + '-loaded', '')
+                db.set_value(f"{db_key}-state", state)
 
         # register user permissions
         if cmd_type == 'trust':  # initial permissions
@@ -158,17 +178,17 @@ def register_cfg(cmd_type,
             for user_cn in db.get_all_values('user'):
                 db.rm_value('user/' + user_cn)
             for user_cn in cfg_data['authorizations']:
-                _register_user_permissions(db, user_cn, ['admin'])
+                register_user_permissions(db, user_cn, ["admin"])
 
         elif cmd_type == 'user':  # permissions from user management command
             user_cn = cfg_data['cn']
-            log.info('Resetting user "%s" permissions', cfg_data['cn'])
+            log.info("Resetting user %r permissions", cfg_data['cn'])
             register_service_event(
                 'PERMISSION_RESET', params={'user_cn': user_cn})
             for existing_user_cn in db.get_all_values('user'):
                 if existing_user_cn == user_cn:
                     db.rm_value('user/' + user_cn)
-            _register_user_permissions(db, user_cn, cfg_data['roles'])
+            register_user_permissions(db, user_cn, cfg_data["roles"])
 
         elif cmd_type == 'election':  # register election params
             cfg_data = load_cfg_file_content(
@@ -207,7 +227,7 @@ def register_cfg(cmd_type,
                     pass
 
         if cmd_type in ['technical', 'election']:
-            manage_db_dds_fields(db)
+            manage_db_mid_fields(db)
             manage_db_tsp_fields(db)
 
     register_cfg_in_fs(
@@ -237,16 +257,16 @@ def register_cfg_in_fs(cmd_type,
         os.remove(tgt_path)
     except FileNotFoundError:
         pass
-    log.debug('Creating symlink for config file %s -> %s', src_path, tgt_path)
+    log.debug("Creating symlink for config file %r -> %r", src_path, tgt_path)
     os.symlink(src_path, tgt_path)
 
     # create state file for loaded command
-    if cmd_type in ['technical', 'election', 'choices', 'voters']:
+    if cmd_type in ["technical", "election", "choices", "districts", "voters"]:
         try:
             os.remove(state_path)
         except FileNotFoundError:
             pass
-        log.debug('Generating config state file %s', state_path)
+        log.debug("Generating config state file %r", state_path)
         default_state_data = {
             # config data
             'config_type': CMD_DESCR[cmd_type],
@@ -287,6 +307,13 @@ def check_cmd_loading_state(cmd_type):
             raise IvxvError(
                 'Trust root must be loaded before technical configuration')
 
+    # don't allow to load voters list if districts list is not loaded
+    elif cmd_type == "voters":
+        with IVXVManagerDb() as db:
+            districts_cfg = db.get_value("list/districts")
+        if not districts_cfg:
+            raise IvxvError("Districts list must be loaded before voters list")
+
 
 def check_signer_permissions(cmd_type, filename):
     """Check command file signer permissions.
@@ -312,15 +339,15 @@ def check_signer_permissions(cmd_type, filename):
     if not cfg_signatures:
         raise IvxvError('No signatures by authorized users')
     cfg_version, role = cfg_signatures[0]
-    log.info('User %s with role "%s" is authorized to execute "%s" '
-             'commands', cfg_version.split(' ')[0], role, cmd_type)
-    log.info('Using signature "%s" as config file version', cfg_version)
+    log.info("User %s with role %r is authorized to execute %r commands",
+             cfg_version.split(' ')[0], role, cmd_type)
+    log.info("Using signature %r as config file version", cfg_version)
     cfg_timestamp = cfg_version.split(' ')[1]
 
     return cfg_timestamp, cfg_version
 
 
-def _register_user_permissions(db, user_cn, roles):
+def register_user_permissions(db, user_cn, roles):
     """Register user permissions."""
     roles = sorted(roles)
     register_service_event(
@@ -330,13 +357,29 @@ def _register_user_permissions(db, user_cn, roles):
     populate_user_permissions(db)
 
 
-def _validate_lists_consistency(cmd_type, cmd_filepath):
+def validate_lists_consistency(cmd_type, cmd_filepath):
     """Validate voting lists consistency."""
     # create list of existing voting lists
     list_files = {}
     with IVXVManagerDb() as db:
         for db_key, db_val in db.get_all_values('list').items():
-            if '-loaded' in db_key or not db_val:
+            if re.match(r"voters[0-9]{2}", db_key):
+                if db_key.endswith("-state"):
+                    cli_key = db_key.replace("-state", "")
+                    if db_val in ["PENDING", "APPLIED"]:
+                        list_files[cli_key] = cfg_path(
+                            "active_config_files_path",
+                            "voters0000.bdoc"
+                            if cli_key == "voters0000"
+                            else f"{cli_key}.zip",
+                        )
+                    elif db_val == "SKIPPED":
+                        list_files[cli_key] = cfg_path(
+                            "active_config_files_path",
+                            f"{cli_key}.bdoc",
+                        )
+                continue
+            if db_key.endswith("-loaded") or not db_val:
                 continue
             list_files[db_key] = cfg_path(
                 'active_config_files_path', f'{db_key}.bdoc')
@@ -345,21 +388,22 @@ def _validate_lists_consistency(cmd_type, cmd_filepath):
     if cmd_type != 'voters':
         list_files[cmd_type] = cmd_filepath
     else:  # change voters list key for proper ordering
-        for _ in range(1, 100):
-            if f'voters{_:02d}' not in list_files:
-                list_files[f'voters{_:02d}'] = cmd_filepath
+        for _ in range(10_000):
+            if f'voters{_:04d}' not in list_files:
+                list_files[f'voters{_:04d}'] = cmd_filepath
                 break
 
     # validate
     if len(list_files) > 1:
-        cmd = ['ivxv-config-validate']
+        election_cfg = cfg_path("active_config_files_path", "election.bdoc")
+        cmd = ["ivxv-config-validate", f"--election={election_cfg}"]
         for cfg_type, filepath in sorted(list_files.items()):
             cfg_type = re.sub(r'[0-9]+', '', cfg_type)
             cmd.append(f'--{cfg_type}={filepath}')
         log.info(
             'Some voting lists are already loaded, '
             'executing consistency checks: %s', ' '.join(cmd))
-        proc = subprocess.run(cmd)
+        proc = subprocess.run(cmd, check=False)
         if proc.returncode != 0:
             log.error('Config validation command raised exception')
             return False

@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"fmt"
 	"strings"
 	"time"
 
@@ -104,9 +105,157 @@ func (c *Client) ensure(ctx context.Context, key string, value []byte) error {
 	return nil
 }
 
+// update updates the value of key. It first attempts to put the value, but if
+// the key already exists, then compare-and-swaps in a loop until it succeeds.
+//
+// value is a function which must return the updated value to use. It is
+// first called with a nil argument for the put request, and then called with
+// existing values of key if compare-and-swaps are required instead. If value
+// returns nil, then update cancels and keeps the existing value.
+//
+// Warning: Updating values is not something that the PutGetter interface and
+// storage package in general was designed for. Use this function sparingly,
+// being very mindful of the values being overwritten.
+func (c *Client) update(ctx context.Context,
+	key string, value func(existing []byte) ([]byte, error)) error {
+
+	v, err := value(nil)
+	if err != nil {
+		return UpdateInitialValueError{Err: err}
+	}
+
+	switch err := c.prot.Put(ctx, key, v); {
+	case err == nil:
+		return nil
+	case errors.CausedBy(err, new(ExistError)) == nil:
+		return UpdatePutError{Err: err}
+	}
+
+	for {
+		existing, err := c.prot.Get(ctx, key)
+		if err != nil {
+			return UpdateGetExistingError{Err: err}
+		}
+
+		if v, err = value(existing); err != nil {
+			return UpdateNewValueError{Err: err}
+		}
+		if v == nil {
+			return nil // Keep the existing value as-is.
+		}
+
+		switch err := c.prot.CAS(ctx, key, existing, v); {
+		case err == nil:
+			return nil
+		case errors.CausedBy(err, new(UnexpectedValueError)) == nil:
+			return UpdateCASError{Err: err}
+		}
+	}
+}
+
+const (
+	districtsPrefix = "/districts/"
+	countiesKey     = "counties"
+	versionKey      = "version"
+)
+
+// PutDistricts stores the district list, i.e., map from administrative unit
+// codes and district numbers to district identifiers, with the given version
+// string. The administrative unit codes and district numbers must be encoded
+// using EncodeAdminDistrict for use as map keys. The district identifiers act
+// as choices list identifiers.
+//
+// PutDistricts also stores the counties list, i.e., how the administrative
+// units from the district list are organized into counties. Since this list is
+// only used by other applications as a whole and not needed by the storage
+// package internally, its format is not specified and the list is simply
+// stored as a serialized byte array.
+//
+// Progress of the operation is reported to progress as well as logged
+// periodically.
+func (c *Client) PutDistricts(ctx context.Context, version string,
+	districts map[string][]byte, counties []byte, progress status.Add) (err error) {
+
+	// Check if districts are already stored.
+	oldver, err := c.GetDistrictsVersion(ctx)
+	switch {
+	case err == nil:
+		return PutDistrictsExistsError{Version: oldver}
+	case errors.CausedBy(err, new(NotExistError)) == nil:
+		return PutDistrictsCheckExistingError{Err: err}
+	}
+
+	// Ensure that no IDs clash with our counties or version key.
+	if _, ok := districts[countiesKey]; ok {
+		return PutDistrictsCountiesIDNotAllowedError{}
+	}
+	if _, ok := districts[versionKey]; ok {
+		return PutDistrictsVersionIDNotAllowedError{}
+	}
+
+	if err = c.putAll(ctx, districtsPrefix, districts, true, progress); err != nil {
+		return PutDistrictsError{Err: err}
+	}
+	if err = c.ensure(ctx, districtsPrefix+countiesKey, counties); err != nil {
+		return PutDistrictsCountiesError{Err: err}
+	}
+
+	// Store the district list version.
+	if err = c.prot.Put(ctx, districtsPrefix+versionKey, []byte(version)); err != nil {
+		return PutDistrictsVersionError{Err: err}
+	}
+	return
+}
+
+// GetCounties retrieves the serialized counties list.
+func (c *Client) GetCounties(ctx context.Context) (counties []byte, err error) {
+	if counties, err = c.prot.Get(ctx, districtsPrefix+countiesKey); err != nil {
+		err = GetCountiesError{Err: err}
+	}
+	return
+}
+
+// GetDistrictsVersion retrieves the district list version string.
+func (c *Client) GetDistrictsVersion(ctx context.Context) (version string, err error) {
+	vb, err := c.prot.Get(ctx, districtsPrefix+versionKey)
+	version = string(vb)
+	if err != nil {
+		err = GetDistrictsVersionError{Err: err}
+	}
+	return
+}
+
+// EncodeAdminDistrict encodes an administrative unit code and district number
+// to the form used by the storage package. Although an internal detail of the
+// storage package, this function is exported for use with Client methods which
+// optimize batch operations by having callers pre-encode values.
+func EncodeAdminDistrict(adminCode, district string) []byte {
+	return encodePair(adminCode, district)
+}
+
+func encodePair(first, second string) []byte {
+	n := len(first)
+	if n > 255 {
+		panic(fmt.Sprintf("data too large: %d > 255", n))
+	}
+	encoded := make([]byte, 1, 1+n+len(second))
+	encoded[0] = byte(n)
+	encoded = append(encoded, first...)
+	encoded = append(encoded, second...)
+	return encoded
+}
+
+func decodePair(encoded []byte) (first, second string, err error) {
+	if len(encoded) == 0 || len(encoded) < 1+int(encoded[0]) {
+		return "", "", EncodedPairLengthError{Len: len(encoded)}
+	}
+	n := encoded[0]
+	return string(encoded[1 : 1+n]), string(encoded[1+n:]), nil
+}
+
 const (
 	choicesPrefix = "/choices/"
-	versionKey    = "version"
+	// versionKey is already defined.
 )
 
 // PutChoices stores the map of choices lists with the given version string.
@@ -163,20 +312,24 @@ const (
 	previousKey  = "previous"
 )
 
-// PutVoters stores a new version of the voters list.
+// PutVoters stores a new version of the voters list, i.e., map from voter
+// identifiers to administrative unit codes and district numbers where the
+// voters are assigned. The administrative unit codes and district numbers must
+// be encoded using EncodeAdminDistrict.
 //
 // A non-initial voter list acts as an overlay to the previous version of the
-// list: if a voter is not specified in the version, then their choices from
-// the previous version will persist, recursively. A voter with empty choices
-// is considered a deletion of that voter from the list and will be reported as
+// list: if a voter is not specified in the version, then their entry from the
+// previous version will persist, recursively. A voter with an empty value is
+// considered a deletion of that voter from the list and will be reported as
 // not existing.
 //
 // Voters lists have two different version strings attached to them: the
 // container versions and the list version. The former is a concatenation of
-// the versions of signed containers used to import voter lists. The latter is
-// a version number calculated based on the actual contents of the voter lists.
-// Therefore if the same lists are imported but in different signed containers,
-// then the container versions will differ but the list version will not.
+// the versions of signed containers used to import voters list changes. The
+// latter is a version number identifying the actual contents of the voters
+// list. Therefore if the same changes are imported but in different signed
+// containers, then the container versions will differ but the list version
+// will not.
 //
 // The container versions are used to provide feedback about which signed
 // containers were used to build the voters list. The list version is used to
@@ -272,18 +425,36 @@ func (c *Client) PutVoters(ctx context.Context, cversion string, voters map[stri
 	return
 }
 
-// GetVoter returns the identifier of the requested voter's choices list for
-// the specified voter list version.
-func (c *Client) GetVoter(ctx context.Context, version, voter string) (choices string, err error) {
+// GetVoter returns the administrative unit code and district number of the
+// requested voter for the specified voter list version.
+func (c *Client) GetVoter(ctx context.Context, version, voter string) (
+	adminCode, district string, err error) {
+
+	encoded, err := c.getVoter(ctx, version, voter)
+	if err != nil {
+		return "", "", err
+	}
+	if adminCode, district, err = decodePair(encoded); err != nil {
+		err = log.Alert(GetVoterParseEntryError{
+			Voter: voter,
+			Err:   err,
+		})
+	}
+	return adminCode, district, err
+}
+
+// getVoter performs the internal operation of GetVoter without decoding the
+// voter entry. Avoids decode-encode round-trip if used within this package.
+func (c *Client) getVoter(ctx context.Context, version, voter string) (encoded []byte, err error) {
 	// Recursively walk back through version until we find the voter or hit
 	// the beginning.
 	currentver := version
 	for {
 		prefix := versionPrefix(currentver)
-		choicesb, err := c.prot.Get(ctx, prefix+voter)
+		encoded, err = c.prot.Get(ctx, prefix+voter)
 		switch {
 		case err == nil: // We found an entry for the voter.
-			if len(choicesb) == 0 { // The voter has been deleted.
+			if len(encoded) == 0 { // The voter has been deleted.
 				var ne NotExistError
 				ne.Key = prefix + voter
 				ne.Err = GetVoterDeletedError{
@@ -291,9 +462,9 @@ func (c *Client) GetVoter(ctx context.Context, version, voter string) (choices s
 					Voter:     voter,
 					DeletedAt: currentver,
 				}
-				return "", ne
+				return nil, ne
 			}
-			return string(choicesb), err // Existing voter.
+			return encoded, err // Existing voter.
 
 		case errors.CausedBy(err, new(NotExistError)) != nil:
 			prevb, verr := c.prot.Get(ctx, prefix+previousKey)
@@ -309,11 +480,11 @@ func (c *Client) GetVoter(ctx context.Context, version, voter string) (choices s
 					Version: version,
 					Voter:   voter,
 				}
-				return "", ne
+				return nil, ne
 			}
 			err = verr
 		}
-		return "", GetVoterError{
+		return nil, GetVoterError{
 			Version: version,
 			Voter:   voter,
 			Step:    currentver,
@@ -323,15 +494,35 @@ func (c *Client) GetVoter(ctx context.Context, version, voter string) (choices s
 }
 
 // VoterChoices returns the the current voter list version and the identifier
-// of voter's choices list, e.g., a district number.
-func (c *Client) VoterChoices(ctx context.Context, voter string) (version, choices string, err error) {
+// of voter's choices list, i.e., the district identifier.
+//
+// If the voter belongs to a foreign administrative unit, then foreignAdminCode
+// is used as the administrative unit code to look up their voting district.
+func (c *Client) VoterChoices(ctx context.Context, voter, foreignAdminCode string) (
+	version, choices string, err error) {
+
 	if version, err = c.GetVotersListVersion(ctx); err != nil {
 		return "", "", VoterChoicesVersionError{Err: err}
 	}
-	if choices, err = c.GetVoter(ctx, version, voter); err != nil {
+	adminDistrict, err := c.getVoter(ctx, version, voter)
+	if err != nil {
 		return "", "", VoterChoicesError{Err: err}
 	}
-	return
+
+	// It is kind of ugly to handle foreign voter encoding in the storage
+	// package, but this is the best way if we want to support the foreign
+	// admin code changing after lists are imported.
+	const foreignPrefix = "\x07FOREIGN"
+	if bytes.HasPrefix(adminDistrict, []byte(foreignPrefix)) {
+		district := string(adminDistrict[len(foreignPrefix):])
+		adminDistrict = EncodeAdminDistrict(foreignAdminCode, district)
+	}
+
+	choicesb, err := c.prot.Get(ctx, districtsPrefix+string(adminDistrict))
+	if err != nil {
+		return "", "", VoterChoicesDistrictError{Err: err}
+	}
+	return version, string(choicesb), nil
 }
 
 // GetVotersContainerVersions returns the container versions of the current
@@ -371,41 +562,122 @@ func versionPrefix(version string) string {
 	return votersPrefix + version + "/"
 }
 
-// EligibleVoter checks if the voter is included in the current voter list as an
-// eligible voter. Additionally EligibleVoter checks if choices matches the
-// current choices list identifier for the voter: otherwise the choices
-// available to the voter have been updated and they are asked to restart their
-// session. If err is non-nil, then version is the current voter list version.
-func (c *Client) EligibleVoter(ctx context.Context, voter, choices string) (version string, err error) {
-	version, current, err := c.VoterChoices(ctx, voter)
-	if err != nil {
-		return "", EligibleVoterChoicesError{Err: err}
-	}
-	if choices != current {
-		return "", OutdatedVoterChoicesError{Choices: choices, Current: current}
-	}
-	return
-}
-
 const (
-	votedPrefix = "/voted/"
-	successKey  = "success"
-	statsKey    = "stats" // Value is 8 bytes for submissions followed by timestamp.
+	// XXX: Would storing these values under a single key be better?
+	votedStatsPrefix  = "/voted/stats/"
+	votedLatestPrefix = "/voted/latest/"
 )
 
-// SetVoted marks the voter as voted.
-func (c *Client) SetVoted(ctx context.Context, voter string) (err error) {
-	prefix := votedVoterPrefix(voter)
-	if err = c.ensure(ctx, prefix+successKey, nil); err != nil {
-		err = SetVotedError{Voter: voter, Err: err}
+// SetVoted notifies storage that voteID was successful, meaning all configured
+// qualifying properties for it are received and stored. ctime is the canonical
+// time of the vote, which is usually the time of a qualifying property, e.g.,
+// vote registration timestamp.
+func (c *Client) SetVoted(ctx context.Context, voteID []byte, ctime time.Time, testVote bool) error {
+	// voteID was successful: refresh indexes related to the voter. Keep in
+	// mind that voteID is not guaranteed to be the latest vote from the
+	// voter, so be careful when updating the information.
+
+	// Get vote metadata in a single batch call.
+	idVoterKey := voteIDPrefix(voteID) + voterKey     // Voter assigned to voteID.
+	idVersionKey := voteIDPrefix(voteID) + versionKey // Effective voter list version.
+	data, err := c.getAllStrict(ctx, idVoterKey, idVersionKey)
+	if err != nil {
+		return SetVotedGetAllError{VoteID: voteID, Err: err}
 	}
-	return
+
+	// Get the administrative unit code of voter in voter list version.
+	idVoter := string(data[idVoterKey])
+	idAdminCode, _, err := c.GetVoter(ctx, string(data[idVersionKey]), idVoter)
+	switch {
+	case err == nil:
+	case errors.CausedBy(err, new(NotExistError)) != nil:
+		// The voter has voted, yet is not in the voter list. Assume
+		// that the voting service is ignoring voter lists (see
+		// ivxv.ee/conf.Election.IgnoreVoterList). Use an empty
+		// administrative unit code.
+		idAdminCode = ""
+	default:
+		return SetVotedGetVoterError{Voter: idVoter, Err: err}
+	}
+
+	ctimeStr := ctime.Format(timefmt)
+	if !testVote { // Only count non-test votes in statistics.
+		// Update the voted stats index: if the administrative unit codes
+		// match, then use the older timestamp; if they differ, then use the
+		// newer timestamp. See GetVotedStats for the reasoning behind this.
+		votedStatsValue := encodePair(idAdminCode, ctimeStr)
+		if err := c.update(ctx, votedStatsPrefix+idVoter, func(existing []byte) ([]byte, error) {
+			if existing == nil {
+				return votedStatsValue, nil // Fast path.
+			}
+
+			oldAdminCode, oldTimeStr, err := decodePair(existing)
+			if err != nil {
+				return nil, log.Alert(SetVotedStatsDecodeError{
+					Voter: idVoter,
+					Err:   err,
+				})
+			}
+			oldTime, err := time.Parse(timefmt, oldTimeStr)
+			if err != nil {
+				return nil, log.Alert(SetVotedStatsParseTimeError{
+					Voter: idVoter,
+					Err:   err,
+				})
+			}
+
+			switch {
+			case idAdminCode == oldAdminCode && ctime.After(oldTime):
+				return nil, nil // Keep older vote in same admin.
+			case idAdminCode != oldAdminCode && ctime.Before(oldTime):
+				return nil, nil // Keep newer vote in different admin.
+			default:
+				return votedStatsValue, nil // Update the index.
+			}
+		}); err != nil {
+			return SetVotedUpdateStatsError{Err: err}
+		}
+	}
+
+	// Update the voted latest index: store the vote identifier with the
+	// newer timestamp, unless they match in which case corrupt the
+	// identifier, since we have no way of ordering the two votes.
+	votedLatestValue := encodePair(ctimeStr, string(voteID))
+	if err := c.update(ctx, votedLatestPrefix+idVoter, func(existing []byte) ([]byte, error) {
+		if existing == nil {
+			return votedLatestValue, nil
+		}
+
+		oldTimeStr, oldVoteID, err := decodePair(existing)
+		if err != nil {
+			return nil, log.Alert(SetVotedLatestDecodeError{Voter: idVoter, Err: err})
+		}
+		oldTime, err := time.Parse(timefmt, oldTimeStr)
+		if err != nil {
+			return nil, log.Alert(SetVotedLatestParseOldTimeError{Voter: idVoter, Err: err})
+		}
+
+		switch {
+		case oldTime.After(ctime):
+			return nil, nil // Keep newer vote.
+		case oldTime.Equal(ctime):
+			// Corrupt the index until a newer vote comes in. Keep
+			// both vote identifiers for manual debugging.
+			voteID = encodePair(string(voteID), oldVoteID)
+			return encodePair(ctimeStr, string(voteID)), nil
+		default:
+			return votedLatestValue, nil // Update the index.
+		}
+	}); err != nil {
+		return SetVotedUpdateLatestError{Err: err}
+	}
+
+	return nil
 }
 
 // CheckVoted checks if the voter has already voted.
 func (c *Client) CheckVoted(ctx context.Context, voter string) (voted bool, err error) {
-	prefix := votedVoterPrefix(voter)
-	switch _, err = c.prot.Get(ctx, prefix+successKey); {
+	switch _, err = c.prot.Get(ctx, votedStatsPrefix+voter); {
 	case err == nil:
 		return true, nil
 	case errors.CausedBy(err, new(NotExistError)) != nil:
@@ -415,30 +687,98 @@ func (c *Client) CheckVoted(ctx context.Context, voter string) (voted bool, err 
 	}
 }
 
-func votedVoterPrefix(voter string) string {
-	return votedPrefix + voter + "/"
+// VotedStats is a single entry from GetVotedStats.
+type VotedStats struct {
+	// Voter is the identity of a successful voter.
+	Voter string
+
+	// AdminCode is the code of the administrative unit Voter voted in
+	// last. If there is no administrative unit data for Voter, e.g., if no
+	// voter lists are being used, then AdminCode is empty.
+	AdminCode string
+
+	// Time is the submission time of the first vote that Voter cast in the
+	// administrative unit with code AdminCode.
+	Time time.Time
 }
 
-// GetVoteStats returns per-voter vote submission statistics: the number of
-// times the voter has submitted a vote and the timestamp of the last
+// GetVotedStats returns for each successful voter the administrative unit that
+// they voted in last and their earliest vote submission time in that unit.
+// This data can be used for reporting voter participation statistics while
+// accounting for revotes and voters changing administrative units.
+//
+// Entries must be read from result channel until it is closed and then a
+// single error must be read from the error channel.
+func (c *Client) GetVotedStats(ctx context.Context) (<-chan VotedStats, <-chan error) {
+	votedc := make(chan VotedStats)
+	errc := make(chan error, 1)
+	go func() {
+		defer close(errc)
+		defer close(votedc)
+
+		pctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+		protc, proterrc := c.prot.GetWithPrefix(pctx, votedStatsPrefix)
+		for voted := range protc {
+			voter := voted.Key[len(votedStatsPrefix):]
+
+			// The value is an encoded pair of admin unit code and
+			// timestamp.
+			adminCode, timestr, err := decodePair(voted.Value)
+			if err != nil {
+				errc <- log.Alert(GetVotedStatsDecodeError{
+					Voter: voter,
+					Err:   err,
+				})
+				return
+			}
+			stime, err := time.Parse(timefmt, timestr)
+			if err != nil {
+				errc <- log.Alert(GetVotedStatsParseTimeError{
+					Voter: voter,
+					Err:   err,
+				})
+				return
+			}
+
+			votedc <- VotedStats{
+				Voter:     voter,
+				AdminCode: adminCode,
+				Time:      stime,
+			}
+		}
+
+		var err error
+		if err = <-proterrc; err != nil {
+			err = log.Alert(GetWithVotedPrefixError{Err: err})
+		}
+		errc <- err
+	}()
+	return votedc, errc
+}
+
+const ratePrefix = "/rate/"
+
+// GetVoterRateStats returns per-voter vote submission rate statistics: the
+// number of times the voter has submitted a vote and the timestamp of the last
 // submission.
-func (c *Client) GetVoteStats(ctx context.Context, voter string) (
+func (c *Client) GetVoterRateStats(ctx context.Context, voter string) (
 	submissions uint64, last time.Time, err error) {
 
-	prefix := votedVoterPrefix(voter)
-	stats, err := c.prot.Get(ctx, prefix+statsKey)
+	stats, err := c.prot.Get(ctx, ratePrefix+voter)
 	switch {
 	case err == nil:
 	case errors.CausedBy(err, new(NotExistError)) != nil:
 		err = nil // No attempts yet.
 		return
 	default:
-		err = GetVoteStatsError{Voter: voter, Err: err}
+		err = GetVoterRateStatsError{Voter: voter, Err: err}
 		return
 	}
 
+	// The value is 8 bytes for submissions followed by timestamp.
 	if len(stats) < 8 {
-		err = log.Alert(InvalidVoteStatsLengthError{
+		err = log.Alert(InvalidVoterRateStatsLengthError{
 			Voter:  voter,
 			Length: len(stats),
 		})
@@ -447,20 +787,21 @@ func (c *Client) GetVoteStats(ctx context.Context, voter string) (
 	submissions = binary.BigEndian.Uint64(stats[:8])
 
 	if last, err = time.Parse(timefmt, string(stats[8:])); err != nil {
-		err = log.Alert(ParseVoteStatsTimeError{Voter: voter, Err: err})
+		err = log.Alert(ParseVoterRateStatsTimeError{Voter: voter, Err: err})
 	}
 	return
 }
 
-// SetVoteStats updates per-voter vote submission statistics based on last
-// known information from GetVoteStats. It increases the submission counter and
-// updates the last attempt timestamp, given that the old information is
-// unchanged.
-func (c *Client) SetVoteStats(ctx context.Context, voter string,
+// SetVoterRateStats updates per-voter vote submission rate statistics based on
+// last known information from GetVoterRateStats. It increases the submission
+// counter and updates the last attempt timestamp, given that the old
+// information is unchanged.
+func (c *Client) SetVoterRateStats(ctx context.Context, voter string,
 	submissions uint64, last, now time.Time) (
 	err error) {
 
-	// Serialize the CAS values.
+	// Serialize the CAS values: 8 bytes for submissions followed by
+	// timestamp.
 	old := make([]byte, 8, 8+len(timefmt))
 	binary.BigEndian.PutUint64(old, submissions)
 	old = last.AppendFormat(old, timefmt)
@@ -469,13 +810,13 @@ func (c *Client) SetVoteStats(ctx context.Context, voter string,
 	binary.BigEndian.PutUint64(newv, submissions+1)
 	newv = now.AppendFormat(newv, timefmt)
 
-	key := votedVoterPrefix(voter) + statsKey
+	key := ratePrefix + voter
 
 	// If either value is non-zero, then the key should already exist and
 	// we attempt to perform the usual compare-and-swap.
 	if submissions > 0 || !last.IsZero() {
 		if err = c.prot.CAS(ctx, key, old, newv); err != nil {
-			err = SetVoteStatsError{Voter: voter, Err: err}
+			err = SetVoterRateStatsError{Voter: voter, Err: err}
 		}
 		return
 	}
@@ -495,13 +836,13 @@ func (c *Client) SetVoteStats(ctx context.Context, voter string,
 		// We cannot use a struct literal, because gen would
 		// report it as a duplicate error type.
 		var unexpected UnexpectedValueError
-		unexpected.Err = SetVoteStatsPutExistsError{
+		unexpected.Err = SetVoterRateStatsPutExistsError{
 			Voter: voter,
 			Err:   err,
 		}
 		return unexpected
 	default:
-		return SetVoteStatsPutError{Voter: voter, Err: err}
+		return SetVoterRateStatsPutError{Voter: voter, Err: err}
 	}
 }
 
@@ -747,38 +1088,44 @@ next:
 
 // GetVerificationStats returns the statistics about a vote required for
 // allowing access to verification: the number of times the vote has been
-// verified and when it was cast.
+// verified, when it was cast, and if it is the latest vote by a voter.
 func (c *Client) GetVerificationStats(ctx context.Context, voteid []byte) (
-	count uint64, at time.Time, err error) {
+	count uint64, at time.Time, latest bool, err error) {
 
 	prefix := voteIDPrefix(voteid)
-
-	timeb, err := c.prot.Get(ctx, prefix+timeKey)
+	m, err := c.getAllStrict(ctx, prefix+timeKey, prefix+countKey, prefix+voterKey)
 	if err != nil {
-		err = GetVerificationTimeError{VoteID: voteid, Err: err}
+		err = GetVerificationStatsError{VoteID: voteid, Err: err}
 		return
 	}
 
-	// If getting the verification time succeeded, then the vote ID is
-	// valid and any following errors raise alerts.
-
-	if at, err = time.Parse(timefmt, string(timeb)); err != nil {
+	if at, err = time.Parse(timefmt, string(m[prefix+timeKey])); err != nil {
 		err = log.Alert(ParseVerificationTimeError{VoteID: voteid, Err: err})
 		return
 	}
 
-	countb, err := c.prot.Get(ctx, prefix+countKey)
-	if err != nil {
-		err = log.Alert(GetVerificationCountError{VoteID: voteid, Err: err})
-		return
-	}
-
+	countb := m[prefix+countKey]
 	if len(countb) != 8 {
 		err = log.Alert(InvalidVerificationCountLengthError{
-			VoteID: voteid, Length: len(countb)})
+			VoteID: voteid,
+			Length: len(countb),
+		})
 		return
 	}
 	count = binary.BigEndian.Uint64(countb)
+
+	voter := string(m[prefix+voterKey])
+	votedLatest, err := c.prot.Get(ctx, votedLatestPrefix+voter)
+	if err != nil {
+		err = log.Alert(GetVerificationLatestError{Voter: voter, Err: err})
+		return
+	}
+	_, latestVoteID, err := decodePair(votedLatest)
+	if err != nil {
+		err = log.Alert(GetVerificationDecodeLatestError{Voter: voter, Err: err})
+		return
+	}
+	latest = bytes.Equal(voteid, []byte(latestVoteID))
 
 	return
 }
@@ -800,23 +1147,9 @@ func (c *Client) GetVerification(ctx context.Context,
 	for _, qp := range qps {
 		keys = append(keys, prefix+string(qp))
 	}
-	m, err := c.getAll(ctx, keys...)
+	m, err := c.getAllStrict(ctx, keys...)
 	if err != nil {
 		err = GetVerificationError{VoteID: voteid, Err: err}
-		return
-	}
-	if len(m) != len(keys) {
-		var missing string
-		for _, key := range keys {
-			if _, ok := m[key]; !ok {
-				missing = key
-				break
-			}
-		}
-		var ne NotExistError
-		ne.Key = missing
-		ne.Err = GetVerificationMissingDataError{Keys: keys, Count: len(m)}
-		err = ne
 		return
 	}
 

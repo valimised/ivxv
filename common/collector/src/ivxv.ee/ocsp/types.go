@@ -2,7 +2,7 @@ package ocsp // import "ivxv.ee/ocsp"
 
 import (
 	"bytes"
-	"crypto/sha1" // nolint: gosec, See certIDHash.
+	"crypto/sha1" //nolint:gosec // See certIDHash.
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -130,7 +130,7 @@ type responseData struct {
 }
 
 // https://tools.ietf.org/html/rfc6960#page-15
-type singleResponse struct { // nolint: aligncheck, maligned, preserve RFC ordering.
+type singleResponse struct {
 	CertID certID
 
 	// The asn1 module does not support choices, so use 3 optional fields

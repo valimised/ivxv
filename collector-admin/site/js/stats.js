@@ -84,7 +84,7 @@ function loadPageData() {
                     stats_table_val[1] +
                     '</td></tr>'
                   )
-                } else if (stats_key === 'voters-by-country') {
+                } else if (stats_key === 'votes-by-country') {
                   $('#table-countries').append(
                     '<tr><td>' +
                     stats_table_val[0] +

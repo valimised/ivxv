@@ -72,7 +72,7 @@ Kogumisteenuses on järgnevad rollid:
       - `-`
       - `-`
 
-   *  - E-urni allalaadimine
+   *  - E-valimiskasti allalaadimine
       - ✓
       - ✓
       - `-`

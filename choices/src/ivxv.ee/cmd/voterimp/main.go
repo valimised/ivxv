@@ -2,34 +2,32 @@
 The voterimp application is used for loading voter lists into the storage
 service.
 
-The voter list is generated and signed by the Estonian Population Register and
-contains Estonian strings, so the format is very specific to Estonia. voterimp
-checks the raw RSA signature with SHA-256 and PKCS #1 v1.5 encoding, parses the
-contents of the voter list, and adds a new version of voter information into
-the storage service.
+The voter list is generated and signed by the Estonian Election Information
+System and contains Estonian strings, so the format is very specific to
+Estonia. voterimp checks the raw ECDSA signature with SHA-256 digest, parses
+the contents of the voter list, and adds a new version of voter information
+into the storage service.
 */
 package main
 
 import (
 	"bytes"
 	"context"
-	"crypto"
-	"crypto/rsa"
+	"crypto/ecdsa"
 	"crypto/sha256"
-	"crypto/x509/pkix"
-	"encoding/asn1"
-	"encoding/base64"
+	"crypto/x509"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"ivxv.ee/command"
 	"ivxv.ee/command/exit"
 	"ivxv.ee/command/status"
-	"ivxv.ee/conf/version"
 	"ivxv.ee/cryptoutil"
 	"ivxv.ee/errors"
 	"ivxv.ee/log"
@@ -47,7 +45,8 @@ for the signature must be the list key with a ".signature" suffix. E.g.,
 "voter.list" and "voter.list.signature".
 
 The voter list container must have an extension corresponding to the container
-type it is, e.g., voterlist.bdoc.`
+type it is, e.g., voterlist.bdoc. voterimp additionally supports unsigned ZIP
+containers with metadata stored in the archive comment.`
 
 var (
 	qp = flag.Bool("q", false, "quiet, do not show progress")
@@ -99,9 +98,7 @@ func voterimpmain() (code int) {
 	path := c.Args[0]
 
 	// Open the voter list container file.
-	cnt, err := c.Conf.Container.OpenFile(path)
-	// nolint: dupl, ignore duplicate from choiceimp, extracting this
-	// snippet of code to a common function is not worth the effort.
+	cnt, trusted, err := openContainer(c.Conf.Container, path)
 	if err != nil {
 		code = exit.DataErr
 		if perr := errors.CausedBy(err, new(os.PathError)); perr != nil {
@@ -112,11 +109,11 @@ func voterimpmain() (code int) {
 		return c.Error(code, OpenContainerError{Container: path, Err: err},
 			"failed to open voter list container:", err)
 	}
-	defer cnt.Close() // nolint: errcheck, ignore close failure of read-only container.
+	defer cnt.Close()
 
-	// Ensure that the container is signed and log the signatures.
+	// Ensure that a trusted container is signed and log the signatures.
 	signatures := cnt.Signatures()
-	if len(signatures) == 0 {
+	if trusted && len(signatures) == 0 {
 		return c.Error(exit.DataErr, UnsignedContainerError{Container: path},
 			"unsigned voter list container")
 	}
@@ -125,35 +122,21 @@ func voterimpmain() (code int) {
 	}
 
 	// Get the version string of the container.
-	cversion, err := version.Container(cnt)
+	cversion, err := containerVersion(cnt)
 	if err != nil {
 		return c.Error(exit.DataErr, ContainerVersionError{Container: path, Err: err},
 			"failed to format container version string:", err)
 	}
 
-	// Check that the container has only two files: * and *.signature.
-	data := cnt.Data()
-	if len(data) != 2 {
-		return c.Error(exit.DataErr, DataCountError{Count: len(data)},
-			"voter list container has", len(data), "files, expected 2")
+	// Get the contents of the container.
+	list, sig, err := containerData(cnt.Data())
+	if err != nil {
+		return c.Error(exit.DataErr, ContainerDataError{Err: err},
+			"failed to find expected data from container:", err)
 	}
-	keys := make([]string, 0, 2)
-	for key := range data {
-		keys = append(keys, key)
-	}
-	if len(keys[0]) > len(keys[1]) {
-		keys[0], keys[1] = keys[1], keys[0] // Put shorter one first.
-	}
-	expected := keys[0] + ".signature"
-	if keys[1] != expected {
-		return c.Error(exit.DataErr, KeyError{Keys: keys},
-			fmt.Sprintf("voter list container has keys %q and %q, but want %[1]q and %[3]q",
-				keys[0], keys[1], expected))
-	}
-	list, sig := data[keys[0]], data[keys[1]]
 
 	// Check the signature.
-	if err = verifyRSA(c.Conf.Election.VoterList.Key, list, sig); err != nil {
+	if err = verifyECDSA(c.Conf.Election.VoterList.Key, list, sig); err != nil {
 		return c.Error(exit.DataErr, VerifySignatureError{Err: err},
 			"failed to verify voter list signature:", err)
 	}
@@ -171,7 +154,7 @@ func voterimpmain() (code int) {
 	}
 
 	// Parse the voter list and preprocess into a map of changes.
-	voters, err := preprocess(c.Ctx, list, oldver, c.Conf.Election.Identifier, c.Storage)
+	voters, newver, err := preprocess(c.Ctx, list, oldver, c.Conf.Election.Identifier, c.Storage)
 	if err != nil {
 		return c.Error(exit.DataErr, PreprocessVotersError{Err: err},
 			"failed to preprocess voter list:", err)
@@ -179,7 +162,6 @@ func voterimpmain() (code int) {
 
 	// Store the new list.
 	if c.Until >= command.Execute {
-		newver := listver(oldver, list)
 		log.Log(c.Ctx, ImportingVoters{Version: newver, Count: len(voters)})
 		progress.Static(fmt.Sprintf("Importing %d voters:", len(voters)))
 		addprogress := progress.Percent(uint64(len(voters)), true)
@@ -196,38 +178,63 @@ func voterimpmain() (code int) {
 	return exit.OK
 }
 
-// verifyRSA parses an RSA public key from a PEM-encoded X.509 structure and
-// verifies the signature sig on data using SHA-256 and PKCS #1 v1.5 encoding.
-func verifyRSA(pub string, data, sig []byte) error {
+// containerData returns voter list and signature contents from container data.
+func containerData(data map[string][]byte) (list, signature []byte, err error) {
+	// The container data should have exactly two keys: *.utf and *.sig.
+	// Although the files are usually named more specifically
+	//
+	//   <election_identifier>-voters-<changeset>.{utf,sig},
+	//
+	// do not enforce this.
+	const utf = ".utf"
+	const sig = ".sig"
+
+	if len(data) != 2 {
+		return nil, nil, KeyCountError{Count: len(data)}
+	}
+	var utfKey, sigKey string
+	for key, content := range data {
+		if strings.HasSuffix(key, utf) {
+			utfKey = key
+			list = content
+			sigKey = key[:len(key)-len(utf)] + sig
+			break
+		}
+	}
+	if len(utfKey) == 0 {
+		return nil, nil, MissingUTFKeyError{}
+	}
+	signature, ok := data[sigKey]
+	if !ok {
+		return nil, nil, MissingSigKeyError{Expected: sigKey}
+	}
+
+	return list, signature, nil
+}
+
+// verifyECDSA parses an ECDSA public key from a PEM-encoded X.509 structure
+// and verifies the signature sig on data.
+func verifyECDSA(pub string, data, sig []byte) error {
 	der, err := cryptoutil.PEMDecode(pub, "PUBLIC KEY")
 	if err != nil {
-		return RSAPEMDecodeError{Err: err}
+		return ECDSAPEMDecodeError{Err: err}
+	}
+	parsed, err := x509.ParsePKIXPublicKey(der)
+	if err != nil {
+		return ECDSAParsePKIXError{Err: err}
+	}
+	key, ok := parsed.(*ecdsa.PublicKey)
+	if !ok {
+		return ECDSAPublicKeyNotECDSAError{Type: fmt.Sprintf("%T", parsed)}
 	}
 
-	// subjectPublicKeyInfo is the X.509 structure used to encode public
-	// keys. See https://tools.ietf.org/html/rfc5280#section-4.1.2.7
-	type subjectPublicKeyInfo struct {
-		Algorithm        pkix.AlgorithmIdentifier
-		SubjectPublicKey asn1.BitString
+	hashed := sha256.Sum256(data) // Hardcoded regardless of key parameters.
+	r, s, err := cryptoutil.ParseECDSAASN1Signature(sig)
+	if err != nil {
+		return ECDSAParseSignatureError{Err: err}
 	}
-	oidRSA := asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 1}
-
-	var x509 subjectPublicKeyInfo
-	if _, err := asn1.Unmarshal(der, &x509); err != nil {
-		return RSAUnmarshalX509Error{Err: err}
-	}
-	if !oidRSA.Equal(x509.Algorithm.Algorithm) {
-		return RSANotAnRSAKeyError{OID: x509.Algorithm.Algorithm}
-	}
-
-	key := new(rsa.PublicKey)
-	if _, err := asn1.Unmarshal(x509.SubjectPublicKey.RightAlign(), key); err != nil {
-		return RSAUnmarshalKeyError{Err: err}
-	}
-
-	hashed := sha256.Sum256(data)
-	if err := rsa.VerifyPKCS1v15(key, crypto.SHA256, hashed[:], sig); err != nil {
-		return RSAVerifyError{Err: err}
+	if !ecdsa.Verify(key, hashed[:], r, s) {
+		return ECDSASignatureVerificationError{}
 	}
 	return nil
 }
@@ -238,64 +245,29 @@ const (
 )
 
 // linefunc is the type of functions used to process voter lines. Given a
-// voter, action and choices, it reports any problems or if there were none,
-// adds an entry for voter into voters. previousErrors indicates if there were
-// previous lines with errors for this voter. version is the currently applied
-// voter list version.
-type linefunc func(ctx context.Context, voter, action, choices string, voters map[string][]byte,
-	previousErrors bool, version string, s *storage.Client) []error
+// voter, action, administrative unit code and district number, it reports any
+// problems or if there were none, adds an entry for voter into voters.
+// previousErrors indicates if there were previous lines with errors for this
+// voter. version is the currently applied voter list version.
+type linefunc func(ctx context.Context, voter, action, adminCode, district string,
+	voters map[string][]byte, previousErrors bool, version string, s *storage.Client) (
+	errs []error)
 
 // preprocess parses the list and preprocesses the changes for storage.
 func preprocess(ctx context.Context, list []byte, version, election string, s *storage.Client) (
-	voters map[string][]byte, err error) {
+	voters map[string][]byte, newver string, err error) {
 
 	b := bytes.NewBuffer(list)
 
-	// First line is the format version number, which must be 1.
-	fver, err := b.ReadString(delim)
+	// Parse the header to determine list version and type.
+	newver, lf, err := header(b, election, version)
 	if err != nil {
-		return nil, ReadFileVersionError{Err: err}
-	}
-	if fver != "1"+string(delim) {
-		return nil, FileVersionError{Version: fver}
+		return nil, "", err
 	}
 
-	// Next is the election identifier. Must match the one in the election
-	// configuration.
-	elid, err := b.ReadString(delim)
-	if err != nil {
-		return nil, ReadElectionIDError{Err: err}
-	}
-	if elid != election+string(delim) {
-		return nil, ElectionIDMismatchError{Conf: election, List: elid}
-	}
-
-	// Next is the list type: either initial or changes.
-	t, err := b.ReadString(delim)
-	if err != nil {
-		return nil, ReadTypeError{Err: err}
-	}
-	t = t[:len(t)-1] // Trim the delimiter.
-
-	var lf linefunc
-	switch t {
-	case "algne":
-		if len(version) > 0 {
-			return nil, VoterListExistsError{Version: version}
-		}
-		lf = initial
-	case "muudatused":
-		if len(version) == 0 {
-			return nil, NoExistingVoterListError{}
-		}
-		lf = changes
-	default:
-		return nil, UnsupportedListTypeError{Type: t}
-	}
-
-	// Finally, loop over all list entries, calling lf for each. Report
-	// progress of this process.
-	log.Log(ctx, PreprocessingVoterList{Type: t})
+	// Loop over all list entries, calling lf for each. Report progress of
+	// this process.
+	log.Log(ctx, PreprocessingVoterList{Version: newver})
 	progress.Static("Preprocessing voter list:")
 	addcount := progress.Count(0, false) // Do not redraw every time.
 	const countstep = 10000              // Redraw after each countstep.
@@ -312,13 +284,13 @@ loop:
 		// Check if preprocessing was cancelled.
 		select {
 		case <-ctx.Done():
-			return nil, PreprocessVoterListCanceled{Err: ctx.Err()}
+			return nil, "", PreprocessVoterListCanceled{Err: ctx.Err()}
 		default:
 		}
 
 		// Read the next line.
 		line++
-		voter, action, choices, err := next(b)
+		voter, action, adminCode, district, err := next(b)
 		switch {
 		case err == nil:
 		case err == io.EOF:
@@ -335,7 +307,7 @@ loop:
 
 		// Call lf for the line.
 		_, previous := withErrors[voter]
-		errs := lf(ctx, voter, action, choices, voters, previous, version, s)
+		errs := lf(ctx, voter, action, adminCode, district, voters, previous, version, s)
 		if len(errs) > 0 {
 			withErrors[voter] = struct{}{}
 		}
@@ -349,13 +321,83 @@ loop:
 		stepadd(ctx, addcount, 0, 0)
 	}
 	if errcount > 0 {
-		return nil, PreprocessVoterListError{ErrorCount: errcount}
+		return nil, "", PreprocessVoterListError{ErrorCount: errcount}
 	}
-	return voters, nil
+	return voters, newver, nil
 }
 
-func initial(ctx context.Context, voter, action, choices string, voters map[string][]byte,
-	previousErrors bool, version string, s *storage.Client) (errs []error) {
+func header(b *bytes.Buffer, election, oldver string) (newver string, lf linefunc, err error) {
+	// First line is the format version number, which must be 2.
+	fver, err := readString(b, delim)
+	if err != nil {
+		return "", nil, ReadFileVersionError{Err: err}
+	}
+	if fver != "2" {
+		return "", nil, FileVersionError{Version: fver}
+	}
+
+	// Second is the election identifier. Must match the one in the election
+	// configuration.
+	elid, err := readString(b, delim)
+	if err != nil {
+		return "", nil, ReadElectionIDError{Err: err}
+	}
+	if elid != election {
+		return "", nil, ElectionIDMismatchError{Conf: election, List: elid}
+	}
+
+	// Third is the list version number.
+	newver, err = readString(b, delim)
+	if err != nil {
+		return "", nil, ReadListVersionError{Err: err}
+	}
+	newver64, err := strconv.ParseUint(newver, 10, 64)
+	if err != nil {
+		return "", nil, ParseListVersionError{Err: err}
+	}
+	if newver64 == 0 {
+		if len(oldver) > 0 {
+			return "", nil, VoterListExistsError{Version: oldver}
+		}
+		lf = initial
+	} else {
+		var oldver64 uint64
+		if len(oldver) == 0 {
+			return "", nil, NoExistingVoterListError{}
+		} else if oldver64, err = strconv.ParseUint(oldver, 10, 64); err != nil {
+			return "", nil, ParseCurrentListVersionError{Err: err}
+		} else if oldver64 >= newver64 {
+			return "", nil, UnexpectedListVersionError{
+				Current: oldver64,
+				List:    newver64,
+			}
+		}
+		lf = changes
+	}
+
+	// Fourth are two timestamps representing the period. Not used by the
+	// collector, but make sure that the format is valid.
+	fromstr, err := readString(b, sep)
+	if err != nil {
+		return "", nil, ReadPeriodFromError{Err: err}
+	}
+	if _, err = time.Parse(time.RFC3339, fromstr); err != nil {
+		return "", nil, ParsePeriodFromError{Err: err}
+	}
+	tostr, err := readString(b, delim)
+	if err != nil {
+		return "", nil, ReadPeriodToError{Err: err}
+	}
+	if _, err = time.Parse(time.RFC3339, tostr); err != nil {
+		return "", nil, ParsePeriodToError{Err: err}
+	}
+
+	return newver, lf, nil
+}
+
+func initial(ctx context.Context, voter, action, adminCode, district string,
+	voters map[string][]byte, previousErrors bool, version string, s *storage.Client) (
+	errs []error) {
 
 	// Skip duplicate checking if there are relevant errors. We want to
 	// check duplicates even if the voter had previous errors, so use a
@@ -370,23 +412,27 @@ func initial(ctx context.Context, voter, action, choices string, voters map[stri
 		errs = append(errs, InitialNonAddActionError{Action: action})
 		skip = true
 	}
-	if !validChoices(choices) {
-		errs = append(errs, InitialInvalidChoicesError{Choices: choices})
-		// Do not set skip: detect duplicate voter regardless of faulty
-		// choices. It is OK to add invalid choices since we will error
-		// anyway and the map values are not used.
+	if len(adminCode) == 0 {
+		errs = append(errs, InitialEmptyAdminUnitCodeError{})
+	}
+	if len(district) == 0 {
+		errs = append(errs, InitialEmptyDistrictNumberError{})
 	}
 	if !skip {
 		if _, ok := voters[voter]; ok {
 			errs = append(errs, InitialAddDuplicateVoterError{Voter: voter})
 		}
-		voters[voter] = []byte(choices)
+		// It is OK to add invalid entries (skip was not set for
+		// adminCode or district errors) since then we will error
+		// anyway and the map values are not used during preprocessing.
+		voters[voter] = storage.EncodeAdminDistrict(adminCode, district)
 	}
 	return
 }
 
-func changes(ctx context.Context, voter, action, choices string, voters map[string][]byte,
-	previousErrors bool, version string, s *storage.Client) (errs []error) {
+func changes(ctx context.Context, voter, action, adminCode, district string,
+	voters map[string][]byte, previousErrors bool, version string, s *storage.Client) (
+	errs []error) {
 
 	if len(voter) == 0 {
 		errs = append(errs, ChangesEmptyVoterError{})
@@ -395,22 +441,32 @@ func changes(ctx context.Context, voter, action, choices string, voters map[stri
 		errs = append(errs, ChangesVoterWithPreviousErrorsError{Voter: voter})
 	}
 
-	if !validChoices(choices) {
-		errs = append(errs, ChangesInvalidChoicesError{Choices: choices})
+	if len(adminCode) == 0 {
+		errs = append(errs, ChangesEmptyAdminUnitCodeError{})
+		previousErrors = true
+	}
+	if len(district) == 0 {
+		errs = append(errs, ChangesEmptyDistrictNumberError{})
 		previousErrors = true
 	}
 
 	// Only perform consistency checks if there are no previous errors.
-	var oldchoices []byte
-	var inMemory bool
+	var voterExists bool    // Is this voter on the current voter list?
+	var voterProcessed bool // Has this voter already been processed?
+	var oldAdminCode string
+	var oldDistrict string
 	if !previousErrors {
-		// Get the current choices for the voter. Check the
-		// in-memory map first and only then storage.
-		if oldchoices, inMemory = voters[voter]; !inMemory {
-			oldchoicesstr, err := s.GetVoter(ctx, version, voter)
+		// Check the current entry for the voter. Look at the in-memory
+		// map first and only then storage.
+		if entry, ok := voters[voter]; ok {
+			voterExists = entry != nil
+			voterProcessed = true
+		} else {
+			var err error
+			oldAdminCode, oldDistrict, err = s.GetVoter(ctx, version, voter)
 			switch {
 			case err == nil:
-				oldchoices = []byte(oldchoicesstr)
+				voterExists = true
 			case errors.CausedBy(err, new(storage.NotExistError)) != nil:
 			default:
 				errs = append(errs, GetOldVoterError{Voter: voter, Err: err})
@@ -422,24 +478,27 @@ func changes(ctx context.Context, voter, action, choices string, voters map[stri
 	switch action {
 	case "lisamine":
 		if !previousErrors {
-			if len(oldchoices) > 0 {
+			if voterExists {
 				errs = append(errs, ChangesAddDuplicateVoterError{Voter: voter})
 			}
-			voters[voter] = []byte(choices)
+			voters[voter] = storage.EncodeAdminDistrict(adminCode, district)
 		}
 
 	case "kustutamine":
 		if !previousErrors {
-			if len(oldchoices) == 0 {
+			switch {
+			case !voterExists:
 				errs = append(errs, ChangesRemoveNotExistingVoterError{Voter: voter})
-			} else if string(oldchoices) != choices {
-				errs = append(errs, ChangesRemoveVoterChoicesMismatchError{
-					Voter:    voter,
-					Choices:  choices,
-					Expected: string(oldchoices),
-				})
-			} else if inMemory {
+			case voterProcessed:
 				errs = append(errs, ChangesRemoveAddedVoterError{Voter: voter})
+			case adminCode != oldAdminCode, district != oldDistrict:
+				errs = append(errs, ChangesRemoveVoterEntryMismatchError{
+					Voter:                 voter,
+					RemovedAdminUnitCode:  adminCode,
+					RemovedDistrictNumber: district,
+					CurrentAdminUnitCode:  oldAdminCode,
+					CurrentDistrictNumber: oldDistrict,
+				})
 			}
 			voters[voter] = nil // nil to distinguish from unchanged voters.
 		}
@@ -448,17 +507,6 @@ func changes(ctx context.Context, voter, action, choices string, voters map[stri
 		errs = append(errs, ChangesUnsupportedActionError{Action: action})
 	}
 	return
-}
-
-// validChoices checks if the choices list identifier is valid.
-func validChoices(choices string) bool {
-	// The choices list identifier is the district EHAK joined with the
-	// district number with a period ('.'). Check that we have something
-	// before and after the first separator and that there is no second
-	// separator.
-	sep := strings.IndexByte(choices, '.')
-	return sep > 0 && len(choices[sep+1:]) > 0 &&
-		strings.IndexByte(choices[sep+1:], '.') < 0
 }
 
 // stepadd calls add with count and, if step is zero or the new total modulo
@@ -471,36 +519,32 @@ func stepadd(ctx context.Context, add status.Add, count, step uint64) {
 }
 
 // next reads and parses the next voter line from b.
-func next(b *bytes.Buffer) (voter, action, choices string, err error) {
-	line, err := b.ReadString(delim)
+func next(b *bytes.Buffer) (voter, action, adminCode, district string, err error) {
+	line, err := readString(b, delim)
 	if err != nil {
 		if err != io.EOF || len(line) > 0 {
 			err = ReadNextError{Line: line, Err: err}
 		}
 		return
 	}
-	line = line[:len(line)-1] // Trim the delimiter.
 
-	// Split on tabs and expect nine fields:
+	// Split on tabs and expect five fields:
 	//
 	//	0. voter ID,
 	//	1. voter name (ignored),
 	//	2. action,
-	//	3. voting station EHAK (ignored),
-	//	4. voting station number (ignored),
-	//	5. district EHAK,
-	//	6. district number,
-	//	7. row number (ignored), and
-	//	8. change reason (ignored).
+	//	3. administrative unit code, and
+	//	4. district number.
 	//
-	// The choices identifier is formed from the district EHAK and number.
+	// The choices identifier is formed from the administrative unit code
+	// and district number.
 	fields := strings.Split(line, string(sep))
-	if len(fields) != 9 {
-		err = FieldCountError{Fields: len(fields), Expected: 9}
+	if len(fields) != 5 {
+		err = FieldCountError{Fields: len(fields), Expected: 5}
 		return
 	}
 
-	return fields[0], fields[2], fmt.Sprint(fields[5], ".", fields[6]), nil
+	return fields[0], fields[2], fields[3], fields[4], nil
 }
 
 // report reports an error to both the log and standard output.
@@ -511,19 +555,11 @@ func report(ctx context.Context, entry log.ErrorEntry) {
 	fmt.Fprintln(os.Stderr, "error:", entry)
 }
 
-// listever calculates a list version number based on the previous one and data.
-func listver(old string, data []byte) string {
-	b64 := base64.StdEncoding
-	n := b64.EncodedLen(sha256.Size)
-	v := make([]byte, len(old)+n)
-
-	// v = old | b64(sha256(data))
-	copy(v, old)
-	h := sha256.Sum256(data)
-	b64.Encode(v[len(old):], h[:])
-
-	// v = b64(sha256(v))
-	h = sha256.Sum256(v)
-	b64.Encode(v, h[:])
-	return string(v[:n])
+// readString returns the result of b.ReadString(delim) with delim trimmed.
+func readString(b *bytes.Buffer, delim byte) (string, error) {
+	line, err := b.ReadString(delim)
+	if err == nil {
+		line = line[:len(line)-1] // Trim the delimiter.
+	}
+	return line, err
 }

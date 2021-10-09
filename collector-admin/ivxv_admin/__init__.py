@@ -1,8 +1,8 @@
 # IVXV Internet voting framework
 """Collector Management Service."""
 
-__version__ = '1.5.1'
-DEB_PKG_VERSION = '1.5.1'
+__version__ = '1.7.7'
+DEB_PKG_VERSION = '1.7.7'
 
 #: Management daemon data
 MANAGEMENT_DAEMON_PORT = 8080
@@ -111,7 +111,7 @@ SERVICE_MONITORING_STATES = [SERVICE_STATE_CONFIGURED, SERVICE_STATE_FAILURE]
 #: operation;
 #: ``require_tls`` - does service require TLS certificate and key to
 #: ``tspreg`` - can communicate with TSP registration service
-#: ``dds`` - can communicate with Mobile ID service
+#: ``mobile_id`` - can communicate with Mobile ID service
 #: communicate with other services;
 SERVICE_TYPE_PARAMS = {
     'backup': {
@@ -119,56 +119,56 @@ SERVICE_TYPE_PARAMS = {
         'require_config': False,
         'require_tls': False,
         'tspreg': False,
-        'dds': False,
+        'mobile_id': False,
     },
     'choices': {
         'main_service': True,
         'require_config': True,
         'require_tls': True,
         'tspreg': False,
-        'dds': True,
-    },
-    'dds': {
-        'main_service': True,
-        'require_config': True,
-        'require_tls': True,
-        'tspreg': False,
-        'dds': True,
+        'mobile_id': True,
     },
     'log': {
         'main_service': False,
         'require_config': False,
         'require_tls': False,
         'tspreg': False,
-        'dds': False,
+        'mobile_id': False,
+    },
+    'mid': {
+        'main_service': True,
+        'require_config': True,
+        'require_tls': True,
+        'tspreg': False,
+        'mobile_id': True,
     },
     'proxy': {
         'main_service': True,
         'require_config': True,
         'require_tls': False,
         'tspreg': False,
-        'dds': False,
+        'mobile_id': False,
     },
     'storage': {
         'main_service': True,
         'require_config': True,
         'require_tls': True,
         'tspreg': False,
-        'dds': False,
+        'mobile_id': False,
     },
     'verification': {
         'main_service': True,
         'require_config': True,
         'require_tls': True,
         'tspreg': False,
-        'dds': False,
+        'mobile_id': False,
     },
     'voting': {
         'main_service': True,
         'require_config': True,
         'require_tls': True,
         'tspreg': True,
-        'dds': True,
+        'mobile_id': True,
     },
 }
 
@@ -186,9 +186,9 @@ SERVICE_SECRET_TYPES = {
         'target-path': '/var/lib/ivxv/service/{service_id}/tls.key',
         'shared': False,
     },
-    'dds-token-key': {
+    'mid-token-key': {
         'description': 'Mobile ID identity token',
-        'db-key': 'dds-token-key',
+        'db-key': 'mid-token-key',
         'target-path': '/var/lib/ivxv/service/ticket.key',
         'shared': True,
     },
@@ -206,8 +206,8 @@ COLLECTOR_PKG_FILENAMES = {
     'ivxv-backup': f'ivxv-backup_{DEB_PKG_VERSION}_amd64.deb',
     'ivxv-choices': f'ivxv-choices_{DEB_PKG_VERSION}_amd64.deb',
     'ivxv-common': f'ivxv-common_{DEB_PKG_VERSION}_all.deb',
-    'ivxv-dds': f'ivxv-dds_{DEB_PKG_VERSION}_amd64.deb',
     'ivxv-log': f'ivxv-log_{DEB_PKG_VERSION}_all.deb',
+    'ivxv-mid': f'ivxv-mid_{DEB_PKG_VERSION}_amd64.deb',
     'ivxv-proxy': f'ivxv-proxy_{DEB_PKG_VERSION}_amd64.deb',
     'ivxv-storage': f'ivxv-storage_{DEB_PKG_VERSION}_amd64.deb',
     'ivxv-verification': f'ivxv-verification_{DEB_PKG_VERSION}_amd64.deb',
@@ -220,26 +220,28 @@ EVENT_LOG_FILENAME = 'ivxv-management-events.log'
 #: Event descriptions
 EVENTS = {
     # collector state events
-    'COLLECTOR_INIT': 'Initialize Collector',
-    'COLLECTOR_RESET':
-    f'Reset Collector (state: "{COLLECTOR_STATE_NOT_INSTALLED}")',
-    'COLLECTOR_STATE_CHANGE':
-    'Collector state changed from "{last_state}" to "{state}"',
+    "COLLECTOR_INIT": "Initialize Collector",
+    "COLLECTOR_RESET":
+    f"Reset Collector (state: {COLLECTOR_STATE_NOT_INSTALLED!r})",
+    "COLLECTOR_STATE_CHANGE":
+    "Collector state changed from {last_state!r} to {state!r}",
     # command loading events
-    'CMD_LOAD': 'Load command "{cmd_type}" version "{version}"',
-    'CMD_LOADED': 'Command "{cmd_type}" is loaded, version "{version}"',
-    'CMD_REMOVED': 'Command "{cmd_type}" is removed, version "{version}"',
+    "CMD_LOAD": "Load command {cmd_type!r} version {version!r}",
+    "CMD_LOADED": "Command {cmd_type!r} is loaded, version {version!r}",
+    "CMD_REMOVED": "Command {cmd_type!r} is removed, version {version!r}",
+    # voter list downloading events
+    "VOTER_LIST_DOWNLOADED": "Downloaded voter list changeset #{changeset_no}",
+    "VOTER_LIST_DOWNLOAD_FAILED":
+    "Failed to download voter list changeset #{changeset_no}",
     # user permission management events
-    'PERMISSION_SET': 'Add permission "{permission}" to user "{user_cn}"',
-    'PERMISSION_RESET': 'Reset user "{user_cn}" permissions',
+    "PERMISSION_SET": "Add permission {permission!r} to user {user_cn!r}",
+    "PERMISSION_RESET": "Reset user {user_cn!r} permissions",
     # election start/stop times registering
-    'SET_ELECTION_TIME': 'Election "{period}" timestamp set to {timestamp}',
+    "SET_ELECTION_TIME": "Election {period!r} timestamp set to {timestamp}",
     # service management events
-    'SERVICE_REGISTER':
-    'Add {service_type} service (state: "%s")' % SERVICE_STATE_NOT_INSTALLED,
-    'SERVICE_CONFIG_APPLY':
-    'Applied {cfg_descr} version "{cfg_version}"',
-    'SERVICE_STATE_CHANGE':
-    'Service state changed from "{last_state}" to "{state}"',
-    'SECRET_INSTALL': '{secret_descr} loaded to service',
+    "SERVICE_REGISTER":
+    f"Add {{service_type}} service (state: {SERVICE_STATE_NOT_INSTALLED!r})",
+    "SERVICE_CONFIG_APPLY": 'Applied {cfg_descr} version {cfg_version!r}',
+    "SERVICE_STATE_CHANGE": 'Service state changed from {last_state!r} to {state!r}',
+    "SECRET_INSTALL": "{secret_descr} loaded to service",
 }

@@ -6,7 +6,7 @@ Elektroonilise hääle kontrollimine
 
 Elektroonilist häält kontrollitakse töötlemisrakenduses, kogumisteenuses,
 valijarakenduses ja kontrollrakenduses. Kõige põhjalikuma kontrolli läbib
-elektrooniline hääl e-urni koosseisus töötlemisrakenduses, kus otsustatakse
+elektrooniline hääl e-valimiskasti koosseisus töötlemisrakenduses, kus otsustatakse
 konkreetse hääle lugemisele saatmine või mittesaatmine. Iga üksiku hääle kohta
 läbitakse töötlemisrakendusega analoogsel tasemel kontroll valijarakenduses, kus
 veendutakse, et kogumisteenus on hääle kvalifitseerinud selliselt, et
@@ -130,7 +130,7 @@ Kontrollid töötlemisrakenduses
 ------------------------------
 
 Töötlemisrakendus kontrollib iga üksikut häält eraldi, veendudes muuhulgas, et
-iga kogumisteenuse ning registreerimisteenuse poolt esitatud vaated e-urni sisu
+iga kogumisteenuse ning registreerimisteenuse poolt esitatud vaated e-valimiskasti sisu
 kohta on konsistentsed. Seejärel otsustab töötlemisrakendus iga valija häälte
 kohta, milline neist on ajaliselt viimane ning suunatakse töötlemise järgmisesse
 etappi, mille tulemusena hääl võib jõuda lugemisele.
@@ -141,7 +141,7 @@ Töötlemisrakenduse sisendiks on:
 
 #. Loend kogumisteenuses rakendatud valijanimekirjadest;
 
-#. Kogumisteenuse poolt üle antud e-urn, mis sisaldab iga hääle kohta
+#. Kogumisteenuse poolt üle antud e-valimiskast, mis sisaldab iga hääle kohta
    krüpteeritud sedelit, valija allkirja krüpteeritud sedelil, valija
    allkirjastamissertifikaati, sertifikaadi kehtivuskinnitust ning
    registreerimistõendit.

@@ -3,10 +3,10 @@
 
 import json
 
-from .. import init_cli_util, log
 from ... import CMD_DESCR, CMD_TYPES
 from ...command_file import load_collector_cmd_file
 from ...lib import IvxvError
+from .. import init_cli_util, log
 
 
 def main():
@@ -47,30 +47,94 @@ def main():
         return 1
     log.info('Config files are valid')
 
+    if validate_cfg_consistency(
+        validated_cfg,
+        election=args["--election"],
+        choices=args["--choices"],
+        districts=args["--districts"],
+        voters=args["--voters"],
+    ):
+        return 0
+    return 1
+
+
+def validate_cfg_consistency(
+    validated_cfg,
+    election=None,
+    choices=None,
+    districts=None,
+    voters=None,
+):
+    """Perform consistency checks for config files."""
+    # validate election ID consistency
+    if not validate_cfg_election_id(validated_cfg):
+        log.info("Election ID consistency check failed")
+        return False
+    log.info("Election ID consistency check succeeded")
+
     # validate multiple voters lists consistency
-    if len(args['--voters']) > 1:
+    if len(voters) > 1:
         if not validate_voters_lists_consistency(validated_cfg):
             log.info('Voters lists consistency check failed')
-            return 1
+            return False
 
         log.info('Voters lists consistency check succeeded')
 
+    # determine voterforeignehak, there are no consistency checks
+    voterforeignehak = "0000"
+    if election:
+        for cfg_type, cfg in validated_cfg:
+            if cfg_type == "election":
+                voterforeignehak = cfg.get("voterforeignehak", voterforeignehak)
+                break
+
     # validate districts and choices/voters lists consistency
-    if args['--districts'] and (args['--choices'] or args['--voters']):
-        if not validate_lists_consistency(validated_cfg):
+    if districts and (choices or voters):
+        if not validate_lists_consistency(validated_cfg, voterforeignehak):
             log.info('Voting lists consistency check failed')
-            return 1
+            return False
 
         log.info('Voting lists consistency check succeeded')
 
-    return 0
+    return True
+
+
+def validate_cfg_election_id(validated_cfg):
+    """Validate election ID consistency in config files."""
+    # try to detect election ID
+    election_id = None
+    for cfg_type, cfg in validated_cfg:
+        if cfg_type == "election":
+            election_id = cfg["identifier"]
+            log.info("Detected election ID %r from election config", election_id)
+            break
+
+    # validate election ID consistency
+    for cfg_type, cfg in validated_cfg:
+        if cfg_type in ["election", "technical", "trust"]:
+            continue
+        cfg_election_id = cfg["election"]
+        if not election_id:
+            election_id = cfg_election_id
+            log.debug("Detected election ID %r from %s config", election_id, cfg_type)
+        else:
+            if election_id != cfg_election_id:
+                log.error(
+                    "Election ID %r in %s config does not match with %r",
+                    cfg_election_id,
+                    cfg_type,
+                    election_id,
+                )
+                return False
+
+    return True
 
 
 def validate_cfg_files(cfg_files, plain):
     """Load and validate config files."""
     cfg_array = []
     for cfg_type, filepath in cfg_files:
-        log.info('Validating %s file %s', CMD_DESCR[cfg_type], filepath)
+        log.info("Validating %s file %r", CMD_DESCR[cfg_type], filepath)
         try:
             cfg = load_collector_cmd_file(cfg_type, filepath, plain)
         except json.decoder.JSONDecodeError:
@@ -86,37 +150,44 @@ def validate_voters_lists_consistency(cfg_objects):
     """Validate voters lists consistency."""
     check_failed = False
     voters_reg = None
-    file_no = 0
+    changeset = 0
     errors = []
     for cfg_type, cfg in cfg_objects:
         if cfg_type != 'voters':
             continue
 
-        file_no += 1
-        if file_no == 1:
-            if cfg['list_type'] != 'algne':
+        if changeset == 0:
+            if int(cfg['changeset']) != 0:
                 errors.append(
-                    f'Invalid type "{cfg["list_type"]}" '
-                    'for initial voters list')
+                    f'Invalid changeset {cfg["changeset"]} for initial voter list'
+                )
                 break
             voters_reg = dict(
-                [voter[0], voter[3:7]] for voter in cfg['voters'])
+                [voter[0], voter[3:5]] for voter in cfg['voters'])
+            changeset = 1
             continue
 
-        log.info('Checking voters list patch #%d consistency', file_no - 1)
-        if cfg['list_type'] != 'muudatused':
+        if int(cfg['changeset']) < changeset:
             errors.append(
-                f'Invalid type "{cfg["list_type"]}" '
-                'for voters list patch')
+                f'Invalid changeset {cfg["changeset"]}, '
+                f'expected {changeset} or greater')
             break
+
+        changeset = int(cfg['changeset'])
+
+        # voter list skipping command acts as an empty changeset
+        if cfg.get('skip_voter_list'):
+            continue
+
+        log.info("Checking voters list changeset #%d consistency", changeset)
         voters_in_patch = set()
-        for rec_no, voter in enumerate(cfg['voters'], start=1):
+        for rec_no, voter in enumerate(cfg['voters']):
             voter_id = voter[0]
 
             if voter[2] == 'lisamine':
                 if (voter_id not in voters_reg
                         and voter_id not in voters_in_patch):
-                    voters_reg[voter_id] = voter[3:7]
+                    voters_reg[voter_id] = voter[3:5]
                 else:
                     errors.append(
                         f'Record #{rec_no}: Adding voter ID {voter_id} '
@@ -129,10 +200,10 @@ def validate_voters_lists_consistency(cfg_objects):
                         'that is added with this patch')
                 try:
                     district = voters_reg.pop(voter_id)
-                    if district != voter[3:7]:
+                    if district != voter[3:5]:
                         errors.append(
                             f'Record #{rec_no}: Removing voter ID {voter_id} '
-                            f'from invalid district {voter[3:7]}. '
+                            f'from invalid district {voter[3:5]}. '
                             f'Voter is registered in district {district}')
                 except KeyError:
                     errors.append(
@@ -150,7 +221,7 @@ def validate_voters_lists_consistency(cfg_objects):
     return not check_failed
 
 
-def validate_lists_consistency(cfg_objects):
+def validate_lists_consistency(cfg_objects, voterforeignehak):
     """Validate voting lists consistency."""
     districts_cfg = ([
         cfg
@@ -160,6 +231,7 @@ def validate_lists_consistency(cfg_objects):
     districts = set(districts_cfg['districts'])
 
     check_failed = False
+    changeset_no = 0
     for cfg_type, cfg in cfg_objects:
         errors = []
         if cfg_type == 'choices':
@@ -167,9 +239,14 @@ def validate_lists_consistency(cfg_objects):
             errors = validate_choices_consistency(districts, cfg)
             check_failed = check_failed or bool(errors)
         elif cfg_type == 'voters':
-            log.info('Checking districts and voters lists consistency')
-            errors = validate_voters_consistency(districts, districts_cfg, cfg)
+            log.info(
+                "Checking districts and voter list changeset #%d consistency",
+                changeset_no,
+            )
+            errors = validate_voters_consistency(districts_cfg, districts, cfg,
+                                                 voterforeignehak)
             check_failed = check_failed or bool(errors)
+            changeset_no += 1
         for error in errors:
             log.error(error)
 
@@ -198,37 +275,55 @@ def validate_choices_consistency(districts, choices_cfg):
     return errors
 
 
-def validate_voters_consistency(districts, districts_cfg, voters_cfg):
+def validate_voters_consistency(
+    districts_cfg, districts, voters_cfg, voterforeignehak
+):
     """Validate voting lists consistency."""
     errors = []
 
-    # generate stations list
-    stations = set()
+    if "skip_voter_list" in voters_cfg:
+        return errors
 
-    for district in districts_cfg['districts']:
-        district_stations = districts_cfg['districts'][district]
-        for station in district_stations['stations']:
-            uniq_station = '.'.join([station, district])
-            if uniq_station in stations:
-                errors.append(f'Duplicate record for station {station} '
-                              f'in district {district}')
-            else:
-                stations.add(uniq_station)
+    parish_to_district = {}
+
+    for dist in districts_cfg["districts"]:
+        for parish in districts_cfg["districts"][dist]["parish"]:
+            if parish not in parish_to_district:
+                parish_to_district[parish] = []
+
+            parish_to_district[parish].append(dist)
 
     # check consistency
     for voter in voters_cfg['voters']:
 
-        # In each station there must be at least one voter voters
-        voter_district = '.'.join(voter[5:7])
-        if voter_district not in districts:
-            errors.append(
-                f'Voter {voter[0]} in non-existing district {voter_district}')
+        # Voterlist contains voter EHAK and district no which must be
+        # translated into full district identifier
+        voter_district = None
+        voter_id = voter[0]
+        voter_ehak = voter[3]
+        voter_district_no = voter[4]
 
-        # Each voter must be in an existing station
-        voter_station = '.'.join(voter[3:5])
-        uniq_station = '.'.join(voter[3:7])
-        if uniq_station not in stations:
-            errors.append(f'Voter {voter[0]} in non-existing station '
-                          f'{voter_station} in district {voter_district}')
+        # Voterlist uses parish FOREIGN, other configs may use some other code
+        if voter_ehak == "FOREIGN":
+            voter_ehak = voterforeignehak
+
+        # Search district by parish, single parish may be in several districts
+        # in this case the district no's must be different and match with voter
+        if voter_ehak in parish_to_district:
+            for dist in parish_to_district[voter_ehak]:
+                if dist.split(".")[1] == voter_district_no:
+                    voter_district = dist
+                    break
+        else:
+            errors.append(f'Parish {voter_ehak} not found in districts')
+
+        # Voter must belong to an existing district
+        if voter_district is None:
+            errors.append(
+                f'District for voter {voter_id} in EHAK {voter_ehak} / '
+                f'{voter_district_no} cannot be determined')
+        elif voter_district not in districts:
+            errors.append(
+                f'District {voter_district} for voter {voter_id} not found')
 
     return errors

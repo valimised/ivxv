@@ -31,18 +31,19 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.smartcardio.CardException;
-import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.cert.X509v1CertificateBuilder;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,12 +148,16 @@ public class InitTool implements Tool.Runner<InitArgs> {
             }
             signBlobs.add(ib);
         }
+        ShoupSigning shoupSign = new ShoupSigning(signBlobs, tparams, rnd);
+
         Path signCertPath = Util.prefixedPath(args.identifier.value(), SIGN_CERT_TMPL);
         Path encCertPath = Util.prefixedPath(args.identifier.value(), ENC_CERT_TMPL);
-        generateAndWriteCert(args, signBlobs, tparams, rnd, rsaPub.getEncoded(), signCertPath,
-                args.signCN.value(), args.signCN.value(), args.signSN.value());
-        generateAndWriteCert(args, signBlobs, tparams, rnd, pub.getBytes(), encCertPath,
-                args.signCN.value(), args.encCN.value(), args.encSN.value());
+        byte[] signCert =
+                generateSigningCert(shoupSign, args.signSN.value(), args.signCN.value(), rsaPub);
+        byte[] encCert = generateEncryptionCert(shoupSign, args.encSN.value(), args.encCN.value(),
+                args.signCN.value(), pub);
+        writeCertificate(signCert, args.outputPath.value(), signCertPath);
+        writeCertificate(encCert, args.outputPath.value(), encCertPath);
         console.println(Msg.m_certificates_generated, signCertPath, encCertPath);
 
         Path encKeyDerPath = Util.prefixedPath(args.identifier.value(), ENC_KEY_DER_TMPL);
@@ -166,17 +171,43 @@ public class InitTool implements Tool.Runner<InitArgs> {
         }
     }
 
-    private void generateAndWriteCert(InitArgs args, Set<IndexedBlob> blobs,
-            ThresholdParameters tparams,
-            Rnd rnd, byte[] publicKey, Path path, String issuerCN, String cn, BigInteger sn)
-            throws ProtocolException, IOException {
-        ShoupSigning shoupSign =
-                new ShoupSigning(blobs, tparams, rnd);
-        X509CertificateHolder certHolder = genCert(shoupSign,
-                SubjectPublicKeyInfo.getInstance(ASN1Sequence.getInstance(publicKey)), issuerCN, cn,
-                sn);
-        Path fullPath = args.outputPath.value().resolve(path);
-        outputCert(certHolder, fullPath);
+    private byte[] generateSigningCert(ContentSigner signer, BigInteger serial, String name,
+            RSAPublicKey pub) throws IOException {
+        // although the RSA key can realistically only be used with PSS padding, then support for
+        // such certificates is only in the most recent OpenSSL versions (1.1.1+). We use the
+        // default RSA algorithm identifier which does not specify the preferred padding scheme.
+        // SubjectPublicKeyInfo spki = SignatureUtil.RSA.RSA_PSS.getSubjectPublicKeyInfo(pub);
+        SubjectPublicKeyInfo spki = SubjectPublicKeyInfo.getInstance(pub.getEncoded());
+        boolean is_ca = true;
+        KeyUsage usage = new KeyUsage(KeyUsage.keyCertSign | KeyUsage.digitalSignature);
+        return generateCert(signer, serial, name, name, spki, is_ca, usage);
+    }
+
+    private byte[] generateEncryptionCert(ContentSigner signer, BigInteger serial, String name,
+            String issuer, ElGamalPublicKey pub) throws IOException {
+        SubjectPublicKeyInfo spki = SubjectPublicKeyInfo.getInstance(pub.getBytes());
+        boolean is_ca = false;
+        KeyUsage usage = new KeyUsage(KeyUsage.dataEncipherment);
+        return generateCert(signer, serial, name, issuer, spki, is_ca, usage);
+    }
+
+    private byte[] generateCert(ContentSigner signer, BigInteger serial, String name, String issuer,
+            SubjectPublicKeyInfo spki, boolean is_ca, KeyUsage usage) throws IOException {
+        X500Name subjectName = new X500Name(String.format("CN=%s", name));
+        // the signing certificate is self-signed
+        X500Name issuerName = new X500Name(String.format("CN=%s", issuer));
+        // certificate valid from now
+        long now = System.currentTimeMillis();
+        Date notBefore = new Date(now);
+        // the certificate expires in 10 years
+        Date notAfter = new Date(now + 10 * 365 * 24 * 60 * 60 * 1000);
+        X509v3CertificateBuilder builder = new X509v3CertificateBuilder(issuerName, serial,
+                notBefore, notAfter, subjectName, spki);
+        // add CA extension (this certificate will also sign the encryption certificate)
+        builder.addExtension(Extension.basicConstraints, true, new BasicConstraints(is_ca));
+        builder.addExtension(Extension.keyUsage, true, usage);
+        X509CertificateHolder cert = builder.build(signer);
+        return cert.getEncoded();
     }
 
     private ElGamalParameters getParameters(InitArgs args) {
@@ -200,32 +231,23 @@ public class InitTool implements Tool.Runner<InitArgs> {
         return params;
     }
 
-
-    private X509CertificateHolder genCert(ContentSigner signer, SubjectPublicKeyInfo pub,
-            String issuerCN, String subjectCN, BigInteger serial) throws IOException {
-        Date startDate = new Date();
-        Date expiryDate = new Date(startDate.getTime() + 365 * 24 * 60 * 60 * 1000L);
-        X509v1CertificateBuilder v1CertGen =
-                new X509v1CertificateBuilder(new X500Name("CN=" + issuerCN), serial, startDate,
-                        expiryDate, new X500Name("CN=" + subjectCN), pub);
-
-        return v1CertGen.build(signer);
-    }
-
-
-    private void outputCert(X509CertificateHolder cert, Path path) throws IOException {
+    private void writeCertificate(byte[] cert, Path dir, Path path) throws IOException {
+        path = dir.resolve(path);
         Util.createFile(path);
-        String out = Util.encodeCertificate(cert.getEncoded());
+        String out = Util.encodeCertificate(cert);
         Files.write(path, Util.toBytes(out));
     }
 
     private void writeOutEncryptionKey(ElGamalPublicKey key, Path dir, Path der, Path pem)
             throws IOException {
-        Files.write(dir.resolve(pem), Util.encodePublicKey(key.getBytes()).getBytes());
-        Files.write(dir.resolve(der), key.getBytes());
+        Path pemPath = dir.resolve(pem);
+        Path derPath = dir.resolve(der);
+        String encodedKey = Util.encodePublicKey(key.getBytes());
+        Util.createFile(pemPath);
+        Files.write(pemPath, Util.toBytes(encodedKey));
+        Util.createFile(derPath);
+        Files.write(derPath, key.getBytes());
     }
-
-
 
     public static class InitArgs extends Args {
         Arg<String> identifier = Arg.aString(Msg.arg_identifier);

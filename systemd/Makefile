@@ -1,4 +1,4 @@
-SERVICES := choices dds proxy storage voting verification
+SERVICES := choices mid proxy storage voting verification
 OUTPUT   := $(SERVICES:%=ivxv-%@.service)
 
 .PHONY: all

@@ -1,0 +1,41 @@
+@startuml
+title Valijate nimekirja olekudiagramm
+
+skinparam state {
+  BackgroundColor<<NEW>> LightGray
+  BackgroundColor<<OK>> LightGreen
+  BackgroundColor<<Invalid>> LightCoral
+}
+
+state "Saadaval" as AVAILABLE <<NEW>>
+state "Rakendamise ootel" as PENDING
+state "Rakendatud" as APPLIED <<OK>>
+state "Vigane" as INVALID <<Invalid>>
+state "Vahele jäetud" as SKIPPED <<Invalid>>
+
+note right of AVAILABLE
+  Süsteemiväline seisund, mida
+  haldusteenuse andmebaasis
+  ei registreerita
+end note
+
+[*] --> AVAILABLE : Nimekirja saadavaloleku tuvastamine
+AVAILABLE : Nimekiri on saadaval Valimiste Infosüsteemis
+
+AVAILABLE --> PENDING : Korrektse nimekirja \n laadimine \n haldusteenusesse
+PENDING : Nimekiri on Laaditud haldusteenusesse
+
+AVAILABLE --> INVALID : Vigase \n muudatusnimekirja \n laadimine \n haldusteenusesse
+PENDING --> INVALID : Muudatusnimekirja \n nurjunud rakendamine \n nimekirjateenusele
+INVALID : Nimekiri on märgitud vigaseks
+
+PENDING --> APPLIED : Nimekirja \n rakendamine \n nimekirjateenusele
+APPLIED : Nimekiri on rakendatud kogumisteenusele
+
+INVALID --> SKIPPED : Nimekirja \n märkimine \n vahelejätmiseks
+SKIPPED : Nimekirja on märgitud vahelejätmiseks
+
+SKIPPED --> [*]
+APPLIED --> [*]
+
+@enduml

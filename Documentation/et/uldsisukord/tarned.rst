@@ -3,6 +3,239 @@
 Tarned
 ======
 
+Muudatused tarne 1.7.7 koosseisus, erinevused võrreldes tarnega 1.7.6
+--------------------------------------------------------------------------------
+
+Kogumisteenus
+~~~~~~~~~~~~~
+
+Üldised muutused
+
+* Muudatusi ei ole
+
+Haldusteenus
+
+* Muudatusi ei ole
+
+IVXV mikroteenused
+
+* Muudatusi ei ole
+
+Registreerimisteenus
+~~~~~~~~~~~~~~~~~~~~
+
+* Muudatusi ei ole
+
+Kontrollrakendused
+~~~~~~~~~~~~~~~~~~
+
+Android
+
+* Muudatusi ei ole
+
+iOS
+
+* Muudatusi ei ole
+
+Mixnet
+~~~~~~
+
+* Muudatused seoses entroopia allika valikulise tühjendamisega
+
+Töötleja rakendused
+~~~~~~~~~~~~~~~~~~~
+
+Üldised
+
+* Muudatusi ei ole
+
+Võtmerakendus
+
+* Muudatusi ei ole
+
+Töötlemisrakendus
+
+* Muudatusi ei ole
+
+Auditirakendus
+
+* Muudatusi ei ole
+
+Valijarakendused ja seadistusrakendus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Muudatusi ei ole
+
+Dokumentatsioon
+~~~~~~~~~~~~~~~
+
+* Muudatused seoses miksneti muutustega
+
+Logimonitor
+~~~~~~~~~~~
+
+* Muudatusi ei ole
+
+
+Muudatused tarne 1.7.6 koosseisus, erinevused võrreldes tarnega 1.6.0
+--------------------------------------------------------------------------------
+
+Kogumisteenus
+~~~~~~~~~~~~~
+
+Üldised muutused
+
+* Muudatused seoses sisendnimekirjade haldamisega VIS3's
+* Muudatused seoses Ubuntu 20.04 toetamisega
+* Väiksemad muutused/veaparandused vastavalt `changelog` failile
+
+Haldusteenus
+
+* Väiksemad muutused/veaparandused vastavalt `changelog` failile
+
+IVXV mikroteenused
+
+* Väiksemad muutused/veaparandused vastavalt `changelog` failile
+
+Registreerimisteenus
+~~~~~~~~~~~~~~~~~~~~
+
+* Muudatusi ei ole
+
+Kontrollrakendused
+~~~~~~~~~~~~~~~~~~
+
+Android
+
+* Muudatused seoses API versioonile 28 liikumisega
+* Aegunud rakenduse tuvastamine
+
+iOS
+
+* Muudatused seoses iOS versioonile 12 liikumisega
+* Aegunud rakenduse tuvastamine
+
+Mixnet
+~~~~~~
+
+* Muudatused seoses Ubuntu 20.04 toetamisega
+
+Töötleja rakendused
+~~~~~~~~~~~~~~~~~~~
+
+Üldised
+
+* Muudatused seoses sisendnimekirjade haldamisega VIS3s
+
+Võtmerakendus
+
+* Muudatusi ei ole
+
+Töötlemisrakendus
+
+* Töötlemise töövoogude optimeerimine
+
+Auditirakendus
+
+* Muudatusi ei ole
+
+Valijarakendused ja seadistusrakendus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* M1 protsessoritüübi toetamine macOS platvormil
+* FLTK, OpenSSL ja teiste alusteekide versiooniuuendused
+* Aegunud rakenduse tuvastamine
+
+Dokumentatsioon
+~~~~~~~~~~~~~~~
+
+* Muudatused seoses muutustega seadistustes ning terminoloogias
+
+Logimonitor
+~~~~~~~~~~~
+
+* Kaasatud tarnesse
+
+
+
+
+Muudatused tarne 1.6.0 koosseisus, erinevused võrreldes tarnega 1.5.0
+--------------------------------------------------------------------------------
+
+Kogumisteenus
+~~~~~~~~~~~~~
+
+Üldised muutused
+
+* Mobiil-ID REST teenuse toetamine
+* Väiksemad muutused/veaparandused vastavalt `changelog` failile
+
+Haldusteenus
+
+* Väiksemad muutused/veaparandused vastavalt `changelog` failile
+
+IVXV mikroteenused
+
+* Väiksemad muutused/veaparandused vastavalt `changelog` failile
+
+Registreerimisteenus
+~~~~~~~~~~~~~~~~~~~~
+
+* Muudatusi ei ole
+
+Kontrollrakendused
+~~~~~~~~~~~~~~~~~~
+
+Android
+
+* Muudatusi ei ole
+
+iOS
+
+* Muudatusi ei ole
+
+Mixnet
+~~~~~~
+
+* Java versiooni 11 kasutuselevõtt
+* Verificatumi versiooniuuendus
+
+Töötleja rakendused
+~~~~~~~~~~~~~~~~~~~
+
+Üldised
+
+* Java versiooni 11 kasutuselevõtt
+
+Võtmerakendus
+
+* RSA võtmete serialiseerimise uus vorming
+
+Töötlemisrakendus
+
+* Muudatusi ei ole
+
+Auditirakendus
+
+* Muudatusi ei ole
+
+Valijarakendused ja seadistusrakendus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Mobiil-ID REST teenuse tugi
+
+Dokumentatsioon
+~~~~~~~~~~~~~~~
+
+* Mobiil-ID REST teenuse tugi
+
+Logimonitor
+~~~~~~~~~~~
+
+* Eemaldatud tarnest seoses litsentsi lõppemisega
+
+
+
 Muudatused tarne 1.5.0 koosseisus, erinevused võrreldes tarnega 1.4.1
 --------------------------------------------------------------------------------
 
@@ -310,7 +543,7 @@ Võtmerakendus
 
 Töötlemisrakendus
 
-* Lisatud tööriist StatsTool urnist statistikafaili genereerimiseks
+* Lisatud tööriist StatsTool valimiskastist statistikafaili genereerimiseks
 * Lisatud tööriist StatsDiffTool kahe statistikafaili võrdlemiseks
 * ESTEID2018 sertifikaatide ja profiili toetamine
 * digidoc4j 2.1.0 kasutamine
@@ -357,7 +590,7 @@ Haldusteenus
 * Lisatud tööriist jaoskondade/ringkondade nimekirja lisamiseks.
 * Lisatud ringkonnapõhine statistika.
 * Lisatud varundusteenus.
-* Lisatud tööriist varundatud urnide konsolideerimiseks.
+* Lisatud tööriist varundatud valimiskastide konsolideerimiseks.
 * Lisatud tööriist nimekirjade kooskõlalisuse kontrolliks.
 * Lisatud võimekus seadistusfailidele valimisspetsiifiliste prefiksite lisamiseks.
 * Täiendatud haldusliidese kasutajaliidest abinfoga.

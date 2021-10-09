@@ -28,6 +28,10 @@ function getContextData() {
         $('title').prepend(pageContext['election']['id'] + ' – ');
       }
 
+      $('.navbar-brand').html(
+        'Kogumisteenuse haldusteenus ' + pageContext['collector']['version']
+      );
+
       // check user permissons and take action
       if (userContext['permissions'].length === 0) {
         // user has no permissons, generate error message and paint navbar to red
@@ -42,7 +46,7 @@ function getContextData() {
         ['user-admin', 'users.html'],
         ['tech-conf-admin', 'services.html'],
         ['tech-conf-admin', 'config.html'],
-        ['download-ballot-box', 'ballot-box.html'],
+        ['download-ballot-box', 'downloads.html'],
         ['log-view', 'log.html']
       ];
       $.each(permission_page_map, function(index, value) {
@@ -165,4 +169,26 @@ function outputCmdVersion(selector, cfg_type, cfg) {
       '</span>'
     );
   }
+}
+
+/**
+ * Voter list state descriptions
+ */
+const voterListStateDescriptions = new Map();
+voterListStateDescriptions.set('APPLIED', 'RAKENDATUD')
+voterListStateDescriptions.set('PENDING', 'OOTEL')
+voterListStateDescriptions.set('INVALID', 'VIGANE')
+voterListStateDescriptions.set('SKIPPED', 'VAHELE JÄETUD')
+voterListStateDescriptions.set('AVAILABLE', 'SAADAVAL')
+
+/**
+ * Fill voter list state counters
+ */
+function fillVoterListStateCounters(list_state) {
+  $('#list-voters-total').text(list_state['voters-list-total']);
+  $('#list-voters-loaded').text(list_state['voters-list-applied']);
+  $('#list-voters-pending').text(list_state['voters-list-pending']);
+  $('#list-voters-invalid').text(list_state['voters-list-invalid']);
+  $('#list-voters-skipped').text(list_state['voters-list-skipped']);
+  $('#list-voters-available').text(list_state['voters-list-available']);
 }

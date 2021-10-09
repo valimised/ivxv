@@ -51,14 +51,14 @@ include $(COMMONDIR)govar.mk
 
 .PHONY: all
 all: generate
-	$(GO) install $(if $(DEVELOPMENT),-tags development )./...
+	env GOBIN=$(or $(IVXV_GOBIN),$(abspath bin)) \
+		$(GO) install $(if $(DEVELOPMENT),-tags development )./...
 
 .PHONY: lint
 lint: all
-	if which gometalinter > /dev/null; then \
-		env PATH="$(dir $(GO)):$$PATH" TABWIDTH=8 \
-			gometalinter --enable-all \
-			--config $(COMMONDIR)gometalinter.json ./...; \
+	if which golangci-lint > /dev/null; then \
+		env PATH="$(dir $(GO)):$$PATH" \
+			golangci-lint run --config $(COMMONDIR)golangci-lint.yaml; \
 	fi
 
 .PHONY: test
@@ -90,5 +90,5 @@ clean:
 		-name gen_import.go -o \
 		-name gen_import_dev.go \
 		\) -delete
-	$(GO) clean -i ./...
+	-$(GO) clean -i ./...
 	rm -rf bin/ pkg/

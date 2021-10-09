@@ -50,7 +50,7 @@ Korrektse dekrüpteerimsie tõendi kontrolliks tuleb kontrollida, et :math:`c_0^
 Korrektse teisendamise kontroll
 ===============================
 
-Kontrollimaks, et teisendus IVXV e-urni ja Verificatumi krüptogrammide vahel on
+Kontrollimaks, et teisendus IVXV e-valimiskasti ja Verificatumi krüptogrammide vahel on
 tehtud korrektselt, tuleb korrata teisendust sõltumatult. Pärast sõltumatut
 teisendust tuleb võrrelda saadud väljundeid. Kuna teisendamine on deterministlik
 protseduur, siis garanteerib kordamine tegevuse õigsuse.

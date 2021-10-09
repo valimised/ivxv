@@ -5,18 +5,18 @@
 Töötlemisrakendus
 =================
 
-Töötlemisrakendus on käsurearakendus e-urni kontrollimiseks ja edasiseks
+Töötlemisrakendus on käsurearakendus e-valimiskasti kontrollimiseks ja edasiseks
 töötlemiseks peale e-hääletamise lõppu.
 
 Töötlemisrakenduse põhilised tööriistad on *check*, *squash*, *revoke* ja
 *anonymize*, mis käivitatakse loetletud järjekorras vastavalt ette nähtud
 valimisprotseduuridele.
 Põhitööriistade sisendi hulgas on alati kas kogumisteenuse või eelmise tööriista
-poolt väljastatud e-urn ja e-urni digitaalselt allkirjastatud räsi.
-Väljundi hulgas on töötlemisetapi tulemuseks olev e-urn koos allkirjastamata
+poolt väljastatud e-valimiskast ja e-valimiskasti digitaalselt allkirjastatud räsi.
+Väljundi hulgas on töötlemisetapi tulemuseks olev e-valimiskast koos allkirjastamata
 räsiga. Kuna rakendused käivitatakse internetiühenduseta arvutis, tuleb
 räsifailid tõsta digitaalseks allkirjastamiseks välisesse seadmesse.
-E-urni räsi arvutatakse funktsiooniga ``hex(sha256(<fail>))``.
+E-valimiskasti räsi arvutatakse funktsiooniga ``hex(sha256(<fail>))``.
 
 Lisaks põhitööriistadele on rakendusel veel neli täiendavat tööriista:
 *export*, *verify*, *stats* ja *statsdiff*.
@@ -29,11 +29,11 @@ Alljärgnevalt on kirjeldatud tööriistade seadistusi.
 
 .. _processor-check:
 
-E-urni töötlemine - verifitseerimine
-------------------------------------
+E-valimiskasti töötlemine - verifitseerimine
+--------------------------------------------
 
-Kogumisteenusest väljastatud e-urni verifitseerimiseks kasutatakse tööriista
-*check*. Urni verifitseeritakse usaldusjuure, valijate nimekirjade, ringkondade
+Kogumisteenusest väljastatud e-valimiskasti verifitseerimiseks kasutatakse tööriista
+*check*. valimiskasti verifitseeritakse usaldusjuure, valijate nimekirjade, ringkondade
 nimekirja ja registreerimisteenuse väljundi vastu.
 
 Verifitseerimise käigus kontrollitakse järgmiseid põhilisi omadusi:
@@ -41,46 +41,37 @@ Verifitseerimise käigus kontrollitakse järgmiseid põhilisi omadusi:
 * Ringkondade nimekirja ja valijate nimekirjade andmeterviklus ja
   kooskõlalisus;
 
-* E-urni andmeterviklus;
+* E-valimiskasti andmeterviklus;
 
 * E-hääletajate valimisõigus e. kuuluvus valijate nimekirja (kontrollitakse
   juhul kui valijate nimekirjad on seadistustes kirjeldatud);
 
-* E-urnis sisalduvate häälte vastavus digiallkirja vormingule;
+* E-valimiskastis sisalduvate häälte vastavus digiallkirja vormingule;
 
 * Registreerimisandmete andmeterviklus;
 
-* E-urnis sisalduvate häälte vastavus registreerimisandmetega.
+* E-valimiskastis sisalduvate häälte vastavus registreerimisandmetega.
 
-E-urni verifitseerimine on töömahukas protsess. 4-tuumalise *i7* protsessoriga
+E-valimiskasti verifitseerimine on töömahukas protsess. 4-tuumalise *i7* protsessoriga
 arvuti suudab ühe sekundi jooksul töödelda umbes 200 häält. Töötlemise jooksul
 kuvatakse kasutajale edenemisriba, mille alusel on võimalik ennustada
 töötlemisele kuluvat aega.
 
-Suure e-urni verifitseerimisel võib olla tarvilik suurendada protsessi
-mälupiirangut. Vaikimisi mälupiiranguks on seatud 8GB.
-
-Seda saab teha kasutades keskkonnamuutujat ``PROCESSOR_OPTS``, mis defineerib
-täiendavad argumendid Java virtuaalmasinale. Protsessi mälupiirangu
-suurendamiseks tuleb kasutada argumenti ``-Xmx{N}G``, kus ``{N}`` on
-mälupiirangu suurus gigabaitides. Näiteks 10 gigabaidi mälu eraldamiseks tuleb
-seada ``PROCESSOR_OPTS=-Xmx10G``.
-
 :check.ballotbox:
-        Kogumisteenusest väljastatud e-urn.
+        Kogumisteenusest väljastatud e-valimiskast.
 
 :check.ballotbox_checksum:
-        Kogumisteenusest väljastatud e-urni digitaalselt allkirjastatud räsi.
+        Kogumisteenusest väljastatud e-valimiskasti digitaalselt allkirjastatud räsi.
 
-        Kui määramata, siis ei väljastata korrastatud e-urni järgmisteks
-        etappideks. Kasulik mitte-lõpliku e-urni valimisaegseks kontrolliks.
+        Kui määramata, siis ei väljastata korrastatud e-valimiskasti järgmisteks
+        etappideks. Kasulik mitte-lõpliku e-valimiskasti valimisaegseks kontrolliks.
 
 :check.districts:
         Digitaalselt allkirjastatud ringkondade nimekiri.
 
 :check.registrationlist:
         Registreerimisteenusest pärit registreerimisandmed. Kui määramata, siis
-        ei kontrollita e-urnis sisalduvate häälte vastavust
+        ei kontrollita e-valimiskastis sisalduvate häälte vastavust
         registreerimisandmetega.
 
 :check.registrationlist_checksum:
@@ -104,7 +95,7 @@ seada ``PROCESSOR_OPTS=-Xmx10G``.
 
 :check.voterlists.signature:
         Valijate nimekirja allkiri, mis on antud algoritmiga
-        ``sha256WithRSAEncryption``.
+        ``ecdsa-with-SHA256``.
 
 :check.districts_mapping:
         Valijate nimekirjas oleva ringkonna ja jaoskonna teisendusfail
@@ -114,15 +105,19 @@ seada ``PROCESSOR_OPTS=-Xmx10G``.
         Hääletamise algusaeg. Sellest varasema hääletusajaga hääli käsitletakse
         proovihäältena ning need lugemisele ei lähe.
 
+:check.voterforeignehak:
+        Alaliselt välisriigis elavate valijate ringkonnakuuluvuse tuvastamiseks
+        kasutatav EHAK-kood. Vaikeväärtus "0000".
+
 :check.out:
         Tööriista väljundkaust. Sellesse kausta tekivad:
 
-        #. Tervikluskontrolliga korrastatud e-urn :file:`<valimise id>-bb-1.json`;
+        #. Tervikluskontrolliga korrastatud e-valimiskast :file:`<valimise id>-bb-1.json`;
 
-        #. Tervikluskontrolliga korrastatud e-urni räsi
+        #. Tervikluskontrolliga korrastatud e-valimiskasti räsi
            :file:`<valimise id>-bb-1.json.sha256sum`;
 
-        #. E-urni töötlemisvigade raport :file:`ballotbox_errors.txt`
+        #. E-valimiskasti töötlemisvigade raport :file:`ballotbox_errors.txt`
            (valikuline);
 
         #. Valijate nimekirjade töötlemisvigade raport
@@ -140,30 +135,35 @@ seada ``PROCESSOR_OPTS=-Xmx10G``.
 
 .. _processor-squash:
 
-E-urni töötlemine - korduvhäälte tühistamine
---------------------------------------------
+E-valimiskasti töötlemine - korduvhäälte tühistamine
+----------------------------------------------------
 
 Korduvate e-häälte tühistamiseks kasutatakse tööriista *squash*.
-Tööriista sisendiks on tööriista *check* poolt koostatud e-urn.
+Tööriista sisendiks on tööriista *check* poolt koostatud e-valimiskast.
 Korduvhäälte tühistamisel jäetakse alles iga hääletaja kõige hilisema hääl ja
 eemaldatakse kõik varasemad hääled.
 
 :squash.ballotbox:
-        Tervikluskontrolliga korrastatud e-urn.
+        Tervikluskontrolliga korrastatud e-valimiskast.
 
 :squash.ballotbox_checksum:
-        Tervikluskontrolliga korrastatud e-urni digitaalselt allkirjastatud
+        Tervikluskontrolliga korrastatud e-valimiskasti digitaalselt allkirjastatud
         räsi.
 
 :squash.districts:
         Digitaalselt allkirjastatud ringkondade nimekiri.
 
+:squash.enckey:
+        Krüpteerimise avaliku võtme faili asukoht (võtmerakenduse väljund).
+        Võtit kasutatakse krüpteeritud häälte eelkontrolliks, eristamaks
+        päriselt krüpteeritud hääli suvalisest binaarsest prügist.
+
 :squash.out:
         Tööriista väljundkaust. Sellesse kausta luuakse:
 
-        #. Korduvhäältest puhastatud e-urn :file:`<valimise id>-bb-2.json`;
+        #. Korduvhäältest puhastatud e-valimiskast :file:`<valimise id>-bb-2.json`;
 
-        #. Korduvhäältest puhastatud e-urni räsi :file:`<valimise
+        #. Korduvhäältest puhastatud e-valimiskasti räsi :file:`<valimise
            id>-bb-2.json.sha256sum`;
 
         #. E-hääletanute nimekiri JSON-vormingus :file:`<valimise
@@ -187,18 +187,18 @@ eemaldatakse kõik varasemad hääled.
 
 .. _processor-revoke:
 
-E-urni töötlemine - häälte tühistamine ja ennistamine jaoskonnainfo põhjal
---------------------------------------------------------------------------
+E-valimiskasti töötlemine - häälte tühistamine ja ennistamine jaoskonnainfo põhjal
+----------------------------------------------------------------------------------
 
 Häälte tühistamiseks ja ennistamiseks jaoskonnainfo põhjal kasutatakse tööriista
-*revoke*. Tööriist saab sisendiks tööriista *squash* poolt koostatud e-urni ning
+*revoke*. Tööriist saab sisendiks tööriista *squash* poolt koostatud e-valimiskasti ning
 rakendab sellele sisendiks antud tühistus- ja ennistusnimekirjad.
 
 :revoke.ballotbox:
-        Korduvhäältest puhastatud e-urn.
+        Korduvhäältest puhastatud e-valimiskast.
 
 :revoke.ballotbox_checksum:
-        Korduvhäältest puhastatud e-urni digitaalselt allkirjastatud räsi.
+        Korduvhäältest puhastatud e-valimiskasti digitaalselt allkirjastatud räsi.
 
 :revoke.districts:
         Digitaalselt allkirjastatud ringkondade nimekiri.
@@ -209,10 +209,10 @@ rakendab sellele sisendiks antud tühistus- ja ennistusnimekirjad.
 :revoke.out:
         Tööriista väljundkaust. Sellesse kausta tekivad:
 
-        #. Korduvhääletajate häältest puhastatud e-urn :file:`<valimise
+        #. Korduvhääletajate häältest puhastatud e-valimiskast :file:`<valimise
            id>-bb-3.json`;
 
-        #. Korduvhääletajate häältest puhastatud e-urni räsi
+        #. Korduvhääletajate häältest puhastatud e-valimiskasti räsi
            :file:`<valimise id>-bb-3.json.sha256sum`;
 
         #. Tühistamiste ja ennistamiste aruanne :file:`<valimise
@@ -233,32 +233,27 @@ rakendab sellele sisendiks antud tühistus- ja ennistusnimekirjad.
 
 .. _processor-anonymize:
 
-E-urni töötlemine - anonüümistamine
------------------------------------
+E-valimiskasti töötlemine - anonüümistamine
+-------------------------------------------
 
-E-urni anonüümistamiseks kasutatakse tööriista *anonymize*.
-Tööriist saab sisendiks tööriista *revoke* poolt koostatud e-urni ning eemaldab
+E-valimiskasti anonüümistamiseks kasutatakse tööriista *anonymize*.
+Tööriist saab sisendiks tööriista *revoke* poolt koostatud e-valimiskasti ning eemaldab
 sellest valijate info.
 
 :anonymize.ballotbox:
-        Korduvhääletajate häältest puhastatud e-urn.
+        Korduvhääletajate häältest puhastatud e-valimiskast.
 
 :anonymize.ballotbox_checksum:
-        Korduvhääletajate häältest puhastatud e-urni digitaalselt allkirjastatud
+        Korduvhääletajate häältest puhastatud e-valimiskasti digitaalselt allkirjastatud
         räsi.
-
-:anonymize.enckey:
-        Krüpteerimise avaliku võtme faili asukoht (võtmerakenduse väljund).
-        Võtit kasutatakse krüpteeritud häälte eelkontrolliks, eristamaks
-        päriselt krüpteeritud hääli suvalisest binaarsest prügist.
 
 :anonymize.out:
         Tööriista väljundkaust. Sellesse kausta luuakse:
 
-        #. Hääletajate isikuandmetest puhastatud e-urn :file:`<valimis
+        #. Hääletajate isikuandmetest puhastatud e-valimiskast :file:`<valimis
            id>-bb-4.json`;
 
-        #. Hääletajate isikuandmetest puhastatud e-urni räsi :file:`<valimise
+        #. Hääletajate isikuandmetest puhastatud e-valimiskasti räsi :file:`<valimise
            id>-bb-4.json.sha256sum`;
 
         #. *Log3* fail e. lugemisele läinud hääled :file:`<valimise
@@ -296,14 +291,14 @@ Tööriist *export*
 *****************
 
 *Export* on lisavahend, millega saab eksportida kogumisteenusest väljastatud
-e-urni seest täielikke digitaalselt allkirjastatud hääle konteinereid. On
+e-valimiskasti seest täielikke digitaalselt allkirjastatud hääle konteinereid. On
 võimalik eksportida nii kõiki hääli korraga, kui konkreetse valija hääli.
 
 :export.ballotbox:
-        Kogumisteenusest väljastatud e-urn.
+        Kogumisteenusest väljastatud e-valimiskast.
 
 :export.ballotbox_checksum:
-        Kogumisteenusest väljastatud e-urni digitaalselt allkirjastatud räsi.
+        Kogumisteenusest väljastatud e-valimiskasti digitaalselt allkirjastatud räsi.
 
 :export.voter_id:
         Valija identifikaator (valikuline).
@@ -311,10 +306,10 @@ võimalik eksportida nii kõiki hääli korraga, kui konkreetse valija hääli.
 :export.out:
         Tööriista väljundkaust. Sellesse kausta tekivad:
 
-        #. E-urni töötlemisvigade raport :file:`ballotbox_errors.txt`
+        #. E-valimiskasti töötlemisvigade raport :file:`ballotbox_errors.txt`
            (valikuline);
 
-        #. E-urnist eksporditud häälte digitaalselt allkirjastatud konteinerid.
+        #. E-valimiskastist eksporditud häälte digitaalselt allkirjastatud konteinerid.
 
 
 :file:`processor.export.yaml`:
@@ -328,15 +323,15 @@ Tööriist *stats*
 ****************
 
 *Stats* on lisavahend, millega saab arvutada häälte ja hääletajate statistikat
-e-urni põhjal. Statistikat on võimalik piiritleda ajavahemikuga ning väljundit
+e-valimiskasti põhjal. Statistikat on võimalik piiritleda ajavahemikuga ning väljundit
 on võimalik piiritleda koondandmetega kui ka ringkondade kaupa. NB! Tööriist ei
 kontrolli digitaalallkirju, häälte töötlemiseks tuleb kasutada *check*,
 *squash*, *revoke*, *anonymize* töövoogu.
 
 :stats.ballotbox:
-        E-urn, mille põhjal statistika koostada. Kui faili laiendiks on
-        ``.json``, siis peab see olema olema töödeldud e-urn. Vastasel juhul
-        peab see olema kogumisteenusest väljastatud e-urn.
+        E-valimiskast, mille põhjal statistika koostada. Kui faili laiendiks on
+        ``.json``, siis peab see olema olema töödeldud e-valimiskast. Vastasel juhul
+        peab see olema kogumisteenusest väljastatud e-valimiskast.
 
 :stats.election_day:
         Valimispäev. Kõikide e-hääletanute vanused arvutatakse statistika
@@ -355,34 +350,38 @@ kontrolli digitaalallkirju, häälte töötlemiseks tuleb kasutada *check*,
         kaupa statistika väljastamiseks. Kui on määramata, siis väljastatakse
         ainult koondstatistika.
 
-        Argument on kohustuslik, kui e-urn on kogumisteenusest väljastatud ja
-        valijate nimekirjad on antud.
-
 :stats.vlkey:
         Valijate nimekirjade verifitseerimiseks kasutatav avalik võti.
-        Argument on kohustuslik, kui e-urn on kogumisteenusest väljastatud ja
-        valijate nimekirjad on antud.
+        Argument on kohustuslik valijate nimekirjade kasutamise korral.
 
 :stats.voterlists:
         Valijate nimekirjade loend. Vajalik kogumisteenusest väljastatud
-        e-urnist valija ringkonna tuvastamiseks. Kui on määramata, siis sellise
-        e-urni puhul väljastatakse ainult koondstatistika.
+        e-valimiskastist valija ringkonna tuvastamiseks.
+
+        Argument on kohustuslik, kui e-valimiskast on väljastatud kogumisteenusest ja
+        statistikat väljastatakse ringkondade kaupa.
 
 :stats.voterlists.path:
         Valijate nimekirja fail.
 
 :stats.voterlists.signature:
         Valijate nimekirja allkiri, mis on antud algoritmiga
-        ``sha256WithRSAEncryption``.
+        ``ecdsa-with-SHA256``.
+
+:check.voterforeignehak:
+        Alaliselt välisriigis elavate valijate ringkonnakuuluvuse tuvastamiseks
+        kasutatav EHAK-kood. Vaikeväärtus "0000".
 
 :stats.out:
         Tööriista väljundkaust. Sellesse kausta tekivad:
 
-        #. E-urni statistika JSON-vormingus :file:`<valimise id>-stats.json`;
+        #. E-valimiskasti statistika JSON-vormingus :file:`<valimise id>-stats.json`
+           (:file:`ELECTION-stats.json` kui valimist ei suudeta tuvastada);
 
-        #. E-urni statistika CSV-vormingus :file:`<valimise id>-stats.csv`;
+        #. E-valimiskasti statistika CSV-vormingus :file:`<valimise id>-stats.csv`
+           (:file:`ELECTION-stats.csv` kui valimist ei suudeta tuvastada);
 
-        #. E-urni töötlemisvigade raport :file:`ballotbox_errors.txt`
+        #. E-valimiskasti töötlemisvigade raport :file:`ballotbox_errors.txt`
            (tekib vigade korral);
 
         #. Valijate nimekirjade töötlemisvigade raport

@@ -25,15 +25,23 @@ Nimekirja võimalikud seisundid on:
 Valijate nimekirjad
 -------------------
 
-Valijate nimekirjade kohta kuvatakse laaditud ja rakendatud nimekirjade arvu ning
-loetelu kõigi laaditud nimekirjade ja versioonide (nimekirja signeerija andmed
-koos digiallkirja ajatempliga) kohta koos nimekirja seisundiga kogumisteenuses.
+Valijate nimekirjade kohta kuvatakse nimekirjade koguarvu, nimekirjade arvu
+seisundi kaupa ning loetelu kõigi kogumisteenuses registreeritud nimekirjade
+kohta (versioon ja seisund).
 
-Nimekirja võimalikud seisundid võivad olla järgmised:
+Valijate algnimekirja korral on nimekirja versioon nimekirja signeerija andmed
+koos digiallkirja ajatempliga; muudatusnimekirja korral nimekirja allalaadimise
+URL koos allalaadimise hetke ajatempliga.
 
-#. Laaditud haldusteenusesse;
+Nimekirja võimalikud seisundid on:
 
-#. Rakendatud kogumisteenusele.
+#. Rakendamise ootel;
+
+#. Rakendatud kogumisteenusele;
+
+#. Vigane;
+
+#. Vahele jäetud.
 
 
 Ringkondade nimekiri
@@ -47,7 +55,9 @@ Nimekirja võimalikud seisundid on:
 
 #. Laadimata;
 
-#. Laaditud haldusteenusesse.
+#. Laaditud haldusteenusesse;
+
+#. Rakendatud kogumisteenusele.
 
 
 Nimekirjade laadimine kogumisteenusesse

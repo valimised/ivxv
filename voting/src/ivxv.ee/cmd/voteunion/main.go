@@ -113,7 +113,7 @@ func (u *union) zipadd(path string) (code int, err error) {
 	if err != nil {
 		return exit.NoInput, fmt.Errorf("failed to open input: %v", err)
 	}
-	defer r.Close() // nolint: errcheck, ignore close failure of read-only fd.
+	defer r.Close()
 
 	// Status line: 100% 100000/100000 filename
 	addpercent := progress.Percent(uint64(len(r.File)), false)
@@ -143,7 +143,7 @@ func (u *union) fileadd(f *zip.File, path string) (code int, err error) {
 	if err != nil {
 		return exit.DataErr, fmt.Errorf("failed to open file: %v", err)
 	}
-	defer src.Close() // nolint: errcheck, ignore close failure of read-only fd.
+	defer src.Close()
 
 	// Copy the contents of the file to hash.
 	u.hash.Reset()
@@ -162,6 +162,7 @@ func (u *union) fileadd(f *zip.File, path string) (code int, err error) {
 		dst = io.MultiWriter(dst, o)
 	}
 
+	//nolint:gosec // Only used on trusted Zip archives.
 	if _, err = io.CopyBuffer(dst, src, u.block); err != nil {
 		return exit.Unavailable, fmt.Errorf("failed to copy contents of file: %v", err)
 	}

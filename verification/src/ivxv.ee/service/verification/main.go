@@ -54,8 +54,8 @@ func (r *RPC) Verify(args Args, resp *Response) error {
 	// this happens, then try from the beginning, but still use the time
 	// the request originally came in.
 	for {
-		// Get the verification count and vote time for the vote ID.
-		count, at, err := r.storage.GetVerificationStats(args.Ctx, args.VoteID)
+		// Get the verification statistics for the vote ID.
+		count, at, latest, err := r.storage.GetVerificationStats(args.Ctx, args.VoteID)
 		if err != nil {
 			if errors.CausedBy(err, new(storage.NotExistError)) != nil {
 				log.Error(args.Ctx, BadVoteIDError{Err: err})
@@ -78,6 +78,12 @@ func (r *RPC) Verify(args Args, resp *Response) error {
 			now.After(at.Add(time.Duration(limit)*time.Minute)) {
 
 			log.Error(args.Ctx, VerificationTimeError{At: at})
+			return server.ErrBadRequest
+		}
+
+		// Check if this is the latest vote.
+		if r.election.Verification.LatestOnly && !latest {
+			log.Error(args.Ctx, VerificationNotLatestError{})
 			return server.ErrBadRequest
 		}
 

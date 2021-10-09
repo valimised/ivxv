@@ -18,7 +18,7 @@ public class Ballot {
     private final String version;
     private final Voter voter;
     private final Map<String, byte[]> votes;
-    private boolean isRevoked;
+    private boolean isInvalid;
 
     @JsonCreator
     public Ballot( //
@@ -27,11 +27,10 @@ public class Ballot {
             @JsonProperty("version") String version, //
             @JsonProperty("name") String name, //
             @JsonProperty("districtId") String districtId, //
-            @JsonProperty("stationId") String stationId, //
-            @JsonProperty("rowNumber") Long rowNumber, //
+            @JsonProperty("parish") String parishId, //
             @JsonProperty("votes") Map<String, byte[]> votes) {
         this(id, Instant.parse(time), version,
-                new Voter(null, name, null, districtId, stationId, rowNumber), votes);
+                new Voter(null, name, null, parishId, new LName(districtId)), votes);
     }
 
     public Ballot(String id, Instant time, String version, Voter voter, Map<String, byte[]> votes) {
@@ -67,17 +66,8 @@ public class Ballot {
         return voter.getDistrict().getId();
     }
 
-    @JsonIgnore
-    public LName getStation() {
-        return voter.getStation();
-    }
-
-    public String getStationId() {
-        return voter.getStation().getId();
-    }
-
-    public Long getRowNumber() {
-        return voter.getRowNumber();
+    public String getParish() {
+        return voter.getParish();
     }
 
     /**
@@ -87,22 +77,23 @@ public class Ballot {
         return votes;
     }
 
-    boolean isRevoked() {
-        return isRevoked;
+    boolean isInvalid() {
+        return isInvalid;
     }
 
     /**
-     * Sets the revoked status of the ballot if the status is not already the same as the parameter.
-     * 
-     * @param isRevoked
+     * Sets the invalid status of the ballot if the status is not already the same as the parameter.
+     *
+     * @param isInvalid
      * @return Returns whether the operation was successful.
      */
-    boolean setRevokedState(boolean isRevoked) {
-        if (this.isRevoked == isRevoked) {
+    boolean setInvalidState(boolean isInvalid) {
+        if (this.isInvalid == isInvalid) {
             return false;
         }
-        this.isRevoked = isRevoked;
+        this.isInvalid = isInvalid;
         return true;
     }
+
 
 }

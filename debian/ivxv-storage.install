@@ -1,4 +1,5 @@
 #!/usr/bin/dh-exec
-usr/bin/storage => usr/bin/ivxv-storage
+usr/bin/storage    => usr/bin/ivxv-storage
+usr/bin/storageidx => usr/bin/ivxv-storageidx
 
 usr/lib/systemd/user/ivxv-storage@.service

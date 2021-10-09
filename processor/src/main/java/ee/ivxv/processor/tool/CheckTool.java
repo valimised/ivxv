@@ -9,6 +9,7 @@ import ee.ivxv.common.crypto.CryptoUtil.PublicKeyHolder;
 import ee.ivxv.common.model.BallotBox;
 import ee.ivxv.common.model.District;
 import ee.ivxv.common.model.DistrictList;
+import ee.ivxv.common.model.SkipCommand;
 import ee.ivxv.common.model.LName;
 import ee.ivxv.common.model.Voter;
 import ee.ivxv.common.model.VoterList;
@@ -41,6 +42,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +51,7 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
     private static final Logger log = LoggerFactory.getLogger(CheckTool.class);
 
     static final ASN1ObjectIdentifier TS_KEY_ALG_ID = PKCSObjectIdentifiers.rsaEncryption;
-    static final ASN1ObjectIdentifier VL_KEY_ALG_ID = PKCSObjectIdentifiers.rsaEncryption;
+    static final ASN1ObjectIdentifier VL_KEY_ALG_ID = X9ObjectIdentifiers.id_ecPublicKey;
 
     private static final String OUT_BB_TMPL = "bb-1.json";
 
@@ -97,21 +99,20 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
         // Voter lists not given - using fictive voter list that accepts all
 
         if (dl.getDistricts().size() != 1) {
-            throw new MessageException(Msg.e_vl_fictive_single_district_and_station_required);
+            throw new MessageException(Msg.e_vl_fictive_single_district_and_parish_required);
         }
         Map.Entry<String, District> de = dl.getDistricts().entrySet().iterator().next();
-        if (de.getValue().getStations().size() != 1) {
-            throw new MessageException(Msg.e_vl_fictive_single_district_and_station_required);
+        if (de.getValue().getParish().size() != 1) {
+            throw new MessageException(Msg.e_vl_fictive_single_district_and_parish_required);
         }
-        String stationId = de.getValue().getStations().iterator().next();
+        String parish = de.getValue().getParish().iterator().next();
 
         console.println(Msg.m_vl_fictive_warning, Msg.m_vl_fictive_voter_name);
 
         String voterName = ctx.i.i18n.get(Msg.m_vl_fictive_voter_name);
         LName district = new LName(de.getKey());
-        LName station = new LName(stationId);
-
-        return (vid, version) -> new Voter(vid, voterName, null, district, station, null);
+        // TODO test it
+        return (vid, version) -> new Voter(vid, voterName, null, parish, district);
     }
 
     private DistrictsMapper getDistrictsMapper(Path path) throws Exception {
@@ -143,9 +144,23 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
         console.println(Msg.m_read);
         // NB! Must process voter lists in certain order. Using the order of input values.
         args.voterLists.value().forEach(vl -> {
-            VoterList list = loader.load(vl.path.value(), vl.signature.value());
+            SkipCommand skip_cmd = null;
+            if (vl.skip_cmd.value() != null) {
+                try {
+                    skip_cmd = tool.readSkipCommand(vl.skip_cmd.value());
+                }
+                catch (Exception e) {
+                    throw new MessageException(Msg.e_skip_cmd_loading);
+                }
+            }
+
+            VoterList list = loader.load(vl.path.value(), vl.signature.value(),
+                    vl.skip_cmd.value(), skip_cmd, args.foreignEHAK.value());
             console.println(Msg.m_vl, list.getName());
-            console.println(Msg.m_vl_type, list.getType());
+            console.println(Msg.m_vl_type, list.getChangeset());
+            if (skip_cmd != null) {
+                console.println(Msg.m_vl_skipped);
+            }
             console.println(Msg.m_vl_total_added, list.getAdded().size());
             console.println(Msg.m_vl_total_removed, list.getRemoved().size());
             console.println();
@@ -321,6 +336,7 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
                 new TreeList<>(Msg.arg_voterlists, VoterListEntry::new).setOptional();
         Arg<Path> distMapping = Arg.aPath(Msg.arg_districts_mapping, true, false).setOptional();
         Arg<Instant> elStart = Arg.anInstant(Msg.arg_election_start);
+        Arg<String> foreignEHAK = Arg.aString(Msg.arg_voterforeignehak).setOptional();
 
         Arg<Path> out = Arg.aPath(Msg.arg_out, false, null);
 
@@ -335,6 +351,7 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
             args.add(voterLists);
             args.add(distMapping);
             args.add(elStart);
+            args.add(foreignEHAK);
             args.add(out);
         }
 
@@ -343,10 +360,12 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
     static class VoterListEntry extends Args {
         Arg<Path> path = Arg.aPath(Msg.arg_path, true, false);
         Arg<Path> signature = Arg.aPath(Msg.arg_signature, true, false);
+        Arg<Path> skip_cmd = Arg.aPath(Msg.arg_skip_cmd, true, false).setOptional();
 
         VoterListEntry() {
             args.add(path);
             args.add(signature);
+            args.add(skip_cmd);
         }
     }
 

@@ -48,7 +48,7 @@ func firstBoot(wd string) (bool, error) {
 		}
 		return false, OpenWALDirError{Err: err}
 	}
-	defer f.Close() // nolint: errcheck, ignore close failure of read-only fd.
+	defer f.Close()
 	files, err := f.Readdirnames(-1)
 	if err != nil {
 		return false, ReadWALDirError{Err: err}
@@ -139,7 +139,6 @@ next:
 			if err != nil {
 				log.Debug(ctx, PingClientError{Err: err})
 			} else {
-				// nolint: errcheck, ignore close errors of ping client.
 				defer pingc.Close()
 
 				opctx, cancel := context.WithTimeout(ctx, optime)
@@ -230,7 +229,6 @@ func updateMembers(ctx context.Context, conf clientv3.Config, optime time.Durati
 		return EtcdClientError{Err: err}
 	}
 	defer func() {
-		// nolint: vetshadow, false positive.
 		if err := client.Close(); err != nil {
 			// Only log close error, do not return.
 			log.Error(ctx, EtcdClientCloseError{Err: err})

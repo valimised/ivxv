@@ -5,6 +5,7 @@ import ee.ivxv.common.model.AnonymousBallotBox;
 import ee.ivxv.common.model.BallotBox;
 import ee.ivxv.common.model.CandidateList;
 import ee.ivxv.common.model.DistrictList;
+import ee.ivxv.common.model.SkipCommand;
 import ee.ivxv.common.model.IBallotBox;
 import ee.ivxv.common.model.Proof;
 import ee.ivxv.common.service.bbox.BboxHelper;
@@ -126,6 +127,18 @@ public class ToolHelper {
         console.println(M.m_election_id, districts.getElection());
 
         return districts;
+    }
+
+    public SkipCommand readSkipCommand(Path path) throws Exception {
+        console.println();
+        console.println(M.m_skip_cmd_loading, path);
+        container.requireContainer(path);
+        Container c = container.read(path.toString());
+        ContainerHelper ch = new ContainerHelper(console, c);
+        DataFile file = ch.getSingleFileAndReport(M.m_skip_cmd_arg_for_cont);
+        SkipCommand skip = SkipCommandUtil.readSkipCommand(file.getStream());
+        console.println(M.m_skip_cmd_loaded);
+        return skip;
     }
 
     public Proof readJsonProofs(Path path) throws Exception {

@@ -22,7 +22,7 @@ Võtmerakenduse omadused
 
 #. Võtmerakendus logib tekkivad veaolukorrad üksikasjalikult;
 
-#. Võtmerakendus tagab urni töötluse logimisel logiandmete tervikluse
+#. Võtmerakendus tagab valimiskasti töötluse logimisel logiandmete tervikluse
    kontrollivõimalused;
 
 #. Võtmerakendus verifitseerib digiallkirju vastavalt määratud nõuetele;

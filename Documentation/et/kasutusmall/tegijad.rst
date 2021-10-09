@@ -33,7 +33,7 @@ Koguja
 
 *Koguja* on isik, kes haldab Kogumisteenust, Valijarakendust ja Kontrollrakendust tehniliselt.
 
-*Kogumisteenus* on serverisüsteem, mis tuvastab hääleõiguslikkust Tuvastusteenuse abil, väljstab kandidaatide nimekirja, aitab Valijarakendusel Allkirjastamisteenuse abil e-häält moodustada, talletab hääli e-urni ning registreerib neid Registreerimisteenuses. Kogumisteenus vastab Kontrollrakenduse poolt tehtud hääle tervikluse kontrollpäringutele.
+*Kogumisteenus* on serverisüsteem, mis tuvastab hääleõiguslikkust Tuvastusteenuse abil, väljstab kandidaatide nimekirja, aitab Valijarakendusel Allkirjastamisteenuse abil e-häält moodustada, talletab hääli e-valimiskasti ning registreerib neid Registreerimisteenuses. Kogumisteenus vastab Kontrollrakenduse poolt tehtud hääle tervikluse kontrollpäringutele.
 
 *Kogumisteenuse Haldur* on kas Korraldaja, Koguja või Klienditugi. Koguja on Kogumisteenuse tehniline haldur. Kogumisteenuse sisuline haldur on Korraldaja. Kogumisteenus pakub informatiivset liidest Klienditoele.
 
@@ -64,7 +64,7 @@ Töötleja
 
 Töötleja võib e-hääli täiendavalt krüptograafiliselt anonüümistada kasutades Miksimisrakendust.
 
-*Töötlemisrakendus* on rakendus, mille abil kontrollitakse häälte individuaalset terviklust ja e-urni terviklust, tühistatakse hääli, väljastatakse hääletanute nimekirju ning ringkondade kaupa rühmitatud anonüümistatud hääli. Töötlemisrakenduse sisendi annavad Koguja, Registreerimisteenus ja Korraldaja. Töötlemisrakendust võib käitada ka Audiitor Töötleja töötulemuste kontrollimiseks.
+*Töötlemisrakendus* on rakendus, mille abil kontrollitakse häälte individuaalset terviklust ja e-valimiskasti terviklust, tühistatakse hääli, väljastatakse hääletanute nimekirju ning ringkondade kaupa rühmitatud anonüümistatud hääli. Töötlemisrakenduse sisendi annavad Koguja, Registreerimisteenus ja Korraldaja. Töötlemisrakendust võib käitada ka Audiitor Töötleja töötulemuste kontrollimiseks.
 
 Miksija
 -------

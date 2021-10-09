@@ -12,13 +12,13 @@ testkey:
 decrypt:
 # Valimise unikaalne identifikaator.
   identifier: DEMO
-# Küsimuste arv anonüümistatud e-urnis. Vaikimisi väärtus on 1.
+# Küsimuste arv anonüümistatud e-valimiskastis. Vaikimisi väärtus on 1.
   questioncount: 1
   protocol:
     recover:
       threshold: 5
       parties: 9
-# decrypt.anonballotbox Töötlemisrakenduse või miksimisrakenduse poolt loodud e-urn anonüümistatud häältega.
+# decrypt.anonballotbox Töötlemisrakenduse või miksimisrakenduse poolt loodud e-valimiskast anonüümistatud häältega.
   anonballotbox: DEMO_shuffled.json
   anonballotbox_checksum: DEMO_shuffled.json.sha256sum.bdoc
   candidates: DEMO_valikud.bdoc

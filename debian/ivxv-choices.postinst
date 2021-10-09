@@ -30,13 +30,13 @@ case "$1" in
 
         # prepare ssh directory for user account
         test -d ~ivxv-choices/.ssh ||
-	    mkdir --parents ~ivxv-choices/.ssh
-	chmod 700 ~ivxv-choices/.ssh
-	chown ivxv-choices:ivxv ~ivxv-choices/.ssh
-	test -e ~ivxv-choices/.ssh/authorized_keys ||
-	    touch ~ivxv-choices/.ssh/authorized_keys
-	chmod 600 ~ivxv-choices/.ssh/authorized_keys
-	chown ivxv-choices:ivxv ~ivxv-choices/.ssh/authorized_keys
+        mkdir --parents ~ivxv-choices/.ssh
+        chmod 700 ~ivxv-choices/.ssh
+        chown ivxv-choices:ivxv ~ivxv-choices/.ssh
+        test -e ~ivxv-choices/.ssh/authorized_keys ||
+            touch ~ivxv-choices/.ssh/authorized_keys
+        chmod 600 ~ivxv-choices/.ssh/authorized_keys
+        chown ivxv-choices:ivxv ~ivxv-choices/.ssh/authorized_keys
 
         # enable user to automatically start service
         loginctl enable-linger ivxv-choices

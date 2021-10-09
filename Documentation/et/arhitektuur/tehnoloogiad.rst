@@ -53,7 +53,7 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Kasutusvajadus
 
    *  - `Bootstrap <http://getbootstrap.com>`_
-      - 3.3.7
+      - 3.4.1
       - MIT
       - Kogumisteenuse haldusteenuse kasutajaliidese kujundus
 
@@ -63,7 +63,7 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - ASN1 käsitlemine, andmetüübi BigInteger abifunktsioonid
 
    *  - `Bottle <https://bottlepy.org/>`_
-      - 0.12.13
+      - 0.12.15
       - MIT
       - Raamistik kogumisteenuse haldusteenuse veebiliidese teostamiseks
 
@@ -82,7 +82,7 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - LGPL-2.1-only or EUPL-1.1
       - Digidoc 4j sõltuvus
 
-   *  - Apache Commons (cli 1.4, codec 1.10, collections 4.1, io 2.5, lang 3.6, logging 1.2, compress 1.3)
+   *  - Apache Commons (cli 1.4, codec 1.10, collections4 4.1, io 2.5, lang3 3.6, logging 1.2, compress 1.3)
       - -
       - Apache-2.0
       - Digidoc 4j ja PDFBox sõltuvused
@@ -137,48 +137,63 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - MIT
       - Kogumisteenuse haldusutiliitide käsurealiidese teostus
 
+   *  - `Fasteners <https://github.com/harlowja/fasteners>`_
+      - 0.14.1
+      - Apache-2.0
+      - Kogumisteenuse haldusteenuse protsesside lukustus
+
    *  - `etcd <https://coreos.com/etcd>`_
-      - 3.2.17
+      - 3.2.26
       - Apache-2.0
       - Talletusteenusena kasutatav hajus võti-väärtus andmebaas
 
    *  - `github.com/golang/protobuf <https://github.com/golang/protobuf>`_
-      - 1909bc2
+      - 1.3.2
       - BSD-3-Clause
       - etcd klientteegi sõltuvus
 
+   *  - Glassfish JAXB
+      - 2.3.3
+      - BSD-3-Clause
+      - Java XML teek
+
    *  - `google.golang.org/genproto <https://google.golang.org/genproto>`_
-      - 7f0da29
+      - 58ce757
       - Apache-2.0
       - etcd klientteegi sõltuvus
 
    *  - `google.golang.org/grpc <https://google.golang.org/grpc>`_
-      - 1.6.0
+      - 1.22.1
       - Apache-2.0
       - etcd klientteegi sõltuvus
 
    *  - `golang.org/x/net <https://golang.org/x/net>`_
-      - c81e7f2
+      - 74dc4d7
+      - BSD-3-Clause
+      - etcd klientteegi sõltuvus
+
+   *  - `golang.org/x/sys <https://golang.org/x/sys>`_
+      - fc99dfb
       - BSD-3-Clause
       - etcd klientteegi sõltuvus
 
    *  - `golang.org/x/text <https://golang.org/x/text>`_
-      - 6353ef0
+      - 0.3.2
       - BSD-3-Clause
       - etcd klientteegi sõltuvus
 
    *  - Gradle
-      - 3.0
+      - 6.4
       - Apache-2.0
       - Java rakenduste ehitamise raamistik
 
    *  - `HAProxy <http://www.haproxy.org/>`_
-      - 1.8.8
+      - 2.0.13
       - GPL-2.0-or-later
       - Vahendusteenusena kasutatav TCP-proksi
 
    *  - IvyPot
-      - 0.4
+      - 0.12
       - Apache-2.0
       - Gradle ehitusraamistiku laiendus sõltuvuste haldamiseks ja rakenduste
         ehitamiseks vallasrežiimis
@@ -189,14 +204,14 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - JSON vormingus failide lugemine ja kirjutamine
 
    *  - `jQuery <https://jquery.org/>`_
-      - 3.1.0
+      - 3.3.1
       - MIT
       - Kogumisteenuse haldusteenuse kasutajaliides
 
    *  - Logback
       - 1.2.3
       - EPL-1.0 or LGPL-v2.1-only
-      - Logimise API SLF4J realisatsioon
+      - Logimise API SLF4J teostus
 
    *  - Logback JSON
       - 0.1.5
@@ -215,7 +230,7 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - PDF vormingus raportite genereerimise tugi Java rakendustele
 
    *  - `PyYAML <http://pyyaml.org/>`_
-      - 3.12
+      - 5.3.1
       - MIT
       - Kogumisteenuse seadistusfailide töötlemise tugi haldusteenusele
 
@@ -252,7 +267,7 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
    *  - Hamcrest
       - 1.3
       - BSD-3-Clause
-      - Loetavam assert-meetodite kasutamine Java ühiktestides
+      - Loetavam assert-meetodite kasutamine Java üksuste testides
 
    *  - JUnit
       - 4.12
@@ -270,24 +285,29 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Testitava koodi sõltuvuste mockimise tugi
 
    *  - Byte Buddy
-      - 1.6.14
+      - 1.9.10
       - Apache-2.0
       - Mockito sõltuvus
 
    *  - Objenesis
-      - 2.5
+      - 2.6
       - Apache-2.0
       - Mockito sõltuvus
 
-   *  - libdigidoc2
-      - 3.10.4.1218
+   *  - libdigidocpp-tools
+      - 3.14.5.1404
       - LGPL-2.1-or-later
       - Testandmete genereerimine
 
-   *  - libdigidocpp-tools
-      - 3.13.6.1371
-      - LGPL-2.1-or-later
-      - Testandmete genereerimine
+   *  - PyTest
+      - 6.2.3
+      - MIT
+      - Üksuste testimise tugi Pythonile
+
+   *  - Requests
+      - 2.25.1
+      - Apache 2.0
+      - HTTP päringute moodul Pythoni testidele
 
 .. list-table::
    IVXV raamistiku arendamiseks ja/või testimiseks
@@ -310,11 +330,11 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Regressioonitestide läbiviimise keskkond - tarkvarakonteinerid
 
    *  - `Docker Compose <http://www.docker.com/>`_
-      - 1.22.0
+      - 1.28.6
       - Apache-2.0
       - Regressioonitestide läbiviimise keskkond - tarkvarakonteinerite haldus
 
    *  - `Sphinx <http://www.sphinx-doc.org/>`_
-      - 1.8.2
-      - BSD-2-Clause
+      - 3.4.3
+      - BSD
       - Dokumentatsiooni genereerimine

@@ -38,8 +38,8 @@ import org.apache.xml.security.Init;
 import org.apache.xml.security.c14n.Canonicalizer;
 import org.digidoc4j.Configuration;
 import org.digidoc4j.ContainerBuilder;
-import org.digidoc4j.TSLCertificateSource;
 import org.digidoc4j.ContainerValidationResult;
+import org.digidoc4j.TSLCertificateSource;
 import org.digidoc4j.impl.asic.tsl.TSLCertificateSourceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -333,11 +333,11 @@ public class BdocContainerReader implements ContainerReader {
             ServiceInfo serviceInfo = new ServiceInfo();
 
             Map<String, List<Condition>> qualifiers = new HashMap<>(); // Must not be null!
-            ServiceInfoStatus status = new ServiceInfoStatus(OCSP_SERVICE_INFO_TYPE,
-                    OCSP_SERVICE_INFO_STATUS, qualifiers, null, null, null,
-                    cert.getNotBefore(), cert.getNotAfter());
+            ServiceInfoStatus status =
+                    new ServiceInfoStatus(OCSP_SERVICE_INFO_TYPE, OCSP_SERVICE_INFO_STATUS,
+                            qualifiers, null, null, null, cert.getNotBefore(), cert.getNotAfter());
 
-            serviceInfo.setStatus(new TimeDependentValues(Arrays.asList(status)));
+            serviceInfo.setStatus(new TimeDependentValues<>(Arrays.asList(status)));
             return serviceInfo;
         }
 
@@ -345,11 +345,11 @@ public class BdocContainerReader implements ContainerReader {
             ServiceInfo serviceInfo = new ServiceInfo();
 
             Map<String, List<Condition>> qualifiers = new HashMap<>(); // Must not be null!
-            ServiceInfoStatus status = new ServiceInfoStatus(TSA_SERVICE_INFO_TYPE,
-                    TSA_SERVICE_INFO_STATUS, qualifiers, null, null, null,
-                    cert.getNotBefore(), cert.getNotAfter());
+            ServiceInfoStatus status =
+                    new ServiceInfoStatus(TSA_SERVICE_INFO_TYPE, TSA_SERVICE_INFO_STATUS,
+                            qualifiers, null, null, null, cert.getNotBefore(), cert.getNotAfter());
 
-            serviceInfo.setStatus(new TimeDependentValues(Arrays.asList(status)));
+            serviceInfo.setStatus(new TimeDependentValues<>(Arrays.asList(status)));
             return serviceInfo;
         }
 

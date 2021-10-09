@@ -6,9 +6,9 @@ import re
 
 from jinja2 import Environment, PackageLoader
 
-from . import init_cli_util, log
 from .. import lib
 from ..db import IVXVManagerDb
+from . import init_cli_util, log
 
 
 def users_list_util():
@@ -89,13 +89,13 @@ def status_util():
 
     # apply smart filtering
     if 'smart' in filters:
-        _cfg_state_filters(filters, state)
+        cfg_state_filters(filters, state)
 
     # apply service ID filters
     if args['--service']:
         for service_id in args['--service']:
             if service_id not in state['service'].keys():
-                log.error('Unknown service ID "%s"', service_id)
+                log.error("Unknown service ID %r", service_id)
                 return 1
         for network_id in list(state['network']):
             for service_id in list(state['network'][network_id]):
@@ -114,7 +114,7 @@ def status_util():
     return 0
 
 
-def _cfg_state_filters(filters, state):
+def cfg_state_filters(filters, state):
     """Reconfigure list of state filters depending on actual state."""
     if (state['config']['trust'] or
             state['config']['technical'] or
@@ -124,8 +124,10 @@ def _cfg_state_filters(filters, state):
         filters += ['election']
     if (state['list']['choices-loaded'] or
             state['list']['choices'] or
-            state['list'].get('voters01') or
-            state['list'].get('voters01-loaded')):
+            state['list']['districts-loaded'] or
+            state['list']['districts'] or
+            state['list'].get('voters0000') or
+            state['list'].get('voters0000-loaded')):
         filters += ['list']
     if state.get('service'):
         filters += ['service']

@@ -1,5 +1,6 @@
 package ee.ivxv.key.protocol.generation.shoup;
 
+import ee.ivxv.common.asn1.RSAParams;
 import ee.ivxv.common.crypto.SignatureUtil;
 import ee.ivxv.common.crypto.rnd.Rnd;
 import ee.ivxv.common.math.IntegerConstructor;
@@ -12,7 +13,6 @@ import ee.ivxv.key.protocol.ProtocolUtil;
 import ee.ivxv.key.protocol.ThresholdParameters;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.interfaces.RSAPublicKey;
 
 /**
@@ -92,7 +92,7 @@ public class ShoupGeneration implements GenerationProtocol {
         d = computePrivateExponent(p, q, e);
         pol = generatePolynomial(p, q, d);
         BigInteger[] shares = ProtocolUtil.generateShares(pol, tparams.getParties());
-        RSAPrivateCrtKey[] packedShares = packShares(e, shares, n);
+        RSAParams[] packedShares = packShares(e, shares, n);
         storeShares(packedShares);
         RSAPublicKey pk = SignatureUtil.RSA.paramsToRSAPublicKey(e, n);
         return pk.getEncoded();
@@ -125,17 +125,17 @@ public class ShoupGeneration implements GenerationProtocol {
         return new Polynomial(tparams.getThreshold() - 1, MathUtil.phiSemiprime(p, q), d, rnd);
     }
 
-    RSAPrivateCrtKey[] packShares(BigInteger e, BigInteger[] shares, BigInteger n) {
-        RSAPrivateCrtKey[] packedShares = new RSAPrivateCrtKey[shares.length];
+    RSAParams[] packShares(BigInteger e, BigInteger[] shares, BigInteger n) {
+        RSAParams[] packedShares = new RSAParams[shares.length];
         for (int i = 0; i < packedShares.length; i++) {
-            packedShares[i] = SignatureUtil.RSA.paramsToRSAPrivateKeyCrt(e, shares[i], n);
+            packedShares[i] = SignatureUtil.RSA.paramsToRSAParams(e, shares[i], n);
         }
         return packedShares;
     }
 
-    void storeShares(RSAPrivateCrtKey[] shares) {
+    void storeShares(RSAParams[] shares) {
         for (int i = 0; i < shares.length; i++) {
-            sharestorage[i] = shares[i].getEncoded();
+            sharestorage[i] = shares[i].encode();
         }
     }
 }

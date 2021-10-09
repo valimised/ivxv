@@ -25,11 +25,11 @@ case "$1" in
             /var/backups/ivxv/management-conf \
             /var/backups/ivxv/log \
             /var/backups/ivxv/ballot-box
-	chmod 700 \
+    chmod 700 \
             /var/backups/ivxv/management-conf \
             /var/backups/ivxv/log \
             /var/backups/ivxv/ballot-box
-	chown ivxv-admin:ivxv \
+    chown ivxv-admin:ivxv \
             /var/backups/ivxv/management-conf \
             /var/backups/ivxv/log \
             /var/backups/ivxv/ballot-box

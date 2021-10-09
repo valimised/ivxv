@@ -77,11 +77,35 @@ case "$1" in
             su -c 'env LC_ALL=et_EE.UTF-8 ivxv-db-reset --force' ivxv-admin
         fi
 
-        # FIXME temporary hack to provide access to ivxv data for www-data account
+        DIR='/var/lib/ivxv/vis'
+        chown --changes ivxv-admin:ivxv ${DIR}
+        chmod --changes 2770 ${DIR}
+
+        # provide access to ivxv data for www-data account
         usermod --groups ivxv www-data
+
+        # provide access to /etc/ssl/private for ivxv-admin account
+        # to read client certificate key
+        usermod --groups ssl-cert ivxv-admin
 
         # set management service config file permissions
         chmod --changes 755 /etc/ivxv/ivxv-collector-admin.conf
+
+        # Default client certificate for IVXV management service
+        CRT_SUBJ="/CN=ivxv-admin-client/O=IVXV kogumisteenuse haldusteenus/L=Somewhere/C=EE"
+        CRT_FILE="/etc/ssl/certs/ivxv-admin-client.crt"
+        RSA_KEY_FILE="/etc/ssl/private/ivxv-admin-client.key"
+        if [ ! -f ${RSA_KEY_FILE} ]; then
+            echo "# Generating RSA-key for Management service client certificate"
+            openssl genrsa -out ${RSA_KEY_FILE} 2048
+            rm --force ${CRT_FILE}
+        fi
+        chmod 0640 ${RSA_KEY_FILE}
+        chown root:ssl-cert ${RSA_KEY_FILE}
+        if [ ! -f ${CRT_FILE} ]; then
+            echo "# Generating client certificate for Management service"
+            openssl req -x509 -days 365 -subj "${CRT_SUBJ}" -key "${RSA_KEY_FILE}" -out "${CRT_FILE}"
+        fi
 
         # CONFIGURE APACHE
         APACHE_RESTART="reload"
@@ -92,6 +116,12 @@ case "$1" in
             sed --regexp-extended --in-place \
                 --expression 's/^#(\. .etc.default.locale)/\1/' \
                 /etc/apache2/envvars
+            APACHE_RESTART="restart"
+        fi
+
+        # enable JavaScript modules for Apache
+        if [ ! -L /etc/apache2/conf-enabled/javascript-common.conf ]; then
+            a2enconf javascript-common
             APACHE_RESTART="restart"
         fi
 
@@ -114,34 +144,29 @@ case "$1" in
         for MODULE in ${APACHE_MODULES_TO_ENABLE}; do
             if [ ! -L /etc/apache2/mods-enabled/${MODULE}.load ]; then
                 a2enmod ${MODULE}
+                APACHE_RESTART="restart"
             fi
         done
 
         # Default SSL certificate for Apache web server
         CRT_SUBJ="/CN=ivxv-admin-ui/O=IVXV kogumisteenuse haldusteenus/L=Somewhere/C=EE"
         CRT_FILE="/etc/ssl/certs/ivxv-admin-default.crt"
-        CSR_FILE="/etc/ssl/certs/ivxv-admin-default.csr"
         RSA_KEY_FILE="/etc/ssl/private/ivxv-admin-default.key"
         if [ ! -f ${RSA_KEY_FILE} ]; then
             echo "# Generating RSA-key for Apache web server default certificate"
             openssl genrsa -out ${RSA_KEY_FILE} 2048
-            rm -f ${CSR_FILE} ${CRT_FILE}
+            rm -f ${CRT_FILE}
         fi
         chmod 0640 ${RSA_KEY_FILE}
         chown root:root ${RSA_KEY_FILE}
-        if [ ! -f ${CSR_FILE} ]; then
-            echo "# Generating certificate request for Apache web server default certificate"
-            openssl req -new -subj "${CRT_SUBJ}" -key ${RSA_KEY_FILE} -out ${CSR_FILE}
-            rm -f ${CRT_FILE}
-        fi
         if [ ! -f ${CRT_FILE} ]; then
             echo "# Generating certificate for Apache web server"
-            openssl x509 -req -days 365 -in ${CSR_FILE} -signkey ${RSA_KEY_FILE} -out ${CRT_FILE}
+            openssl req -x509 -subj "${CRT_SUBJ}" -days 365 -key ${RSA_KEY_FILE} -out ${CRT_FILE}
         fi
         DH_PARAMS_FILE="/etc/ssl/dhparams.pem"
         if [ ! -f "${DH_PARAMS_FILE}" ]; then
             echo "# Generating strong Diffie-Hellman group file"
-            openssl dhparam 2048 > ${DH_PARAMS_FILE}.tmp
+            openssl dhparam -out ${DH_PARAMS_FILE}.tmp 2048
             mv ${DH_PARAMS_FILE}.tmp ${DH_PARAMS_FILE}
         fi
 

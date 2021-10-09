@@ -12,9 +12,8 @@ import subprocess
 import tempfile
 import zipfile
 
-import yaml
-
 import schematics.exceptions
+import yaml
 
 from . import (CFG_TYPES, CMD_DESCR, CMD_TYPES, PERMISSION_ELECTION_CONF,
                PERMISSION_TECH_CONF, PERMISSION_USERS_ADMIN,
@@ -36,7 +35,7 @@ def load_collector_cmd_file(cmd_type, filename, plain=False):
     :return: Config as data structure or None on error
     :rtype: dict
     """
-    assert cmd_type in CMD_TYPES, 'Invalid command type "%s"' % cmd_type
+    assert cmd_type in CMD_TYPES, f"Invalid command type {cmd_type!r}"
 
     file_descr = CMD_DESCR[cmd_type]
     if plain:
@@ -71,7 +70,7 @@ def load_collector_cmd_file(cmd_type, filename, plain=False):
         log.error(err)
         return None
     except schematics.exceptions.DataError as data_error:
-        _log_cfg_validation_errors(data_error.errors)
+        log_cfg_validation_errors(data_error.errors)
         return None
 
     # validate election ID in config
@@ -88,8 +87,8 @@ def load_collector_cmd_file(cmd_type, filename, plain=False):
                         'Unknown config type {}'.format(cmd_type))
                 if election_id != cfg_election_id:
                     log.error(
-                        'Election ID "%s" in config file does not match '
-                        'with current election ID "%s"',
+                        "Election ID %r in config file does not match "
+                        "with current election ID %r",
                         cfg_election_id, election_id)
                     return None
 
@@ -101,15 +100,15 @@ def load_collector_cmd_file(cmd_type, filename, plain=False):
     return cfg
 
 
-def load_cfg_file_content(cmd_type, cfg_filename, bdoc_filename):
+def load_cfg_file_content(cmd_type, cfg_filename, cmd_filename):
     """Load config file content from command file container.
 
     :param cfg_filename: Config file name
     :type cfg_filename: str or regexp pattern
-    :param bdoc_filename: Container file name.
+    :param cmd_filename: Container file name.
                           Plain config file is used if None.
-    :type bdoc_filename: str
-    :return: Config as data structure or None on error
+    :type cmd_filename: str
+    :return: Config as data structure; string for voter list; or None on error
     :rtype: dict
 
     :raises UnicodeDecodeError: if config file is not in UTF-8
@@ -120,22 +119,21 @@ def load_cfg_file_content(cmd_type, cfg_filename, bdoc_filename):
     file_descr = CMD_DESCR[cmd_type]
 
     # load plain config file
-    if bdoc_filename is None:
+    if cmd_filename is None:
         return load_plain_cfg_file(
             cmd_type, os.path.dirname(cfg_filename),
             os.path.basename(cfg_filename))
 
     # load BDOC command file
-    log.info('Loading command file "%s" (%s)', bdoc_filename, file_descr)
+    log.info('Loading command file %r (%s)', cmd_filename, file_descr)
     try:
-        cmd_file = zipfile.ZipFile(bdoc_filename)
+        cmd_file = zipfile.ZipFile(cmd_filename)
     except FileNotFoundError:
-        raise IvxvError(f'File "{bdoc_filename}" not found')
+        raise IvxvError(f"File {cmd_filename!r} not found")
     except zipfile.BadZipFile:
-        raise IvxvError(f'File "{bdoc_filename}" is not a valid ZIP container')
+        raise IvxvError(f"File {cmd_filename!r} is not a valid ZIP container")
     log.debug('Command file loaded')
-    log.debug('Files in command file container: %s',
-              ' '.join(cmd_file.namelist()))
+    log.debug("Files in command file container: %r", cmd_file.namelist())
 
     # parse contents of command file
     filenames_in_bdoc = cmd_file.namelist()
@@ -146,8 +144,10 @@ def load_cfg_file_content(cmd_type, cfg_filename, bdoc_filename):
         ]:
             filenames_in_bdoc.remove(filename)
     if cfg_filename is None:
-        cfg_filename = _get_voting_list_filename(cmd_type, filenames_in_bdoc)
-        log.debug('Detected command filename: %s', cfg_filename)
+        cfg_filename = get_command_filename(cmd_type, filenames_in_bdoc)
+        if cfg_filename is None:
+            raise IvxvError("No command filename detected")
+        log.debug("Detected command filename %r", cfg_filename)
 
     if isinstance(cfg_filename, str) and cfg_filename not in filenames_in_bdoc:
         raise IvxvError(
@@ -165,7 +165,7 @@ def load_cfg_file_content(cmd_type, cfg_filename, bdoc_filename):
 
     # create temporary directory to extract container
     with tempfile.TemporaryDirectory() as dirpath:
-        log.debug('Extracting command file to directory %s', dirpath)
+        log.debug("Extracting command file to directory %r", dirpath)
         cmd_file.extractall(dirpath)
         log.debug('Command file successfully extracted')
         cfg = load_plain_cfg_file(cmd_type, dirpath, cfg_filename)
@@ -182,36 +182,45 @@ def ck_json_dict_key_uniqueness(args):
     keys = [_[0] for _ in args]
     for key in keys:
         if keys.count(key) > 1:
-            raise IvxvError(f'Duplicate key "{key}" in JSON object')
+            raise IvxvError(f"Duplicate key {key!r} in JSON object")
     return dict(args)
 
 
 def load_plain_cfg_file(cmd_type, dirpath, filename):
     """Load content from plain config file."""
-    log.debug('Reading file %s', os.path.join(dirpath, filename))
+    log.debug("Reading file %r", os.path.join(dirpath, filename))
     cwd = os.getcwd()
     if dirpath:
         os.chdir(dirpath)
-    with open(filename, 'rb') as fp:
-        # possible UnicodeDecodeError must be handled by caller
-        file_content = fp.read().decode('utf-8')
-        if cmd_type in CFG_TYPES:
-            cfg = load_yaml_file(file_content)
-        elif cmd_type in ('choices', 'districts', 'user'):
-            cfg = json.loads(
-                file_content, object_pairs_hook=ck_json_dict_key_uniqueness)
-        else:
-            cfg = file_content
-    if dirpath:
-        os.chdir(cwd)
+    try:
+        with open(filename, 'rb') as fp:
+            # possible UnicodeDecodeError must be handled by caller
+            file_content = fp.read().decode('utf-8')
+            if cmd_type in CFG_TYPES:
+                cfg = load_yaml_file(file_content)
+            elif cmd_type in ('choices', 'districts', 'user'):
+                cfg = json.loads(
+                    file_content, object_pairs_hook=ck_json_dict_key_uniqueness)
+            else:
+                assert cmd_type == 'voters'
+                if filename.endswith(".skip.yaml"):
+                    cfg = load_yaml_file(file_content)
+                else:
+                    cfg = file_content
+    finally:
+        if dirpath:
+            os.chdir(cwd)
 
     return cfg
 
 
-def _get_voting_list_filename(cmd_type, filenames_in_bdoc):
-    """Get voting list file name from list of filenames.
+def get_command_filename(cmd_type, filenames_in_bdoc):
+    """Get command file name from list of filenames.
 
-    :return: Voting list filename or None on error
+    Get command file for choice list, district list,
+    voter list or voter list changeset skip command.
+
+    :return: Command filename or None on error
     :rtype: str
     """
     filename = None
@@ -219,7 +228,7 @@ def _get_voting_list_filename(cmd_type, filenames_in_bdoc):
     if cmd_type in ('choices', 'districts'):
         if len(filenames_in_bdoc) > 1:
             log.error(
-                'Too many files in %s file: %s',
+                "Too many files in %s file: %r",
                 CMD_DESCR[cmd_type], filenames_in_bdoc)
         elif not filenames_in_bdoc:
             log.error('Missing %s list in %s file',
@@ -229,21 +238,26 @@ def _get_voting_list_filename(cmd_type, filenames_in_bdoc):
 
     elif cmd_type == 'voters':
         if len(filenames_in_bdoc) > 2:
-            log.error('Too many files in %s file: %s',
+            log.error("Too many files in %s file: %r",
                       CMD_DESCR[cmd_type], filenames_in_bdoc)
+        elif (
+            len(filenames_in_bdoc) == 1 and filenames_in_bdoc[0].endswith(".skip.yaml")
+        ):
+            filename = filenames_in_bdoc[0]
         elif len(filenames_in_bdoc) < 2:
             log.error('Missing voters list or signature in %s file',
                       CMD_DESCR[cmd_type])
         else:
-            cmd_filename, signature_filename = sorted(filenames_in_bdoc)
-            if cmd_filename + '.signature' == signature_filename:
-                filename = cmd_filename
+            sig_filename, utf_filename = sorted(filenames_in_bdoc)
+            if (utf_filename.endswith('.utf')
+                    and sig_filename == utf_filename[:-4] + '.sig'):
+                filename = utf_filename
             else:
-                log.error('Voters list and signature file names does not '
+                log.error('Voters list and signature file names do not '
                           'match (filenames: %s)',
-                          ', '.join([cmd_filename, signature_filename]))
-                log.error('Signature file name must be list file name '
-                          'with ".signature" extension')
+                          ', '.join([utf_filename, sig_filename]))
+                log.error('List file must have ".utf" extension and '
+                          'signature file the same base with ".sig" extension')
     else:
         raise NotImplementedError
 
@@ -258,14 +272,15 @@ def check_cmd_signature(cmd_type, filename):
              second one contains all signatures.
     :rtype: tuple
 
-    :raises: OSError if reading command file fails or
-             if :command:`ivxv-verify-container` command not found
-    :raises: subprocess.SubprocessError on :command:`ivxv-verify-container`
-             error
-    :raises: LookupError on invalid signature line
-    :raises: IvxvError on trust root config validation error
+    :raises OSError:
+        if reading command file fails or
+        if :command:`ivxv-verify-container` command not found
+    :raises subprocess.SubprocessError:
+        on :command:`ivxv-verify-container` error
+    :raises LookupError: on invalid signature line
+    :raises IvxvError: on trust root config validation error
     """
-    log.debug('Checking command file %s (%s) signature', filename, cmd_type)
+    log.debug("Checking command file %r (%s) signature", filename, cmd_type)
 
     # detect trust root file
     trust_container_filepath = (
@@ -273,7 +288,7 @@ def check_cmd_signature(cmd_type, filename):
         else os.path.join(CONFIG['active_config_files_path'], 'trust.bdoc'))
 
     # execute verifier command
-    proc = _exec_container_verifier(trust_container_filepath, filename)
+    proc = exec_container_verifier(trust_container_filepath, filename)
 
     # parse command output and create signatures list
     all_signatures = []
@@ -327,22 +342,24 @@ def check_cmd_signature(cmd_type, filename):
     return authorized_signatures, all_signatures
 
 
-def _exec_container_verifier(trust_container_filepath, filepath):
+def exec_container_verifier(trust_container_filepath, filepath):
     """Execute container verifier command."""
     cmd = [
         'ivxv-verify-container', '-trust', trust_container_filepath, filepath
     ]
-    log.debug('Executing command "%s"', ' '.join(cmd))
+    log.debug("Executing command %r", " ".join(cmd))
     try:
         proc = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            universal_newlines=True)
+            check=False,
+            universal_newlines=True,
+        )
     except OSError as err:
         err.strerror = (
-            'Error while executing verifier command "{}": {}'.format(
-                ' '.join(cmd), err.strerror))
+            f"Error while executing verifier command {' '.join(cmd)!r}: {err.strerror}"
+        )
         raise err
 
     if proc.returncode == 0:
@@ -362,14 +379,13 @@ def _exec_container_verifier(trust_container_filepath, filepath):
         f'Failed to execute container verifier: {err_msg}')
 
 
-def _log_cfg_validation_errors(items, prefix='/'):
+def log_cfg_validation_errors(items, prefix="/"):
     """Log validation errors."""
     for field_name, val in items.items():
         if isinstance(val, dict):
-            _log_cfg_validation_errors(val, prefix + field_name + '/')
+            log_cfg_validation_errors(val, prefix + field_name + "/")
         else:
-            log.error('Validation error for field "%s%s": %s',
-                      prefix, field_name, val)
+            log.error("Validation error for field %r: %s", prefix + field_name, val)
 
 
 def load_yaml_file(fp):
@@ -385,10 +401,12 @@ def load_yaml_file(fp):
         """Handler for !container constructor."""
         filename = loader.construct_scalar(node)
         if os.path.dirname(filename):
-            raise OSError('Referenced file "{}" must be in the same '
-                          'directory with YAML file.'.format(filename))
+            raise OSError(
+                f"Referenced file {filename!r} must be in the same "
+                "directory with YAML file."
+            )
         with open(filename) as fp:
-            content = (yaml.load(fp) if filename[-5:] == '.yaml'
+            content = (yaml.load(fp, yaml.Loader) if filename[-5:] == '.yaml'
                        else fp.read(-1))
         return content
 
@@ -404,4 +422,4 @@ def load_yaml_file(fp):
     yaml.add_constructor('tag:yaml.org,2002:timestamp', timestamp_constructor)
     yaml.add_constructor('!container', container_constructor_handler)
 
-    return yaml.load(fp)
+    return yaml.load(fp, yaml.Loader)

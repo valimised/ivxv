@@ -23,10 +23,11 @@ public enum Msg implements NameHolder {
     arg_registrationlist, arg_registrationlist_checksum, //
     arg_districts, arg_revocationlists, //
     arg_tskey, arg_vlkey, //
-    arg_voterlists, arg_path, arg_signature, //
+    arg_voterlists, arg_path, arg_signature, arg_skip_cmd, //
     arg_districts_mapping, //
     arg_voter_id, //
     arg_election_start, //
+    arg_voterforeignehak, //
     arg_enckey, //
     arg_election_day, arg_period_start, arg_period_end, //
     arg_compare, arg_to, arg_diff, //
@@ -35,22 +36,24 @@ public enum Msg implements NameHolder {
     // Error messages
     e_tehcnical_error,
 
-    e_vl_districts_missing, e_vl_vlkey_missing, //
+    e_vl_voterlists_missing, e_vl_vlkey_missing, //
     e_vl_first_not_initial, e_vl_initial_not_first, //
     e_vl_read_error, e_vl_signature_error, e_vl_election_id, //
     e_vl_invalid_header, e_vl_invalid_voter_row, e_vl_invalid_row_number, //
-    e_vl_invalid_district, e_vl_invalid_station, //
+    e_vl_invalid_changeset, e_vl_invalid_version, e_vl_invalid_time, //
+    e_vl_invalid_district, e_vl_invalid_parish, //
     e_vl_voter_already_removed, e_vl_removed_voter_missing, //
     e_vl_voter_already_added, e_vl_added_voter_exists, //
-    e_vl_fictive_single_district_and_station_required, //
+    e_vl_fictive_single_district_and_parish_required, //
     e_vl_error_report,
 
     e_dist_mapping_invalid_row,
-
+    e_skip_cmd_loading,
     e_reg_checksum_missing, //
     e_bb_read_error, e_bb_ballot_processing, e_reg_record_processing, //
     e_bb_invalid_file_name, e_bb_missing_file, e_bb_repeated_file, e_bb_unknown_file_type, //
-    e_ballot_signature_invalid, e_ballot_missing_voter_signature, e_active_voter_not_found, //
+    e_ballot_signature_invalid, e_ballot_missing_voter_signature, //
+    e_active_voter_not_found, e_active_voterlist_not_found, //
     e_time_before_start, //
     e_reg_resp_invalid, e_reg_req_invalid, //
     e_reg_resp_not_unique, e_reg_req_not_unique, //
@@ -91,6 +94,7 @@ public enum Msg implements NameHolder {
     m_vl_reading, //
     m_vl, //
     m_vl_type, //
+    m_vl_skipped, //
     m_vl_total_added, //
     m_vl_total_removed, //
     m_vl_fictive_warning, //
@@ -119,6 +123,7 @@ public enum Msg implements NameHolder {
     m_dist_mapping_loaded, //
 
     m_removing_recurrent_votes, //
+    m_removing_invalid_ciphertexts, //
     m_applying_revocation_lists, //
     m_anonymizing_ballot_box,
 

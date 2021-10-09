@@ -28,3 +28,10 @@ Kogumisteenuse üldseisundi vaates kuvatakse järgnevaid andmeid:
 
 Kogumisteenuse üldseisundi tuvastamiseks kogub haldusteenus korrapäraselt
 alamteenustelt nende seisundi kohta andmeid ja peab selle üle arvestust.
+
+.. note::
+
+   Kogumisteenusesse laaditud korraldused jagunevad aktiivseteks ja
+   arhiveeritud korraldusteks. Aktiivsed korraldused on hetkel teenusele
+   rakendatud. Arhiveeritud korraldused on süsteemi laaditud, kuid pole
+   rakendatud - näiteks uuema versiooniga asendatud korraldused.

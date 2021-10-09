@@ -22,7 +22,7 @@ function loadPageData() {
   var service_types = {
     'backup': 'Varundusteenus',
     'choices': 'Nimekirjateenus',
-    'dds': 'Mobiil-ID abiteenus',
+    'mid': 'Mobiil-ID abiteenus',
     'proxy': 'Vahendusteenus',
     'storage': 'Talletusteenus',
     'log': 'Logikogumisteenus',
@@ -50,14 +50,14 @@ function loadPageData() {
       var state_str = 'Tundmatu';
       var status_class = 'warning';
       var service_type = v['service-type'] in service_types ? service_types[v['service-type']] : 'Tundmatu';
-      var show_mobile = 'dds-token-key' in state['service'][k] ? '' : 'display: none';
+      var show_mobile = 'mid-token-key' in state['service'][k] ? '' : 'display: none';
       var show_tlskey = 'tls-key' in state['service'][k] ? '' : 'display: none';
       var show_tlscert = 'tls-cert' in state['service'][k] ? '' : 'display: none';
       var lastdata = state['service'][k]['last-data'] ? state['service'][k]['last-data'] : '-';
       var econf = state['service'][k]['election-conf-version'] ? state['service'][k]['election-conf-version'] : '-';
       var tlsc = state['service'][k]['tls-cert'] ? state['service'][k]['tls-cert'] : '-';
       var tlsk = state['service'][k]['tls-key'] ? state['service'][k]['tls-key'] : '-';
-      var ddsk = state['service'][k]['dds-token-key'] ? state['service'][k]['dds-token-key'] : '-';
+      var midk = state['service'][k]['mid-token-key'] ? state['service'][k]['mid-token-key'] : '-';
       var pingerr = state['service'][k]['ping-errors'] ? state['service'][k]['ping-errors'] : '-';
       var bg_info = state['service'][k]['bg_info'];
       var tconf = state['service'][k]['technical-conf-version'] ? state['service'][k]['technical-conf-version'] : '-';
@@ -124,7 +124,7 @@ function loadPageData() {
         '</tr>' +
         '<tr style="' + show_mobile + ';">' +
         '<td align="right">Mobiil-ID krüptimissaladus:</td>' +
-        '<td>' + ddsk + '</td>' +
+        '<td>' + midk + '</td>' +
         '</tr>' +
         '</tbody>' +
         '</table>' +

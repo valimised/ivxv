@@ -87,51 +87,54 @@ public class Verifier {
                 get_proof().get_ProtocolInformation().get_vbitlenro());
     }
 
-    public GroupElement compute_A(BigInteger[] e) throws MathException {
-        return compute_A(get_proof().get_PermutationCommitment().get_u(), e);
+    public GroupElement compute_A(Progress progress, BigInteger[] e) throws MathException {
+        return compute_A(progress, get_proof().get_PermutationCommitment().get_u(), e);
     }
 
-    public GroupElement compute_C(GroupElement[] h) throws MathException, ShuffleException {
-        return compute_C(get_proof().get_PermutationCommitment().get_u(), h);
+    public GroupElement compute_C(Progress progress, GroupElement[] h)
+            throws MathException, ShuffleException {
+        return compute_C(progress, get_proof().get_PermutationCommitment().get_u(), h);
     }
 
-    public GroupElement compute_D(GroupElement[] h, BigInteger[] e)
+    public GroupElement compute_D(Progress progress, GroupElement[] h, BigInteger[] e)
             throws ShuffleException, MathException {
-        return compute_D(get_proof().get_PoSCommitment().get_B(), h, e,
+        return compute_D(progress, get_proof().get_PoSCommitment().get_B(), h, e,
                 get_proof().get_ciphertexts().length);
     }
 
-    public GroupElement compute_F(BigInteger[] e) throws MathException {
-        return compute_F(get_proof().get_ciphertexts(), e);
+    public GroupElement compute_F(Progress progress, BigInteger[] e) throws MathException {
+        return compute_F(progress, get_proof().get_ciphertexts(), e);
     }
 
-    public boolean verify_A(BigInteger v, GroupElement A, GroupElement[] h) throws MathException {
-        return verify_A(v, A, get_proof().get_PoSCommitment().get_A_prim(),
+    public boolean verify_A(Progress progress, BigInteger v, GroupElement A, GroupElement[] h)
+            throws MathException {
+        return verify_A(progress, v, A, get_proof().get_PoSCommitment().get_A_prim(),
                 get_proof().get_ProtocolInformation().get_parsed_generator(), h,
                 get_proof().get_PoSReply().get_kA(), get_proof().get_PoSReply().get_kE());
     }
 
-    public boolean verify_B(BigInteger v, GroupElement[] h) throws MathException {
-        return verify_B(v, get_proof().get_PoSCommitment().get_B(),
+    public boolean verify_B(Progress progress, BigInteger v, GroupElement[] h)
+            throws MathException {
+        return verify_B(progress, v, get_proof().get_PoSCommitment().get_B(),
                 get_proof().get_PoSCommitment().get_B_prim(),
                 get_proof().get_ProtocolInformation().get_parsed_generator(),
                 get_proof().get_PoSReply().get_kB(), get_proof().get_PoSReply().get_kE(), h);
     }
 
-    public boolean verify_C(BigInteger v, GroupElement C) throws MathException {
-        return verify_C(v, C, get_proof().get_PoSCommitment().get_C_prim(),
+    public boolean verify_C(Progress progress, BigInteger v, GroupElement C) throws MathException {
+        return verify_C(progress, v, C, get_proof().get_PoSCommitment().get_C_prim(),
                 get_proof().get_ProtocolInformation().get_parsed_generator(),
                 get_proof().get_PoSReply().get_kC());
     }
 
-    public boolean verify_D(BigInteger v, GroupElement D) throws MathException {
-        return verify_D(v, D, get_proof().get_PoSCommitment().get_D_prim(),
+    public boolean verify_D(Progress progress, BigInteger v, GroupElement D) throws MathException {
+        return verify_D(progress, v, D, get_proof().get_PoSCommitment().get_D_prim(),
                 get_proof().get_ProtocolInformation().get_parsed_generator(),
                 get_proof().get_PoSReply().get_kD());
     }
 
-    public boolean verify_F(BigInteger v, GroupElement F) throws MathException {
-        return verify_F(v, F, get_proof().get_PoSCommitment().get_F_prim(),
+    public boolean verify_F(Progress progress, BigInteger v, GroupElement F) throws MathException {
+        return verify_F(progress, v, F, get_proof().get_PoSCommitment().get_F_prim(),
                 get_proof().get_publickey(), get_proof().get_PoSReply().get_kE(),
                 get_proof().get_PoSReply().get_kF(), get_proof().get_shuffled_ciphertexts());
     }
@@ -146,32 +149,40 @@ public class Verifier {
      * @throws MathException If computation fails.
      */
     public boolean verify_all() throws ShuffleException, MathException {
-        console.enter(ShuffleStep.COMPUTE);
+        console.enter(ShuffleStep.VERIFY);
+        console.enter(ShuffleStep.VERIFY_PARAMS);
         byte[] rho = compute_rho();
         GroupElement[] h = compute_h(rho);
+        console.enter(ShuffleStep.VERIFY_NI);
         byte[] s = compute_RO_seed(rho, h);
         BigInteger[] e = compute_e(s);
         BigInteger v = compute_v(rho, s);
-        GroupElement A = compute_A(e);
-        GroupElement C = compute_C(h);
-        GroupElement D = compute_D(h, e);
-        GroupElement F = compute_F(e);
-        console.enter(ShuffleStep.VERIFY);
-        if (!verify_A(v, A, h)) {
+
+        int N = get_proof().get_ciphertexts().length;
+        Progress progress = console.enter(ShuffleStep.VERIFY_PERM, 5 * N + 11);
+        GroupElement A = compute_A(progress, e);
+        GroupElement C = compute_C(progress, h);
+        GroupElement D = compute_D(progress, h, e);
+        if (!verify_A(progress, v, A, h)) {
             throw new ShuffleException("A failed");
         }
-        if (!verify_B(v, h)) {
+        if (!verify_B(progress, v, h)) {
             throw new ShuffleException("B failed");
         }
-        if (!verify_C(v, C)) {
+        if (!verify_C(progress, v, C)) {
             throw new ShuffleException("C failed");
         }
-        if (!verify_D(v, D)) {
+        if (!verify_D(progress, v, D)) {
             throw new ShuffleException("D failed");
         }
-        if (!verify_F(v, F)) {
+        progress.finish();
+        progress = console.enter(ShuffleStep.VERIFY_RERAND,
+                2 * N + get_proof().get_PoSReply().get_kF().getElements().length + 3);
+        GroupElement F = compute_F(progress, e);
+        if (!verify_F(progress, v, F)) {
             throw new ShuffleException("F failed");
         }
+        progress.finish();
         return true;
     }
 
@@ -197,7 +208,6 @@ public class Verifier {
 
     public byte[] compute_rho(String sid, String auxsid, String version, int statdist,
             int vbitlenro, int ebitlenro, String prg, String pgroup, String rohash) {
-        console.enter(ShuffleStep.COMPUTE_RHO);
         String fullsid = String.format("%s.%s", sid, auxsid);
         Node n = new Node(new ByteTree[] {new Leaf(version), new Leaf(fullsid),
                 new Leaf(Util.toBytes(statdist)), new Leaf(Util.toBytes(vbitlenro)),
@@ -214,7 +224,6 @@ public class Verifier {
         if (!(pk instanceof ProductGroupElement)) {
             throw new IllegalArgumentException("pk must be ProductGroupElement");
         }
-        console.enter(ShuffleStep.COMPUTE_RO_SEED);
         ByteTree[] nodes = new ByteTree[] {new Leaf(g), new Node(h), new Node(u),
                 new Node((ProductGroupElement) pk), new Node(DataParser.toArray(w).getElements()),
                 new Node(DataParser.toArray(w_prim).getElements()),};
@@ -233,7 +242,6 @@ public class Verifier {
     }
 
     public BigInteger[] compute_e(byte[] s, int n_e, int N, String prg) {
-        console.enter(ShuffleStep.COMPUTE_E);
         PRNG gen = new PRNG(prg, s);
         BigInteger[] e = new BigInteger[N];
         BigInteger mask = BigInteger.ONE.shiftLeft(n_e);
@@ -251,7 +259,6 @@ public class Verifier {
         if (!(G_q instanceof ModPGroup)) {
             throw new IllegalArgumentException("Only ModPGroup supported");
         }
-        console.enter(ShuffleStep.COMPUTE_H);
         BigInteger TWO = BigInteger.valueOf(2);
         BigInteger p = ((ModPGroup) G_q).getOrder();
         int n_p = p.bitLength();
@@ -279,7 +286,6 @@ public class Verifier {
     public BigInteger compute_v(byte[] rho, byte[] s, GroupElement A_prim, GroupElement[] B,
             GroupElement[] B_prim, GroupElement C_prim, GroupElement D_prim,
             ProductGroupElement F_prim, String rohash, int n_v) {
-        console.enter(ShuffleStep.COMPUTE_V);
         ByteTree[] nodes = new ByteTree[] {new Node(B), new Leaf(A_prim), new Node(B_prim),
                 new Leaf(C_prim), new Leaf(D_prim), new Node(F_prim)};
         Node n = new Node(new ByteTree[] {new Leaf(s), new Node(nodes),});
@@ -293,26 +299,22 @@ public class Verifier {
         return new BigInteger(1, out);
     }
 
-    public GroupElement compute_A(GroupElement[] u, BigInteger[] e) throws MathException {
-        // the number of computations differ in threaded and non-threaded case. In threaded case we
-        // also aggregate the per-thread results.
-        Progress progress = console.enter(ShuffleStep.COMPUTE_A, u.length);
+    public GroupElement compute_A(Progress progress, GroupElement[] u, BigInteger[] e)
+            throws MathException {
         GroupElement res = u[0].getGroup().getIdentity();
         for (int i = 0; i < u.length; i++) {
             GroupElement exped = u[i].scale(e[i]);
             res = res.op(exped);
             progress.increase(1);
         }
-        progress.finish();
         return res;
     }
 
-    public GroupElement compute_C(GroupElement[] u, GroupElement[] h)
+    public GroupElement compute_C(Progress progress, GroupElement[] u, GroupElement[] h)
             throws MathException, ShuffleException {
         if (u.length != h.length) {
             throw new ShuffleException("u and h length does not match");
         }
-        Progress progress = console.enter(ShuffleStep.COMPUTE_C, u.length+2);
         GroupElement up = u[0].getGroup().getIdentity();
         GroupElement hp = h[0].getGroup().getIdentity();
         for (int i = 0; i < u.length; i++) {
@@ -323,13 +325,11 @@ public class Verifier {
         GroupElement hpi = hp.inverse();
         GroupElement res = up.op(hpi);
         progress.increase(2);
-        progress.finish();
         return res;
     }
 
-    public GroupElement compute_D(GroupElement[] B, GroupElement[] h, BigInteger[] e, int N)
-            throws ShuffleException, MathException {
-        Progress progress = console.enter(ShuffleStep.COMPUTE_D, e.length+3);
+    public GroupElement compute_D(Progress progress, GroupElement[] B, GroupElement[] h,
+            BigInteger[] e, int N) throws ShuffleException, MathException {
         BigInteger ep = BigInteger.ONE;
         BigInteger q = null;
         if (h[0] instanceof ModPGroupElement) {
@@ -349,25 +349,23 @@ public class Verifier {
         hp = hp.inverse();
         GroupElement ret = B[N - 1].op(hp);
         progress.increase(3);
-        progress.finish();
         return ret;
     }
 
-    public GroupElement compute_F(GroupElement[] w, BigInteger[] e) throws MathException {
-        Progress progress = console.enter(ShuffleStep.COMPUTE_F, w.length);
+    public GroupElement compute_F(Progress progress, GroupElement[] w, BigInteger[] e)
+            throws MathException {
         GroupElement res = w[0].getGroup().getIdentity();
         for (int i = 0; i < w.length; i++) {
             GroupElement exped = w[i].scale(e[i]);
             res = res.op(exped);
             progress.increase(1);
         }
-        progress.finish();
         return res;
     }
 
-    public boolean verify_A(BigInteger v, GroupElement A, GroupElement A_prim, GroupElement g,
-            GroupElement[] h, BigInteger k_A, BigInteger[] k_E) throws MathException {
-        Progress progress = console.enter(ShuffleStep.VERIFY_A, h.length + 2);
+    public boolean verify_A(Progress progress, BigInteger v, GroupElement A, GroupElement A_prim,
+            GroupElement g, GroupElement[] h, BigInteger k_A, BigInteger[] k_E)
+            throws MathException {
         GroupElement left = A.scale(v).op(A_prim);
         progress.increase(1);
         GroupElement right = h[0].getGroup().getIdentity();
@@ -377,16 +375,15 @@ public class Verifier {
         }
         right = right.op(g.scale(k_A));
         progress.increase(1);
-        progress.finish();
         return left.equals(right);
     }
 
-    public boolean verify_B(BigInteger v, GroupElement[] B, GroupElement[] B_prim, GroupElement g,
-            BigInteger[] k_B, BigInteger[] k_E, GroupElement[] h) throws MathException {
+    public boolean verify_B(Progress progress, BigInteger v, GroupElement[] B,
+            GroupElement[] B_prim, GroupElement g, BigInteger[] k_B, BigInteger[] k_E,
+            GroupElement[] h) throws MathException {
         // the number of computations is different in threaded and non-threaded case. In threaded
         // case the thread which sees invalid proof stops and this is propagated to the controlling
         // thread. In non-threaded case, all values are computed and then checked one-by-one.
-        Progress progress = console.enter(ShuffleStep.VERIFY_B, 2 * B.length);
         boolean[] res = new boolean[B.length];
         GroupElement left = B[0].scale(v).op(B_prim[0]);
         GroupElement right = h[0].scale(k_E[0]).op(g.scale(k_B[0]));
@@ -400,36 +397,35 @@ public class Verifier {
         }
         for (int i = 0; i < res.length; i++) {
             if (!res[i]) {
-                progress.finish();
                 return false;
             }
-            progress.increase(1);
         }
-        progress.finish();
         return true;
     }
 
-    public boolean verify_C(BigInteger v, GroupElement C, GroupElement C_prim, GroupElement g,
-            BigInteger k_C) throws MathException {
-        console.enter(ShuffleStep.VERIFY_C);
+    public boolean verify_C(Progress progress, BigInteger v, GroupElement C, GroupElement C_prim,
+            GroupElement g, BigInteger k_C) throws MathException {
         GroupElement left = C.scale(v).op(C_prim);
+        progress.increase(1);
         GroupElement right = g.scale(k_C);
+        progress.increase(1);
         return left.equals(right);
     }
 
-    public boolean verify_D(BigInteger v, GroupElement D, GroupElement D_prim, GroupElement g,
-            BigInteger k_D) throws MathException {
-        console.enter(ShuffleStep.VERIFY_D);
+    public boolean verify_D(Progress progress, BigInteger v, GroupElement D, GroupElement D_prim,
+            GroupElement g, BigInteger k_D) throws MathException {
         GroupElement left = D.scale(v).op(D_prim);
+        progress.increase(1);
         GroupElement right = g.scale(k_D);
+        progress.increase(1);
         return left.equals(right);
     }
 
-    public boolean verify_F(BigInteger v, GroupElement F, GroupElement F_prim, GroupElement pk,
-            BigInteger[] k_E, ProductGroupElement k_F, GroupElement[] w_prim) throws MathException {
+    public boolean verify_F(Progress progress, BigInteger v, GroupElement F, GroupElement F_prim,
+            GroupElement pk, BigInteger[] k_E, ProductGroupElement k_F, GroupElement[] w_prim)
+            throws MathException {
         // the number of computations differ in threaded and non-threaded case. In threaded case we
         // also aggregate the per-thread results.
-        Progress progress = console.enter(ShuffleStep.VERIFY_F, w_prim.length + k_F.getElements().length + 3);
         GroupElement left = F.scale(v).op(F_prim);
         GroupElement right = w_prim[0].getGroup().getIdentity();
         for (int i = 0; i < w_prim.length; i++) {
@@ -450,7 +446,6 @@ public class Verifier {
         ProductGroupElement tmp = new ProductGroupElement((ProductGroup) pk.getGroup(), tmpl, tmpr);
         right = right.op(tmp);
         progress.increase(1);
-        progress.finish();
         return left.equals(right);
     }
 }

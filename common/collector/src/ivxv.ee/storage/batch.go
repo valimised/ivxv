@@ -44,12 +44,34 @@ func (c *Client) getAll(ctx context.Context, keys ...string) (values map[string]
 
 	for _, key := range keys {
 		value, err := c.prot.Get(ctx, key)
-		if err != nil {
+		switch {
+		case err == nil:
+			values[key] = value
+		case errors.CausedBy(err, new(NotExistError)) != nil:
+			// Ignore missing keys to match the real GetAll.
+		default:
 			return nil, GetAllSingleError{Key: key, Err: err}
 		}
-		values[key] = value
 	}
 	return
+}
+
+// getAllStrict calls getAll and returns an error if any key is missing.
+func (c *Client) getAllStrict(ctx context.Context, keys ...string) (
+	values map[string][]byte, err error) {
+
+	if values, err = c.getAll(ctx, keys...); err != nil {
+		return nil, err
+	}
+	for _, key := range keys {
+		if _, ok := values[key]; !ok {
+			var ne NotExistError
+			ne.Key = key
+			ne.Err = GetAllStrictMissingError{}
+			return nil, ne
+		}
+	}
+	return values, nil
 }
 
 // putAll attempts to optimize putting many keys at once. It starts a worker
@@ -64,9 +86,6 @@ func (c *Client) getAll(ctx context.Context, keys ...string) (values map[string]
 //
 // Progress of the operation is reported to progress as well as logged
 // periodically.
-//
-// nolint: gocyclo, this is a very complicated function, as is the cyclomatic
-// complexity. This might get refactored into smaller pieces in the future.
 func (c *Client) putAll(ctx context.Context, prefix string,
 	values map[string][]byte, ensure bool, progress status.Add) error {
 

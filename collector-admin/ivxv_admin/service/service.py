@@ -8,17 +8,23 @@ import shutil
 import subprocess
 import tempfile
 
-from debian import debfile
 from jinja2 import Environment, PackageLoader
 
-from . import (IVXV_ADMIN_SSH_PUBKEY_FILE, RSYSLOG_CFG_FILENAME,
-               generate_service_hints)
-from .. import (COLLECTOR_PKG_FILENAMES, DEB_PKG_VERSION, SERVICE_SECRET_TYPES,
-                SERVICE_STATE_CONFIGURED, SERVICE_STATE_INSTALLED,
-                SERVICE_STATE_NOT_INSTALLED, SERVICE_TYPE_PARAMS)
+from debian import debfile
+
+from .. import (
+    COLLECTOR_PKG_FILENAMES,
+    DEB_PKG_VERSION,
+    SERVICE_SECRET_TYPES,
+    SERVICE_STATE_CONFIGURED,
+    SERVICE_STATE_INSTALLED,
+    SERVICE_STATE_NOT_INSTALLED,
+    SERVICE_TYPE_PARAMS,
+)
 from ..config import CONFIG, cfg_path
 from ..db import IVXVManagerDb
 from ..event_log import register_service_event
+from . import IVXV_ADMIN_SSH_PUBKEY_FILE, RSYSLOG_CFG_FILENAME, generate_service_hints
 from .backup_service import install_backup_crontab
 from .logging import ServiceLogger
 from .remote_exec import exec_remote_cmd
@@ -113,8 +119,10 @@ class Service:
         :rtype: bool
         """
         # disable ivxv-admin key in authorized_keys file
-        self.log.info('Removing management service access '
-                      'to root account in service host "%s"', self.hostname)
+        self.log.info(
+            "Removing management service access to root account in service host %r",
+            self.hostname,
+        )
         proc = self.ssh(
             'sudo ivxv-admin-sudo remove-admin-root-access', account='root')
 
@@ -134,7 +142,7 @@ class Service:
         :return: True on success, False on error.
         :rtype: bool
         """
-        self.log.info('Installing service to host "%s"', self.hostname)
+        self.log.info("Installing service to host %r", self.hostname)
 
         # initialize service on the first tech config
         with IVXVManagerDb() as db:
@@ -149,9 +157,10 @@ class Service:
 
         # create SSH access to service account
         if not error and self.service_account_name != 'ivxv-admin':
-            self.log.info('Creating access '
-                          'to the service account "%s" in service host',
-                          self.service_account_name)
+            self.log.info(
+                "Creating access to the service account %r in service host",
+                self.service_account_name,
+            )
             proc = self.ssh(
                 'sudo ivxv-admin-sudo create-ssh-access {}'.format(
                     self.service_account_name),
@@ -182,7 +191,7 @@ class Service:
         # check package status in service host
         if not is_update:
             self.log.info(
-                'Querying state of the service software package %s version %s',
+                'Querying state of the service software package %r version %s',
                 self.deb_pkg_name, DEB_PKG_VERSION)
             proc = self.ssh(
                 f'dpkg --status {self.deb_pkg_name}',
@@ -194,12 +203,15 @@ class Service:
                         pkg_version = line.split(':')[1].strip()
                         if DEB_PKG_VERSION == pkg_version:
                             self.log.info(
-                                'Package %s is already installed',
-                                self.deb_pkg_name)
+                                "Package %r is already installed",
+                                self.deb_pkg_name,
+                            )
                             return True
                         self.log.info(
-                            'Package %s is installed with wrong version %s',
-                            self.deb_pkg_name, pkg_version)
+                            "Package %r is installed with wrong version %s",
+                            self.deb_pkg_name,
+                            pkg_version,
+                        )
                         break
 
         # copy packages to service host
@@ -210,28 +222,16 @@ class Service:
                 account='ivxv-admin'):
             return False
 
-        # configure etcd APT source for storage service
-        if self.service_type == 'storage':
-            self.log.info('Configuring APT source for package "etcd"')
-            proc = self.ssh(
-                'sudo ivxv-admin-sudo configure-etcd-apt-source',
-                account='ivxv-admin')
-            if proc.returncode:
-                self.log.error('Failed to configure APT source '
-                               'for package "etcd"')
-                return False
-
         # install service package
-        self.log.info('Installing package "%s"', self.deb_pkg_name)
+        self.log.info("Installing package %r", self.deb_pkg_name)
         proc = self.ssh(
             'sudo ivxv-admin-sudo install-pkg {}'.format(
                 COLLECTOR_PKG_FILENAMES[self.deb_pkg_name]),
             account='ivxv-admin')
         if proc.returncode:
-            self.log.error('Failed to install package "%s"', self.deb_pkg_name)
+            self.log.error("Failed to install package %r", self.deb_pkg_name)
             return False
-        self.log.info(
-            'Package "%s" is installed successfully', self.deb_pkg_name)
+        self.log.info("Package %r is installed successfully", self.deb_pkg_name)
 
         return True
 
@@ -261,7 +261,7 @@ class Service:
             self.log.info('Failed to install {} package', pkg_name)
             return False
 
-        self.log.info('Package "%s" is installed successfully', pkg_name)
+        self.log.info("Package %r is installed successfully", pkg_name)
         return True
 
     def init_service(self):
@@ -300,7 +300,7 @@ class Service:
 
         # install ivxv-common package in service host if required
         self.log.info('Detect ivxv-common package status')
-        proc = self.ssh('dpkg -l ivxv-common', account='ivxv-admin')
+        proc = self.ssh('dpkg --list ivxv-common', account='ivxv-admin')
         if proc.returncode:
             self.log.info('Failed to detect ivxv-common package status')
             # detect ivxv-common package dependencies
@@ -386,7 +386,7 @@ class Service:
 
         # install package
         self.log.info('Installing ivxv-common package')
-        proc = self.ssh(f'dpkg -i {remote_path}', account='root')
+        proc = self.ssh(f'dpkg --install {remote_path}', account='root')
         if proc.returncode:
             self.log.info('Failed to install ivxv-common package')
             return False
@@ -400,13 +400,14 @@ class Service:
         :rtype: bool
         """
         # check package state
-        self.log.info(
-            'Checking package "%s" state in service host', self.deb_pkg_name)
+        self.log.info("Checking package %r state in service host", self.deb_pkg_name)
         cmd = f'dpkg --list {self.deb_pkg_name}'
         proc = self.ssh(cmd, account='ivxv-admin', stdout=subprocess.PIPE)
         if proc.returncode:
-            self.log.info('Package "%s" is not installed in service host',
-                          self.deb_pkg_name)
+            self.log.info(
+                "Package %r is not installed in service host",
+                self.deb_pkg_name,
+            )
             return True
 
         # detect packages to remove
@@ -419,13 +420,14 @@ class Service:
                         pkg_to_remove.append(key)
 
         # remove packages
-        self.log.info(
-            'Removing package "%s" in service host', self.deb_pkg_name)
+        self.log.info("Removing package %r in service host", self.deb_pkg_name)
         cmd = 'apt-get purge --yes {}'.format(' '.join(pkg_to_remove))
         proc = self.ssh(cmd, account='root', stdout=subprocess.PIPE)
         if proc.returncode:
-            self.log.info('Failed to remove package "%s" in service host',
-                          self.deb_pkg_name)
+            self.log.info(
+                "Failed to remove package %r in service host",
+                self.deb_pkg_name,
+            )
             if proc.stdout:
                 for line in proc.stdout.decode().split('\n'):
                     self.log.info(line)
@@ -434,8 +436,10 @@ class Service:
                     self.log.error(line)
             return False
 
-        self.log.info('Package "%s" in service host removed successfully',
-                      self.deb_pkg_name)
+        self.log.info(
+            "Package %r in service host removed successfully",
+            self.deb_pkg_name,
+        )
         return True
 
     def restart_service(self):
@@ -504,8 +508,7 @@ class Service:
         :return: True on success, False on error.
         :rtype: bool
         """
-        self.log.info('Configuring syslog logging in service host "%s"',
-                      self.hostname)
+        self.log.info("Configuring syslog logging in service host %r", self.hostname)
 
         # prepare log collector services data
         log_collectors = []
@@ -541,8 +544,9 @@ class Service:
         # don't replace file if not required
         if rsyslog_cfg == existing_rsyslog_cfg:
             self.log.info(
-                'Rsyslog config file %s already exist with required content',
-                RSYSLOG_CFG_FILENAME)
+                "Rsyslog config file %r already exist with required content",
+                RSYSLOG_CFG_FILENAME,
+            )
             return True
 
         # write config file
@@ -721,35 +725,43 @@ class Service:
 
         return True
 
-    def apply_list(self, list_type, list_no=None):
+    def apply_list(self, list_type, changeset_no=None):
         """Apply choices list to service.
 
         :param list_type: List type (choices, voters)
         :type list_type: str
-        :param list_no: List number (only for voters list)
-        :type list_no: int
+        :param changeset_no: Changeset number for voter list
+        :type changeset_no: int
         :return: True on success, False on error.
         :rtype: bool
         """
         # apply list
         self.log.info('Applying %s list to service', list_type)
-        if not self.copy_cfg_to_service(list_type, list_no):
+        if not self.copy_cfg_to_service(list_type, changeset_no):
             self.log.error('Failed to apply %s list to service', list_type)
             return False
         self.update_apply_state()
 
         # register list version
         with IVXVManagerDb(for_update=True) as db:
-            if list_type == 'choices':
-                cfg_ver = db.get_value('list/choices')
-                self.log.info('Registering applied choices list version '
-                              '"%s" in management database', cfg_ver)
-                db.set_value('list/choices-loaded', cfg_ver)
+            if list_type in ["choices", "districts"]:
+                cfg_ver = db.get_value(f"list/{list_type}")
+                self.log.info(
+                    "Registering applied %s list version %r in management database",
+                    list_type,
+                    cfg_ver,
+                )
+                db.set_value(f"list/{list_type}-loaded", cfg_ver)
             else:
-                cfg_ver = db.get_value(f'list/voters{list_no:02}')
-                self.log.info('Registering applied voters list #%d version '
-                              '"%s" in management database', list_no, cfg_ver)
-                db.set_value(f'list/voters{list_no:02}-loaded', cfg_ver)
+                assert list_type == "voters"
+                cfg_ver = db.get_value(f"list/voters{changeset_no:04}")
+                self.log.info(
+                    "Registering applied voters list #%d "
+                    "version %r in management database",
+                    changeset_no,
+                    cfg_ver,
+                )
+                db.set_value(f"list/voters{changeset_no:04}-state", "APPLIED")
 
         self.log.info('%s list applied successfully to service',
                       list_type.capitalize())
@@ -807,20 +819,21 @@ class Service:
         # restart service
         return self.restart_service()
 
-    def copy_cfg_to_service(self, cfg_type, list_no=None):
+    def copy_cfg_to_service(self, cfg_type, changeset_no=None):
         """Copy config to service host and reload service if needed.
 
         :param cfg_type: Config type
                          (trust, technical, elections, choices, voters)
         :type cfg_type: str
-        :param list_no: List number (only for voters list)
-        :type list_no: int
+        :param changeset_no: Changeset number for voter list
+        :type changeset_no: int
         :return: True on success, False on error.
         :rtype: bool
         """
         # copy config to host
-        cfg_filename_suffix = f'{list_no:02}' if cfg_type == 'voters' else ''
-        cfg_filename = f'{cfg_type}{cfg_filename_suffix}.bdoc'
+        cfg_filename_suffix = f"{changeset_no:04}" if cfg_type == "voters" else ""
+        cfg_filename_ext = "zip" if changeset_no else "bdoc"
+        cfg_filename = f"{cfg_type}{cfg_filename_suffix}.{cfg_filename_ext}"
         cfg_filepath = cfg_path('active_config_files_path', cfg_filename)
         target_path = f'/etc/ivxv/{cfg_filename}'
         if not self.scp(
@@ -843,6 +856,7 @@ class Service:
         # notify choices service about list change
         list_change_util = {
             'choices': 'ivxv-choiceimp',
+            'districts': 'ivxv-districtimp',
             'voters': 'ivxv-voterimp'
         }.get(cfg_type)
         if list_change_util:
@@ -859,8 +873,11 @@ class Service:
     def register_cfg_version(self, cfg_type, cfg_ver, service_state):
         """Register config version and service state in database."""
         with IVXVManagerDb(for_update=True) as db:
-            self.log.info('Registering %s config version "%s" '
-                          'in management database', cfg_type, cfg_ver)
+            self.log.info(
+                "Registering %s config version %r in management database",
+                cfg_type,
+                cfg_ver,
+            )
             db.set_value(
                 self.get_db_key('%s-conf-version' % cfg_type), cfg_ver)
 
@@ -871,7 +888,7 @@ class Service:
         """Register service state in database."""
         last_state = db.get_value(self.get_db_key('state'))
         if state == last_state:
-            self.log.info('Service state "%s" not changed', state)
+            self.log.info("Service state %r not changed", state)
             return
 
         # set background info
@@ -881,9 +898,12 @@ class Service:
             db.set_value(self.get_db_key('bg_info'), bg_info, safe=True)
 
         # set service state
-        self.log.info('Registering service state as "%s" '
-                      'in management database (last state: "%s")',
-                      state, last_state)
+        self.log.info(
+            "Registering service state as %r "
+            "in management database (last state: %r)",
+            state,
+            last_state,
+        )
         db.set_value(self.get_db_key('state'), state, safe=True)
         self.register_event(
             'SERVICE_STATE_CHANGE',
@@ -932,7 +952,7 @@ class Service:
                 'Ping error: {}'.format(
                     cmd_err_output or
                     ping_proc.stdout.decode('UTF-8').strip() or
-                    'Command "{}" failed'.format(' '.join(ping_cmd))))
+                    f"Command {' '.join(ping_cmd)!r} failed"))
             self.log.error('Pinging service failed')
             return False
 
@@ -947,7 +967,7 @@ class Service:
             self.register_bg_info(
                 'Ping error: {}'.format(
                     ping_proc.stdout.decode('UTF-8').strip() or
-                    'Command "{}" failed'.format(' '.join(ping_cmd))))
+                    f"Command {' '.join(ping_cmd)!r} failed"))
             self.log.error('Pinging service failed')
         else:  # invalid config
             self.register_bg_info(
@@ -965,6 +985,7 @@ class Service:
 
         * ``systemctl show`` - trust, technical and election config
         * ``ivxv-choiceimp`` - choices list
+        * ``ivxv-districtimp`` - districts list
         * ``ivxv-voterimp`` - voters lists
 
         :raises LookupError: if some internal check fails
@@ -972,6 +993,7 @@ class Service:
         cfg_versions = {
             'service_state': {},
             'choices_list_versions': [],
+            'districts_list_versions': [],
             'voters_lists_versions': [],
         }
 
@@ -999,25 +1021,26 @@ class Service:
         self.log.debug('Service internal status: %s',
                        cfg_versions['service_state']['Status'])
 
-        # query status text for choices list
+        # query status text for choices and districts list
         if self.service_type == 'choices':
-            cmd = (
-                f'ivxv-choiceimp --check version --instance {self.service_id}')
-            proc = self.ssh(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if proc.returncode:
-                raise LookupError(
-                    'Error while querying choices list version: {}'.format(
-                        proc.stderr.decode('UTF-8')))
-            status_text = proc.stdout.decode('UTF-8')
-            try:
-                choices_list_versions = (
-                    json.loads(status_text) if status_text else [])
-                assert isinstance(choices_list_versions, list)
-            except json.decoder.JSONDecodeError as err:
-                raise LookupError(
-                    'Error while decoding JSON data from service state: '
-                    f'{err}. JSON: {status_text}')
+            for cfg_type in ["choices", "districts"]:
+                utility = f"ivxv-{cfg_type[:-1]}imp"
+                cmd = f"{utility} --check version --instance {self.service_id}"
+                proc = self.ssh(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                if proc.returncode:
+                    raise LookupError(
+                        f"Error while querying {cfg_type} list version: "
+                        f"{proc.stderr.decode('UTF-8')}"
+                    )
+                status_text = proc.stdout.decode("UTF-8")
+                try:
+                    list_versions = json.loads(status_text) if status_text else []
+                    assert isinstance(list_versions, list)
+                except json.decoder.JSONDecodeError as err:
+                    raise LookupError(
+                        "Error while decoding JSON data from service state: "
+                        f"{err}. JSON: {status_text}"
+                    )
 
         # query status text for voters lists
         elif self.service_type == 'voting':
@@ -1055,56 +1078,61 @@ class Service:
         with IVXVManagerDb() as db:
             for cfg_type in 'trust', 'technical', 'election':
                 db_key = (
-                    f'config/trust' if cfg_type == 'trust' else
+                    'config/trust' if cfg_type == 'trust' else
                     self.get_db_key(f'{cfg_type}-conf-version'))
                 version_in_db = db.get_value(db_key)
                 versions_in_service = cfg_versions['service_state']['Version'][
                     cfg_type.capitalize()]
                 if version_in_db not in versions_in_service:
                     raise LookupError(
-                        f'{cfg_type.capitalize()} config version '
-                        'in service status info '
-                        f'does not contain version "{version_in_db}" '
-                        'registered in management database. '
-                        f'Service status info: {versions_in_service}')
-
-            versions_in_service = cfg_versions['choices_list_versions']
-            if versions_in_service:
-                version_in_db = db.get_value('list/choices')
-                if version_in_db not in versions_in_service:
-                    raise LookupError(
-                        'Choices list version in service status info '
-                        f'does not contain version "{version_in_db}" '
-                        'as registered in management database. '
-                        'Choices list versions in services: '
-                        f'{versions_in_service}')
+                        f"{cfg_type.capitalize()} config version "
+                        "in service status info "
+                        f"does not contain version {version_in_db!r} "
+                        "registered in management database. "
+                        f"Service status info: {versions_in_service}"
+                    )
+            for list_type in ["choices", "districts"]:
+                versions_in_service = cfg_versions[f"{list_type}_list_versions"]
+                if versions_in_service:
+                    version_in_db = db.get_value(f"list/{list_type}")
+                    if version_in_db not in versions_in_service:
+                        raise LookupError(
+                            f"{list_type.capitalize()} list version "
+                            "in service status info "
+                            f"does not contain version {version_in_db!r} "
+                            "as registered in management database. "
+                            "Choices list versions in services: "
+                            f"{versions_in_service}"
+                        )
 
             version_lists_in_service = cfg_versions['voters_lists_versions']
             if version_lists_in_service:
-                for voter_list_no in range(1, 100):
-                    key = f'list/voters{voter_list_no:02d}-loaded'
+                for changeset_no in range(10_000):
+                    key = f"list/voters{changeset_no:04d}-loaded"
                     try:
                         version_in_db = db.get_value(key)
                     except KeyError:
                         break
                     try:
                         versions_in_service = version_lists_in_service[
-                            voter_list_no - 1]
+                            changeset_no - 1]
                     except IndexError:
                         raise LookupError(
-                            'Service status info does not contain '
-                            'version info for voters list '
-                            f'#{voter_list_no:02d}. '
-                            'Version for this list in management database '
-                            f'is "{version_in_db}"')
+                            "Service status info does not contain "
+                            "version info for voters list "
+                            f"#{changeset_no:04d}. "
+                            "Version for this list in management database "
+                            f"is {version_in_db!r}"
+                        )
                     if version_in_db not in versions_in_service:
                         raise LookupError(
-                            f'Voters list #{voter_list_no:02d} version '
-                            'in service status info '
-                            f'does not contain version "{version_in_db}" '
-                            'as registered in management database. '
-                            'Voters list versions in services: '
-                            f'{versions_in_service}')
+                            f"Voters list #{changeset_no:04d} version "
+                            "in service status info "
+                            f"does not contain version {version_in_db!r} "
+                            "as registered in management database. "
+                            "Voters list versions in services: "
+                            f"{versions_in_service}"
+                        )
 
     def scp(self,
             local_path,

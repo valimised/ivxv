@@ -21,7 +21,7 @@ Hääletajatelt saadud hääled. Pärast hääletamisperioodi lõppu edastab
 Kogumisteenus talletatud hääled Töötlejale ning Registreerimisteenus edastab
 registreeritud hääled Töötlejale.
 
-Registreerimisteenus aitab tagada e-urni terviklust. Eeldame et Kogumisteenusel
+Registreerimisteenus aitab tagada e-valimiskasti terviklust. Eeldame et Kogumisteenusel
 puudub võimalus võltsida digitaalallkirja ning sellisel moel tekitada juurde
 hääli või muuta juba talletatud hääli. Riskina säilib võimalus, et Kogumisteenus
 ei anna kõiki talletatud hääli Töötlejale üle. Häälte valikulise üleandmise

@@ -11,17 +11,16 @@ import (
 
 const bin = "./testgen"
 
-func gobin() string {
-	// Prefer go binary from environment.
-	if gobin, ok := os.LookupEnv("GO"); ok {
-		return gobin
-	}
-	return "go"
-}
+var gobin = "go"
 
 func TestMain(m *testing.M) {
+	// Prefer go binary from environment.
+	if goenv, ok := os.LookupEnv("GO"); ok {
+		gobin = goenv
+	}
+
 	// Generate the template source file, if not already done.
-	out, err := exec.Command(gobin(), "generate").CombinedOutput()
+	out, err := exec.Command(gobin, "generate").CombinedOutput()
 	if err != nil {
 		fmt.Fprint(os.Stderr, string(out))
 		fmt.Fprintln(os.Stderr, "go generate failed:", err)
@@ -29,7 +28,7 @@ func TestMain(m *testing.M) {
 	}
 
 	// Build the testing binary.
-	out, err = exec.Command(gobin(), "build", "-o", bin).CombinedOutput()
+	out, err = exec.Command(gobin, "build", "-o", bin).CombinedOutput()
 	if err != nil {
 		fmt.Fprint(os.Stderr, string(out))
 		fmt.Fprintf(os.Stderr, "building %s failed: %v\n", bin, err)
@@ -113,7 +112,7 @@ func TestSingle(t *testing.T) {
 	r.expectnot(`^generating testdata/single/gen_types_test\.go$`)
 
 	// Ensure the generated code compiles.
-	out, err := exec.Command(gobin(), "build", "./testdata/single").CombinedOutput()
+	out, err := exec.Command(gobin, "build", "./testdata/single").CombinedOutput()
 	if err != nil {
 		t.Logf(string(out))
 		t.Error("building ./testdata/single failed:", err)

@@ -22,6 +22,6 @@ IVXV kogumisteenuse haldusliidese kasutusjuhend
    statistika
    kasutajad
    teenused
-   e-urn
+   allalaadimised
    seadistused
    logi

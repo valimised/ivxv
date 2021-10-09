@@ -134,24 +134,25 @@ function loadPageData() {
       }
 
       // voting lists - voters
-      $('#list-voters-loaded').text(state['list']['voters-list-loaded']);
-      $('#list-voters-pending').text(state['list']['voters-list-pending']);
+      fillVoterListStateCounters(state['list']);
       $('#voterslist')
         .removeClass('list-group-item-danger')
         .removeClass('list-group-item-success');
-      if (state['list']['voters-list-loaded'] === 0) {
+      if ((state['list']['voters-list-total'] === 0) ||
+        (state['list']['voters-list-invalid'] !== 0)) {
         $('#voterslist').addClass('list-group-item-danger');
       } else if (state['list']['voters-list-pending'] === 0) {
         $('#voterslist').addClass('list-group-item-success');
 
         $('#list-list').empty();
-        for (var i = 0; i < state['list']['voters-list-loaded']; i++) {
-          var iStr = (i < 10 ? '0' : '') + (i + 1);
-          var listStatus = state['list']['voters' + iStr] === state['list']['voters' + iStr + '-loaded'] ?
-            'LAADITUD' : 'OOTEL';
+        for (var changeset_no = 0; changeset_no < 10000; changeset_no++) {
+          var iStr = 'voters' + String(changeset_no).padStart(4, '0');
+          if (!(iStr + '-state' in state['list']))
+            break;
+          var listStatus = voterListStateDescriptions.get(state['list'][iStr + '-state']);
           $('#list-list').append(
             '<li class="list-group-item list-group-item-success" style="padding-left:25px">' +
-            (i + 1) + '. ' + listStatus + ': ' + state['list']['voters' + iStr] +
+            (changeset_no + 1) + '. ' + listStatus + ': ' + state['list'][iStr] +
             '</li>'
           );
         }
@@ -208,8 +209,12 @@ function loadPageData() {
       $('#user-count').text(usercount);
 
       // command packages
-      $('#commands-loaded').text(state['storage']['command_files'].length);
-      $('#commands-pending').text(state['storage']['command_files_pending'].length);
+      $('#command-files-count').text(
+        state['storage']['command_files_active'].length +
+        state['storage']['command_files_inactive'].length
+      );
+      $('#command-files-active-count').text(state['storage']['command_files_active'].length);
+      $('#command-files-inactive-count').text(state['storage']['command_files_inactive'].length);
 
       // data loading stats
       var genDate = new Date();

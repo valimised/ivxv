@@ -9,6 +9,8 @@ import (
 	"crypto"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/asn1"
+	"encoding/base64"
 	"encoding/pem"
 	"math/big"
 )
@@ -102,6 +104,19 @@ func PEMCertificate(p string) (cert *x509.Certificate, err error) {
 	return
 }
 
+// Base64Certificate parses a X.509 certificate from base64-encoded DER data.
+func Base64Certificate(b string) (cert *x509.Certificate, err error) {
+	certDER, err := base64.StdEncoding.DecodeString(b)
+	if err != nil {
+		return nil, Base64CertificateDecodeError{Err: err}
+	}
+	cert, err = x509.ParseCertificate(certDER)
+	if err != nil {
+		return nil, Base64CertParseX509Error{Err: err}
+	}
+	return
+}
+
 // PEMCertificatePool parses a slice of PEM-encoded certificates and puts them
 // in a CertPool.
 func PEMCertificatePool(pems ...string) (pool *x509.CertPool, err error) {
@@ -126,6 +141,24 @@ func CertificatePool(certs ...*x509.Certificate) (pool *x509.CertPool) {
 	return pool
 }
 
+// ReEncodeECDSASignature re-encodes an ECDSA XML digital signature to an ECDSA
+// X.509 PKI digital signature. The XML signature format is specified in
+// https://tools.ietf.org/html/rfc4050#section-3.3 and the X.509 PKI signature
+// format is specified in https://tools.ietf.org/html/rfc3279#section-2.2.3.
+func ReEncodeECDSASignature(signature []byte) (recode []byte, err error) {
+	var r, s *big.Int
+	if r, s, err = ParseECDSAXMLSignature(signature); err != nil {
+		return nil, ECDSASignatureParseError{Signature: signature, Err: err}
+	}
+	if recode, err = asn1.Marshal(struct {
+		R *big.Int
+		S *big.Int
+	}{r, s}); err != nil {
+		return nil, ECDSASignatureASN1MarshalError{Err: err}
+	}
+	return
+}
+
 // ParseECDSAXMLSignature parses an ECDSA XML digital signature. The XML
 // signature is a concatenation of the R and S outputs of the ECDSA algorithm
 // as specified in https://tools.ietf.org/html/rfc4050#section-3.3.
@@ -140,6 +173,25 @@ func ParseECDSAXMLSignature(signature []byte) (r, s *big.Int, err error) {
 	r = big.NewInt(0).SetBytes(signature[:n])
 	s = big.NewInt(0).SetBytes(signature[n:])
 	return
+}
+
+// ParseECDSAASN1Signature parses an ECDSA ASN.1 digital signature. The ASN.1
+// signature is a DER-encoded SEQUENCE of the R and S INTEGERS of the ECDSA
+// algorithm as specified in https://tools.ietf.org/html/rfc3279#section-2.2.3.
+//
+// Note! This format differs from the one used in XML digital signatures
+// specified here https://tools.ietf.org/html/rfc4050#section-3.3.
+func ParseECDSAASN1Signature(der []byte) (r, s *big.Int, err error) {
+	var parsed struct {
+		R *big.Int
+		S *big.Int
+	}
+	if rest, err := asn1.Unmarshal(der, &parsed); err != nil {
+		return nil, nil, ECDSASignatureASN1UnmarshalError{Err: err}
+	} else if len(rest) > 0 {
+		return nil, nil, ECDSASignatureTrailingDataError{Err: err}
+	}
+	return parsed.R, parsed.S, nil
 }
 
 // AlgorithmIdentifierCmp compares two pkix.AlgorithmIdentifier structures

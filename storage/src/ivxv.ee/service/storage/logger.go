@@ -27,7 +27,7 @@ func newLogger() (logger, error) {
 }
 
 func (l logger) log(ctx context.Context, r io.ReadCloser) {
-	defer r.Close() // nolint: errcheck, PipeReader.Close always returns nil.
+	defer r.Close()
 	defer func() {
 		if err := l.Close(); err != nil {
 			log.Error(ctx, EtcdSyslogCloseError{Err: err})

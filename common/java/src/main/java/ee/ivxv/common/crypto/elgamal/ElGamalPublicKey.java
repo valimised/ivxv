@@ -137,6 +137,14 @@ public class ElGamalPublicKey {
         return String.format("ElGamalPublicKey(%s, %s)", parameters, key);
     }
 
+    public BigInteger generateCompatibleRandomness() throws IOException {
+        return generateCompatibleRandomness(new NativeRnd());
+    }
+
+    public BigInteger generateCompatibleRandomness(Rnd rnd) throws IOException {
+        return IntegerConstructor.construct(rnd, getParameters().getGeneratorOrder());
+    }
+
     /**
      * Encrypt the message using system random source.
      * 
@@ -146,7 +154,7 @@ public class ElGamalPublicKey {
      * @throws IOException When reading randomness fails.
      */
     public ElGamalCiphertext encrypt(Plaintext msg) throws KeyException, IOException {
-        return encrypt(msg, new NativeRnd());
+        return encrypt(msg, generateCompatibleRandomness());
     }
 
     /**
@@ -159,6 +167,20 @@ public class ElGamalPublicKey {
      * @throws IOException When reading randomness fails.
      */
     public ElGamalCiphertext encrypt(Plaintext msg, Rnd rnd) throws KeyException, IOException {
+        return encrypt(msg, generateCompatibleRandomness(rnd));
+    }
+
+    /**
+     * Encrypt the message using specified randomness
+     * The r must be properly generated, no error checking here
+     *
+     * @param msg
+     * @param rnd
+     * @return
+     * @throws KeyException When encryption fails.
+     * @throws IOException When reading randomness fails.
+     */
+    public ElGamalCiphertext encrypt(Plaintext msg, BigInteger r) throws KeyException, IOException {
         Plaintext padded = getParameters().getGroup().pad(msg);
         GroupElement el;
         try {
@@ -166,7 +188,6 @@ public class ElGamalPublicKey {
         } catch (MathException e) {
             throw new KeyException("Encoding for key parameters failed: " + e);
         }
-        BigInteger r = IntegerConstructor.construct(rnd, getParameters().getGeneratorOrder());
         try {
             return new ElGamalCiphertext(getParameters().getGenerator().scale(r),
                     getKey().scale(r).op(el), getParameters().getOID());
@@ -174,4 +195,7 @@ public class ElGamalPublicKey {
             throw new KeyException("Key initialization error");
         }
     }
+
+
+
 }

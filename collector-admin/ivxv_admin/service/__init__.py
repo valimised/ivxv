@@ -1,7 +1,7 @@
 # IVXV Internet voting framework
 """Microservice management module."""
 
-from .. import SERVICE_TYPE_PARAMS, SERVICE_STATE_REMOVED
+from .. import SERVICE_STATE_REMOVED, SERVICE_TYPE_PARAMS
 from .logging import log
 
 #: Path to users SSH public key file.
@@ -28,6 +28,7 @@ def get_service_cfg_state(db, cfg):
                          'technical': bool,
                          'election': bool,
                          'choices': bool,
+                         'districts': bool,
                          'voters': [list-number, ...],
                      },
                      ...
@@ -45,12 +46,13 @@ def get_service_cfg_state(db, cfg):
     # detect need for list updates
     update_choices_list = (db.get_value('list/choices') !=
                            db.get_value('list/choices-loaded'))
+    update_districts_list = (db.get_value('list/districts') !=
+                             db.get_value('list/districts-loaded'))
     update_voters_list = []
-    for voter_list_no in range(1, 100):
+    for changeset_no in range(10_000):
         try:
-            if (db.get_value('list/voters%02d' % voter_list_no) !=
-                    db.get_value('list/voters%02d-loaded' % voter_list_no)):
-                update_voters_list.append(voter_list_no)
+            if db.get_value(f"list/voters{changeset_no:04d}-state") == "PENDING":
+                update_voters_list.append(changeset_no)
         except KeyError:
             break
 
@@ -72,6 +74,8 @@ def get_service_cfg_state(db, cfg):
                     'election': service_election_cfg_ver != election_cfg_ver,
                     'choices':
                     service_type == 'choices' and update_choices_list,
+                    'districts':
+                    service_type == 'choices' and update_districts_list,
                     'voters': update_voters_list,
                 }
                 if service_list[service['id']]['technical']:
@@ -145,10 +149,10 @@ def generate_service_hints(services):
                 ['Install service TLS certificate',
                  not params.get('tls-cert', True)],
             ]
-        if service_type_params['dds']:
+        if service_type_params['mobile_id']:
             hints.append(
                 ['Install mobile ID identity token key',
-                 not params.get('dds-token-key', True)])
+                 not params.get('mid-token-key', True)])
         if service_type_params['tspreg']:
             hints.append(
                 ['Install TSP registration key',
