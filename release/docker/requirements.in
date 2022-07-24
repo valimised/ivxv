@@ -1,0 +1,10 @@
+# IVXV Internet voting framework
+# Python requirements for release builder
+
+docutils==0.16
+sphinx==3.4.3
+sphinx_rtd_theme
+
+# Jinja >= 3.1.0 with Sphinx == 3.4.3 raises
+# ImportError: cannot import name 'environmentfilter' from 'jinja2' (jinja2/__init__.py)
+jinja2<3.1.0

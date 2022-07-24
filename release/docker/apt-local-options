@@ -1,0 +1,8 @@
+# IVXV Internet voting framework
+# Custom APT options
+
+# Don't install recommended packages
+APT::Install-Recommends "0";
+
+# Suppress "Reading database" messages
+Dpkg::Use-Pty "0";

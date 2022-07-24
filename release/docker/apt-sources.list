@@ -1,0 +1,16 @@
+# IVXV Internet voting framework
+# Package sources
+
+# Ubuntu 20.04 LTS (Focal Fossa)
+
+# main
+deb http://ee.archive.ubuntu.com/ubuntu focal main restricted universe multiverse
+#deb-src http://ee.archive.ubuntu.com/ubuntu focal main restricted universe
+
+# updates
+deb http://ee.archive.ubuntu.com/ubuntu focal-updates main restricted universe multiverse
+#deb-src http://ee.archive.ubuntu.com/ubuntu focal-updates main restricted universe
+
+# security updates
+deb http://security.ubuntu.com/ubuntu focal-security main restricted universe
+#deb-src http://security.ubuntu.com/ubuntu focal-security main restricted universe
