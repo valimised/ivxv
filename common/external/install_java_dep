@@ -1,0 +1,19 @@
+#!/bin/bash
+
+GRADLE="https://services.gradle.org/distributions/gradle-6.4-bin.zip"
+
+function installGradle {
+    wget -O gradle-6.4.zip $GRADLE
+    unzip gradle-6.4.zip
+    rm gradle-6.4.zip
+}
+
+function syncRemoteRepositories {
+    make -C ../java/ sync
+}
+
+echo "Downloading Gradle"
+installGradle
+
+echo "Downloading dependencies. This may take a while."
+syncRemoteRepositories
