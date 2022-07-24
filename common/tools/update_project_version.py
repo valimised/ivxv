@@ -14,6 +14,11 @@ from debian import debfile
 
 def update_version(filename, pattern, repl):
     """Update version data in file."""
+
+    # ignore files missing in some repositories
+    if not os.path.exists(filename):
+        return
+
     file_content = []
     updated = None
     pattern = re.compile(pattern)
