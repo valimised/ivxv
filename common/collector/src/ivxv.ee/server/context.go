@@ -38,6 +38,11 @@ type Header struct {
 	// verifiers to authenticate the client. It may be omitted, depending
 	// on the authentication method. Not included in the response.
 	AuthToken []byte `json:",omitempty" size:"16000"`
+
+	// DataToken is a data token used for keeping authentication
+	// data. It may be omitted, depending on the authentication
+	// method. Not included in the response.
+	DataToken []byte `json:",omitempty" size:"16000"`
 }
 
 // header is an unexported interface to check if a message contains a Header.
@@ -57,6 +62,7 @@ const (
 	authClientKey            // Context key for authenticated client's distinguished name.
 	voteIDKey                // Context key for vote identifier from authentication token.
 	voterIDKey               // Context key for authenticated client's unique identifier.
+	voterIDNumber            // Context key for authenticated client's unique number.
 
 	// Keys only used internally.
 	addrKey // Context key for connection's remote address.
@@ -98,6 +104,15 @@ func VoteIdentifier(ctx context.Context) []byte {
 // empty string if no authentication was done in this context.
 func VoterIdentity(ctx context.Context) string {
 	if val := ctx.Value(voterIDKey); val != nil {
+		return val.(string)
+	}
+	return ""
+}
+
+// VoterNumber returns the unique number of the authenticated client or
+// empty string if no authentication was done in this context.
+func VoterNumber(ctx context.Context) string {
+	if val := ctx.Value(voterIDNumber); val != nil {
 		return val.(string)
 	}
 	return ""

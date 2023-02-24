@@ -40,14 +40,12 @@ auth:
       - !container EE_Certification_Centre_Root_CA.pem.crt
       - !container EE-GovCA2018.pem.crt
     intermediates:
-      - !container ESTEID-SK_2011.pem.crt
       - !container ESTEID-SK_2015.pem.crt
       - !container esteid2018.pem.crt
     ocsp:
       url: http://aia.sk.ee/esteid2015
       # respondereid ei tohiks enam vaja minna
       responders:
-      #  - !container ESTEID-SK_2011_AIA_OCSP_RESPONDER_201808.pem.cer
       #  - !container ESTEID-SK_2015_AIA_OCSP_RESPONDER_201808.pem.cer
       # Proovime ainult 1 korra, vea korral uuesti ei lähe, see on ka
       # vaikeväärtus
@@ -69,7 +67,6 @@ vote:
       - !container EE_Certification_Centre_Root_CA.pem.crt
       - !container EE-GovCA2018.pem.crt
     intermediates:
-      - !container ESTEID-SK_2011.pem.crt
       - !container ESTEID-SK_2015.pem.crt
       - !container esteid2018.pem.crt
     profile: BES
@@ -89,7 +86,6 @@ mid:
   roots:
     - !container EE_Certification_Centre_Root_CA.pem.crt
   intermediates:
-    - !container ESTEID-SK_2011.pem.crt
     - !container ESTEID-SK_2015.pem.crt
   ocsp:
     url: http://aia.sk.ee/esteid2015
@@ -114,7 +110,6 @@ qualification:
     conf:
       url: http://aia.sk.ee/esteid2015
       responders:
-      #  - !container ESTEID-SK_2011_AIA_OCSP_RESPONDER_201808.pem.cer
       #  - !container ESTEID-SK_2015_AIA_OCSP_RESPONDER_201808.pem.cer
 # Lubame ühe korra peale päringu ebaõnnestumist veel proovida
       retry: 1

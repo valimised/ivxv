@@ -28,11 +28,9 @@ public class CommandLine {
         this.options = options;
     }
 
-    // TODO Currently not allowing combined flags, like "ls -ltr"
-
     /**
      * Parses an instance of <tt>CommandLine</tt> out of the provided command line arguments.
-     * 
+     *
      * @param args the command line arguments
      * @return Returns a <tt>CommandLine</tt> instance that corresponds to the provided arguments.
      */
@@ -65,7 +63,6 @@ public class CommandLine {
         return new CommandLine(commands, options);
     }
 
-    // TODO Consider returning error list
     public void set(Args args) throws ParseException {
         Map<Arg<?>, Arg.Tree> branches = new HashMap<>();
         Set<Arg<?>> processedArgs = new HashSet<>();

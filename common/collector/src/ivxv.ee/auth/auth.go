@@ -65,6 +65,14 @@ type VoteIdentifier interface {
 	VoteIdentifier(token []byte) (voteID []byte, err error)
 }
 
+// TokenData is an optional additional interface that Verifiers can
+// implement. If a Verifier is also a VoteIdentifier, then it should be used to
+// retrieve the vote identifier for storing the vote submitted using the
+// authentication token.
+type TokenData interface {
+	TokenData(token []byte) (data []byte, err error)
+}
+
 // NewFunc is the type of functions that an authentication verifier with a
 // specified configuration.
 type NewFunc func(yaml.Node) (Verifier, error)
@@ -136,6 +144,19 @@ func (a Auther) Verify(ctx context.Context, t Type, token []byte) (
 	if vid, ok := v.(VoteIdentifier); ok {
 		if voteID, err = vid.VoteIdentifier(token); err != nil {
 			return nil, nil, err
+		}
+	}
+	return
+}
+
+func (a Auther) Data(t Type, token []byte) (data []byte, err error) {
+	v, ok := a[t]
+	if !ok {
+		return nil, UnconfiguredDataTypeError{Type: t}
+	}
+	if vid, ok := v.(TokenData); ok {
+		if data, err = vid.TokenData(token); err != nil {
+			return nil, err
 		}
 	}
 	return

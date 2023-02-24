@@ -21,7 +21,7 @@ frontend {{replace .Service.ID "@" "-" -1}}
 	tcp-request inspect-delay 3000
 	tcp-request content accept if { req.ssl_hello_type 1 }
 {{range .Backends}}
-	use_backend {{.Name}} if { req.ssl_sni {{.Name}}.ivxv.invalid }
+	use_backend {{.Name}} if { req.ssl_sni {{.Name}}.{{.SniDomain}} }
 {{- end}}
 {{range .Backends}}
 backend {{.Name}}

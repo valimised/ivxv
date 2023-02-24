@@ -1,0 +1,25 @@
+{
+    "server": {
+        "address": ":443",
+        "batchmaxsize": 1000,
+        "openapipath": "/etc/xroad-service/ehs-xroad-api.yaml",
+        "tls": {
+            "insecure": false,
+            "certificate": "/etc/xroad-service/cert.pem",
+            "key": "/etc/xroad-service/cert.key"
+        },
+        "xroad": {
+            "certificate": "/etc/xroad-service/xroad.pem"
+        }
+    },
+    "elections": [
+        {
+            "name": "RK_2023",
+            "address": "ivxv1.ivxv.ee:443",
+            "servername": "votesorder.ivxv.invalid",
+            "rootca": "/etc/xroad-service/ehs.pem",
+            "clientcert": "/etc/xroad-service/client.pem",
+            "clientkey": "/etc/xroad-service/client.key"
+        }
+    ]
+}

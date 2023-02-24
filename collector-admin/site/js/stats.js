@@ -14,6 +14,12 @@ function loadPageData() {
   // manage districts selection
   if ($('#districts option').length == 1) {
     $.getJSON('data/districts.json', function(data) {
+        /*
+         * HTTP GET on https://admin.?.ivxv.ee/ivxv/data/districts.json
+         * HTTP GET response that contains HTML tags is not allowed!
+         * data is always an JSON object
+         */
+        data = sanitizeJSON(data);
         var dropdown = $('#districts');
         $.each(data, function() {
           dropdown.append($('<option />').val(this[0]).text(this[1]));
@@ -26,6 +32,12 @@ function loadPageData() {
 
   // fill page with stats
   $.getJSON('data/stats.json', function(data) {
+      /*
+       * HTTP GET on https://admin.?.ivxv.ee/ivxv/data/stats.json
+       * HTTP GET response that contains HTML tags is not allowed!
+       * data is always an JSON object
+       */
+      data = sanitizeJSON(data)
       $('#stats-error').hide();
       $('#stats-error-msg').html();
       $('#auth-os').empty();
@@ -59,43 +71,43 @@ function loadPageData() {
                 if (stats_key === 'authentication-methods') {
                   var method = 'ID-kaart';
                   if (stats_table_val[0] === 'ticket') {
-                    method = 'Mobiil-ID';
+                    method = 'Mobiil-ID/Smart-ID';
                   }
                   $('#auth-os').append(
                     '<tr><td>' +
                     method +
                     '</td><td>' +
-                    stats_table_val[1] +
+                    sanitizePrimitive(stats_table_val[1]) +
                     '</td></tr>'
                   )
                 } else if (stats_key === 'operating-systems') {
                   $('#auth-os').append(
                     '<tr><td>' +
-                    stats_table_val[0] +
+                    sanitizePrimitive(stats_table_val[0]) +
                     '</td><td>' +
-                    stats_table_val[1] +
+                    sanitizePrimitive(stats_table_val[1]) +
                     '</td></tr>'
                   )
                 } else if (stats_key === 'top-10-revoters') {
                   $('#table-revoters').append(
                     '<tr><td>' +
-                    stats_table_val[0] +
+                    sanitizePrimitive(stats_table_val[0]) +
                     '</td><td>' +
-                    stats_table_val[1] +
+                    sanitizePrimitive(stats_table_val[1]) +
                     '</td></tr>'
                   )
                 } else if (stats_key === 'votes-by-country') {
                   $('#table-countries').append(
                     '<tr><td>' +
-                    stats_table_val[0] +
+                    sanitizePrimitive(stats_table_val[0]) +
                     '</td><td>' +
-                    stats_table_val[1] +
+                    sanitizePrimitive(stats_table_val[1]) +
                     '</td></tr>'
                   )
                 }
               });
             } else {
-              $('#' + stats_key).html(stats_val);
+              $('#' + sanitizePrimitive(stats_key)).text(stats_val);
             }
           });
         } else if (key === 'error') {

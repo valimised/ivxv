@@ -106,10 +106,22 @@ func (t *T) VoteIdentifier(token []byte) (voteID []byte, err error) {
 	return ticket.VoteID, nil
 }
 
+// CreateData issues a new ticket for the data.
+func (t *T) CreateData(plain []byte) (ticket []byte, err error) {
+	return t.cookie.Create(plain), nil
+}
+
+// TokenData implements the ivxv.ee/auth.TokenData interface. The
+// token must be a ticket issued with the same cookie key as it was configured
+// with.
+func (t *T) TokenData(token []byte) (data []byte, err error) {
+	return t.openplain(token)
+}
+
 func (t *T) open(token []byte) (ticket tt, err error) {
-	plain, err := t.cookie.Open(token)
+	plain, err := t.openplain(token)
 	if err != nil {
-		return ticket, OpenTicketError{Err: err}
+		return ticket, err
 	}
 	rest, err := asn1.Unmarshal(plain, &ticket)
 	if err != nil {
@@ -117,6 +129,14 @@ func (t *T) open(token []byte) (ticket tt, err error) {
 	}
 	if len(rest) > 0 {
 		return ticket, TrailingDataError{Rest: rest}
+	}
+	return
+}
+
+func (t *T) openplain(token []byte) (plain []byte, err error) {
+	plain, err = t.cookie.Open(token)
+	if err != nil {
+		return nil, OpenTicketError{Err: err}
 	}
 	return
 }

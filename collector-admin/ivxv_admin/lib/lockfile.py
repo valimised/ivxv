@@ -42,7 +42,7 @@ class PidLocker:
         self.fp = open(pidfile_name, "ab")
         fcntl.flock(self.fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
         atexit.register(self.rm_pid)
-        self.fp.write(bytes("{}\n".format(os.getpid()), "ASCII"))
+        self.fp.write(bytes(f"{os.getpid()}\n", "ASCII"))
         self.fp.flush()
 
     def rm_pid(self):

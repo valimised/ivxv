@@ -7,11 +7,6 @@ Kontrollrakenduse seadistamine
 
 Kontrollrakenduste seadistus on JSON formaadis.
 
-#. Android-seadmed otsivad seadistust aadressilt
-   "https://www.valimised.ee/kontrollrakendus/config.json".
-#. iOS-seadmed otsivad seadistust aadressilt
-   "https://www.valimised.ee/kontrollrakendus/config.json"
-
 Reaalne sisu võib kahel seadistusel olla samasugune ka siis kui
 võimalike erinevuste tekkimise jaoks kasutatakse ennetavalt erinevaid
 URLe. Varasemalt on erinevate URLide kasutamist õigustanud nt. iOS

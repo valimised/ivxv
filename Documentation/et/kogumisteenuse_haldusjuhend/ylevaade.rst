@@ -95,7 +95,7 @@ Välised teenused
 Välised teenused on läbiviidavatele valimistele kehtestatud nõuetest sõltuvad
 teenused, millega kogumisteenus on võimeline liidestuma. Väliste teenuste hulka
 kuuluvad Registreerimisteenus, Ajatempliteenus, Mobiil-ID
-teenus, OCSP teenus vms.
+teenus, Smart-ID teenus, OCSP teenus vms.
 
 
 Ülevaade toimingutest

@@ -1,0 +1,4 @@
+#!/usr/bin/dh-exec
+usr/bin/smartid => usr/bin/ivxv-smartid
+
+usr/lib/systemd/user/ivxv-smartid@.service

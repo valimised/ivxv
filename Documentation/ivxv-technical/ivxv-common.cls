@@ -51,7 +51,7 @@
 % For figuring out, how many pages there is in the document
 \usepackage{lastpage}
 
-% We want to do later MakeUppercase for the section heads and when \label{} is included in the section head, then it will break everything. 
+% We want to do later MakeUppercase for the section heads and when \label{} is included in the section head, then it will break everything.
 % Textcase package provides more intelligent MakeUppercase command
 \usepackage[overload]{textcase}
 
@@ -66,7 +66,7 @@
 
 \newcommand{\IVXVArial}{\fontfamily{phv} \selectfont}
 
-% Commands for setting the document type, number, version, etc. 
+% Commands for setting the document type, number, version, etc.
 \newcommand{\IVXVDefineDocumentType}[1]{\def\@IVXVStringDocumentType{#1}}
 \newcommand{\IVXVDefineDocumentNumber}[1]{\def\@IVXVDocumentNumber{#1}}
 \newcommand{\IVXVDefineDocumentVersion}[1]{\def\@IVXVDocumentVersion{#1}}
@@ -174,13 +174,13 @@
 		\IVXVArial
 		{\LARGE \bfseries \@title}
 		\vfill
-		{\Large \bfseries 
+		{\Large \bfseries
 			\@IVXVStringDocumentType
 
 			\ifx\@IVXVDocumentVersion\@empty
-				Dok. versiooninumber defineerimata. Kasuta IVXVDefineDocumentVersion käsku või IVXV-Document-Version stiili. 
+				Dok. versiooninumber defineerimata. Kasuta IVXVDefineDocumentVersion käsku või IVXV-Document-Version stiili.
 			\else
-				\@IVXVStringVersion~\@IVXVDocumentVersion 
+				\@IVXVStringVersion~\@IVXVDocumentVersion
 			\fi
 
 			\@date
@@ -224,4 +224,3 @@
 \renewcommand{\labelenumiv}{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiii}.\arabic{enumiv}}
 % make LaTeX observe right margins at all costs:
 \sloppy
-

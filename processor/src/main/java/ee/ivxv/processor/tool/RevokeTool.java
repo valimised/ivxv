@@ -61,10 +61,14 @@ public class RevokeTool implements Tool.Runner<RevokeArgs> {
 
         Path OUT_IVLJSON = Util.prefixedPath(bb.getElection(), OUT_IVLJSON_TMPL);
         Path OUT_RR = Util.prefixedPath(bb.getElection(), OUT_RR_TMPL);
+        Path OUT_RR_ANONYMOUS = Util.prefixedPath(bb.getElection(), OUT_RR_TMPL + ".anonymous");
         Path OUT_BB = Util.prefixedPath(bb.getElection(), OUT_BB_TMPL);
 
         reporter.writeIVoterList(out.resolve(OUT_IVLJSON), null, bb, dl);
-        reporter.writeRevocationReport(out.resolve(OUT_RR), bb.getElection(), loader.revRecords);
+        reporter.writeRevocationReport(out.resolve(OUT_RR), bb.getElection(), loader.revRecords,
+                Reporter.AnonymousFormatter.NOT_ANONYMOUS);
+        reporter.writeRevocationReport(out.resolve(OUT_RR_ANONYMOUS), bb.getElection(), loader.revRecords,
+                Reporter.AnonymousFormatter.REVOCATION_REPORT_CSV);
         reporter.writeLog2(out, bb.getElection(), loader.getLog2Records());
 
         tool.writeJsonBb(bb, out.resolve(OUT_BB));

@@ -1,3 +1,50 @@
+ivxv (1.8.2) focal; urgency=medium
+
+  * General
+    - Simplify voterlist format for VIS compatibility
+
+  * x-Road Service
+    - CI
+    - Documentation
+
+  * Management interface
+    - Export unique reports
+
+  * Processor application
+    - Add revokeAndAnonymize utility
+
+  * Collector service
+    - Reject SessionID with invalid structure
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Mon, 23 Jan 2023 18:11:51 +0000
+
+ivxv (1.8.1) focal; urgency=medium
+
+  * Collector service:
+    - SmartID support
+    - X-road service for VIS communication
+    - Ordering of the votes
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Fri, 16 Dec 2022 11:53:15 +0000
+
+ivxv (1.8.0) focal; urgency=medium
+
+  * Collector service:
+    - Introduction of votes order interface for VIS
+    - Configurable SNI
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Thu, 01 Dec 2022 21:48:08 +0000
+
+ivxv (1.7.8) focal; urgency=medium
+
+  * Collector service:
+    - Fix rebuilding storage index to not corrupt the latest vote index.
+
+  * Key application
+    - Attempt to retry in case of errors
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Tue, 28 Dec 2021 00:11:09 +0000
+
 ivxv (1.7.7) focal; urgency=medium
 
   * Documentation

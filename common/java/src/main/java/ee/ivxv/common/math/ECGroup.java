@@ -16,7 +16,7 @@ public class ECGroup extends Group {
     /** The curve name constant for P-384 curve. */
     public final static String P384 = "P-384";
 
-    // XXX: there is no objective reasoning for this value. It seems to give
+    // there is no objective reasoning for this value. It seems to give
     // reasonable success probability (i.e. failure rate 1/2^1024)
     // the probability of encoding failure is 2^-(2^ENCODING_SUCCESS)
     private final static int ENCODING_SUCCESS = 10;
@@ -35,7 +35,7 @@ public class ECGroup extends Group {
 
     /**
      * Initialize an elliptic curve using a serialized value.
-     * 
+     *
      * @see #getBytes()
      * @param data
      * @throws IllegalArgumentException When parsing fails
@@ -46,7 +46,7 @@ public class ECGroup extends Group {
 
     /**
      * Initialize an elliptic curve using a standard name for the curve.
-     * 
+     *
      * @param curvename
      * @throws IllegalArgumentException When unknown curve name is used.
      */
@@ -71,7 +71,7 @@ public class ECGroup extends Group {
 
     /**
      * Initialize an elliptic curve over a field with specified bitlength.
-     * 
+     *
      * @param len
      */
     public ECGroup(int len) {
@@ -121,7 +121,7 @@ public class ECGroup extends Group {
 
     /**
      * Return point at infinity.
-     * 
+     *
      * @return Point at infinity
      */
     @Override
@@ -142,7 +142,7 @@ public class ECGroup extends Group {
      * 5.1 if not, let i += 1 and got to 4.
      * 5. the square root of f(x) will then become the y-coordinate of the point.
      * }
-     * 
+     *
      * @param msg
      * @return
      */
@@ -223,7 +223,7 @@ public class ECGroup extends Group {
      * Serialize the group.
      * <p>
      * Returns GENERALSTRING of the curve name.
-     * 
+     *
      * @return
      */
     @Override
@@ -233,7 +233,7 @@ public class ECGroup extends Group {
 
     /**
      * Get the curve name.
-     * 
+     *
      * @return
      */
     public String getCurveName() {
@@ -254,7 +254,7 @@ public class ECGroup extends Group {
 
     /**
      * Get the base point of the group.
-     * 
+     *
      * @return
      */
     public ECGroupElement getBasePoint() {

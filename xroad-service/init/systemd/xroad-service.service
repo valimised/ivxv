@@ -1,0 +1,13 @@
+[Unit]
+Description=X-Road Service server
+
+[Service]
+ExecStart=/usr/bin/xroad-service
+Restart=on-failure
+User=xroad-service
+StateDirectory=xroad-service
+ConfigurationDirectory=xroad-service
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target

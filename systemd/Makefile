@@ -1,4 +1,4 @@
-SERVICES := choices mid proxy storage voting verification
+SERVICES := choices mid smartid proxy storage voting verification votesorder
 OUTPUT   := $(SERVICES:%=ivxv-%@.service)
 
 .PHONY: all

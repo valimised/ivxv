@@ -19,7 +19,7 @@ public interface Reporter {
 
     /**
      * Creates and returns new record for {@code LOG1..LOG3} log.
-     * 
+     *
      * @param voterId
      * @param b
      * @return
@@ -28,7 +28,7 @@ public interface Reporter {
 
     /**
      * Creates and returns new record for {@code LOG1..LOG3} log.
-     * 
+     *
      * @param voterId
      * @param b
      * @param qid The question id
@@ -38,7 +38,7 @@ public interface Reporter {
 
     /**
      * Creates and returns new record of revocation report for recurrent vote.
-     * 
+     *
      * @param voterId
      * @param b
      * @return
@@ -47,7 +47,7 @@ public interface Reporter {
 
     /**
      * Creates and returns new record of revocation report for invalid vote.
-     * 
+     *
      * @param voterId
      * @param b
      * @return
@@ -56,7 +56,7 @@ public interface Reporter {
 
     /**
      * Creates and returns new record for revocation report.
-     * 
+     *
      * @param action
      * @param voterId
      * @param b
@@ -68,7 +68,7 @@ public interface Reporter {
     /**
      * Writes the log records of the specified type into files in the specified directory and
      * returns the map from question id to the corresponding log file path.
-     * 
+     *
      * @param dir
      * @param eid
      * @param type
@@ -94,7 +94,7 @@ public interface Reporter {
 
     /**
      * Writes the i-voter list of the specified ballot box into the specified file.
-     * 
+     *
      * @param jsonOut
      * @param pdfOut
      * @param bb
@@ -104,24 +104,31 @@ public interface Reporter {
 
     /**
      * Writes the report on the specified path.
-     * 
+     *
      * @param out
      * @param eid
      * @param records
      * @param headers Additional headers
      * @throws UncheckedIOException
      */
-    <T extends Record> void write(Path out, String eid, List<T> records, String... headers)
+    <T extends Record> void write(Path out, String eid, List<T> records, AnonymousFormatter formatter, String... headers)
             throws UncheckedIOException;
 
     /**
      * Formats single report record according to the current implementation rules.
-     * 
+     *
      * @param r
      * @return
      */
-    String format(Record r);
+    String format(Record r,AnonymousFormatter formatter);
 
+    /**
+     * Gives information about anonymization type of the output files
+     */
+    enum AnonymousFormatter {
+        NOT_ANONYMOUS,
+        REVOCATION_REPORT_CSV,
+    }
     /**
      * Generic report record - just a list of strings.
      */

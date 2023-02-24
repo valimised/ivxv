@@ -6,17 +6,17 @@
 ..  Feature: Kogumisteenuse käivitamine kõrgkäideldava konfiguratsiooniga
              features/end-to-end-10-collector-ha-setup.feature:7
    Scenario: Valijate algnimekirja rakendamine
-             features/end-to-end-10-collector-ha-setup.feature:643
+             features/end-to-end-10-collector-ha-setup.feature:642
        Step: Nimekirjade haldur laadib valijate algnimekirja haldusteenusesse
-             features/end-to-end-10-collector-ha-setup.feature:667
+             features/end-to-end-10-collector-ha-setup.feature:666
 
 .. code-block:: text
 
    ivxv-admin@admin $ ivxv-cmd-load voters /output/voting/HA-SETUP/config/voters-0.asice
-   INFO: Config file is signed by: NÕID,VÄIKE,33333333333 2021-10-02T19:46:00Z
+   INFO: Config file is signed by: NÕID,VÄIKE,33333333333 2021-12-28T11:49:37Z
    INFO: User NÕID,VÄIKE,33333333333 with role 'election-conf-manager' is authorized to execute 'voters' commands
-   INFO: Using signature 'NÕID,VÄIKE,33333333333 2021-10-02T19:46:00Z' as config file version
-   INFO: Config file version is 'NÕID,VÄIKE,33333333333 2021-10-02T19:46:00Z'
+   INFO: Using signature 'NÕID,VÄIKE,33333333333 2021-12-28T11:49:37Z' as config file version
+   INFO: Config file version is 'NÕID,VÄIKE,33333333333 2021-12-28T11:49:37Z'
    INFO: Loading command 'voters list' from file '/output/voting/HA-SETUP/config/voters-0.asice'
    command_file:INFO: Loading command file '/output/voting/HA-SETUP/config/voters-0.asice' (voters list)
    command_file:INFO: Validating voters list

@@ -4,10 +4,12 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/hex"
 	"io"
 	"net"
 	"net/rpc"
+	"regexp"
 	"time"
 
 	"ivxv.ee/age"
@@ -86,12 +88,16 @@ type FilterConf struct {
 }
 
 // newFilters returns a new chain of mandatory filters.
-func newFilters(conf *FilterConf, r *rpc.Server, cert tls.Certificate, end time.Time) (
+func newFilters(conf *FilterConf, r *rpc.Server, cert tls.Certificate, end time.Time, certPool *x509.CertPool) (
 	connFilters, error) {
 
 	tlsFilter, err := newTLSFilter(&conf.TLS, cert)
 	if err != nil {
 		return nil, TLSConfError{Err: err}
+	}
+	if certPool != nil {
+		tlsFilter.tlsConf.ClientCAs = certPool
+		tlsFilter.tlsConf.ClientAuth = tls.RequireAndVerifyClientCert
 	}
 	return connFilters{
 		connFilterFunc(logFilter),
@@ -185,7 +191,7 @@ func proxyFilter(ctx context.Context, c net.Conn, chain connFilters) context.Con
 		log.Log(ctx, PROXYProtocol{Address: addr})
 	}
 
-	// XXX: Put remote address into context for addrFilter. Remove once
+	// Put remote address into context for addrFilter. Remove once
 	// addrFilter is no longer necessary.
 	ctx = context.WithValue(ctx, addrKey, c.RemoteAddr())
 	if addr != nil {
@@ -355,6 +361,13 @@ func sessIDFilter(header *Header, chain headerFilters) error {
 		entry = ReadSessionID{}
 	}
 
+	// True if header.SessionID is not a valid HEX
+	invalidSessionID, _ := regexp.MatchString("[^0-9A-Fa-f]", header.SessionID)
+	if invalidSessionID {
+		log.Error(header.Ctx, InvalidSessionID{Value: header.SessionID})
+		return ErrBadRequest
+	}
+
 	// Set session ID in logging context and log.
 	header.Ctx = log.WithSessionID(header.Ctx, header.SessionID)
 	log.Log(header.Ctx, entry)
@@ -364,7 +377,7 @@ func sessIDFilter(header *Header, chain headerFilters) error {
 // addrFilter re-logs the remote address of the connection after we have a
 // SessionID.
 //
-// XXX: This is a temporary filter until the log monitor is capable of
+// This is a temporary filter until the log monitor is capable of
 // extracting the address based on ConnectionID.
 func addrFilter(header *Header, chain headerFilters) error {
 	log.Log(header.Ctx, RemoteAddress{Address: header.Ctx.Value(addrKey)})
@@ -414,10 +427,24 @@ func (a authFilter) filter(header *Header, chain headerFilters) error {
 			header.Ctx = context.WithValue(header.Ctx, voterIDKey, voteid)
 			log.Log(header.Ctx, AuthenticationVoteID{VoteID: voteid})
 		}
+		if header.DataToken != nil {
+			log.Log(header.Ctx, AuthData{
+				Token: log.Sensitive(header.DataToken),
+			})
+			data, err := auth.Auther(a).Data(auth.Type(header.AuthMethod), header.DataToken)
+			if err != nil {
+				log.Error(header.Ctx, AuthenticationDataError{Err: err})
+				return ErrInternal
+			}
+			header.Ctx = context.WithValue(header.Ctx, voterIDNumber, string(data))
+			log.Log(header.Ctx, AuthenticationData{Number: string(data)})
+		}
+
 	}
 
 	header.AuthMethod = ""
 	header.AuthToken = nil
+	header.DataToken = nil
 	return chain.next(header)
 }
 

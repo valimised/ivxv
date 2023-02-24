@@ -177,7 +177,7 @@ def gen_service_record_defaults(db, cfg):
     for service_id, service_defaults in sorted(service_values.items()):
         db_key_prefix = f'service/{service_id}'
         try:
-            db.get_value(db_key_prefix + '/service-type')
+            db.get_value(f"{db_key_prefix}/service-type")
             continue
         except KeyError:
             log.info('Registering new service %s in management service',
@@ -188,7 +188,7 @@ def gen_service_record_defaults(db, cfg):
                 params={'service_type': service_defaults['service-type']})
 
         for key, val in service_defaults.items():
-            db.set_value(db_key_prefix + '/' + key, val)
+            db.set_value(f"{db_key_prefix}/{key}", val)
 
     set_tech_cfg_service_cond_values(db, cfg)
 
@@ -225,8 +225,8 @@ def manage_db_cond_value(db, service_id, key, set_value, value=None):
             pass
 
 
-def manage_db_mid_fields(db):
-    """Create/remove service Mobile ID token keys in database.
+def manage_db_mobileid_fields(db):
+    """Create/remove service Mobile-ID/Smart-ID token keys in database.
 
     Check 'ticket' authentication method in election config and manage
     "mid-token-key" keys in management database for mid, choices and voting
@@ -235,7 +235,7 @@ def manage_db_mid_fields(db):
     """
     ticket_auth = 'ticket' in db.get_all_values('election').get('auth', {})
     for service_id, service_data in db.get_all_values('service').items():
-        if service_data['service-type'] not in ['mid', 'choices', 'voting']:
+        if service_data['service-type'] not in ['mid', 'smartid', 'choices', 'voting']:
             continue
         key = f'service/{service_id}/mid-token-key'
         if ticket_auth:
@@ -284,13 +284,13 @@ def gen_host_record_defaults(db, cfg):
     for hostname in sorted(hostnames):
         db_key_prefix = f'host/{hostname}'
         try:
-            db.get_value(db_key_prefix + '/state')
+            db.get_value(f"{db_key_prefix}/state")
             continue
         except KeyError:
             log.info(
                 'Registering new service host %s in management service',
                 hostname)
-        db.set_value(db_key_prefix + '/state', '')
+        db.set_value(f"{db_key_prefix}/state", "")
 
 
 def gen_logmon_data(db, logging_params):
@@ -392,7 +392,7 @@ def populate_user_permissions(db):
 
     for user_cn, permissions in db.get_all_values('user').items():
         for permission_name in permissions.split(','):
-            permissions_to_create.append(user_cn + '-' + permission_name)
+            permissions_to_create.append(f"{user_cn}-{permission_name}")
 
     # removing permission files
     for permission_name in os.listdir(permissions_path):
@@ -407,7 +407,7 @@ def populate_user_permissions(db):
         if not os.path.exists(filepath):
             log.info("Creating Apache Web Server user permission file %r", filepath)
             with open(filepath, 'x') as fp:
-                fp.write('Created %s' % datetime.datetime.now().strftime('%c'))
+                fp.write(f"Created {datetime.datetime.now().strftime('%c')}")
 
 
 def get_current_voter_list_changeset_no(db):

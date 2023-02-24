@@ -18,6 +18,13 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 :debug:
         Tõeväärtus, kas logidesse kirjutatakse silumisteateid.
 
+:snidomain:
+        Kohustuslik väli.
+        Domeen, mida kasutatakse teenuste SNI väärtuse seadistamiseks.
+        Varasemalt on kasutusel olnud väärtus `ivxv.invalid` võib kasutada ka
+        reaalseid domeene, mille nimehaldus on korraldaja kontrolli all nagu nt.
+        `ivxv.ee`
+
 ----
 
 :filter:
@@ -102,6 +109,9 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 
 :network.*.services.mid:
         Loetelu, mis sisaldab Mobiil-ID toeteenuste isendite seadistust.
+
+:network.*.services.smartid:
+        Loetelu, mis sisaldab Smart-ID toeteenuste isendite seadistust.
 
 :network.*.services.choices:
         Loetelu, mis sisaldab nimekirjateenuste isendite seadistust.
@@ -216,6 +226,11 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
         loetletud talletusteenuste identifikaatoritega. Hiljem teenuseid
         lisades või eemaldades ei tohi ``storage.conf.bootstrap`` väärtust
         uuendada.
+
+:storage.ordertimeout:
+         Aeg sekundites. Vaikeväärtus 5.
+
+         Maksimaalne aeg hääle kirjutamiseks häälte järjekorra tabelisse.
 
 ----
 

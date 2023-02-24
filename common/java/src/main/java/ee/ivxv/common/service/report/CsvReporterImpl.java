@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,11 +30,11 @@ public class CsvReporterImpl extends DefaultReporter implements Reporter {
 
     /**
      * Writes report in {@code CSV} format into the specified file. The report version number is 1.
-     * 
+     *
      * <p>
      * The format is:
      * </p>
-     * 
+     *
      * <pre>
      * {@literal
      * report = version-number LF election-id LF *record
@@ -42,15 +43,15 @@ public class CsvReporterImpl extends DefaultReporter implements Reporter {
      * record = <tab-separated-content> LF
      * }
      * </pre>
-     * 
-     * @param out The output file
-     * @param eid The election ID
+     *
+     * @param out     The output file
+     * @param eid     The election ID
      * @param records The list of log records to be written in
      * @param headers The list of additional headers
      * @throws UncheckedIOException
      */
     @Override
-    public <T extends Record> void write(Path out, String eid, List<T> records, String... headers)
+    public <T extends Record> void write(Path out, String eid, List<T> records, AnonymousFormatter formatter, String... headers)
             throws UncheckedIOException {
         try {
             Util.createFile(out);
@@ -72,23 +73,35 @@ public class CsvReporterImpl extends DefaultReporter implements Reporter {
             }
 
             for (Record r : records) {
-                writer.write(format(r));
+                writer.write(format(r, formatter));
                 writer.write(LF);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
-
+    
     /**
      * Formats a single report record as a {@code CSV} record, using tabs as separators.
-     * 
+     * In case of anonymous output - hides requested data according to the AnonymousFormatter type.
+     *
      * @param r
      * @return
      */
     @Override
-    public String format(Record r) {
-        return r.fields.stream().collect(Collectors.joining(TAB));
-    }
+    public String format(Record r, AnonymousFormatter formatter) {
+        if (formatter.equals(AnonymousFormatter.REVOCATION_REPORT_CSV)) {
+            // Remove indexes i=1 and i=2 from the List<String>
+            // At index i=1 are NAME and SURNAME
+            // At index i=2 is IDENTITY CODE (isikukood (Estonian))
+            return IntStream
+                    .range(0, r.fields.size())
+                    .filter(i -> i != 1 && i != 2)
+                    .mapToObj(r.fields::get)
+                    .collect(Collectors.joining(TAB));
 
+        } else {
+            return r.fields.stream().collect(Collectors.joining(TAB));
+        }
+    }
 }

@@ -30,7 +30,7 @@ IVXV tarnefailist:
 
 * :file:`vmn.dirsha256sum` - vmn kataloogi räsi;
 
-* :file:`ivxv-verificatum-1.7.7-runner.zip` - IVXV adapter Verificatumi
+* :file:`ivxv-verificatum-1.8.2-runner.zip` - IVXV adapter Verificatumi
   kasutamiseks.
 
 Valimise korraldaja käest:
@@ -124,7 +124,7 @@ Verificatumi lähtekoodi täielikkuse kontrollimine::
 IVXV Verificatumi adapteri ja käivitusskripti lahtipakkimine::
 
     cd ..
-    unzip ivxv-verificatum-1.7.7-runner.zip
+    unzip ivxv-verificatum-1.8.2-runner.zip
 
 Verificatumi teekide kopeerimine adapteri väliste teekide kataloogi::
 

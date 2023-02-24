@@ -23,15 +23,23 @@ function loadPageData() {
     'backup': 'Varundusteenus',
     'choices': 'Nimekirjateenus',
     'mid': 'Mobiil-ID abiteenus',
+    'smartid': 'Smart-ID abiteenus',
     'proxy': 'Vahendusteenus',
     'storage': 'Talletusteenus',
     'log': 'Logikogumisteenus',
+    'votesorder': 'Järjekorrateenus',
     'voting': 'Hääletamisteenus',
     'verification': 'Kontrollteenus'
   };
 
   // load collector state
   $.getJSON('data/status.json', function(state) {
+    /*
+     * HTTP GET on https://admin.?.ivxv.ee/ivxv/data/status.json
+     * HTTP GET response that contains HTML tags is not allowed!
+     * state is always an JSON object
+     */
+    state = sanitizeJSON(state);
     hideErrorMessage();
 
     var i = 1;

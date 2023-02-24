@@ -1,0 +1,15 @@
+{
+    "id": 0.0,
+    "method": "RPC.Sign",
+    "params": [
+        {
+            "AuthMethod": "ticket",
+            "AuthToken": "G1RTZqBSBKrzqReuKYrmFUFXWFPvaxhJjdiZi6zqAnaK3OvrT...",
+            "DataToken": "G1RTZqBSBKrzqReuKYrmFUFXWkajsdhaiuhdaksdj62vrT2Qu6...",
+            "Hash": "9IBrA05ylt2StdjxKkSTYMW/rQXY3Vub4upzShdfEzo=",
+            "HashType": "SHA256",
+            "OS": "Operating System,2,0",
+            "SessionID": "057229fdfa2df7d3c7f4ced81b02760b"
+        }
+    ]
+}

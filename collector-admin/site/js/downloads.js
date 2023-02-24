@@ -13,6 +13,12 @@ function loadPageData() {
 
   // load collector state
   $.getJSON('data/status.json', function(state) {
+      /*
+       * HTTP GET on https://admin.?.ivxv.ee/ivxv/data/status.json
+       * HTTP GET response that contains HTML tags is not allowed!
+       * state is always an JSON object
+      */
+      state = sanitizeJSON(state);
       hideErrorMessage();
 
       if ((state.collector_state == 'NOT INSTALLED') ||
@@ -43,6 +49,12 @@ function loadPageData() {
 
   // load ballot box state
   $.getJSON('cgi/ballot-box-state', function(state) {
+      /*
+       * HTTP GET on https://admin.?.ivxv.ee/ivxv/cgi/ballot-box-state
+       * HTTP GET response that contains HTML tags is not allowed!
+       * state is always an JSON object
+       */
+      state = sanitizeJSON(state);
       $('#panel-download-ballot-box').remove();
 
       if (state.data.length === 0) {

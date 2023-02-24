@@ -111,7 +111,6 @@ public class CheckTool implements Tool.Runner<CheckArgs> {
 
         String voterName = ctx.i.i18n.get(Msg.m_vl_fictive_voter_name);
         LName district = new LName(de.getKey());
-        // TODO test it
         return (vid, version) -> new Voter(vid, voterName, null, parish, district);
     }
 

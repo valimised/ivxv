@@ -103,24 +103,35 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
             Set<IndexedBlob> decBlobs = new HashSet<>();
             Set<IndexedBlob> signBlobs = new HashSet<>();
             for (int i = 0; i < tparams.getThreshold(); i++) {
-                Card card;
-                if (ctx.card.isPluggableService()) {
-                    card = ctx.card.createCard("-1");
-                    cards.initUnprocessedCard(card);
-                } else {
-                    card = cards.getCard(i);
-                }
-                IndexedBlob ib = card.getIndexedBlob(aid, decShareName);
-                if (ib.getIndex() < 1 || ib.getIndex() > tparams.getParties()) {
-                    throw new ProtocolException("Indexed blob index mismatch");
-                }
-                decBlobs.add(ib);
+                int retryCount = 0;
+                int maxTries = 2;
+                while (true) {
+                    try {
+                        Card card;
+                        if (ctx.card.isPluggableService()) {
+                            card = ctx.card.createCard("-1");
+                            cards.initUnprocessedCard(card);
+                        } else {
+                            card = cards.getCard(i);
+                        }
+                        IndexedBlob ib = card.getIndexedBlob(aid, decShareName);
+                        if (ib.getIndex() < 1 || ib.getIndex() > tparams.getParties()) {
+                            throw new ProtocolException("Indexed blob index mismatch");
+                        }
+                        decBlobs.add(ib);
 
-                ib = card.getIndexedBlob(aid, signShareName);
-                if (ib.getIndex() < 1 || ib.getIndex() > tparams.getParties()) {
-                    throw new ProtocolException("Indexed blob index mismatch");
+                        ib = card.getIndexedBlob(aid, signShareName);
+                        if (ib.getIndex() < 1 || ib.getIndex() > tparams.getParties()) {
+                            throw new ProtocolException("Indexed blob index mismatch");
+                        }
+                        signBlobs.add(ib);
+                        break;
+                    } catch (ProtocolException e) {
+                        throw e;
+                    } catch (Exception e) {
+                        if (++retryCount == maxTries) throw e;
+                    }
                 }
-                signBlobs.add(ib);
             }
 
             dec = new RecoverDecryption(decBlobs, tparams, args.doProvable.value());

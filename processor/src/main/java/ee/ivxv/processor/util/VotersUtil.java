@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,6 +39,7 @@ public class VotersUtil {
     private static final String VERSION = "2";
     private static final String FOREIGN = "FOREIGN";
     private static final String DEFAULT_EHAK = "0000";
+    private static final String KUSTUTAMINE = "kustutamine";
 
     public static Loader getLoader(PublicKeyHolder key, DistrictList dl, DistrictsMapper mapper,
                                    Reporter reporter) {
@@ -183,7 +185,13 @@ public class VotersUtil {
          */
         Voter parseVoter(String csv, String... arg) {
             String[] r = csv.split(SEPARATOR, -1);
-            if (r.length != 5) {
+            if (r.length == 5) {
+                // "lisamine" or "muutmine"
+            } else if (r.length == 2 && Arrays.asList(r).contains(KUSTUTAMINE)) {
+                // potential error for NullPointerException
+                return new Voter(r[1], null, r[0], "", null);
+            }
+            else {
                 throw new MessageException(Msg.e_vl_invalid_voter_row, csv);
             }
             LName district = new LName("", "");
@@ -209,7 +217,7 @@ public class VotersUtil {
                 }
             }
 
-            return new Voter(r[0], r[1], r[2], ehak, district);
+            return new Voter(r[1], r[2], r[0], ehak, district);
         }
 
         void validate(VoterList vl) {
@@ -261,18 +269,23 @@ public class VotersUtil {
             Set<String> added = new HashSet<>();
             Set<String> invalid = new HashSet<>();
 
-            voters.forEach(v -> {
-                District d = dl.getDistricts().get(v.getDistrict().getId());
-                if (d == null) {
-                    rep.report(Msg.e_vl_invalid_district, vlName, v.getCode(), v.getName(),
-                            v.getDistrict().getId());
-                    invalid.add(v.getCode());
-                } else if (!d.getParish().contains(v.getParish())) {
-                    rep.report(Msg.e_vl_invalid_parish, vlName, v.getCode(), v.getName(),
-                            v.getParish());
-                    invalid.add(v.getCode());
-                }
-            });
+            try {
+                voters.forEach(v -> {
+                    // if here NullPointerException occurs, then it's a "kustutamine"
+                    District d = dl.getDistricts().get(v.getDistrict().getId());
+                    if (d == null) {
+                        rep.report(Msg.e_vl_invalid_district, vlName, v.getCode(), v.getName(),
+                                v.getDistrict().getId());
+                        invalid.add(v.getCode());
+                    } else if (!d.getParish().contains(v.getParish())) {
+                        rep.report(Msg.e_vl_invalid_parish, vlName, v.getCode(), v.getName(),
+                                v.getParish());
+                        invalid.add(v.getCode());
+                    }
+                });
+            } catch (NullPointerException npe) {
+                // "kustutamine", do nothing
+            }
 
             voters.forEach(v -> {
                 if (invalid.contains(v.getCode())) {

@@ -166,6 +166,9 @@ def download_voting_sessions():
     if request.forms.get("anonymize"):
         cmd.append("--anonymize")
         filename += "-anonymized"
+    if request.forms.get("uniq"):
+        cmd.append("--uniq")
+        filename += "-uniq"
     filename += "-{:%Y.%m.%d_%H.%M}.csv".format(datetime.datetime.now())  # timestamp
     filepath = f"/var/lib/ivxv/admin-ui-data/{filename}"
     cmd.append(filepath)

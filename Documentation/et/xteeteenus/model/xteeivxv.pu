@@ -1,0 +1,16 @@
+@startuml
+
+left to right direction
+
+[X-tee teenus(xroad-service)] as xservice
+[X-tee turvaserver] as xsec
+[IVXV1] as ivxv1
+[IVXV2] as ivxv2
+[IVXV3] as ivxv3
+
+xsec --> xservice
+xservice--> ivxv1
+xservice--> ivxv2
+xservice--> ivxv3
+
+@enduml

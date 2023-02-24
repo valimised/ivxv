@@ -85,8 +85,6 @@ func openASiCE(r io.Reader, zipLimit, fileLimit int64, readSigs bool) (
 	var manifest *asiceFile
 	var signatures int
 	for i, file := range rzip.File {
-		// XXX: Upper limit on number of files allowed in ZIP? Or is
-		// the size limit enforced on the entire archive good enough?
 
 		// Check that we have not seen this file yet.
 		if _, ok := seen[file.Name]; ok {

@@ -63,7 +63,7 @@ public class BlockingQueueConsole implements Console {
     @Override
     public String readPw() {
         java.io.Console console = System.console();
-        // TODO: Should warn user when console is null and password input will be visible?
+        // Should warn user when console is null and password input will be visible?
         // Should be possible ONLY when running from IDE
         if (console == null) {
             return readln();

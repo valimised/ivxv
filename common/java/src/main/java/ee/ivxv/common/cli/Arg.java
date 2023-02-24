@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * Instances of <code>Arg</code> are the building blocks of the application (and tool) arguments'
  * data model. The argument values can be acquired from either command line ({@link Option}) or a
  * configuration file.
- * 
+ *
  * @param <T> The type of the argument value.
  */
 public abstract class Arg<T> {
@@ -119,7 +119,7 @@ public abstract class Arg<T> {
     /**
      * Creates an argument instance for a value from the specified choices, which is found by
      * matching the result of <tt>toString()</tt> of a choice with the string being parsed.
-     * 
+     *
      * @param n
      * @param values
      * @return
@@ -174,7 +174,7 @@ public abstract class Arg<T> {
     /**
      * Creates an argument instance for a list of values from the specified choices, which are found
      * by matching the result of <tt>toString()</tt> of a choice with the string being parsed.
-     * 
+     *
      * @param n
      * @param values
      * @return
@@ -194,7 +194,7 @@ public abstract class Arg<T> {
 
     /**
      * Sets the argument optional. By default arguments are required.
-     * 
+     *
      * @return This
      */
     public Arg<T> setOptional() {
@@ -205,7 +205,7 @@ public abstract class Arg<T> {
     /**
      * Set the default value of the argument. Note that argument with a not-null default has always
      * a value.
-     * 
+     *
      * @return This
      */
     public Arg<T> setDefault(T v) {
@@ -228,7 +228,6 @@ public abstract class Arg<T> {
         parse(s, IDENTITY_RESOLVER);
     }
 
-    // TODO replace exception throwing with returned errors object
     public abstract void parse(List<String> s, Resolver r) throws ParseException;
 
     /**
@@ -254,7 +253,7 @@ public abstract class Arg<T> {
 
     /**
      * Validates the argument and possibly it's children and returns the validation result.
-     * 
+     *
      * @return Returns the validation result.
      */
     public final ValidationResult validate() {
@@ -272,7 +271,7 @@ public abstract class Arg<T> {
 
     /**
      * Argument with single value.
-     * 
+     *
      * @param <T> The value type.
      */
     public static class SingleValueArg<T> extends Arg<T> {
@@ -299,7 +298,7 @@ public abstract class Arg<T> {
 
     /**
      * Argument with multiple values, i.e list of values.
-     * 
+     *
      * @param <T> The value type.
      */
     public static class MultiValueArg<T> extends Arg<List<T>> {
@@ -379,7 +378,7 @@ public abstract class Arg<T> {
 
     /**
      * TreeList is a arbitrary-size list with structural content, i.e. list of <tt>Args</tt>.
-     * 
+     *
      * @param <T> The actual type of <tt>Args</tt> contained in this list.
      */
     public static class TreeList<T extends Args> extends Arg<List<T>> {
@@ -426,7 +425,7 @@ public abstract class Arg<T> {
 
     /**
      * Parser is an interface for parsing a string into another type.
-     * 
+     *
      * @param <T> The target type to parse into.
      */
     @FunctionalInterface

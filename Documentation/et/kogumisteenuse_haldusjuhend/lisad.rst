@@ -375,7 +375,7 @@ Andmevälja nimi ja kirjeldus:
 * ``service/<service-id>/backup-times`` -- Varundusteenuse automaatvarunduse
   kellaajad;
 
-* ``service/<service-id>/mid-token-key`` -- Mobiil-ID tugiteenuse
+* ``service/<service-id>/mid-token-key`` -- Mobiil-ID/Smart-ID tugiteenuse
   identsustõendi võtmefaili kontrollsumma (SHA256);
 
 * ``service/<service-id>/tls-cert`` -- Teenuse TLS-sertifikaadi faili

@@ -26,6 +26,7 @@ import (
 	"ivxv.ee/mid"
 	"ivxv.ee/q11n"
 	"ivxv.ee/server"
+	"ivxv.ee/smartid"
 	"ivxv.ee/storage"
 	"ivxv.ee/yaml"
 )
@@ -79,6 +80,10 @@ type Election struct {
 		Key string // PEM-encoding of the public key used to verify voter list signatures.
 	}
 
+	XRoad struct {
+		CA string // PEM-encoded authentication certificate.
+	}
+
 	// Composited configuration structures defined in other packages.
 	Auth          auth.Conf
 	Identity      identity.Type
@@ -86,6 +91,7 @@ type Election struct {
 	Vote          container.Conf
 	DDS           dds.Conf
 	MID           mid.Conf
+	SmartID       smartid.Conf
 	Qualification q11n.Conf
 }
 
@@ -122,6 +128,8 @@ func (e Election) VoterForeignEHAKDefault() string {
 type Technical struct {
 	Debug bool // Should debug logging be enabled?
 
+	SniDomain string
+
 	Network []struct {
 		ID       string   // Network segment identifier.
 		Services Services // Configured services in this segment.
@@ -137,10 +145,12 @@ type Services struct {
 	Proxy        []*Service
 	DDS          []*Service
 	MID          []*Service
+	SmartID      []*Service
 	Choices      []*Service
 	Voting       []*Service
 	Verification []*Service
 	Storage      []*Service
+	VotesOrder   []*Service
 }
 
 // Services finds the configured services for the requested network segment.

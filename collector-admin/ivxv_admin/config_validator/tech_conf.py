@@ -30,6 +30,8 @@ class ServicesSchema(Model):
 
     proxy = ListType(ModelType(ServiceSchema))
     mid = ListType(ModelType(ServiceSchema))
+    smartid = ListType(ModelType(ServiceSchema))
+    votesorder = ListType(ModelType(ServiceSchema))
     voting = ListType(ModelType(ServiceSchema))
     choices = ListType(ModelType(ServiceSchema))
     verification = ListType(ModelType(ServiceSchema))
@@ -41,6 +43,7 @@ class ServicesSchema(Model):
 class CollectorTechnicalConfigSchema(Model):
     """Validating schema for collector technical config."""
     debug = BooleanType(default=False)
+    snidomain = StringType(required=True)
 
     class FilterSchema(Model):
         """Validating schema for connection filter config."""

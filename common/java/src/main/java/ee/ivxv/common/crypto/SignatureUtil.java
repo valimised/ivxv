@@ -267,8 +267,6 @@ public class SignatureUtil {
      * @return
      */
     public static byte[] stripSignature(byte[] sig) {
-        // TODO: in some cases, the first byte may be 0 legitimately. Stripping must depend on the
-        // size of the modulus.
         byte[] ret;
         if (sig[0] == (byte) 0) {
             ret = new byte[sig.length - 1];

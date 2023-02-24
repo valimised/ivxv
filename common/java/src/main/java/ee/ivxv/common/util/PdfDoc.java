@@ -147,7 +147,7 @@ public class PdfDoc implements Closeable {
         boolean isFirst = true;
         for (String l : lines) {
             if (!isFirst) {
-                // TODO Use internal newLine, remember the number of new lines and consider it in
+                // Use internal newLine, remember the number of new lines and consider it in
                 // public newLine method to avoid overwriting. Keep in mind page-breaks!
                 newLine();
                 tab(origTab);
@@ -166,9 +166,6 @@ public class PdfDoc implements Closeable {
             addTextFlow(l);
             tab(-currentTab);
         }
-        // TODO restore offsetY
-        // offsetY += (lines.size() - 1) * leading;
-        // cs.newLineAtOffset(0, (lines.size() - 1) * leading);
     }
 
     private float getWidth(String s) throws IOException {

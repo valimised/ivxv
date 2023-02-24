@@ -198,7 +198,7 @@ def apply_cfg(state):
     """Apply config files."""
     apply_cfg_for_services("technical", "technical", state)
     if state['config']['technical']:
-        for cfg_key in ['election', 'choices']:
+        for cfg_key in ["election", "choices", "districts"]:
             apply_cfg_for_services(cfg_key, cfg_key, state)
     for changeset_no in range(10_000):
         if apply_cfg_for_services("voters", f"voters{changeset_no:04}", state) is None:
@@ -389,7 +389,7 @@ def query_logmon_stats(address):
     """
     ssh_cmd = [
         'ssh', '-T', '-o', 'PreferredAuthentications=publickey',
-        '{}@{}'.format('logmon', address), 'cat', '/var/lib/ivxv/stats.json'
+        f"logmon@{address}", "cat", "/var/lib/ivxv/stats.json"
     ]
 
     log.debug('Querying stats from Log Monitor')
@@ -404,13 +404,13 @@ def query_logmon_stats(address):
             proc.returncode)
         stats['error'] = (
             'Error while transporting stats data from Log Monitor over SSH:'
-            '\n {}'.format(proc.stderr.decode('utf-8')))
+            f"\n {proc.stderr.decode('utf-8')}"
+        )
     else:
         try:
             stats = json.loads(proc.stdout.decode('utf-8'))
         except json.JSONDecodeError as err:
-            errmsg = '%s: line %d column %d (char %d)' % (
-                err.msg, err.lineno, err.colno, err.pos)
+            errmsg = f"{err.msg}: line {err.lineno} column {err.colno} (char {err.pos})"
             stats['error'] = f'Invalid JSON data from Log Monitor: {errmsg}'
             log.error('Error while parsing JSON stats from Log Monitor: %s',
                       errmsg)

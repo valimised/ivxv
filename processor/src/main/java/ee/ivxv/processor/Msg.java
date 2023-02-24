@@ -17,7 +17,7 @@ public enum Msg implements NameHolder {
 
     // Tools
     tool_check, tool_squash, tool_revoke, tool_anonymize, tool_export, tool_stats, tool_statsdiff,
-
+    tool_checkAndSquash, tool_revokeAndAnonymize,
     // Tool arguments
     arg_ballotbox("bb"), arg_ballotbox_checksum("bbcs"), //
     arg_registrationlist, arg_registrationlist_checksum, //

@@ -1,12 +1,14 @@
 # IVXV Internet voting framework
 """Microservice management helper."""
 
+import datetime
 import json
 import os
 import re
 import shutil
 import subprocess
 import tempfile
+from logging.handlers import MemoryHandler
 
 from jinja2 import Environment, PackageLoader
 
@@ -15,6 +17,7 @@ from debian import debfile
 from .. import (
     COLLECTOR_PKG_FILENAMES,
     DEB_PKG_VERSION,
+    RFC3339_DATE_FORMAT_WO_FRACT,
     SERVICE_SECRET_TYPES,
     SERVICE_STATE_CONFIGURED,
     SERVICE_STATE_INSTALLED,
@@ -26,7 +29,7 @@ from ..db import IVXVManagerDb
 from ..event_log import register_service_event
 from . import IVXV_ADMIN_SSH_PUBKEY_FILE, RSYSLOG_CFG_FILENAME, generate_service_hints
 from .backup_service import install_backup_crontab
-from .logging import ServiceLogger
+from .logging import ServiceLogger, log
 from .remote_exec import exec_remote_cmd
 
 #: Path to service directory.
@@ -38,6 +41,7 @@ class Service:
     service_id = None  #: Service ID (str)
     data = None  #: Service data (dict)
     log = None  #: Logger for service
+    memory_log_handler = MemoryHandler(1000)  #: Memory handler for log buffering
     #: State report file name for currently applied config (str)
     cfg_state_filepath = None
     cfg_state = None  #: State report for currently applied config (dict)
@@ -55,7 +59,8 @@ class Service:
                 'ip-address': service_data.get('address'),
             }
         self.data = service_data
-        self.log = ServiceLogger(service_id)
+        self.log = ServiceLogger(log, {"service_id": service_id})
+        log.addHandler(self.memory_log_handler)
 
     def __repr__(self):
         """Printable representation of an object."""
@@ -78,7 +83,7 @@ class Service:
             return 'ivxv-admin'
         if self.service_type == 'proxy':
             return 'haproxy'
-        return 'ivxv-' + self.service_type
+        return f"ivxv-{self.service_type}"
 
     @property
     def service_systemctl_id(self):
@@ -536,8 +541,7 @@ class Service:
             ext_log_collectors=ext_log_collectors)
 
         # read existing config file
-        cmd = 'test -f {filename} && cat {filename}'.format(
-            filename=RSYSLOG_CFG_FILENAME)
+        cmd = f"test -f {RSYSLOG_CFG_FILENAME} && cat {RSYSLOG_CFG_FILENAME}"
         proc = self.ssh(cmd, account='ivxv-admin', stdout=subprocess.PIPE)
         existing_rsyslog_cfg = proc.stdout.decode()
 
@@ -595,9 +599,8 @@ class Service:
     def update_apply_state(self, **kw):
         """Update config applying state file."""
         self.cfg_state.update(kw)
-        self.cfg_state['log'][-1] += self.log.storage
-        self.log.storage = []
-        tmp_filepath = self.cfg_state_filepath + '.tmp'
+        self.cfg_state["log"][-1] = list(self.get_log_buffer())
+        tmp_filepath = f"{self.cfg_state_filepath}.tmp"
         with open(tmp_filepath, 'x') as fp:
             json.dump(self.cfg_state, fp, indent=4, sort_keys=True)
         shutil.move(tmp_filepath, self.cfg_state_filepath)
@@ -879,7 +882,7 @@ class Service:
                 cfg_ver,
             )
             db.set_value(
-                self.get_db_key('%s-conf-version' % cfg_type), cfg_ver)
+                self.get_db_key(f"{cfg_type}-conf-version"), cfg_ver)
 
             if service_state is not None:
                 self.register_state(db, service_state)
@@ -1198,3 +1201,12 @@ class Service:
                 account or self.service_account_name, self.hostname))
 
         return exec_remote_cmd(ssh_cmd + cmd, **kw)
+
+    def get_log_buffer(self):
+        """Get formatted log messages from log buffer."""
+        for rec in self.memory_log_handler.buffer:
+            timestamp = datetime.datetime.fromtimestamp(rec.created).strftime(
+                RFC3339_DATE_FORMAT_WO_FRACT
+            )
+            msg = rec.getMessage()
+            yield f"{timestamp} {msg}"

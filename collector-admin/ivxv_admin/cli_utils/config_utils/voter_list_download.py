@@ -151,7 +151,7 @@ def main():
 def write_voter_list_zip(content, version, output_filepath):
     """Write voter list ZIP file."""
     # write list to temporary ZIP file
-    tmp_filepath = output_filepath + ".tmp"
+    tmp_filepath = f"{output_filepath}.tmp"
     with open(tmp_filepath, "bw") as fd:
         tmp_filepath = fd.name
         log.info("Writing VIS response to temporary file %r", tmp_filepath)

@@ -6,9 +6,9 @@
 ..  Feature: Kogumisteenuse käivitamine kõrgkäideldava konfiguratsiooniga
              features/end-to-end-10-collector-ha-setup.feature:7
    Scenario: Mikroteenuse seiskamine ja käivitamine
-             features/end-to-end-10-collector-ha-setup.feature:513
+             features/end-to-end-10-collector-ha-setup.feature:512
        Step: Haldur käivitab teenuse "voting@voting2.ivxv.ee"
-             features/end-to-end-10-collector-ha-setup.feature:519
+             features/end-to-end-10-collector-ha-setup.feature:518
 
 .. code-block:: text
 

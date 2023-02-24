@@ -115,24 +115,35 @@ public class TestKeyTool implements Tool.Runner<TestKeyArgs> {
             List<IndexedBlob> decList = new ArrayList<>();
             List<IndexedBlob> signList = new ArrayList<>();
             for (int i = 0; i < tparams.getParties(); i++) {
-                Card card;
-                if (cardService.isPluggableService()) {
-                    card = cardService.createCard("-1");
-                    cards.initUnprocessedCard(card);
-                } else {
-                    card = cards.getCard(i);
-                }
-                IndexedBlob ib = card.getIndexedBlob(InitTool.AID, InitTool.DEC_SHARE_NAME);
-                if (ib.getIndex() < 1 || ib.getIndex() > tparams.getParties()) {
-                    throw new ProtocolException("Indexed blob index mismatch");
-                }
-                decList.add(ib);
+                int retryCount = 0;
+                int maxTries = 2;
+                while (true) {
+                    try {
+                        Card card;
+                        if (cardService.isPluggableService()) {
+                            card = cardService.createCard("-1");
+                            cards.initUnprocessedCard(card);
+                        } else {
+                            card = cards.getCard(i);
+                        }
+                        IndexedBlob ib = card.getIndexedBlob(InitTool.AID, InitTool.DEC_SHARE_NAME);
+                        if (ib.getIndex() < 1 || ib.getIndex() > tparams.getParties()) {
+                            throw new ProtocolException("Indexed blob index mismatch");
+                        }
+                        decList.add(ib);
 
-                ib = card.getIndexedBlob(InitTool.AID, InitTool.SIGN_SHARE_NAME);
-                if (ib.getIndex() < 1 || ib.getIndex() > tparams.getParties()) {
-                    throw new ProtocolException("Indexed blob index mismatch");
+                        ib = card.getIndexedBlob(InitTool.AID, InitTool.SIGN_SHARE_NAME);
+                        if (ib.getIndex() < 1 || ib.getIndex() > tparams.getParties()) {
+                            throw new ProtocolException("Indexed blob index mismatch");
+                        }
+                        signList.add(ib);
+                        break;
+                    } catch (ProtocolException e) {
+                        throw e;
+                    } catch (Exception e) {
+                        if (++retryCount == maxTries) throw e;
+                    }
                 }
-                signList.add(ib);
             }
 
             List<Set<IndexedBlob>> recoverQuorums =

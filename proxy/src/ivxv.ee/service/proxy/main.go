@@ -75,7 +75,7 @@ type hapid int
 
 // start sets p to the PID of the HAProxy master process.
 func (p *hapid) start(ctx context.Context) error {
-	// XXX: We need to wait until the service manager has restarted
+	// We need to wait until the service manager has restarted
 	// HAProxy. Replace this with something that actually ensures new
 	// instances of HAProxy are up.
 	time.Sleep(500 * time.Millisecond)

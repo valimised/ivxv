@@ -6,9 +6,9 @@
 ..  Feature: Kogumisteenuse käivitamine kõrgkäideldava konfiguratsiooniga
              features/end-to-end-10-collector-ha-setup.feature:7
    Scenario: Valimiste kokkuvõtete tegemine
-             features/end-to-end-10-collector-ha-setup.feature:881
+             features/end-to-end-10-collector-ha-setup.feature:892
        Step: Haldur genereerib haldusteenuses töötlemisrakenduse sisendi aluse
-             features/end-to-end-10-collector-ha-setup.feature:962
+             features/end-to-end-10-collector-ha-setup.feature:973
 
 .. code-block:: text
 
@@ -16,7 +16,7 @@
    INFO: Generating processor application config
    command_file:INFO: Loading command file '/etc/ivxv/election.bdoc' (elections configuration)
    INFO: Creating input file for processor application
-   INFO: Preparing container structure in directory '/tmp/tmp6rcd_rv_'
+   INFO: Preparing container structure in directory '/tmp/tmp6jswwi8i'
    INFO: Copying district list 'HA-SETUP.districts.json.bdoc'
    INFO: Copying voter list signing key 'voterfile.pub.key'
    INFO: Copying voter list #0 content '00.HA-SETUP.voters.utf'

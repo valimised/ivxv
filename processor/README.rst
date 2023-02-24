@@ -41,10 +41,10 @@ Usage:
 
 * ``processor -h`` - show application help
 * ``processor <tool> -h`` - show the tool help
-* ``processor <tool> --certs certs.bdoc --conf processor.yaml.bdoc`` - execute a tool with the *--certs* and *--conf* arguments
-* ``processor check --certs certs.bdoc --conf processor.yaml.bdoc``
-* ``processor squash --certs certs.bdoc --conf processor.yaml.bdoc``
-* ``PROCESSOR_OPTS=-Xmx8G processor squash --certs certs.bdoc --conf processor.yaml.bdoc`` - the same as above, but increase maximal memory usage to 8GB.
+* ``processor <tool> --conf certs.bdoc --params processor.yaml.bdoc`` - execute a tool with the *--conf* and *--params* arguments
+* ``processor check --conf certs.bdoc --params processor.yaml.bdoc``
+* ``processor squash --conf certs.bdoc --params processor.yaml.bdoc``
+* ``PROCESSOR_OPTS=-Xmx8G processor squash --conf certs.bdoc --params processor.yaml.bdoc`` - the same as above, but increase maximal memory usage to 8GB.
 
 The ``certs.bdoc`` container is expected to contain all CA, OCSP and TSA certificates required for validating any signed input (including the ``certs.bdoc`` itself) and the file ``ivxv.properties`` that refers to the certificates. Example of ``ivxv.properties``:
 

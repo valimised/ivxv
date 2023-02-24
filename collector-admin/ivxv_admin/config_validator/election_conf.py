@@ -15,6 +15,7 @@ from schematics.types import (
     ModelType,
     StringType,
     URLType,
+    DictType,
 )
 
 from .fields import CertificateType, ElectionIdType, PublicKeyType
@@ -77,6 +78,13 @@ class ElectionConfigSchema(Model):
 
     vis = ModelType(VisSchema, required=True)
 
+    class XroadSchema(Model):
+        """Validating schema for VIS service config."""
+
+        ca = CertificateType(required=True)
+
+    xroad = ModelType(XroadSchema, required=True)
+
     class AuthSchema(Model):
         """Validating schema for voter authentication config."""
 
@@ -137,6 +145,24 @@ class ElectionConfigSchema(Model):
             return value
 
     mid = ModelType(MIDSchema)
+
+    class SmartIDSchema(Model):
+        """Validating schema for Smart ID config."""
+        url = URLType(required=True)
+        relyingpartyuuid = StringType(required=True)
+        relyingpartyname = StringType(required=True)
+        certificatelevel = StringType(
+            required=True, choices=["QUALIFIED", "ADVANCED", "QSCD"]
+        )
+        authinteractionsorder = ListType(DictType(StringType), required=True)
+        signinteractionsorder = ListType(DictType(StringType), required=True)
+        authchallengesize = IntType()
+        statustimeoutms = IntType()
+        roots = ListType(CertificateType, required=True)
+        intermediates = ListType(CertificateType)
+        ocsp = ModelType(OCSPSchema)
+
+    smartid = ModelType(SmartIDSchema)
 
     qualification = ListType(
         protocol_cfg({

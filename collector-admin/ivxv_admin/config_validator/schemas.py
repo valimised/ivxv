@@ -35,9 +35,10 @@ def protocol_cfg(mapping, **kwargs):
     models = []
     for protocol, model in mapping.items():
         wrapper = type(
-            model.__name__ + "Wrapper", (Model, ), {
+            f"{model.__name__}Wrapper", (Model, ), {
                 "protocol": StringType(required=True, choices=[protocol]),
                 "conf": ModelType(model, required=True),
+                "ordertimeout": IntType(required=False, min_value=1)
             })
         mapping[protocol] = wrapper
         models.append(wrapper)

@@ -1,0 +1,10 @@
+{
+    "id": 0.0,
+    "method": "RPC.Votes",
+    "params": [
+        {
+            "VotesFrom": 1,
+            "BatchMaxSize": 1000
+        }
+    ]
+}

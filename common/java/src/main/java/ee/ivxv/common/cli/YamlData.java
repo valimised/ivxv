@@ -49,15 +49,23 @@ public class YamlData {
 
     public void set(String toolName, Args args) throws ParseException {
         Map<?, ?> toolMap = expectMap(map.get(toolName), toolName);
-
-        set(args, toolMap, toolName);
+        set(args, toolMap, toolName, ""); // Default for optionalValuePrefix is ""
     }
 
-    private void set(Args args, Map<?, ?> m, String argPath) {
+    private void set(Args args, Map<?, ?> m, String argPath, String optionalValuePrefix) {
         for (Map.Entry<?, ?> entry : m.entrySet()) {
             String name = entry.getKey().toString();
             String subPath = getPath(argPath, name);
             Object value = entry.getValue();
+
+            if (YamlDataExtension.isVoterListsDirTag(name)) {
+                YamlDataExtension.setVoterListsDirName(value);
+                continue;
+            }
+
+            if (!optionalValuePrefix.equals("")) {
+                value = optionalValuePrefix + (String) value;
+            }
 
             log.debug("Path: {}, name: {}, value: {} ({})", argPath, name, value,
                     value != null ? value.getClass() : null);
@@ -72,17 +80,25 @@ public class YamlData {
                 if (value == null) {
                     continue;
                 }
+
+                if (((List<?>) value).isEmpty()) {
+                    throw new ParseException(Msg.e_yaml_list_expected, subPath, value);
+                }
                 if (!(value instanceof List)) {
                     throw new ParseException(Msg.e_yaml_list_expected, subPath, value);
                 }
+
                 Arg.TreeList<?> tl = (Arg.TreeList<?>) arg;
-                ((List<?>) value).forEach(o -> set(tl.addNew(), expectMap(o, subPath), subPath));
+
+                ((List<?>) value).forEach(o -> set(tl.addNew(), expectMap(o, argPath), argPath, YamlDataExtension.getVoterlistsDirName()));
+
                 continue;
             }
 
             if (arg instanceof Arg.Tree) {
                 Arg.Tree tree = (Arg.Tree) arg;
-                set(tree.value(), expectMap(value, subPath), subPath);
+                // Default for optionalValuePrefix is ""
+                set(tree.value(), expectMap(value, subPath), subPath, "");
                 continue;
             } else if (value instanceof Map) {
                 throw new ParseException(Msg.e_yaml_scalar_expected, subPath, value);

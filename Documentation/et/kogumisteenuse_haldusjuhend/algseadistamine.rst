@@ -17,7 +17,7 @@ Väliste teenuste kaardistamine
 ------------------------------
 
 Kogumisteenuse poolt toetatavate ja läbiviidavas hääletamises kasutatavate
-väliste teenuste (Mobiil-ID, OCSP jms) kaardistamise käigus koostatakse
+väliste teenuste (Mobiil-ID, Smart-ID, OCSP jms) kaardistamise käigus koostatakse
 nimekiri välistest teenustest ja nendega andmevahetuseks vajalikest andmetest
 (võrguaadress, port jms).
 
@@ -275,6 +275,9 @@ Teenuste omavaheline suhtlus
    (protokoll TLS, port vastavalt tehnilisele seadistusele);
 
 #. Mobiil-ID tugiteenusest välisesse Mobiil-ID teenusesse
+   (protokoll HTTP(S), port vastavalt tehnilisele seadistusele);
+
+#. Smart-ID tugiteenusest välisesse Smart-ID teenusesse
    (protokoll HTTP(S), port vastavalt tehnilisele seadistusele);
 
 #. Hääletamisteenusest välisesse kvalifitseerimisteenusesse
@@ -640,7 +643,7 @@ käsuga :ref:`ivxv-secret-load`:
    juhul, kui ajatempliteenust kasutatakse registreerimisteenuseks (valimiste
    seadistuses on ``qualification/protocol`` välja väärtuseks ``tspreg``).
 
-**Mobiil-ID identsustõendi võtme** rakendamine toimub
+**Mobiil-ID/Smart-ID identsustõendi võtme** rakendamine toimub
 käsuga :ref:`ivxv-secret-load`:
 
 .. code-block:: shell-session
@@ -649,8 +652,8 @@ käsuga :ref:`ivxv-secret-load`:
 
 .. note::
 
-   Mobiil-ID identsustõendi võti on vaja rakendada vaid
-   juhul, kui Mobiil-ID tugiteenus on kasutusel
+   Mobiil-ID/Smart-ID identsustõendi võti on vaja rakendada vaid
+   juhul, kui Mobiil-ID/Smart-ID tugiteenus on kasutusel
    (valimiste seadistuses on olemas plokk ``auth.ticket``).
 
 Kogumisteenuse krüptovõtmete rakendamise tulemusena on hallatavate teenuste

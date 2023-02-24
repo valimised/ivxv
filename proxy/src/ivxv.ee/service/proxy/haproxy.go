@@ -28,8 +28,9 @@ type data struct {
 }
 
 type backend struct {
-	Name    string
-	Servers []*conf.Service
+	Name      string
+	SniDomain string
+	Servers   []*conf.Service
 }
 
 // generate creates a HAProxy configuration based on the technical configuration
@@ -61,8 +62,9 @@ func generate(c *conf.Technical, network string, service *conf.Service, tmpl str
 			continue // Do not proxy to other proxies or storage.
 		}
 		d.Backends = append(d.Backends, &backend{
-			Name:    strings.ToLower(rt.Field(i).Name),
-			Servers: rv.Field(i).Interface().([]*conf.Service),
+			Name:      strings.ToLower(rt.Field(i).Name),
+			SniDomain: c.SniDomain,
+			Servers:   rv.Field(i).Interface().([]*conf.Service),
 		})
 	}
 

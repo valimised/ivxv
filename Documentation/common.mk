@@ -67,7 +67,7 @@ master-latex: $(master)
 	fi
 
 $(master):
-	git worktree add $@ 1.6.0
+	git worktree add $@ 1.7.7
 
 # Installation rules.
 .PHONY: install-pdf

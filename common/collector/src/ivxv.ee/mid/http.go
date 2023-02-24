@@ -74,7 +74,7 @@ func httpDo(ctx context.Context, tag string, httpReq *http.Request, resp interfa
 	}
 	log.Debug(ctx, HTTPResponse{Response: string(respDump)})
 
-	// XXX: Does encoding/json.Unmarshal retain any references to the
+	// Does encoding/json.Unmarshal retain any references to the
 	// original byte slice in the unmarshaled structure? If not, then
 	// instead of allocating a new byte slice here we could reuse pooled
 	// buffers for temporarily storing the JSON between reading and

@@ -49,7 +49,7 @@ func TestBallot(t *testing.T) {
 	// Helper functions to simplify actual tests.
 	ctx := log.TestContext(context.Background())
 	parse := func(choices, encoded string) (string, error) {
-		_, voter, _, err := rpc.verify(ctx, choices, container.Dummy, []byte(encoded))
+		_, voter, _, _, err := rpc.verify(ctx, choices, container.Dummy, []byte(encoded))
 		return voter, err
 	}
 

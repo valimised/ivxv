@@ -64,10 +64,11 @@ def get_service_cfg_state(db, cfg):
                 db_key_prefix = f'service/{service["id"]}'
 
                 service_tech_cfg_ver = db.get_value(
-                    db_key_prefix + '/technical-conf-version')
-                service_election_cfg_ver = (
-                    election_cfg_ver and
-                    db.get_value(db_key_prefix + '/election-conf-version'))
+                    f"{db_key_prefix}/technical-conf-version"
+                )
+                service_election_cfg_ver = election_cfg_ver and db.get_value(
+                    f"{db_key_prefix}/election-conf-version"
+                )
 
                 service_list[service['id']] = {
                     'technical': service_tech_cfg_ver != tech_cfg_ver,
@@ -151,7 +152,7 @@ def generate_service_hints(services):
             ]
         if service_type_params['mobile_id']:
             hints.append(
-                ['Install mobile ID identity token key',
+                ['Install Mobile-ID/Smart-ID identity token key',
                  not params.get('mid-token-key', True)])
         if service_type_params['tspreg']:
             hints.append(

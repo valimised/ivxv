@@ -4,5 +4,3 @@
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{ivxv-common}}
 \ProcessOptions\relax
 \LoadClass{ivxv-common}
-
-

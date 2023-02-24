@@ -31,6 +31,12 @@ function loadPageData() {
 
   // load collector state
   $.getJSON('data/status.json', function(state) {
+     /*
+      * HTTP GET on https://admin.?.ivxv.ee/ivxv/data/status.json
+      * HTTP GET response that contains HTML tags is not allowed!
+      * state is always an JSON object
+      */
+      state = sanitizeJSON(state);
       hideErrorMessage();
 
       // election ID
@@ -152,7 +158,7 @@ function loadPageData() {
           var listStatus = voterListStateDescriptions.get(state['list'][iStr + '-state']);
           $('#list-list').append(
             '<li class="list-group-item list-group-item-success" style="padding-left:25px">' +
-            (changeset_no + 1) + '. ' + listStatus + ': ' + state['list'][iStr] +
+            (changeset_no + 1) + '. ' + sanitizePrimitive(listStatus) + ': ' + state['list'][iStr] +
             '</li>'
           );
         }

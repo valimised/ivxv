@@ -1,0 +1,12 @@
+# Hardening the binaries with relro and pie is not necessary since memory
+# errors should not occur in Go binaries. Although we could use -buildmode=pie,
+# we have not tested the effect this will have, so leave it off for now.
+ivxv-votesorder: hardening-no-relro usr/bin/ivxv-votesorder
+ivxv-votesorder: hardening-no-pie usr/bin/ivxv-votesorder
+
+# We do not provide manpages, since these packages are not meant for
+# distribution.
+ivxv-votesorder: binary-without-manpage
+
+# The package depends on ivxv-common, which depends on adduser.
+ivxv-votesorder: maintainer-script-needs-depends-on-adduser postinst

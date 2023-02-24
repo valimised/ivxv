@@ -111,7 +111,7 @@ public abstract class DefaultReporter implements Reporter {
             Map<String, List<Record>> rmap) {
         Map<String, Path> paths = new TreeMap<>();
         rmap.forEach((qid, rs) -> write(paths.computeIfAbsent(qid, x -> logNName(dir, type, qid)),
-                eid, rs, type.value));
+                eid, rs, AnonymousFormatter.NOT_ANONYMOUS, type.value));
         return paths;
     }
 

@@ -86,6 +86,10 @@ töötlemisele kuluvat aega.
         Valijate nimekirjade verifitseerimiseks kasutatav avalik võti.
         Argument on kohustuslik, kui valijate nimekirjad on antud.
 
+:check.voterlists_dir:
+        Valijate nimekirjade loendi kaust. Kui on määramata, siis e-hääletanute
+        hääleõigust ei kontrollita.
+
 :check.voterlists:
         Valijate nimekirjade loend. Kui on määramata, siis e-hääletanute
         hääleõigust ei kontrollita.
@@ -175,6 +179,10 @@ eemaldatakse kõik varasemad hääled.
         #. Tühistamiste ja ennistamiste aruanne :file:`<valimise
            id>-revocation-report.csv`;
 
+        #. Tühistamiste ja ennistamiste aruanne ilma isikuandmedeta
+           :file:`<valimise
+           id>-revocation-report.csv.anonymous`;
+
         #. *Log2* fail ehk tühistatud hääled :file:`<valimise id>.<küsimuse
            id>.log2`.
 
@@ -217,6 +225,10 @@ rakendab sellele sisendiks antud tühistus- ja ennistusnimekirjad.
 
         #. Tühistamiste ja ennistamiste aruanne :file:`<valimise
            id>-revocation-report.csv`;
+
+        #. Tühistamiste ja ennistamiste aruanne ilma isikuandmedeta
+           :file:`<valimise
+           id>-revocation-report.csv.anonymous`;
 
         #. E-hääletanute nimekiri JSON-vormingus :file:`<valimise
            id>-ivoterlist.json``;
@@ -416,5 +428,170 @@ kust on lahutatud võrreldava faili väärtused.
 :file:`processor.statsdiff.yaml`:
 
 .. literalinclude:: config-examples/processor.statsdiff.yaml
+   :language: yaml
+   :linenos:
+
+.. _processor-checkAndSquash:
+
+E-valimiskasti töötlemine - verifitseerimine ja korduvhäälte tühistamine
+------------------------------------------------------------------------
+
+Antud tööriist teostab nii verifitseerimist, kui ka korduvhäälte tühistamist.
+Rohkem infot teostavate operatsioonide kohta leidub alapeatükkides:
+
+* *E-valimiskasti töötlemine - verifitseerimine*
+* *E-valimiskasti töötlemine - korduvhäälte tühistamine*
+
+:checkAndSquash.ballotbox:
+        Kogumisteenusest väljastatud e-valimiskast.
+
+:checkAndSquash.ballotbox_checksum:
+        Kogumisteenusest väljastatud e-valimiskasti digitaalselt allkirjastatud räsi.
+
+        Kui määramata, siis ei väljastata korrastatud e-valimiskasti järgmisteks
+        etappideks. Kasulik mitte-lõpliku e-valimiskasti valimisaegseks kontrolliks.
+
+:checkAndSquash.districts:
+        Digitaalselt allkirjastatud ringkondade nimekiri.
+
+:checkAndSquash.registrationlist:
+        Registreerimisteenusest pärit registreerimisandmed. Kui määramata, siis
+        ei kontrollita e-valimiskastis sisalduvate häälte vastavust
+        registreerimisandmetega.
+
+:checkAndSquash.registrationlist_checksum:
+        Registreerimisandmete digitaalselt allkirjastatud räsi. Võib puududa,
+        kui ``registrationlist`` puudub.
+
+:checkAndSquash.tskey:
+        Registreerimispäringute verifitseerimiseks kasutatav kogumisteenuse
+        avalik võti registreerimispäringute tegemise sertifikaadist.
+
+:checkAndSquash.vlkey:
+        Valijate nimekirjade verifitseerimiseks kasutatav avalik võti.
+        Argument on kohustuslik, kui valijate nimekirjad on antud.
+
+:checkAndSquash.voterlists_dir:
+        Valijate nimekirjade loendi kaust. Kui on määramata, siis e-hääletanute
+        hääleõigust ei kontrollita.
+
+:checkAndSquash.voterlists:
+        Valijate nimekirjade loend. Kui on määramata, siis e-hääletanute
+        hääleõigust ei kontrollita.
+
+:checkAndSquash.voterlists.path:
+        Valijate nimekirja fail.
+
+:checkAndSquash.voterlists.signature:
+        Valijate nimekirja allkiri, mis on antud algoritmiga
+        ``ecdsa-with-SHA256``.
+
+:checkAndSquash.districts_mapping:
+        Valijate nimekirjas oleva ringkonna ja jaoskonna teisendusfail
+        (valikuline).
+
+:checkAndSquash.election_start:
+        Hääletamise algusaeg. Sellest varasema hääletusajaga hääli käsitletakse
+        proovihäältena ning need lugemisele ei lähe.
+
+:checkAndSquash.voterforeignehak:
+        Alaliselt välisriigis elavate valijate ringkonnakuuluvuse tuvastamiseks
+        kasutatav EHAK-kood. Vaikeväärtus "0000".
+
+:checkAndSquash.enckey:
+        Krüpteerimise avaliku võtme faili asukoht (võtmerakenduse väljund).
+        Võtit kasutatakse krüpteeritud häälte eelkontrolliks, eristamaks
+        päriselt krüpteeritud hääli suvalisest binaarsest prügist.
+
+:checkAndSquash.out:
+        Tööriista väljundkaust. Sellesse kausta tekivad:
+
+        #. Korduvhäältest puhastatud e-valimiskast :file:`<valimise id>-bb-2.json`;
+
+        #. Korduvhäältest puhastatud e-valimiskasti räsi :file:`<valimise
+           id>-bb-2.json.sha256sum`;
+
+        #. E-hääletanute nimekiri JSON-vormingus :file:`<valimise
+           id>-ivoterlist.json`;
+
+        #. E-hääletanute nimekiri PDF-vormingus :file:`<valimise
+           id>-ivoterlist.pdf`;
+
+        #. Tühistamiste ja ennistamiste aruanne :file:`<valimise
+           id>-revocation-report.csv`;
+
+        #. Tühistamiste ja ennistamiste aruanne ilma isikuandmedeta
+           :file:`<valimise
+           id>-revocation-report.csv.anonymous`;
+
+        #. *Log1* fail ehk vastvõetud hääled
+           :file:`<valimise id>.<küsimuse id>.log1`.
+
+        #. *Log2* fail ehk tühistatud hääled :file:`<valimise id>.<küsimuse
+           id>.log2`.
+
+        #. E-valimiskasti töötlemisvigade raport :file:`ballotbox_errors.txt`
+           (valikuline);
+
+        #. Valijate nimekirjade töötlemisvigade raport
+           :file:`voterlist_errors.txt` (valikuline);
+
+
+:file:`processor.checkAndSquash.yaml`:
+
+.. literalinclude:: config-examples/processor.checkAndSquash.yaml
+   :language: yaml
+   :linenos:
+
+.. _processor-revokeAndAnonymize:
+
+E-valimiskasti töötlemine - häälte tühistamine, ennistamine jaoskonnainfo põhjal ja anonüümistamine
+---------------------------------------------------------------------------------------------------
+
+Häälte tühistamiseks, ennistamiseks jaoskonnainfo põhjal ning anonüümistamiseks
+kasutatakse tööriista *revokeAndAnonymize*. Tööriist saab sisendiks tööriista *squash*
+või *checkAndSquash* poolt koostatud e-valimiskasti ning rakendab sellele sisendiks antud
+tühistus- ja ennistusnimekirjad.
+
+:revokeAndAnonymize.ballotbox:
+        Korduvhäältest puhastatud e-valimiskast.
+
+:revokeAndAnonymize.ballotbox_checksum:
+        Korduvhäältest puhastatud e-valimiskasti digitaalselt allkirjastatud räsi.
+
+:revokeAndAnonymize.districts:
+        Digitaalselt allkirjastatud ringkondade nimekiri.
+
+:revokeAndAnonymize.revocationlists:
+        Tühistus- ja ennistusnimekirjade loend. Võib olla tühi.
+
+:revokeAndAnonymize.out:
+        Tööriista väljundkaust. Sellesse kausta tekivad:
+
+        #. Korduvhääletajate häältest puhastatud ning anonüümistamistatud e-valimiskast
+           :file:`<valimise id>-bb-4.json`;
+
+        #. Korduvhääletajate häältest puhastatud ning anonüümistamistatud e-valimiskasti räsi
+           :file:`<valimise id>-bb-4.json.sha256sum`;
+
+        #. Tühistamiste ja ennistamiste aruanne :file:`<valimise
+           id>-revocation-report.csv`;
+
+        #. Tühistamiste ja ennistamiste aruanne ilma isikuandmedeta
+           :file:`<valimise
+           id>-revocation-report.csv.anonymous`;
+
+        #. E-hääletanute nimekiri JSON-vormingus :file:`<valimise
+           id>-ivoterlist.json``;
+
+        #. *Log2* fail e. tühistatud hääled
+           :file:`<valimise id>.<küsimuse id>.log2`.
+
+        #. *Log3* fail e. lugemisele läinud hääled :file:`<valimise
+           id>.<küsimuse id>.log3`.
+
+:file:`processor.revokeAndAnonymize.yaml`:
+
+.. literalinclude:: config-examples/processor.revokeAndAnonymize.yaml
    :language: yaml
    :linenos:

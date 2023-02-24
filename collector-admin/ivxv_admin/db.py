@@ -180,7 +180,7 @@ class IVXVManagerDb:
         # validate value
         if isinstance(value, datetime.datetime):
             value = value.strftime(RFC3339_DATE_FORMAT)
-        assert isinstance(value, str), 'Invalid value type: %s' % type(value)
+        assert isinstance(value, str), f"Invalid value type: {type(value)}"
 
         # set value
         if key in [
@@ -210,12 +210,12 @@ class IVXVManagerDb:
             assert value in ["PENDING", "APPLIED", "INVALID", "SKIPPED"]
         elif re.match(r'host/.+/.+$', key):
             key_type = key.split('/')[2]
-            assert key_type in DB_HOST_SUBKEYS, (
-                'Invalid host key type %s' % key_type)
+            assert key_type in DB_HOST_SUBKEYS, f"Invalid host key type {key_type}"
         elif re.match(r'service/.+/.+$', key):
             key_type = key.split('/')[2]
-            assert key_type in ALLOWED_SERVICE_KEYS, (
-                'Invalid service key type %s' % key_type)
+            assert (
+                key_type in ALLOWED_SERVICE_KEYS
+            ), f"Invalid service key type {key_type}"
             if key_type == 'state':
                 assert value in SERVICE_STATES, f"Invalid value for {key!r}: {value!r}"
             elif key_type == 'backup-times':

@@ -1,7 +1,7 @@
 include common/go/gopath.mk
 
 JAVADIRS := common/java key processor auditor
-GODIRS   := common/tools/go common/collector proxy dds mid choices voting verification storage
+GODIRS   := common/tools/go common/collector proxy dds mid smartid choices voting verification storage votesorder
 
 DIRS        := $(JAVADIRS) $(GODIRS) systemd Documentation
 TESTDIRS    := $(patsubst %,test-%,$(JAVADIRS) $(GODIRS))

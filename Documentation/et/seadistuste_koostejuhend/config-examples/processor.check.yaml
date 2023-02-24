@@ -6,6 +6,7 @@ check:
   registrationlist_checksum: TESTCONF.registration.zip.sha256sum.bdoc
   tskey: TESTCONF.ts.key
   vlkey: TESTCONF.voterfile.pub.key
+  voterlists_dir: TESTCONF.voterlists
   voterlists:
     - path: TESTCONF.voters_1
       signature: TESTCONF.voters_1.signature

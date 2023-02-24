@@ -10,7 +10,7 @@ apply plugin: 'java'
 apply plugin: 'org.ysb33r.ivypot'
 
 group 'ee.ivxv'
-version '1.7.7'
+version '1.8.2'
 sourceCompatibility = 1.8
 
 ext.external = "${base}/common/external"

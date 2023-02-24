@@ -1,0 +1,8 @@
+{
+    "id": 0.0,
+    "method": "RPC.VotesSeqNo",
+    "params": [
+        {
+        }
+    ]
+}

@@ -93,30 +93,40 @@ def parse_voters_list(list_content):
 def validate_voter_record(fields, is_original_list):
     """Validate voter record in voters list."""
     # field count
-    try:
-        voter_personalcode, voter_name, action, adminunit_code, no_district = fields
-    except ValueError:
-        raise ValueError(f"Invalid field count {len(fields)}, expected 5 fields")
-    # voter-personalcode = 11DIGIT
-    if not re.match(r"[0-9]{11}$", voter_personalcode):
-        raise ValueError(f"Invalid voter-personalcode {voter_personalcode!r}")
-    # voter-name = 1*100UTF-8-CHAR
-    if not voter_name:
-        raise ValueError("voter-name is empty")
-    if len(voter_name) > 100:
-        raise ValueError(f"voter-name lenght {len(voter_name)} exceeds 100 chars")
-    # action = "lisamine" | "kustutamine"
-    if action not in ["lisamine", "kustutamine"]:
-        raise ValueError(
-            f"Unknown action {action!r}. Must be 'lisamine' or 'kustutamine'"
-        )
-    if is_original_list and action != "lisamine":
-        raise ValueError(f"Action {action!r} is not allowed in initial list")
-    # adminunit-code = 1*4UTF-8-CHAR | "FOREIGN"
-    if not adminunit_code:
-        raise ValueError("Missing adminunit-code")
-    if len(adminunit_code) > 4 and adminunit_code != "FOREIGN":
-        raise ValueError(f"adminunit-code {adminunit_code!r} is longer than 4 chars")
-    # no-district = 1*10DIGIT
-    if not re.match(r"[0-9]{1,10}$", no_district):
-        raise ValueError(f"Invalid no-district {no_district!r}")
+    if len(fields) == 5:
+        action, voter_personalcode, voter_name, adminunit_code, no_district = fields
+        if not voter_name:
+            raise ValueError("voter-name is empty")
+        if action != "lisamine":
+            raise ValueError(
+                f"Unknown action {action!r}. Must be 'lisamine' or 'kustutamine'"
+            )
+        # voter-personalcode = 11DIGIT
+        if not re.match(r"[0-9]{11}$", voter_personalcode):
+            raise ValueError(f"Invalid voter-personalcode {voter_personalcode!r}")
+        if len(voter_name) > 100:
+            raise ValueError(f"voter-name lenght {len(voter_name)} exceeds 100 chars")
+        # adminunit-code = 1*4UTF-8-CHAR | "FOREIGN"
+        if not adminunit_code:
+            raise ValueError("Missing adminunit-code")
+        if len(adminunit_code) > 4 and adminunit_code != "FOREIGN":
+            raise ValueError(
+                f"adminunit-code {adminunit_code!r} is longer than 4 chars")
+        # no-district = 1*10DIGIT
+        if not re.match(r"[0-9]{1,10}$", no_district):
+            raise ValueError(f"Invalid no-district {no_district!r}")
+
+    elif len(fields) == 2:
+        action, voter_personalcode = fields
+        if action != "kustutamine":
+            raise ValueError(
+                f"Unknown action {action!r}. Must be 'lisamine' or 'kustutamine'"
+            )
+        # voter-personalcode = 11DIGIT
+        if not re.match(r"[0-9]{11}$", voter_personalcode):
+            raise ValueError(f"Invalid voter-personalcode {voter_personalcode!r}")
+        if is_original_list:
+            raise ValueError(f"Action {action!r} is not allowed in initial list")
+
+    else:
+        raise ValueError(f"Invalid field count {len(fields)}, expected 2 or 5 fields")

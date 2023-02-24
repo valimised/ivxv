@@ -1,0 +1,23 @@
+{
+    "error": null,
+    "id": 0.0,
+    "result": {
+        "SessionID": "057229fdfa2df7d3c7f4ced81b02760b",
+        "batchRecords": [
+            {
+                "seqNo": 1,
+                "idCode": "37123097845",
+                "voterName": "NIMI NIMESTE1",
+                "kovCode": "0123",
+                "electoralDistrictNo": 1
+            },
+            {
+                "seqNo": 2,
+                "idCode": "37123097653",
+                "voterName": "NIMI NIMESTE2",
+                "kovCode": "0444",
+                "electoralDistrictNo": 1
+            }
+        ]
+    }
+}

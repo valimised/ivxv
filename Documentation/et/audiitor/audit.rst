@@ -70,9 +70,9 @@ Ehitame Java rakendused::
 
 RVT'le tarnitavad rakendused::
 
-  $HOME/ivxv/auditor/build/distributions/auditor-1.7.7.zip
-  $HOME/ivxv/key/build/distributions/key-1.7.7.zip
-  $HOME/ivxv/processor/build/distributions/processor-1.7.7.zip
+  $HOME/ivxv/auditor/build/distributions/auditor-1.8.2.zip
+  $HOME/ivxv/key/build/distributions/key-1.8.2.zip
+  $HOME/ivxv/processor/build/distributions/processor-1.8.2.zip
 
 Käivitatavad failid::
 

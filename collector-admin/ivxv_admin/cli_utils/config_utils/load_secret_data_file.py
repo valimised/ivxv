@@ -41,7 +41,7 @@ def main():
 
             Key file must be in PEM format and must be not password protected.
 
-        mid-token-key - Mobile ID identity token for
+        mid-token-key - Mobile-ID/Smart-ID identity token for
                         choices, mobile-id and voting services.
 
             Key file must be 32 bytes long.

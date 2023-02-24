@@ -168,7 +168,6 @@ func (u *union) fileadd(f *zip.File, path string) (code int, err error) {
 	}
 
 	// Check or store the hash of the file contents.
-	// XXX: Maybe we should also track some metadata, e.g., IsDir.
 	u.sum = u.hash.Sum(u.sum[:0])
 	if ok {
 		// Compare hash to previous value.

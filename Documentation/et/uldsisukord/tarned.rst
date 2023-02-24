@@ -3,6 +3,149 @@
 Tarned
 ======
 
+Muudatused tarne 1.8.2 koosseisus, erinevused võrreldes tarnega 1.8.1
+--------------------------------------------------------------------------------
+
+Kogumisteenus
+~~~~~~~~~~~~~
+
+Üldised muutused
+
+* Valijate nimekirjade vormingu muutus
+* EHS/VIS X-tee liidese CI lisandumine
+* EHS/VIS X-tee liidese dokumentatsiooni täpsustumine
+* Väiksemad veaparandused
+
+Registreerimisteenus
+~~~~~~~~~~~~~~~~~~~~
+
+* Muudatusi ei ole
+
+Kontrollrakendused
+~~~~~~~~~~~~~~~~~~
+
+Android
+
+* RSA eemaldamine
+* Veaparandused
+
+iOS
+
+* Muudatusi ei ole
+
+Mixnet
+~~~~~~
+
+* Muudatusi ei ole
+
+Töötleja rakendused
+~~~~~~~~~~~~~~~~~~~
+
+Üldised
+
+* Valijate nimekirjade vormingu muutus
+
+Võtmerakendus
+
+* Muudatusi ei ole
+
+Töötlemisrakendus
+
+* Töövoogude konsolideerimine
+
+Auditirakendus
+
+* Muudatusi ei ole
+
+Valijarakendused ja seadistusrakendus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Väiksemad veaparandused
+
+Dokumentatsioon
+~~~~~~~~~~~~~~~
+
+* Täpsustused seoses muudatustega tarkvaras
+
+Logimonitor
+~~~~~~~~~~~
+
+* Muudatusi ei ole
+
+Muudatused tarne 1.8.1 koosseisus, erinevused võrreldes tarnega 1.7.7
+--------------------------------------------------------------------------------
+
+Kogumisteenus
+~~~~~~~~~~~~~
+
+Üldised muutused
+
+* Smart-ID toe lisandumine
+* EHS/VIS X-tee liidese lisandumine
+* Hääletamisfaktide järjestamine
+* Seadistatav SNI
+
+
+Registreerimisteenus
+~~~~~~~~~~~~~~~~~~~~
+
+* Muudatusi ei ole
+
+Kontrollrakendused
+~~~~~~~~~~~~~~~~~~
+
+Android
+
+* Smart-ID
+* Täpsustatud krüptogrammi kontroll
+* Seadistatav SNI
+
+iOS
+
+* Smart-ID
+* Täpsustatud krüptogrammi kontroll
+* Seadistatav SNI
+
+Mixnet
+~~~~~~
+
+* Muudatusi ei ole
+
+Töötleja rakendused
+~~~~~~~~~~~~~~~~~~~
+
+Üldised
+
+* Smart-ID
+
+Võtmerakendus
+
+* Muudatusi ei ole
+
+Töötlemisrakendus
+
+* Töövoogude konsolideerimine, täpsustused parameetrites
+
+Auditirakendus
+
+* Muudatusi ei ole
+
+Valijarakendused ja seadistusrakendus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* SmartID
+* Uuendatud väljanägemine
+
+Dokumentatsioon
+~~~~~~~~~~~~~~~
+
+* Täpsustused seoses muudatustega tarkvaras - SmartID, jne.
+
+Logimonitor
+~~~~~~~~~~~
+
+* SmartID
+
 Muudatused tarne 1.7.7 koosseisus, erinevused võrreldes tarnega 1.7.6
 --------------------------------------------------------------------------------
 

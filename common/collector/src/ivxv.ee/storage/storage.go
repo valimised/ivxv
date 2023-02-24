@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,8 +25,9 @@ const timefmt = time.RFC3339Nano
 
 // Conf is the storage service client protocol configuration.
 type Conf struct {
-	Protocol Protocol  // The protocol which the client must implement.
-	Conf     yaml.Node // Protocol-specific configuration.
+	Protocol     Protocol  // The protocol which the client must implement.
+	Conf         yaml.Node // Protocol-specific configuration.
+	OrderTimeout int64
 }
 
 // Services contains necessary information about the storage client and server
@@ -48,7 +50,8 @@ type Services struct {
 
 // Client is used to access the storage service.
 type Client struct {
-	prot PutGetter // The underlying protocol.
+	prot         PutGetter // The underlying protocol.
+	orderTimeout int64
 }
 
 // New initializes a new storage service client with the provided configuration
@@ -64,6 +67,12 @@ func New(c *Conf, services *Services) (client *Client, err error) {
 	if client.prot, err = n(c.Conf, services); err != nil {
 		return nil, ConfigureProtocolError{Protocol: c.Protocol, Err: err}
 	}
+	if c.OrderTimeout == 0 {
+		client.orderTimeout = 5
+	} else {
+		client.orderTimeout = c.OrderTimeout
+	}
+
 	return
 }
 
@@ -563,16 +572,21 @@ func versionPrefix(version string) string {
 }
 
 const (
-	// XXX: Would storing these values under a single key be better?
 	votedStatsPrefix  = "/voted/stats/"
 	votedLatestPrefix = "/voted/latest/"
+	votesStatsPrefix  = "/votes/stats"
+	votesPrefix       = "/votes/order/"
+	voterIDKey        = "voterid"
+	voterNameKey      = "votername"
+	admincodeKey      = "admincode"
+	districtKey       = "district"
 )
 
 // SetVoted notifies storage that voteID was successful, meaning all configured
 // qualifying properties for it are received and stored. ctime is the canonical
 // time of the vote, which is usually the time of a qualifying property, e.g.,
 // vote registration timestamp.
-func (c *Client) SetVoted(ctx context.Context, voteID []byte, ctime time.Time, testVote bool) error {
+func (c *Client) SetVoted(ctx context.Context, voteID []byte, voterName string, ctime time.Time, testVote bool) error {
 	// voteID was successful: refresh indexes related to the voter. Keep in
 	// mind that voteID is not guaranteed to be the latest vote from the
 	// voter, so be careful when updating the information.
@@ -587,7 +601,7 @@ func (c *Client) SetVoted(ctx context.Context, voteID []byte, ctime time.Time, t
 
 	// Get the administrative unit code of voter in voter list version.
 	idVoter := string(data[idVoterKey])
-	idAdminCode, _, err := c.GetVoter(ctx, string(data[idVersionKey]), idVoter)
+	idAdminCode, district, err := c.GetVoter(ctx, string(data[idVersionKey]), idVoter)
 	switch {
 	case err == nil:
 	case errors.CausedBy(err, new(NotExistError)) != nil:
@@ -596,6 +610,7 @@ func (c *Client) SetVoted(ctx context.Context, voteID []byte, ctime time.Time, t
 		// ivxv.ee/conf.Election.IgnoreVoterList). Use an empty
 		// administrative unit code.
 		idAdminCode = ""
+		district = ""
 	default:
 		return SetVotedGetVoterError{Voter: idVoter, Err: err}
 	}
@@ -608,7 +623,10 @@ func (c *Client) SetVoted(ctx context.Context, voteID []byte, ctime time.Time, t
 		votedStatsValue := encodePair(idAdminCode, ctimeStr)
 		if err := c.update(ctx, votedStatsPrefix+idVoter, func(existing []byte) ([]byte, error) {
 			if existing == nil {
-				return votedStatsValue, nil // Fast path.
+				return votedStatsValue, nil // Initial value.
+			}
+			if bytes.Equal(votedStatsValue, existing) {
+				return nil, nil // Fast path if already same value.
 			}
 
 			oldAdminCode, oldTimeStr, err := decodePair(existing)
@@ -637,6 +655,13 @@ func (c *Client) SetVoted(ctx context.Context, voteID []byte, ctime time.Time, t
 		}); err != nil {
 			return SetVotedUpdateStatsError{Err: err}
 		}
+		// voterName is empty when rebuilding voted stats
+		if voterName != "" {
+			err = c.AddVoteOrder(ctx, voterName, idVoter, district, idAdminCode)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	// Update the voted latest index: store the vote identifier with the
@@ -645,7 +670,10 @@ func (c *Client) SetVoted(ctx context.Context, voteID []byte, ctime time.Time, t
 	votedLatestValue := encodePair(ctimeStr, string(voteID))
 	if err := c.update(ctx, votedLatestPrefix+idVoter, func(existing []byte) ([]byte, error) {
 		if existing == nil {
-			return votedLatestValue, nil
+			return votedLatestValue, nil // Initial value.
+		}
+		if bytes.Equal(votedLatestValue, existing) {
+			return nil, nil // Fast path if already same value.
 		}
 
 		oldTimeStr, oldVoteID, err := decodePair(existing)
@@ -685,6 +713,103 @@ func (c *Client) CheckVoted(ctx context.Context, voter string) (voted bool, err 
 	default:
 		return false, CheckVotedError{Voter: voter, Err: err}
 	}
+}
+
+// GetVotesCount returns votes count.
+func (c *Client) GetVotesCount(ctx context.Context) (count uint64, err error) {
+	switch countb, err := c.prot.Get(ctx, votesStatsPrefix); {
+	case err == nil:
+		return binary.BigEndian.Uint64(countb), nil
+	case errors.CausedBy(err, new(NotExistError)) != nil:
+		return 0, nil
+	default:
+		return 0, GetVotesCountError{Err: err}
+	}
+}
+
+type VoteOrder struct {
+	SeqNo      string
+	IDCode     string
+	VoterName  string
+	KovCode    string
+	DistrictNo string
+}
+
+// AddVoteOrder tries to add vote order record
+func (c *Client) AddVoteOrder(ctx context.Context, voterName string, idVoter string,
+	district string, idAdminCode string) error {
+	count, err := c.GetVotesCount(ctx)
+	if err != nil {
+		return SetVotedGetVotesCountError{Err: err}
+	}
+	var newCount uint64
+	if count == 0 {
+		newCount = count + 1
+		newValue := make([]byte, 8)
+		binary.BigEndian.PutUint64(newValue, newCount)
+		err := c.prot.Put(ctx, votesStatsPrefix, newValue)
+		if err != nil {
+			return log.Alert(StoreVotesPutStatsError{Err: err})
+		}
+	} else {
+		timeout := time.Duration(c.orderTimeout) * time.Second
+		for start := time.Now(); time.Since(start) < timeout; {
+			oldValue := make([]byte, 8)
+			newCount = count + 1
+			newValue := make([]byte, 8)
+			binary.BigEndian.PutUint64(oldValue, count)
+			binary.BigEndian.PutUint64(newValue, newCount)
+			if err = c.prot.CAS(ctx, votesStatsPrefix, oldValue, newValue); err != nil {
+				count++
+			} else {
+				break
+			}
+		}
+		if err != nil {
+			return log.Alert(StoreVotesCASStatsError{VoterName: voterName,
+				VoterID: idVoter, AdminCode: idAdminCode, District: district})
+		}
+	}
+	if err = c.putAll(ctx, votesPrefix+strconv.FormatUint(newCount, 10)+"/", map[string][]byte{
+		voterIDKey:   []byte(idVoter),
+		admincodeKey: []byte(idAdminCode),
+		districtKey:  []byte(district),
+		voterNameKey: []byte(voterName),
+	}, false, noopAdd); err != nil {
+		return log.Alert(StoreVotesCountError{Err: err})
+	}
+
+	return nil
+}
+
+// GetVotesOrder returns for each successful vote record with order number and voter info.
+func (c *Client) GetVotesOrder(ctx context.Context, countFrom int, batchSize int) ([]VoteOrder, error) {
+	var keys []string
+	for i := countFrom; i < countFrom+batchSize; i++ {
+		keys = append(keys, votesPrefix+strconv.FormatInt(int64(i), 10)+"/"+admincodeKey,
+			votesPrefix+strconv.FormatInt(int64(i), 10)+"/"+voterIDKey,
+			votesPrefix+strconv.FormatInt(int64(i), 10)+"/"+voterNameKey,
+			votesPrefix+strconv.FormatInt(int64(i), 10)+"/"+districtKey)
+	}
+	values, err := c.getAll(ctx, keys...)
+	if err != nil {
+		return []VoteOrder{}, GetAllVotesOrderError{Err: err}
+	}
+	var votesOrder []VoteOrder
+	for i := countFrom; i < countFrom+batchSize; i++ {
+		var voterID []byte
+		var ok bool
+		// do not add empty values to the list
+		if voterID, ok = values[votesPrefix+strconv.FormatInt(int64(i), 10)+"/"+voterIDKey]; !ok {
+			break
+		}
+		votesOrder = append(votesOrder, VoteOrder{strconv.FormatInt(int64(i), 10),
+			string(voterID),
+			string(values[votesPrefix+strconv.FormatInt(int64(i), 10)+"/"+voterNameKey]),
+			string(values[votesPrefix+strconv.FormatInt(int64(i), 10)+"/"+admincodeKey]),
+			string(values[votesPrefix+strconv.FormatInt(int64(i), 10)+"/"+districtKey])})
+	}
+	return votesOrder, nil
 }
 
 // VotedStats is a single entry from GetVotedStats.
@@ -961,7 +1086,7 @@ func (c *Client) StoreQualifyingProperty(ctx context.Context, voteID []byte,
 func (c *Client) GetVotes(ctx context.Context, qps []q11n.Protocol, optional []string) (
 	<-chan *StoredVote, <-chan error) {
 
-	// XXX: It might make more sense to iterate over keys only to get vote
+	// It might make more sense to iterate over keys only to get vote
 	// identifiers and then use getAll to get entire votes. This would
 	// reduce our running memory usage and probably be a lot easier to
 	// read, however increase the number of storage queries, resulting in a

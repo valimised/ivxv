@@ -6,6 +6,7 @@ package server // import "ivxv.ee/server"
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net"
 	"net/rpc"
@@ -16,6 +17,7 @@ import (
 	"ivxv.ee/age"
 	"ivxv.ee/auth"
 	"ivxv.ee/conf/version"
+	"ivxv.ee/cryptoutil"
 	"ivxv.ee/identity"
 	"ivxv.ee/log"
 )
@@ -45,6 +47,8 @@ type Conf struct {
 
 	Filter  *FilterConf
 	Version *version.V // Necessary for reporting server status.
+
+	ClientCA string
 }
 
 // New creates a new server with the provided configuration and handler.
@@ -64,9 +68,15 @@ func New(c *Conf, handler interface{}) (*S, error) {
 	if err != nil {
 		return nil, TLSKeyPairError{Err: err}
 	}
-
+	var certPool *x509.CertPool
+	if c.ClientCA != "" {
+		certPool, err = cryptoutil.PEMCertificatePool(c.ClientCA)
+		if err != nil {
+			return nil, ClientCAParsingError{Err: err}
+		}
+	}
 	// Setup the chain of filters that serves a connection using r.
-	if s.filters, err = newFilters(c.Filter, r, tlsCert, c.End); err != nil {
+	if s.filters, err = newFilters(c.Filter, r, tlsCert, c.End, certPool); err != nil {
 		return nil, FilterConfError{Err: err}
 	}
 

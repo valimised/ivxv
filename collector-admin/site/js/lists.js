@@ -13,6 +13,12 @@ function loadPageData() {
 
   // load collector state
   $.getJSON('data/status.json', function(state) {
+     /*
+      * HTTP GET on https://admin.?.ivxv.ee/ivxv/data/status.json
+      * HTTP GET response that contains HTML tags is not allowed!
+      * state is always an JSON object
+      */
+      state = sanitizeJSON(state);
       hideErrorMessage();
 
       // choices list
@@ -53,7 +59,7 @@ function loadPageData() {
           var listStatus = voterListStateDescriptions.get(state['list'][iStr + '-state']);
           $('#list-list').append(
             '<li class="list-group-item" style="padding-left:25px">' +
-            (changeset_no + 1) + '. ' + listStatus + ': ' + state['list'][iStr] +
+            (changeset_no + 1) + '. ' + sanitizePrimitive(listStatus) + ': ' + state['list'][iStr] +
             '</li>'
           );
         }
@@ -120,12 +126,12 @@ function uploadFiles(event) {
   // Create a formdata object and add the files
   var data = new FormData();
   data.append('upload', files[0]);
-  data.append('type', $('#drop').find(':selected').val());
+  data.append('type', sanitizePrimitive($('#drop').find(':selected').val()));
 
   var form = $('#config-upload-form');
   $.ajax({
-    url: form.attr('action'),
-    type: form.attr('method'),
+    url: encodeURI(form.attr('action')),
+    type: sanitizePrimitive(form.attr('method')),
     data: data,
     cache: false,
     dataType: 'json',
@@ -136,9 +142,9 @@ function uploadFiles(event) {
       console.log(jqXHR.responseJSON.message);
       $('#upload-message')
         .html(
-          jqXHR.responseJSON.message +
+          sanitizePrimitive(jqXHR.responseJSON.message) +
           '<hr />' +
-          '<pre>' + jqXHR.responseJSON.log.join('\n') + '</pre>'
+          '<pre>' + sanitizePrimitive(jqXHR.responseJSON.log.join('\n')) + '</pre>'
         )
         .addClass(jqXHR.responseJSON.success ? 'alert-success' : 'alert-danger')
         .show();
@@ -148,7 +154,7 @@ function uploadFiles(event) {
     error: function(jqXHR, textStatus, errorThrown) {
       console.log(jqXHR);
       $('#upload-message')
-        .html(jqXHR.responseText)
+        .html(sanitizePrimitive(jqXHR.responseText))
         .addClass('alert-danger')
         .show();
     }

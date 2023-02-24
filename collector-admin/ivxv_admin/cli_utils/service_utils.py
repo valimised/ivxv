@@ -77,10 +77,9 @@ def export_votes(must_consolidate, output_filename):
     try:
         subprocess.run(['ivxv-backup', 'ballot-box'], check=True)
     except OSError as err:
-        raise IvxvError(
-            'Creating ballot box backup failed: {}'.format(err.strerror))
+        raise IvxvError(f"Creating ballot box backup failed: {err.strerror}")
     except subprocess.CalledProcessError as err:
-        raise IvxvError('Creating ballot box backup failed: {}'.format(err))
+        raise IvxvError(f"Creating ballot box backup failed: {err}")
 
     # create handler for backup service
     services = get_services(include_types=['backup'])
@@ -779,13 +778,14 @@ def voting_sessions_util():
 
         Session data is in CSV format.
 
-        Usage: ivxv-voting-sessions (vote | verify) <output_file> [--anonymize]
+        Usage: ivxv-voting-sessions (vote | verify) <output_file> [--anonymize] [--uniq]
                     [--log-level=<level>]
 
         Options:
             <output_file>               Write sessions to file.
             --anonymize                 Anonymize session data
                                         (IP addresses and ID codes).
+            --uniq                      Consolidate session data.
             --log-level=<level>         Logging level [Default: INFO].
         """
     )
@@ -819,6 +819,7 @@ def voting_sessions_util():
             logmon_account,
             session_type="vote" if args["vote"] else "verify",
             anonymize=args["--anonymize"],
+            uniq=args["--uniq"],
             output_filepath=args["<output_file>"],
             log_level=args["--log-level"],
         )
@@ -830,21 +831,19 @@ def voting_sessions_util():
 
 
 def import_voting_sessions(
-    logmon_account, session_type, anonymize, output_filepath, log_level
+    logmon_account, session_type, anonymize, uniq, output_filepath, log_level
 ):
     """Import voting sessions from Log Monitor."""
     # generate CSV
     log.info("Generating voting sessions file in Log Monitor")
     remote_outfile = f"~logmon/voting-sessions-{session_type}-{os.getpid()}.json"
-    remote_cmd = [
-        "ivxv-export-voting-sessions",
-        session_type,
-        f"--log-level={log_level}",
-    ]
-    cmd = ["ssh", logmon_account] + remote_cmd
+    remote_cmd = ["ivxv-export-voting-sessions", f"--log-level={log_level}"]
     if anonymize:
-        cmd.append("--anonymize")
-    cmd.append(remote_outfile)
+        remote_cmd.append("--anonymize")
+    if uniq:
+        remote_cmd.append("--uniq")
+    remote_cmd += [session_type, remote_outfile]
+    cmd = ["ssh", logmon_account] + remote_cmd
     try:
         subprocess.run(cmd, stdout=subprocess.PIPE, check=True)
     except subprocess.CalledProcessError as err:

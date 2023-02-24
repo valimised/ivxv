@@ -213,7 +213,7 @@ def backup_management_cfg(backup_service):
                     'rsync',
                     '-av',
                     '--del',
-                    src_dir + '/',
+                    f"{src_dir}/",
                     f'{backup_service.hostname}:{backup_tmpdir}/{tgt_dir}/',
                 ],
                 check=True,

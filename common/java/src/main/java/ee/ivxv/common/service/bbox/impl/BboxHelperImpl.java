@@ -27,7 +27,6 @@ public class BboxHelperImpl implements BboxHelper {
 
     @Override
     public Loader<?> getLoader(Path path, Progress.Factory pf, int nThreads) {
-        // TODO Choose profile better!!!
         Profile<?, ?, ?, ?> profile = new TsProfile(container);
         return new LoaderImpl<>(profile, pf, nThreads);
     }

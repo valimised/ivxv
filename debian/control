@@ -72,6 +72,14 @@ Description: IVXV mobiil-ID tugiteenus
  .
  Käesolev pakk sisaldab kogumisteenuse mobiil-ID tugiteenust
 
+Package: ivxv-smartid
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, ca-certificates, ivxv-common, libpam-systemd
+Description: IVXV Smart-ID tugiteenus
+ Elektroonilise hääletamise infosüsteem IVXV
+ .
+ Käesolev pakk sisaldab kogumisteenuse Smart-ID tugiteenust
+
 Package: ivxv-log
 Architecture: all
 Depends: ${misc:Depends}, ivxv-common, rsync
@@ -89,3 +97,12 @@ Description: IVXV varundusteenus
  Elektroonilise hääletamise infosüsteem IVXV
  .
  Käesolev pakk sisaldab kogumisteenuse varundusteenust
+
+Package: ivxv-votesorder
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, ivxv-common, libpam-systemd
+Description: IVXV häälte kirjete edastusteenus
+ Elektroonilise hääletamise infosüsteem IVXV
+ .
+ Käesolev pakk sisaldab häälte nimekirja edastusteenust
+

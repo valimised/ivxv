@@ -126,6 +126,9 @@ public class InitTool implements Tool.Runner<InitArgs> {
 
         console.println(Msg.m_storing_shares);
         for (int i = 0; i < encshares.length; i++) {
+
+            // We do not add retry handler to storage operations, it's better to
+            // use different card
             Card card = cards.getCard(i);
             card.storeIndexedBlob(AID, DEC_SHARE_NAME, encshares[i], i + 1);
             card.storeIndexedBlob(AID, SIGN_SHARE_NAME, signshares[i], i + 1);
@@ -142,6 +145,8 @@ public class InitTool implements Tool.Runner<InitArgs> {
             } else {
                 card = cards.getCard(i);
             }
+            // We do not add retry handler here, since it's part of the storage
+            // operation
             IndexedBlob ib = card.getIndexedBlob(AID, SIGN_SHARE_NAME);
             if (ib.getIndex() < 1 || ib.getIndex() > tparams.getParties()) {
                 throw new ProtocolException("Indexed blob index mismatch");

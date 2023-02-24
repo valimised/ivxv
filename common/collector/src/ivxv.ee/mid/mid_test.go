@@ -17,8 +17,9 @@ import (
 )
 
 const (
-	testID    = "60001019906"
-	testPhone = "+37200000766"
+	testID     = "60001018800"
+	testSerial = "PNOEE-60001018800"
+	testPhone  = "+37200000566"
 )
 
 var (
@@ -83,7 +84,7 @@ func TestAuthentication(t *testing.T) {
 		}
 	}
 
-	if cert.Subject.SerialNumber != testID {
+	if cert.Subject.SerialNumber != testSerial {
 		t.Error("unexpected subject serial number:", cert.Subject.SerialNumber)
 	}
 
@@ -104,7 +105,7 @@ func TestCertificate(t *testing.T) {
 		t.Fatal("failed to get signing certificate:", err)
 	}
 
-	if cert.Subject.SerialNumber != testID {
+	if cert.Subject.SerialNumber != testSerial {
 		t.Error("unexpected subject serial number:", cert.Subject.SerialNumber)
 	}
 }

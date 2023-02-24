@@ -58,7 +58,7 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
 
     /**
      * Initialize using a card identifier and a console.
-     * 
+     *
      * @param id
      * @param console
      */
@@ -68,7 +68,7 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
 
     /**
      * Initialize using a card identifier, terminal number and a console.
-     * 
+     *
      * @param id
      * @param termNo
      * @param console
@@ -83,7 +83,7 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
 
     /**
      * Get all available PKCS15Cards.
-     * 
+     *
      * @param console
      * @return
      * @throws CardException
@@ -228,7 +228,7 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
      * Erase the file system.
      * <p>
      * Currently erasing the file system is not implemented and this method is a no-op.
-     * 
+     *
      * @throws PKCS15Exception
      */
     public void eraseFilesystem() throws PKCS15Exception {
@@ -239,7 +239,7 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
      * Create a PKCS15 file system.
      * <p>
      * Currently erasing the file system is not implemented and this method is a no-op.
-     * 
+     *
      * @throws PKCS15Exception
      */
     public void createFilesystem() throws PKCS15Exception {
@@ -340,7 +340,7 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
             try {
                 offset += v.getEncoded("DER").length;
             } catch (IOException e) {
-                // TODO: does not happen. the input is controlled
+                // does not happen. the input is controlled
             }
         }
         apdu.updateBinary(dodfEntry, offset);
@@ -348,7 +348,7 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
 
     /**
      * Store a blob on the card.
-     * 
+     *
      * @param aid Authentication identifier to associate with the file.
      * @param identifier File identifier.
      * @param blob File data.
@@ -426,7 +426,7 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
      * Remove the data object at a location protected with an authentication identifier.
      * <p>
      * The implementation does not support removing files. It returns false on every call.
-     * 
+     *
      * @param aid Authentication identifier
      * @param identifier File identifier
      * @return Success of removing the blob.
@@ -455,7 +455,7 @@ public class PKCS15Card implements ee.ivxv.common.service.smartcard.Card {
 
     /**
      * Get the blob with authentication identifier.
-     * 
+     *
      * @param aid Authentication identifier.
      * @param identifier File identifier.
      * @return File content.

@@ -153,6 +153,13 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 
         Valimiste Infosüsteemi TLS-sertifikaadi usaldusahel.
 
+:xroad:
+        Alamblokk, mis sisaldab X-teega ühenduva teenuse seadistust.
+
+:xroad.ca:
+
+        X-teega teenuse TLS-sertifikaadi usaldusahel.
+
 ----
 
 :auth:
@@ -164,9 +171,9 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 
         Alamblokk, mis sisaldab piletipõhise valija tuvastamise seadistust.
 
-        Piletipõhist valija tuvastamist kasutatakse Mobiil-ID puhul, kus
-        ``mid`` teenus tuvastab valija ning väljastab talle pileti, millega
-        teistele teenustele ennast tuvastada.
+        Piletipõhist valija tuvastamist kasutatakse Mobiil-ID/Smart-ID puhul,
+        kus ``mid``/``smartid`` teenus tuvastab valija ning väljastab talle
+        pileti, millega teistele teenustele ennast tuvastada.
 
         See alamblokk on tühi, aga tema olemasolek või puudumine määrab, kas
         piletipõhine valija tuvastus on lubatud või ei.
@@ -394,6 +401,94 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
         olevate sertifikaatide hulgast selline, mis on antud välja sama
         väljastaja poolt, mis kontrollitav sertifikaat, ning on lubatud OCSP
         vastuste signeerimiseks.
+
+----
+
+:smartid:
+
+        Alamblokk, mis sisaldab Smart-ID teenusepakkuja seadistust.
+
+:smartid.url:
+
+        Kohustuslik väli.
+        Smart-ID teenusepakkuja asukoht.
+
+:smartid.relyingpartyuuid:
+
+        Kohustuslik väli.
+        Smart-ID teenusepakkujaga kokkulepitud kliendi identifikaator.
+
+:smartid.relyingpartyname:
+
+        Kohustuslik väli.
+        Smart-ID teenusepakkujaga kokkulepitud kliendi nimi.
+
+:smartid.authinteractionsorder:
+
+        Kohustuslik väli.
+        Autentimise käigus Smart-ID kasutajale kuvatavate interaktsioonide järjekord.
+        Järjekorrast valitakse esimene interaktsioon, mida rakendus toetab.
+        Võimalikud  väärtused: ``displayTextAndPIN`` koos ``displayText60``,
+        ``verificationCodeChoice`` koos ``displayText60``,
+        ``confirmationMessage`` koos ``displayText200`` või
+        ``confirmationMessageAndVerificationCodeChoice`` koos ``displayText200``.
+
+:smartid.signinteractionsorder:
+
+        Kohustuslik väli.
+        Allkirjastamise käigus Smart-ID kasutajale kuvatavate interaktsioonide järjekord.
+        Järjekorrast valitakse esimene interaktsioon, mida rakendus toetab.
+        Võimalikud  väärtused: ``displayTextAndPIN`` koos ``displayText60``,
+        ``verificationCodeChoice`` koos ``displayText60``,
+        ``confirmationMessage`` koos ``displayText200`` või
+        ``confirmationMessageAndVerificationCodeChoice`` koos ``displayText200``.
+
+:smartid.authchallengesize:
+
+        Autentimise käigus Smart-ID teenusele saadetava pretensiooni pikkus.
+        Võimalikud väärtused ``32`` (vaikeväärtus), ``48`` ja ``64``.
+
+:smartid.statustimeoutms:
+
+        Autentimise ja allkirjastamise staatuse päringu korral Smart-ID
+        teenusele edastatav parameeter, millega saab kontrollida, kui kaua
+        Smart-ID teenus ootab kasutajapoolse tegevuse lõpptulemust, enne kui
+        vastab, et tegevus on pooleli.
+        Väärtuse puudumisel oodatakse võimalikult vähe: täpne aeg sõltub
+        Smart-ID teenusest.
+
+        Parameeter aitab vähendada autentimise või allkirjastamise käigus
+        Smart-ID teenusele saadetavate päringute arvu.
+
+:smartid.roots:
+
+        Kohustuslik väli.
+        Smart-ID sertifikaatide usaldusjuured.
+
+:smartid.intermediates:
+
+        Smart-ID sertifikaatide vahesertifikaadid. Smart-ID autentimiseks
+        peab nende sertifikaatide abil olema võimalik luua ahel Smart-ID
+        sertifikaadist usaldusjuureni.
+
+:smartid.ocsp:
+
+        Alamblokk, mis sisaldab valija Smart-ID sertifikaatide oleku
+        kontrollimise seadistust.
+
+:smartid.ocsp.url:
+
+        Kohustuslik väli.
+        Valija Smart-ID sertifikaatide kehtivuskinnitusteenuse aadress.
+
+:smartid.ocsp.responders:
+
+        Smart-ID sertifikaatide OCSP responderi sertifikaadid. Kui nende
+        hulgast responderi sertifikaati ei leita, siis otsitakse vastuses
+        olevate sertifikaatide hulgast selline, mis on
+        1) välja antud sama väljastaja poolt, mis kontrollitav sertifikaat;
+        ja
+        2) lubatud OCSP vastuste signeerimiseks.
 
 ----
 

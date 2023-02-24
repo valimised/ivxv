@@ -1,0 +1,15 @@
+startuml
+
+left to right direction
+
+package "IVXV" {
+    [Järjekorrateenus] as votesorder
+}
+
+[X-tee teenus(xroad-service)] as xservice
+[X-tee turvaserver] as xsec
+
+xsec --> xservice
+xservice--> votesorder
+
+@enduml

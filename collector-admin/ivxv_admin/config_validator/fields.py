@@ -22,8 +22,8 @@ class ElectionIdType(StringType):
 
         if len(value) < min_length or len(value) > max_length:
             raise ValidationError(
-                'Election ID length must be between {} and {}'.format(
-                    min_length, max_length))
+                f"Election ID length must be between {min_length} and {max_length}"
+            )
         if any(ws in value for ws in list(string.whitespace)):
             raise ValidationError('Election ID contains whitespace')
 
@@ -40,8 +40,8 @@ class CertificateType(StringType):
         except OpenSSL.crypto.Error as err:
             err_lib, err_func, err_reason = err.args[0][0]
             raise ValidationError(
-                'Error in {} library {} function: {}'
-                .format(err_lib, err_func, err_reason))
+                f"Error in {err_lib} library {err_func} function: {err_reason}"
+            )
 
         return super().validate(value, context)
 
@@ -56,7 +56,7 @@ class PublicKeyType(StringType):
         except OpenSSL.crypto.Error as err:
             err_lib, err_func, err_reason = err.args[0][0]
             raise ValidationError(
-                'Error in {} library {} function: {}'
-                .format(err_lib, err_func, err_reason))
+                f"Error in {err_lib} library {err_func} function: {err_reason}"
+            )
 
         return super().validate(value, context)

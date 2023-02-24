@@ -274,6 +274,12 @@ vastava teenuse tarkvarapakk teenuse hostist:
 
       $ apt purge ivxv-mid
 
+* Smart-ID tugiteenuse paki eemaldamine:
+
+   .. code-block:: shell-session
+
+      $ apt purge ivxv-smartid
+
 * Vahendusteenuse paki eemaldamine:
 
    .. code-block:: shell-session

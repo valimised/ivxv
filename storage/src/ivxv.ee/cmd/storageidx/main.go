@@ -120,7 +120,7 @@ func rebuildVotedStats(ctx context.Context, start time.Time, qps []q11n.Protocol
 			}
 
 			testVote := ctime.Before(start)
-			if err := s.SetVoted(ctx, vote.VoteID, ctime, testVote); err != nil {
+			if err := s.SetVoted(ctx, vote.VoteID, "", ctime, testVote); err != nil {
 				return err
 			}
 			if _, ok := voters[vote.Voter]; !ok {

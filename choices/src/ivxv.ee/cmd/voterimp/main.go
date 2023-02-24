@@ -290,7 +290,7 @@ loop:
 
 		// Read the next line.
 		line++
-		voter, action, adminCode, district, err := next(b)
+		action, voter, adminCode, district, err := next(b)
 		switch {
 		case err == nil:
 		case err == io.EOF:
@@ -441,20 +441,9 @@ func changes(ctx context.Context, voter, action, adminCode, district string,
 		errs = append(errs, ChangesVoterWithPreviousErrorsError{Voter: voter})
 	}
 
-	if len(adminCode) == 0 {
-		errs = append(errs, ChangesEmptyAdminUnitCodeError{})
-		previousErrors = true
-	}
-	if len(district) == 0 {
-		errs = append(errs, ChangesEmptyDistrictNumberError{})
-		previousErrors = true
-	}
-
 	// Only perform consistency checks if there are no previous errors.
 	var voterExists bool    // Is this voter on the current voter list?
 	var voterProcessed bool // Has this voter already been processed?
-	var oldAdminCode string
-	var oldDistrict string
 	if !previousErrors {
 		// Check the current entry for the voter. Look at the in-memory
 		// map first and only then storage.
@@ -463,7 +452,7 @@ func changes(ctx context.Context, voter, action, adminCode, district string,
 			voterProcessed = true
 		} else {
 			var err error
-			oldAdminCode, oldDistrict, err = s.GetVoter(ctx, version, voter)
+			_, _, err = s.GetVoter(ctx, version, voter)
 			switch {
 			case err == nil:
 				voterExists = true
@@ -477,6 +466,14 @@ func changes(ctx context.Context, voter, action, adminCode, district string,
 
 	switch action {
 	case "lisamine":
+		if len(adminCode) == 0 {
+			errs = append(errs, ChangesEmptyAdminUnitCodeError{})
+			previousErrors = true
+		}
+		if len(district) == 0 {
+			errs = append(errs, ChangesEmptyDistrictNumberError{})
+			previousErrors = true
+		}
 		if !previousErrors {
 			if voterExists {
 				errs = append(errs, ChangesAddDuplicateVoterError{Voter: voter})
@@ -491,14 +488,6 @@ func changes(ctx context.Context, voter, action, adminCode, district string,
 				errs = append(errs, ChangesRemoveNotExistingVoterError{Voter: voter})
 			case voterProcessed:
 				errs = append(errs, ChangesRemoveAddedVoterError{Voter: voter})
-			case adminCode != oldAdminCode, district != oldDistrict:
-				errs = append(errs, ChangesRemoveVoterEntryMismatchError{
-					Voter:                 voter,
-					RemovedAdminUnitCode:  adminCode,
-					RemovedDistrictNumber: district,
-					CurrentAdminUnitCode:  oldAdminCode,
-					CurrentDistrictNumber: oldDistrict,
-				})
 			}
 			voters[voter] = nil // nil to distinguish from unchanged voters.
 		}
@@ -519,7 +508,7 @@ func stepadd(ctx context.Context, add status.Add, count, step uint64) {
 }
 
 // next reads and parses the next voter line from b.
-func next(b *bytes.Buffer) (voter, action, adminCode, district string, err error) {
+func next(b *bytes.Buffer) (action, voter, adminCode, district string, err error) {
 	line, err := readString(b, delim)
 	if err != nil {
 		if err != io.EOF || len(line) > 0 {
@@ -528,23 +517,29 @@ func next(b *bytes.Buffer) (voter, action, adminCode, district string, err error
 		return
 	}
 
-	// Split on tabs and expect five fields:
+	// Split on tabs and expect five fields or two fields when 'kustutamine':
 	//
-	//	0. voter ID,
-	//	1. voter name (ignored),
-	//	2. action,
+	//	0. action,
+	//	1. voter ID,
+	//	2. voter name (ignored),
 	//	3. administrative unit code, and
 	//	4. district number.
+	//
+	//	0. action,
+	//	1. voter ID,
 	//
 	// The choices identifier is formed from the administrative unit code
 	// and district number.
 	fields := strings.Split(line, string(sep))
-	if len(fields) != 5 {
-		err = FieldCountError{Fields: len(fields), Expected: 5}
+	switch len(fields) {
+	case 2:
+		return fields[0], fields[1], "", "", nil
+	case 5:
+		return fields[0], fields[1], fields[3], fields[4], nil
+	default:
+		err = FieldCountError{Fields: len(fields)}
 		return
 	}
-
-	return fields[0], fields[2], fields[3], fields[4], nil
 }
 
 // report reports an error to both the log and standard output.

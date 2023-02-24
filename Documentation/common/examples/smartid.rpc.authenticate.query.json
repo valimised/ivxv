@@ -1,0 +1,10 @@
+{
+    "id": 0.0,
+    "method": "RPC.Authenticate",
+    "params": [
+        {
+            "OS": "Operating System,2,0",
+            "Identifier": "60001019906"
+        }
+    ]
+}

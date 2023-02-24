@@ -92,7 +92,7 @@ func soapRequest(ctx context.Context, url string, req interface{}, resp interfac
 	}
 	log.Debug(ctx, HTTPResponse{Response: string(respDump)})
 
-	// XXX: Does encoding/xml.Unmarshal retain any references to the
+	// Does encoding/xml.Unmarshal retain any references to the
 	// original byte slice in the unmarshaled structure? If not, then
 	// instead of allocating a new byte slice here we could reuse pooled
 	// buffers for temporarily storing the XML between reading and

@@ -16,6 +16,8 @@ data:
 
     debug: true
 
+    snidomain: inttest.ivxv.ee
+
     filter:
       tls:
         handshaketimeout: 10
@@ -48,10 +50,17 @@ data:
           verification:
             - id:      verification@localhost
               address: localhost:4444
+          smartid:
+            - id:      smartid@localhost
+              address: localhost:4445
+          votesorder:
+            - id:      votesorder@localhost
+              address: localhost:4446
 
     storage:
       protocol: file
       conf:
         wd: testdata/storage
+      ordertimeout: 10
 
 # vim: set ft=yaml sw=2:

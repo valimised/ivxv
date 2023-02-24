@@ -1,0 +1,208 @@
+openapi: 3.0.1
+info:
+  title: E-hääletamiste jooksev nimekiri
+  description: EHS poolt VIS3-le osutatava X-tee teenuse spetsifikatsioon
+  license:
+    name: MIT
+  version: 1.0.0
+servers:
+  - url: https://host/xroad/v1
+tags:
+  - name: ELECTION
+    description: Valimissündmuste info pärimise teenused
+
+paths:
+  /elections:
+    get:
+      summary: Valimissündmuste loetelu
+      description: Otspunkt väljastab aktiivsete valimissündmuste loetelu. Aktiivne valimissündmus teenuse kontekstis on selline, mille kohta EHS on valmis väljastama jooksvat e-hääletanute nimekirja.
+      responses:
+        200:
+          description: Edukas operatsioon
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Elections"
+        400:
+          description: Vigane päring
+        500:
+          description: Tehniline viga
+
+  /elections/{electionId}/lastseqno:
+    get:
+      summary: Valimissündmuses viimase e-hääletamise järjenumbri pärimine.
+      description: Valimissündmuses viimase e-hääletamise järjenumbri pärimine.
+      parameters:
+        - name: electionId
+          in: path
+          description: Valimissündmuse ID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Edukas operatsioon
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LastSeqNoResponse"
+        400:
+          description: Vigane päring
+        404:
+          description: Objekti ei leitud
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/GenericError"
+        410:
+          description: Enam ei paku
+        500:
+          description: |
+            "Tehniline viga" - üldnimetus olukordadele, kus EHS ei suuda päringut teenindada.
+
+  /elections/{electionId}/evotingsbatchfrom/{fromSeqNo}:
+    get:
+      summary: e-hääletamiste pakk
+      description: VIS3 pärib EHS-le valimissündmuses e-hääletamiste paki, alates järjenumbrist.
+      parameters:
+        - name: electionId
+          in: path
+          description: Valimissündmuse ID
+          required: true
+          schema:
+            type: string
+        - name: fromSeqNo
+          in: path
+          description: Viimase e-hääletamise järjenumber
+          required: true
+          schema:
+            type: number
+      responses:
+        200:
+          description: Edukas operatsioon
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EVotingsBatchResponse"
+        400:
+          description: Vigane päring
+        404:
+          description: Päritud järjenumbriga e-hääletamist ei ole.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/GenericError"
+        410:
+          description: Enam ei paku
+        500:
+          description: |
+            "Tehniline viga" - üldnimetus olukordadele, kus EHS ei suuda päringut teenindada.
+
+components:
+  schemas:
+
+    Elections:
+      type: object
+      properties:
+        elections:
+          type: array
+          items:
+            $ref: "#/components/schemas/Election"
+
+    Election:
+      type: object
+      description: Valimissündmus
+      properties:
+        name:
+          type: string
+          description: Valimissündmuse nimi
+          example: "RK_2023"
+
+    LastSeqNoResponse:
+      type: object
+      properties:
+        electionName:
+          type: string
+          description: Valimissündmuse identifikaator
+          example: "RK_2023"
+        lastSeqNo:
+          type: number
+          description: Viimase e-hääletamise järjenumber; või 0, kui e-hääletamisi veel ei ole.
+          example: 54001
+
+    EVotingsBatchResponse:
+      type: object
+      properties:
+        electionName:
+          type: string
+          description: Valimissündmuse identifikaator
+          example: "RK_2023"
+        fromSeqNo:
+          type: number
+          description: E-hääletamise järjenumber, millest alates on pakis kirjed
+          example: 54001
+        batchMaxSize:
+          type: number
+          description: Maksimaalne kirjete arv pakis.
+          example: 100
+        eVotingsBatch:
+          type: object
+          properties:
+            batchRecords:
+              type: array
+              items:
+                $ref: "#/components/schemas/EVotingFact"
+
+    EVotingFact:
+      type: object
+      properties:
+        seqNo:
+          type: number
+          description: E-hääletamise järjenumber (konkreetses valimissündmuses)
+          example: 54001
+        idCode:
+          type: string
+          description: Isikukood
+          example: "38101010020"
+        voterName:
+          type: string
+          description: E-hääletanu nimi (nii ees- kui perekonnanimi), teabeliseks otstarbeks.
+          example: "LEO KASS"
+        kovCode:
+          type: string
+          description: KOV EHAK kood
+          example: "0068"
+        electoralDistrictNo:
+          type: number
+          description: Valimisringkonna number
+          example: 4
+
+    ErrorResponse:
+      type: array
+      description: Päringu töötlemise ebaõnnestumise korral tagastatav veasõnum
+      items:
+        type: object
+        properties:
+          code:
+            type: string
+            description: Vea kood
+            example: "not_found"
+          field:
+            type: string
+            description: Viide vea põhjustanud atribuudile
+            example: "id"
+          value:
+            type: integer
+            description: Vea kood
+            example: 0
+
+    GenericError:
+      type: string
+      description: Ei leidu
+      example: "404 Not Found"

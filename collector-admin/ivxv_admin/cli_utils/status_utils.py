@@ -27,7 +27,7 @@ def users_list_util():
     user_no = 0
     for user_cn, permissions in sorted(users.items()):
         user_no += 1
-        print('%d. %s   Permissions: %s' % (user_no, user_cn, permissions))
+        print(f"{user_no}. {user_cn}   Permissions: {permissions}")
 
     if not user_no:
         print('No users defined')

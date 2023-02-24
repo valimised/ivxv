@@ -88,7 +88,7 @@ Services: {{ service|count }} services in {{ network|count }} network(s)
           Service TLS certificate: {{ service['tls-cert'] or '-' }}
 {%- endif %}
 {%- if 'mid-token-key' in service %}
-          Mobile ID identity token: {{ service['mid-token-key'] or '-' }}
+          Mobile-ID/Smart-ID identity token key: {{ service['mid-token-key'] or '-' }}
 {%- endif %}
 {%- if 'tspreg-key' in service %}
           PKIX TSP registration key: {{ service['tspreg-key'] or '-' }}

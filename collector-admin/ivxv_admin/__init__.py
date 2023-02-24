@@ -1,12 +1,12 @@
 # IVXV Internet voting framework
 """Collector Management Service."""
 
-__version__ = '1.7.7'
-DEB_PKG_VERSION = '1.7.7'
+__version__ = '1.8.2'
+DEB_PKG_VERSION = '1.8.2'
 
 #: Management daemon data
 MANAGEMENT_DAEMON_PORT = 8080
-MANAGEMENT_DAEMON_URL = 'http://localhost:%s/' % MANAGEMENT_DAEMON_PORT
+MANAGEMENT_DAEMON_URL = f"http://localhost:{MANAGEMENT_DAEMON_PORT}/"
 
 #: RFC3339 date format
 RFC3339_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
@@ -142,12 +142,26 @@ SERVICE_TYPE_PARAMS = {
         'tspreg': False,
         'mobile_id': True,
     },
+    'votesorder': {
+        'main_service': True,
+        'require_config': True,
+        'require_tls': True,
+        'tspreg': False,
+        'mobile_id': False,
+    },
     'proxy': {
         'main_service': True,
         'require_config': True,
         'require_tls': False,
         'tspreg': False,
         'mobile_id': False,
+    },
+    'smartid': {
+        'main_service': True,
+        'require_config': True,
+        'require_tls': True,
+        'tspreg': False,
+        'mobile_id': True,
     },
     'storage': {
         'main_service': True,
@@ -187,7 +201,7 @@ SERVICE_SECRET_TYPES = {
         'shared': False,
     },
     'mid-token-key': {
-        'description': 'Mobile ID identity token',
+        'description': 'Mobile-ID/Smart-ID identity token',
         'db-key': 'mid-token-key',
         'target-path': '/var/lib/ivxv/service/ticket.key',
         'shared': True,
@@ -208,6 +222,8 @@ COLLECTOR_PKG_FILENAMES = {
     'ivxv-common': f'ivxv-common_{DEB_PKG_VERSION}_all.deb',
     'ivxv-log': f'ivxv-log_{DEB_PKG_VERSION}_all.deb',
     'ivxv-mid': f'ivxv-mid_{DEB_PKG_VERSION}_amd64.deb',
+    'ivxv-votesorder': f'ivxv-votesorder_{DEB_PKG_VERSION}_amd64.deb',
+    'ivxv-smartid': f'ivxv-smartid_{DEB_PKG_VERSION}_amd64.deb',
     'ivxv-proxy': f'ivxv-proxy_{DEB_PKG_VERSION}_amd64.deb',
     'ivxv-storage': f'ivxv-storage_{DEB_PKG_VERSION}_amd64.deb',
     'ivxv-verification': f'ivxv-verification_{DEB_PKG_VERSION}_amd64.deb',

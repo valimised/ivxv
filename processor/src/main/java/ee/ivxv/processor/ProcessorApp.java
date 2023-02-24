@@ -21,6 +21,10 @@ import ee.ivxv.processor.tool.StatsDiffTool;
 import ee.ivxv.processor.tool.StatsDiffTool.StatsDiffArgs;
 import ee.ivxv.processor.tool.StatsTool;
 import ee.ivxv.processor.tool.StatsTool.StatsArgs;
+import ee.ivxv.processor.tool.CheckAndSquashTool;
+import ee.ivxv.processor.tool.CheckAndSquashTool.CheckAndSquashArgs;
+import ee.ivxv.processor.tool.RevokeAndAnonymizeTool;
+import ee.ivxv.processor.tool.RevokeAndAnonymizeTool.RevokeAndAnonymizeArgs;
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,7 +43,9 @@ class ProcessorApp extends App<ProcessorContext> {
                 new Tool<>(Msg.tool_export, ExportArgs::new, ExportTool::new),
                 new Tool<>(ee.ivxv.common.cli.Msg.tool_verify, VerifyArgs::new, VerifyTool::new),
                 new Tool<>(Msg.tool_stats, StatsArgs::new, StatsTool::new),
-                new Tool<>(Msg.tool_statsdiff, StatsDiffArgs::new, StatsDiffTool::new));
+                new Tool<>(Msg.tool_statsdiff, StatsDiffArgs::new, StatsDiffTool::new),
+                new Tool<>(Msg.tool_checkAndSquash, CheckAndSquashArgs::new, CheckAndSquashTool::new),
+                new Tool<>(Msg.tool_revokeAndAnonymize, RevokeAndAnonymizeArgs::new, RevokeAndAnonymizeTool::new));
     }
 
     @Override

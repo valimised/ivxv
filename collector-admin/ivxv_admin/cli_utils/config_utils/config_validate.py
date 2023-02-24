@@ -163,7 +163,7 @@ def validate_voters_lists_consistency(cfg_objects):
                 )
                 break
             voters_reg = dict(
-                [voter[0], voter[3:5]] for voter in cfg['voters'])
+                [voter[1], voter[3:5]] for voter in cfg['voters'])
             changeset = 1
             continue
 
@@ -182,9 +182,9 @@ def validate_voters_lists_consistency(cfg_objects):
         log.info("Checking voters list changeset #%d consistency", changeset)
         voters_in_patch = set()
         for rec_no, voter in enumerate(cfg['voters']):
-            voter_id = voter[0]
+            voter_id = voter[1]
 
-            if voter[2] == 'lisamine':
+            if voter[0] == 'lisamine':
                 if (voter_id not in voters_reg
                         and voter_id not in voters_in_patch):
                     voters_reg[voter_id] = voter[3:5]
@@ -199,12 +199,8 @@ def validate_voters_lists_consistency(cfg_objects):
                         f'Record #{rec_no}: Removing ID {voter_id} '
                         'that is added with this patch')
                 try:
-                    district = voters_reg.pop(voter_id)
-                    if district != voter[3:5]:
-                        errors.append(
-                            f'Record #{rec_no}: Removing voter ID {voter_id} '
-                            f'from invalid district {voter[3:5]}. '
-                            f'Voter is registered in district {district}')
+                    # just to test that voter id is valid before removing it
+                    voters_reg.pop(voter_id)
                 except KeyError:
                     errors.append(
                         f'Record #{rec_no}: Removing voter ID {voter_id} '
@@ -295,11 +291,13 @@ def validate_voters_consistency(
 
     # check consistency
     for voter in voters_cfg['voters']:
-
+        # if action is "kustutamine" then don't check districts/parish
+        if voter[0] == "kustutamine":
+            continue
         # Voterlist contains voter EHAK and district no which must be
         # translated into full district identifier
         voter_district = None
-        voter_id = voter[0]
+        voter_id = voter[1]
         voter_ehak = voter[3]
         voter_district_no = voter[4]
 

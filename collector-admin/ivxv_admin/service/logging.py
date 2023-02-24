@@ -1,42 +1,33 @@
 # IVXV Internet voting framework
 """Logging helper for microservice management."""
 
-import datetime
 import logging
-
-from .. import RFC3339_DATE_FORMAT_WO_FRACT
 
 # create logger
 log = logging.getLogger('.'.join(__name__.split('.')[:-1]))
 
 
-class ServiceLogger:
-    """Logger wrapper for service object.
+class ServiceLogger(logging.LoggerAdapter):
+    """Logger adapter for service object.
 
-    Prepend service ID for logged messages.
-    Message level is also prepended for levels other than INFO.
+    Include service ID for logged messages.
+    Include message level for levels other than INFO.
     """
-    log_prefix = None  #: Prefix for log messages (str)
-    storage = None  #: Collection for logged records (list of strings)
 
-    def __init__(self, service_id):
-        """Constructor."""
-        self.log_prefix = 'SERVICE %s: ' % service_id
-        self.storage = []
+    def process(self, msg, kwargs):
+        """
+        Process the logging message and keyword arguments passed in to
+        a logging call to insert contextual information.
+        """
+        return f"SERVICE {self.extra['service_id']}: {msg}", kwargs
 
-    def __getattr__(self, name):
-        """Get wrapper for logger method."""
-        log_method = getattr(log, name)
-
-        def log_method_wrapper(*args):
-            """Wrapper for logger method to prepend log message prefix."""
-            args = list(args)
-            if name != 'info':
-                args[0] = '{}: {}'.format(name.upper(), args[0])
-            args[0] = self.log_prefix + args[0]
-            self.storage.append('{} {}'.format(
-                datetime.datetime.now().strftime(RFC3339_DATE_FORMAT_WO_FRACT),
-                args[0] % tuple(args[1:])))
-            return log_method(*tuple(args))
-
-        return log_method_wrapper
+    def log(self, level, msg, *args, **kwargs):
+        """
+        Delegate a log call to the underlying logger, after adding
+        contextual information from this adapter instance.
+        """
+        if self.isEnabledFor(level):
+            if level != logging.INFO:
+                msg = f"{logging.getLevelName(level).upper()}: {msg}"
+            msg, kwargs = self.process(msg, kwargs)
+            self.logger.log(level, msg, *args, **kwargs)

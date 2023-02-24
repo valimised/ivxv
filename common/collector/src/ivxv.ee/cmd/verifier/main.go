@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 
 	"ivxv.ee/command"
@@ -74,7 +76,13 @@ options:`)
 	defer c.Close()
 
 	for _, s := range c.Signatures() {
-		fmt.Println(s.Signer.Subject.CommonName, s.SigningTime.Format(time.RFC3339))
+		pattern := regexp.MustCompile("[0-9]+")
+		if pattern.FindString(s.Signer.Subject.CommonName) == "" {
+			personalCode := strings.TrimPrefix(s.Signer.Subject.SerialNumber, "PNOEE-")
+			fmt.Println(s.Signer.Subject.CommonName+","+personalCode, s.SigningTime.Format(time.RFC3339))
+		} else {
+			fmt.Println(s.Signer.Subject.CommonName, s.SigningTime.Format(time.RFC3339))
+		}
 	}
 
 	return exit.OK, nil

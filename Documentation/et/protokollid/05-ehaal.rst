@@ -119,7 +119,7 @@ Valija poolt allkirjastatud hääl
 
 Krüpteeritud sedel tuleb enne kogumisteenusesse talletamisele saatmist
 digitaalselt allkirjastada, milleks on võimalik kasutada kõiki Eesti Vabariigis
-kehtivaid digitaalallkirjavahendeid – ID-kaart, Digi-ID, Mobiil-ID.
+kehtivaid digitaalallkirjavahendeid – ID-kaart, Digi-ID, Mobiil-ID, Smart-ID.
 
 Käesolev spetsifikatsioon näeb ette Eesti Vabariigi Standardikavandis [BDOC2.1]
 defineeritud BDOC allkirjavormingu kasutamise. BDOC allkirjavorming koosneb ETSI
@@ -155,9 +155,9 @@ vormingus.
 
 Kui hääl allkirjastatakse ID-kaardi või Digi-ID'ga, siis toimub algse
 allkirjastatud konteineri moodustamine valijarakenduses. Kui hääl
-allkirjastatakse Mobiil-ID'ga, siis toimub konteineri moodustamine
-valijarakenduse ning kogumisteenuse poolt vahendatava Mobiil-ID teenuse koostöös.
-Mobiil-ID juhtumil kasutab kogumisteenus Mobiil-ID teenust ainult signatuuri
+allkirjastatakse Mobiil-ID või Smart-ID'ga, siis toimub konteineri moodustamine
+valijarakenduse ning kogumisteenuse poolt vahendatava Mobiil-ID/Smart-ID teenuse koostöös.
+Mobiil-ID/Smart-ID juhtumil kasutab kogumisteenus Mobiil-ID/Smart-ID teenust ainult signatuuri
 saamiseks krüpteeritud sedelile. Kõik hääle kvalifitseerimiseks vajalikud
 elemendid hangitakse vastavatelt teenustelt alles siis kui valijarakendus on
 saatnud signeeritud hääle talletamiseks. Kvalifitseeritud hääl esitatakse
@@ -181,7 +181,7 @@ Räsialgoritmina ``DIGEST_ALG`` on kasutusel SHA-256
 
 RSA võtmete korral (ID-kaart, Digi-ID) on allkirjastamismeetodiks
 http://www.w3.org/2001/04/xmldsig-more#rsa-sha256. ECC võtmete korral
-(ID-kaart, Mobiil-ID) http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256.
+(ID-kaart, Mobiil-ID, Smart-ID) http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256.
 
 Identifikaatorite `VOTE_REF`, `SP_REF`, `SP_URI` ning `SV_URI` täpne väärtus ei
 ole oluline.
@@ -193,8 +193,8 @@ Element ``SignedProperties`` moodustatakse kooskõlas BDOC 2.1 standardiga. Kui
 kvalifitseerimisel kasutatakse ajatemplit, siis elementi
 ``SignaturePolicyIdentifier`` ei kasutata. Ühtegi mitte-kohustuslikku elementi
 ei kasutata. Allkirjastamise kellaaja fikseerib andmestruktuuri täitev arvuti
-ning valija X509-sertifikaat saadakse kas ID-kaardilt või Mobiil-ID teenuse
-vahendusel.
+ning valija X509-sertifikaat saadakse kas ID-kaardilt, Mobiil-ID või Smart-ID
+teenuse vahendusel.
 
 
 .. literalinclude:: ../../common/xmltemplates/sp.template

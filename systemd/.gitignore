@@ -4,3 +4,4 @@ ivxv-proxy@.service
 ivxv-storage@.service
 ivxv-verification@.service
 ivxv-voting@.service
+ivxv-votesorder@.service

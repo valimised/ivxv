@@ -61,10 +61,14 @@ public class SquashTool implements Tool.Runner<SquashArgs> {
         Path OUT_IVLJSON = Util.prefixedPath(bb.getElection(), OUT_IVLJSON_TMPL);
         Path OUT_IVLPDF = Util.prefixedPath(bb.getElection(), OUT_IVLPDF_TMPL);
         Path OUT_RR = Util.prefixedPath(bb.getElection(), OUT_RR_TMPL);
+        Path OUT_RR_ANONYMOUS = Util.prefixedPath(bb.getElection(), OUT_RR_TMPL + ".anonymous");
         Path OUT_BB = Util.prefixedPath(bb.getElection(), OUT_BB_TMPL);
 
         reporter.writeIVoterList(out.resolve(OUT_IVLJSON), out.resolve(OUT_IVLPDF), bb, dl);
-        reporter.writeRevocationReport(out.resolve(OUT_RR), bb.getElection(), revocationRecords);
+        reporter.writeRevocationReport(out.resolve(OUT_RR), bb.getElection(), revocationRecords,
+                Reporter.AnonymousFormatter.NOT_ANONYMOUS);
+        reporter.writeRevocationReport(out.resolve(OUT_RR_ANONYMOUS), bb.getElection(), revocationRecords,
+                Reporter.AnonymousFormatter.REVOCATION_REPORT_CSV);
         reporter.writeLog2(out, bb.getElection(), log2Records);
 
         tool.writeJsonBb(bb, out.resolve(OUT_BB));

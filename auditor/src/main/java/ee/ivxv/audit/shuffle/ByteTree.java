@@ -66,7 +66,7 @@ public class ByteTree {
 
         /**
          * Initialize Node from an array of ByteTree objects.
-         * 
+         *
          * @param nodes Array of ByteTree objects.
          */
         public Node(ByteTree[] nodes) {
@@ -75,7 +75,7 @@ public class ByteTree {
 
         /**
          * Initialize Node from an array of BigInteger objects.
-         * 
+         *
          * @param ints Array of BigInteger objects
          */
         public Node(BigInteger[] ints) {
@@ -87,7 +87,7 @@ public class ByteTree {
 
         /**
          * Initialize Node from an array of GroupElements.
-         * 
+         *
          * @param elements Array of GroupElements
          */
         public Node(GroupElement[] elements) {
@@ -103,7 +103,7 @@ public class ByteTree {
 
         /**
          * Initialize Node from ProductGroupElement.
-         * 
+         *
          * @param element A ProductGroupElement element
          */
         public Node(ProductGroupElement element) {
@@ -120,7 +120,7 @@ public class ByteTree {
 
         /**
          * Return the array of ByteTree objects.
-         * 
+         *
          * @return Array of ByteTree objects.
          */
         public ByteTree[] getNodes() {
@@ -129,7 +129,7 @@ public class ByteTree {
 
         /**
          * Get the number of elements in the ByteTree array.
-         * 
+         *
          * @return Length of array.
          */
         @Override
@@ -139,7 +139,7 @@ public class ByteTree {
 
         /**
          * Get the byte-length of the Node.
-         * 
+         *
          * @return Byte-length of the Node.
          */
         @Override
@@ -153,7 +153,7 @@ public class ByteTree {
 
         /**
          * Encode the Node as bytes.
-         * 
+         *
          * @return Node encoded as bytes
          */
         @Override
@@ -172,7 +172,7 @@ public class ByteTree {
 
         /**
          * Encode the Node and write it to out.
-         * 
+         *
          * @param out Stream to write the ByteTree description of the Node.
          * @throws IOException When writing to out fails
          */
@@ -195,7 +195,7 @@ public class ByteTree {
 
         /**
          * Parse an array of bytes into a node, starting at offset.
-         * 
+         *
          * @param b Array of bytes to be parsed.
          * @param offset The offset in the array to start parsing
          * @return A decoded Node instance.
@@ -214,9 +214,9 @@ public class ByteTree {
 
         /**
          * Parse a DataInputStream into a node.
-         * 
+         *
          * The given DataInputStream must be pointed to the beginning of a valid Node element.
-         * 
+         *
          * @param is DataInputStream to be used for reading a node, seeked to the beginning of Node
          *        definition.
          * @return A decoded Node instance.
@@ -242,7 +242,7 @@ public class ByteTree {
 
         /**
          * Human-friendly representation of the Node object, with starting indentation.
-         * 
+         *
          * @param indent The indentation level
          * @return String representation of instance
          */
@@ -268,7 +268,7 @@ public class ByteTree {
 
         /**
          * Initialize a leaf from an abstract byte array.
-         * 
+         *
          * @param value A byte array
          */
         public Leaf(byte[] value) {
@@ -277,7 +277,7 @@ public class ByteTree {
 
         /**
          * Initialize a leaf from a String.
-         * 
+         *
          * @param value A string to initialize Leaf.
          */
         public Leaf(String value) {
@@ -292,7 +292,7 @@ public class ByteTree {
 
         /**
          * Initialize a leaf from a BigInteger.
-         * 
+         *
          * @param value A BigInteger to initialize Leaf.
          */
         public Leaf(BigInteger value) {
@@ -301,7 +301,7 @@ public class ByteTree {
 
         /**
          * Initialize a leaf from a GroupElement.
-         * 
+         *
          * @param value A GroupElement to initialize Leaf.
          */
         public Leaf(GroupElement value) {
@@ -314,12 +314,11 @@ public class ByteTree {
             } else {
                 throw new IllegalArgumentException("Invalid group");
             }
-            // TODO
         }
 
         /**
          * Get the byte array used to initialize the Leaf.
-         * 
+         *
          * @return A byte array.
          */
         public byte[] getValue() {
@@ -328,7 +327,7 @@ public class ByteTree {
 
         /**
          * Return a String representation of the underlying byte array.
-         * 
+         *
          * @return String representing byte array.
          */
         public String getString() {
@@ -337,7 +336,7 @@ public class ByteTree {
 
         /**
          * Return a BigInteger representation of the underlying byte array.
-         * 
+         *
          * @return BigInteger representing byte array.
          */
         public BigInteger getBigInteger() {
@@ -346,7 +345,7 @@ public class ByteTree {
 
         /**
          * Get the length of the underlying byte array.
-         * 
+         *
          * @return Length of byte array.
          */
         @Override
@@ -356,7 +355,7 @@ public class ByteTree {
 
         /**
          * Get the length of the whole Leaf object represented as byte array.
-         * 
+         *
          * @return Length of Leaf instance representation as byte array.
          */
         @Override
@@ -366,7 +365,7 @@ public class ByteTree {
 
         /**
          * Get the value with corresponding headers.
-         * 
+         *
          * @return A byte array.
          */
         @Override
@@ -380,7 +379,7 @@ public class ByteTree {
 
         /**
          * Encode the Leaf and write it to out.
-         * 
+         *
          * @param out Stream to write the ByteTree description of the Leaf.
          * @throws IOException When writing to out fails
          */
@@ -415,7 +414,7 @@ public class ByteTree {
 
         /**
          * Parse an array of bytes into a leaf.
-         * 
+         *
          * @param b The array of bytes to parse.
          * @param offset Starting offset to start parsing from.
          * @return The Leaf constructed from bytes.
@@ -428,10 +427,10 @@ public class ByteTree {
 
         /**
          * Parse a data stream into a leaf.
-         * 
+         *
          * Parses the given DataInputStream into the leaf. The given stream must be pointed to the
          * beginning of the definition (with length).
-         * 
+         *
          * @param is The given input stream, seeked to the beginning of the Leaf definition.
          * @return Leaf constructed from the input stream
          * @throws IOException When reading from the stream fails.
@@ -458,7 +457,7 @@ public class ByteTree {
 
         /**
          * Return a human-friendly String representation of the Leaf with indentation.
-         * 
+         *
          * @param indent Indentation of the String.
          */
         @Override
@@ -472,7 +471,7 @@ public class ByteTree {
     /**
      * Parse an array of bytes into ByteTree instance. Internally, either Node or Leaf is
      * constructed depending on the prefix.
-     * 
+     *
      * @param b Byte array to be parsed.
      * @param offset Starting offset of the byte array to start parsing from.
      * @return A ByteTree representing the byte array.
@@ -495,9 +494,9 @@ public class ByteTree {
 
     /**
      * Parse an input stream into ByteTree instance.
-     * 
+     *
      * Depending on the prefix, either Node or Leaf instance is constructed.
-     * 
+     *
      * @param is Given input stream to construct the ByteTree instance from, seeked to the
      *        beginning.
      * @return A ByteTree representing the byte array.
@@ -518,7 +517,7 @@ public class ByteTree {
 
     /**
      * Short-hand method for {@link #parse(byte[], int)} with {@literal offset} 0.
-     * 
+     *
      * @param b Byte array to be parsed
      * @return A ByteTree representing the byte array.
      */
@@ -528,11 +527,11 @@ public class ByteTree {
 
     /**
      * Parse a file at a path into a ByteTree instance.
-     * 
+     *
      * Read a file from the given location into a ByteTree instance. In practice, depending on the
      * prefix, either Node or Leaf is constructed. This method is useful when the files are large
      * and do not fit into byte arrays.
-     * 
+     *
      * @param path Location of file
      * @return A ByteTree instance representing the byte array.
      * @throws IOException When the path is invalid, or the corresponding file is not valid ByteTree
@@ -547,7 +546,7 @@ public class ByteTree {
 
     /**
      * Parse value from the byte array into integer.
-     * 
+     *
      * @param b Byte array to be parsed.
      * @param offset Starting offset to start parsing at.
      * @return Integer representation of the byte array.

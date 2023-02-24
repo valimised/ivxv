@@ -111,11 +111,11 @@ public class ReportHelper {
         }
     }
 
-    public void writeRevocationReport(Path out, String electionId, List<Reporter.Record> records) {
+    public void writeRevocationReport(Path out, String electionId, List<Reporter.Record> records, Reporter.AnonymousFormatter formatter) {
         try {
             console.println();
             console.println(Msg.m_writing_revocation_report);
-            ctx.reporter.write(out, electionId, records);
+            ctx.reporter.write(out, electionId, records, formatter);
             console.println(Msg.m_output_file, out);
         } catch (Exception e) {
             throw new MessageException(e, Msg.e_writing_revocation_report, out, e);

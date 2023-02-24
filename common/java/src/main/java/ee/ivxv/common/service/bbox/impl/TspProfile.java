@@ -25,7 +25,7 @@ import org.bouncycastle.tsp.TimeStampToken;
 /**
  * TspProfile is an abstract implementation of {@code Profile} that uses timestamp provider as the
  * ballot registration service.
- * 
+ *
  * @param <T>
  * @param <U>
  */
@@ -36,7 +36,7 @@ abstract class TspProfile<T extends TspRespRecord<?>, U extends TspReqRecord<?>>
     // The canonicalization algorithm: http://www.w3.org/2006/12/xml-c14n11
     private static final String TS_C14N_ALG = Canonicalizer.ALGO_ID_C14N11_OMIT_COMMENTS;
     private static final HashType TS_HASH = HashType.SHA256;
-    private static final String SN_PNOEE_PREFIX = "PNOEE-"; // TODO Make country code configurable.
+    private static final String SN_PNOEE_PREFIX = "PNOEE-"; // Make country code configurable.
 
     final ContainerReader container;
 
@@ -137,7 +137,7 @@ abstract class TspProfile<T extends TspRespRecord<?>, U extends TspReqRecord<?>>
      * <li>tspreg - the registration response</li>
      * <li>version - the voterlist version</li>
      * </ul>
-     * 
+     *
      * <b>NB!</b> Not fully implemented! Add OCSP nonce verification.
      */
     static class TmProfile extends TspProfile<TspRespRecord<TmType>, TspReqRecord<RegType>> {
@@ -181,13 +181,6 @@ abstract class TspProfile<T extends TspRespRecord<?>, U extends TspReqRecord<?>>
 
             checkSignatureProfiles(c, Signature.Profile.BDOC_TM);
 
-            // TODO: Verify OCSP nonce! Are we sure that digidoc4j did not do this already? If so,
-            // it should probably happen inside ocspVerifier similarly to tsv.verify.
-            // BasicOCSPResp basicResp = ocspVerifier.verify(record.get(TmType.ocsptm));
-            // Extension ext = basicResp.getExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce);
-            // ext.getExtnValue();
-
-            // XXX: TM has no timestamp, so how can we use it to check for registration?
             tsv.verify(record.getRegResponse());
 
             return createBallot(bdocName, c, version, voter);
@@ -314,7 +307,7 @@ class KeyableValue<T> implements Keyable {
 
     /**
      * Constructs instance with the given {@code value} as both key and value.
-     * 
+     *
      * @param value
      */
     KeyableValue(T value) {

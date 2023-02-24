@@ -148,7 +148,6 @@ public class StatsTool implements Tool.Runner<StatsArgs> {
         console.println();
         console.println(Msg.m_read);
         // NB! Must process voter lists in certain order. Using the order of input values.
-        // TODO add conf parameter?
         args.voterLists.value().forEach(vl -> {
             SkipCommand skip_cmd = null;
             if (vl.skip_cmd.value() != null) {

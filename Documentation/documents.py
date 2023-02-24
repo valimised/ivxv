@@ -4,17 +4,17 @@ IVXV documents
 """
 
 project = 'Elektroonilise hääletamise infosüsteem'
-copyright = '2016-2021, Cybernetica AS'
+copyright = '2016-2023, Cybernetica AS'
 author = 'Cybernetica AS'
 
-release = '1.7.7'
+release = '1.8.2'
 
 META = {
 
     'audiitor': {
         'lang': 'et',
-        'version': '1.7.6',
-        'changed': "27.09.2021",
+        'version': '1.8.2',
+        'changed': "23.01.2023",
         'document_prefix': 'IVXV-JAJ',
         'document_type': 'Juhend',
         'document_title': 'IVXV audiitori juhend',
@@ -23,8 +23,8 @@ META = {
 
     'arhitektuur': {
         'lang': 'et',
-        'version': '1.7.6',
-        'changed': "27.09.2021",
+        'version': '1.8.0',
+        'changed': "01.12.2022",
         'document_prefix': 'IVXV-AR',
         'document_type': 'Arhitektuuridokument',
         'document_title': 'IVXV arhitektuur',
@@ -33,8 +33,8 @@ META = {
 
     'protokollid': {
         'lang': 'et',
-        'version': '1.7.6',
-        'changed': "27.09.2021",
+        'version': '1.8.2',
+        'changed': "23.01.2023",
         'document_prefix': 'IVXV-PR',
         'document_type': 'Spetsifikatsioon',
         'document_title': 'IVXV protokollide kirjeldus',
@@ -43,8 +43,8 @@ META = {
 
     'architecture': {
         'lang': 'en',
-        'version': '1.4.0',
-        'changed': "18.01.2019",
+        'version': '1.8.0',
+        'changed': "01.12.2022",
         'document_prefix': 'IVXV-AR-EN',
         'document_type': 'Specification',
         'document_title': 'IVXV architecture',
@@ -53,8 +53,8 @@ META = {
 
     'protocols': {
         'lang': 'en',
-        'version': '1.6.0',
-        'changed': "31.05.2020",
+        'version': '1.8.0',
+        'changed': "01.12.2022",
         'document_prefix': 'IVXV-PR-EN',
         'document_type': 'Specification',
         'document_title': 'IVXV protocols',
@@ -63,8 +63,8 @@ META = {
 
     'haldusteenus': {
         'lang': 'et',
-        'version': '1.7.6',
-        'changed': "27.09.2021",
+        'version': '1.8.1',
+        'changed': "16.12.2022",
         'document_prefix': 'IVXV-JHT',
         'document_type': 'Juhend',
         'document_title': 'IVXV haldusteenuse kasutusjuhend',
@@ -73,8 +73,8 @@ META = {
 
     'kasutusmall': {
         'lang': 'et',
-        'version': '1.7.6',
-        'changed': "27.09.2021",
+        'version': '1.8.1',
+        'changed': "16.12.2022",
         'document_prefix': 'IVXV-KM',
         'document_type': 'Analüüsidokument',
         'document_title': 'IVXV kasutusmallid',
@@ -83,8 +83,8 @@ META = {
 
     'votmerakendus': {
         'lang': 'et',
-        'version': '1.4.0',
-        'changed': "18.01.2019",
+        'version': '1.8.0',
+        'changed': "01.12.2022",
         'document_prefix': 'IVXV-SVR',
         'document_type': 'Spetsifikatsioon',
         'document_title': 'IVXV võtmerakendus',
@@ -93,8 +93,8 @@ META = {
 
     'ivxvapi': {
         'lang': 'et',
-        'version': '1.4.0',
-        'changed': "18.01.2019",
+        'version': '1.8.0',
+        'changed': "01.12.2022",
         'document_prefix': 'IVXV-API',
         'document_type': 'API-dokument',
         'document_title': 'IVXV API',
@@ -103,8 +103,8 @@ META = {
 
     'seadistuste_koostejuhend': {
         'lang': 'et',
-        'version': '1.7.7',
-        'changed': "02.10.2021",
+        'version': '1.8.2',
+        'changed': "23.01.2023",
         'document_prefix': 'IVXV-JSK',
         'document_type': 'Juhend',
         'document_title': 'IVXV seadistuste koostamise juhend',
@@ -112,8 +112,8 @@ META = {
     },
     'kogumisteenuse_haldusjuhend': {
         'lang': 'et',
-        'version': '1.7.6',
-        'changed': "27.09.2021",
+        'version': '1.8.1',
+        'changed': "16.12.2022",
         'document_prefix': 'IVXV-JSH',
         'document_type': 'Juhend',
         'document_title': 'IVXV kogumisteenuse haldusjuhend',
@@ -121,8 +121,8 @@ META = {
     },
     'uldsisukord': {
         'lang': 'et',
-        'version': '1.7.7',
-        'changed': "02.10.2021",
+        'version': '1.8.2',
+        'changed': "23.01.2023",
         'document_prefix': 'IVXV-YS',
         'document_type': '',
         'document_title': 'IVXV dokumentatsiooni üldsisukord',
@@ -157,8 +157,8 @@ META = {
     },
     'valijarakendus': {
         'lang': 'et',
-        'version': '1.7.4',
-        'changed': "01.09.2021",
+        'version': '1.8.0',
+        'changed': "01.12.2022",
         'document_prefix': 'IVXV-JVR',
         'document_type': 'Juhend',
         'document_title': 'IVXV valijarakendus',
@@ -166,8 +166,8 @@ META = {
     },
     'valijarakenduse_pakendamine': {
         'lang': 'et',
-        'version': '1.7.4',
-        'changed': "01.09.2021",
+        'version': '1.8.0',
+        'changed': "01.12.2022",
         'document_prefix': 'IVXV-JVP',
         'document_type': 'Juhend',
         'document_title': 'IVXV valijarakenduse pakendamine',
@@ -175,8 +175,8 @@ META = {
     },
     'tarne': {
         'lang': 'et',
-        'version': '1.7.4',
-        'changed': "01.09.2021",
+        'version': '1.8.0',
+        'changed': "01.12.2022",
         'document_prefix': 'IVXV-T',
         'document_type': 'Juhend',
         'document_title': 'IVXV tarnejuhend',
@@ -184,8 +184,8 @@ META = {
     },
     'eriomadused': {
         'lang': 'et',
-        'version': '1.7.4',
-        'changed': "01.09.2021",
+        'version': '1.8.0',
+        'changed': "01.12.2022",
         'document_prefix': 'IVXV-EO',
         'document_type': 'Analüüsidokument',
         'document_title': 'IVXV eriomadused',
@@ -193,8 +193,8 @@ META = {
     },
     'testimisplaan': {
         'lang': 'et',
-        'version': '1.7.4',
-        'changed': "01.09.2021",
+        'version': '1.8.0',
+        'changed': "01.12.2022",
         'document_prefix': 'IVXV-TP',
         'document_type': 'Testimisplaan',
         'document_title': 'IVXV testimisplaan',
@@ -202,17 +202,26 @@ META = {
     },
     'regteenus': {
         'lang': 'et',
-        'version': '1.7.4',
-        'changed': "01.09.2020",
+        'version': '1.8.0',
+        'changed': "01.12.2022",
         'document_prefix': 'IVXV-SRT',
         'document_type': 'Spetsifikatsioon',
         'document_title': 'IVXV registreerimisteenuse kirjeldus',
         'document_target_name': 'IVXV-registreerimisteenus'
     },
+    'xteeteenus': {
+         'lang': 'et',
+         'version': '1.8.0',
+         'changed': "20.12.2022",
+         'document_prefix': 'IVXV-XTEE',
+         'document_type': 'Spetsifikatsioon',
+         'document_title': 'IVXV X-tee teenuse kirjeldus',
+         'document_target_name': 'IVXV-xteeteenus'
+     },
     'ivxv-pyapi': {
         'lang': 'et',
-        'version': '1.7.4',
-        'changed': "01.09.2021",
+        'version': '1.8.0',
+        'changed': "01.12.2022",
         'document_prefix': 'IVXV-PYAPI',
         'document_type': 'API-dokument',
         'document_title': 'IVXV Python API',

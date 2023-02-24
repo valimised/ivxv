@@ -15,6 +15,12 @@ function getContextData() {
   // query page context data
   console.debug('Loading context data');
   $.getJSON('cgi/context.json', function(context) {
+      /*
+       * HTTP GET on https://admin.?.ivxv.ee/ivxv/cgi/context.json
+       * HTTP GET response that contains HTML tags is not allowed!
+       * context is always an JSON object
+       */
+      context = sanitizeJSON(context);
       pageContext = context.data;
       userContext = pageContext['current-user'];
       console.debug('Current user: ' + userContext['cn'] +
@@ -78,7 +84,7 @@ function showErrorMessage(msg, retain_content) {
   if (!retain_content) {
     $('#page-wrapper').find('.row').hide('slow');
   }
-  $('#common-error-msg').find('p').html(msg);
+  $('#common-error-msg').find('p').text(msg);
   $('#common-error-msg').show('slow');
   $('#page-wrapper').css({
     'background-color': 'rgba(217, 83, 79, 0.2)'
@@ -115,7 +121,7 @@ function copyObjectToHtml(object_val, targetPrefix) {
   if ('undefined' === typeof(targetPrefix))
     targetPrefix = '';
   $.each(object_val, function(key, val) {
-    $('#' + targetPrefix + key).html(val);
+    $('#' + sanitizePrimitive(targetPrefix) + sanitizePrimitive(key)).text(val);
   });
 }
 
@@ -142,11 +148,14 @@ function formatTime(dateTime, offset) {
  *
  * Add link to download config file command package.
  *
- * @param {str} selector - DOM selector
- * @param {str} cfg_type - config type
- * @param {obj} cfg - config data from status.json
+ * @param {string} selector - DOM selector
+ * @param {string} cfg_type - config type
+ * @param {Object} cfg - config data from status.json
  */
 function outputCmdVersion(selector, cfg_type, cfg) {
+  selector = sanitizePrimitive(selector);
+  cfg = sanitizeJSON(cfg);
+
   if ((cfg_type === 'trust') ||
     (cfg_type === 'technical') ||
     (cfg_type === 'election')) {
@@ -191,4 +200,48 @@ function fillVoterListStateCounters(list_state) {
   $('#list-voters-invalid').text(list_state['voters-list-invalid']);
   $('#list-voters-skipped').text(list_state['voters-list-skipped']);
   $('#list-voters-available').text(list_state['voters-list-available']);
+}
+
+/**
+ * If Object (JSON!) contains XSS vulnerable content like HTML attributes
+ * or HTML context, it will be replaced and XSS-free Object (JSON!) is returned.
+ *
+ * If somehow Object type data parsing fails - empty {} is returned.
+ * Note, that even if Object data contains XSS vulnerabilities it
+ * doesn't automatically mean, that it isn't a valid JavaScript Object,
+ * however if data isn't valid Object, then it doesn't make sense to
+ * proceed with XSS validation at all.
+ *
+ * @param {Object} context - JSON object
+ * @return {Object} - XSS-free JSON object
+ */
+function sanitizeJSON(context) {
+  try {
+    return JSON.parse(JSON.stringify(context).replaceAll('<', '&lt;'));
+  } catch (err) {
+    console.error(err);
+    return {};
+  }
+}
+
+/**
+ * If primitive type contains XSS vulnerable content like HTML attributes
+ * or HTML context, it will be replaced and returned as XSS-free string.
+ *
+ * If somehow primitive type data parsing fails - empty string is returned.
+ * Note, that even if primitive data contains XSS vulnerabilities it
+ * doesn't automatically mean, that it isn't a valid JavaScript primitive,
+ * however if data isn't valid primitive, then it doesn't make sense to
+ * proceed with XSS validation at all.
+ *
+ * @param {string | number | boolean} context - primitive data
+ * @return {string} - XSS-free string
+ */
+function sanitizePrimitive(context) {
+  try {
+    return String(context).replaceAll('<', '&lt;');
+  } catch (err) {
+    console.error(err);
+    return '';
+  }
 }

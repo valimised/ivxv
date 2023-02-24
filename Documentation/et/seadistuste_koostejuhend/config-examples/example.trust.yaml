@@ -7,7 +7,6 @@ container:
     roots:
       - !container TEST_of_EE_Certification_Centre_Root_CA.pem
     intermediates:
-      - !container TEST_of_ESTEID-SK_2011.pem
       - !container TEST_of_ESTEID-SK_2015.pem
     profile: TS
     ocsp:

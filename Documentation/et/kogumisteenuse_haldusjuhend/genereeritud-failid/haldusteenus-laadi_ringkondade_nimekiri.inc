@@ -6,17 +6,17 @@
 ..  Feature: Kogumisteenuse käivitamine kõrgkäideldava konfiguratsiooniga
              features/end-to-end-10-collector-ha-setup.feature:7
    Scenario: Ringkondade nimekirja rakendamine
-             features/end-to-end-10-collector-ha-setup.feature:587
+             features/end-to-end-10-collector-ha-setup.feature:586
        Step: Nimekirjade haldur laadib ringkondade nimekirja haldusteenusesse
-             features/end-to-end-10-collector-ha-setup.feature:631
+             features/end-to-end-10-collector-ha-setup.feature:630
 
 .. code-block:: text
 
    ivxv-admin@admin $ ivxv-cmd-load districts /output/voting/HA-SETUP/config/districts.asice
-   INFO: Config file is signed by: NÕID,VÄIKE,33333333333 2021-10-02T19:45:51Z
+   INFO: Config file is signed by: NÕID,VÄIKE,33333333333 2021-12-28T11:49:17Z
    INFO: User NÕID,VÄIKE,33333333333 with role 'election-conf-manager' is authorized to execute 'districts' commands
-   INFO: Using signature 'NÕID,VÄIKE,33333333333 2021-10-02T19:45:51Z' as config file version
-   INFO: Config file version is 'NÕID,VÄIKE,33333333333 2021-10-02T19:45:51Z'
+   INFO: Using signature 'NÕID,VÄIKE,33333333333 2021-12-28T11:49:17Z' as config file version
+   INFO: Config file version is 'NÕID,VÄIKE,33333333333 2021-12-28T11:49:17Z'
    INFO: Loading command 'districts list' from file '/output/voting/HA-SETUP/config/districts.asice'
    command_file:INFO: Loading command file '/output/voting/HA-SETUP/config/districts.asice' (districts list)
    command_file:INFO: Validating districts list

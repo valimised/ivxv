@@ -73,8 +73,6 @@ func readPROXY(c net.Conn) (wc net.Conn, addr net.Addr, health bool, err error) 
 	// be reset by HAProxy. For actual connections we should be able to
 	// read at minimum the TLS ClientHello that HAProxy used to dispatch
 	// the connection.
-	// XXX: Can we determine if this was a health check without having to
-	//      use prefixConn to put back the read byte?
 	one := []byte{0}
 	if err = readTimeout(c, one); err != nil {
 		if ne, ok := err.(*net.OpError); ok {

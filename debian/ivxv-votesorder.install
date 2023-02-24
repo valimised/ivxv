@@ -1,0 +1,4 @@
+#!/usr/bin/dh-exec
+usr/bin/votesorder     => usr/bin/ivxv-votesorder
+
+usr/lib/systemd/user/ivxv-votesorder@.service

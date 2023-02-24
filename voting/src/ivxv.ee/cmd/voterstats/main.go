@@ -142,7 +142,7 @@ func voterstatsmain() (code int) {
 	if *detailedp {
 		periods := cumulativePeriods(start, stop, loc)
 		stats, err = statsDetailed(c.Ctx, c.Conf.Election.Identifier,
-			dists, periods, c.Storage)
+			dists, periods, c.Storage, loc)
 	} else {
 		stats, err = statsTotal(c.Ctx, c.Conf.Election.Identifier, c.Storage)
 	}
@@ -215,7 +215,7 @@ type votersDetailedPeriod struct {
 }
 
 func statsDetailed(ctx context.Context, election string,
-	dists *districtlist, periods []period, s *storage.Client) (
+	dists *districtlist, periods []period, s *storage.Client, loc *time.Location) (
 	*votersDetailed, error) {
 
 	log.Log(ctx, ExportingDetailedStatistics{})
@@ -276,7 +276,12 @@ func statsDetailed(ctx context.Context, election string,
 		for i, period := range periods {
 			count := votersDetailedPeriod{Label: period.label}
 			if ok {
-				count.Voted = periodMap[period.label]
+				// future days voted should be 0
+				if period.contains(previousMidnight(time.Now(), loc).Add(24 * time.Hour)) {
+					count.Voted = 0
+				} else {
+					count.Voted = periodMap[period.label]
+				}
 			}
 			converted[i] = count
 		}

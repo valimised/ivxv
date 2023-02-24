@@ -42,7 +42,7 @@ def load_collector_cmd_file(cmd_type, filename, plain=False):
         cmd_filename = filename
         filename = None
     elif cmd_type in CFG_TYPES:
-        cmd_filename = re.compile(r'(.+\.)?{}.yaml$'.format(cmd_type))
+        cmd_filename = re.compile(rf"(.+\.)?{cmd_type}.yaml$")
     elif cmd_type in VOTING_LIST_TYPES:
         cmd_filename = None
     else:
@@ -83,8 +83,7 @@ def load_collector_cmd_file(cmd_type, filename, plain=False):
                 elif cmd_type in ['choices', 'districts', 'voters']:
                     cfg_election_id = cfg.get('election')
                 else:
-                    raise NotImplementedError(
-                        'Unknown config type {}'.format(cmd_type))
+                    raise NotImplementedError(f"Unknown config type {cmd_type}")
                 if election_id != cfg_election_id:
                     log.error(
                         "Election ID %r in config file does not match "
@@ -294,7 +293,7 @@ def check_cmd_signature(cmd_type, filename):
     all_signatures = []
     for line in proc.stdout.strip().split('\n'):
         if not re.match(r'.+,.+,[0-9]{11} ', line):
-            raise LookupError('Invalid signature line: %s' % line)
+            raise LookupError(f"Invalid signature line: {line}")
         signer, timestamp_str = line.split(' ')
         timestamp = datetime.datetime.strptime(
             timestamp_str, RFC3339_DATE_FORMAT_WO_FRACT).timestamp()
@@ -383,7 +382,7 @@ def log_cfg_validation_errors(items, prefix="/"):
     """Log validation errors."""
     for field_name, val in items.items():
         if isinstance(val, dict):
-            log_cfg_validation_errors(val, prefix + field_name + "/")
+            log_cfg_validation_errors(val, f"{prefix}{field_name}/")
         else:
             log.error("Validation error for field %r: %s", prefix + field_name, val)
 

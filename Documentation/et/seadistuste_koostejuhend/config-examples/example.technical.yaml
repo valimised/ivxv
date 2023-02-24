@@ -2,6 +2,8 @@
 
 debug: true
 
+snidomain: inttest.ivxv.ee
+
 filter:
   tls:
     handshaketimeout: 20
@@ -25,6 +27,9 @@ network:
       mid:
         - id:          mid@mid1.ivxv.ee
           address:     mid1.ivxv.ee:443
+      smartid:
+        - id:          smartid@smartid1.ivxv.ee
+          address:     smartid1.ivxv.ee:443
       choices:
         - id:          choices@choices1.ivxv.ee
           address:     choices1.ivxv.ee:443
@@ -53,5 +58,6 @@ storage:
     optimeout: 10
     bootstrap:
       - storage@storage1.ivxv.ee
+  ordertimeout: 10
 
 backup: ["03:00", "09:00", "15:00", "21:00"]

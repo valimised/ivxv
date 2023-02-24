@@ -12,7 +12,9 @@ ivxv-choices
 ivxv-common
 ivxv-log
 ivxv-mid
+ivxv-smartid
 ivxv-proxy
 ivxv-storage
 ivxv-verification
 ivxv-voting
+ivxv-votesorder

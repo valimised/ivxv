@@ -1,0 +1,47 @@
+project_name: xroad-service
+
+builds:
+  - id: xroad-service
+    main: ./cmd
+    binary: xroad-service
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+checksum:
+  name_template: 'checksums.txt'
+scoop:
+  skip_upload: true
+nfpms:
+  - description: |-
+      X-road service is helper service between X-road and EHS systems.
+    maintainer: "IVXV Developer <info@ivotingcentre.ee>"
+    formats:
+      - deb
+    dependencies:
+      - musl
+    bindir: /usr/bin
+    release: 1
+    section: default
+    priority: extra
+    contents:
+      - src: pkg/configs/xroad-service.json
+        dst: /etc/xroad-service/xroad-service.json
+        type: config
+        file_info:
+          mode: 0644
+      - src: openapi/ehs-xroad-api.yaml
+        dst: /etc/xroad-service/ehs-xroad-api.yaml
+        type: config
+        file_info:
+          mode: 0644
+      - src: init/systemd/xroad-service.service
+        dst: /lib/systemd/system/xroad-service.service
+        file_info:
+          mode: 0644
+    scripts:
+      postinstall: scripts/postinstall.sh
+      preremove: scripts/preremove.sh
+      postremove: scripts/postremove.sh

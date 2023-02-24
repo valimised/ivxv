@@ -23,6 +23,14 @@ var (
 	ErrMIDNotUser     = errors.New("MID_NOT_USER")
 	ErrMIDOperator    = errors.New("MID_OPERATOR")
 
+	// Smart ID errors.
+	ErrSmartIDCanceled     = errors.New("SMARTID_CANCELED")
+	ErrSmartIDCertificate  = errors.New("SMARTID_BAD_CERTIFICATE")
+	ErrSmartIDExpired      = errors.New("SMARTID_EXPIRED")
+	ErrSmartIDGeneral      = errors.New("SMARTID_GENERAL")
+	ErrSmartIDVerification = errors.New("SMARTID_VERIFICATION")
+	ErrSmartIDAccount      = errors.New("SMARTID_ACCOUNT")
+
 	// Vote errors.
 	ErrIdentityMismatch = errors.New("IDENTITY_MISMATCH")
 	ErrOutdatedChoices  = errors.New("OUTDATED_CHOICES")

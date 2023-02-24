@@ -130,7 +130,6 @@ BYTE* Aggregator::getSlice()
 
 BOOL Aggregator::handle(MousePosition* event)
 {
-    //TODO! Err not handled
     CryptHashData(hHash, (BYTE*)event, sizeof(*event), 0);
 
     if ((event->ptMousePos.x != ptLastPos.x || event->ptMousePos.y !=
@@ -146,7 +145,6 @@ BOOL Aggregator::handle(MousePosition* event)
 
 BOOL Aggregator::handle(KeyPressed* event)
 {
-    // TODO! Err not handled
     CryptHashData(hHash, (BYTE*)event, sizeof(*event), 0);
 
     if (event->isUp || (bLastScanCode != event->bScanCode && event->dwTickCount

@@ -149,7 +149,7 @@ def fwd_request():
 
     data = urllib.parse.urlencode(request.forms).encode("UTF-8")
     fwd_request = urllib.request.Request(daemon_url, data=data, method="GET")
-    max_response_size = 1024 * 1024
+    max_response_size = 1024 * 1024 * 1024  # 1GB
     with urllib.request.urlopen(fwd_request) as req_fp:
         daemon_response = req_fp.read(max_response_size)
         if len(daemon_response) == max_response_size:

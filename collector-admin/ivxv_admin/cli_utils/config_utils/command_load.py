@@ -19,7 +19,7 @@ from ...event_log import register_service_event
 from ...lib import (
     IvxvError,
     get_current_voter_list_changeset_no,
-    manage_db_mid_fields,
+    manage_db_mobileid_fields,
     manage_db_tsp_fields,
     populate_user_permissions,
     register_tech_cfg_items,
@@ -155,7 +155,7 @@ def register_cfg(
             db_key += f"/voters{changeset_no:04}"
         else:
             active_cfg_filename = f'{cmd_type}.bdoc'
-            db_key += '/' + cmd_type
+            db_key += f"/{cmd_type}"
 
         # write config file to admin ui data path
         cmd_filepath = cfg_path(
@@ -176,7 +176,7 @@ def register_cfg(
         if cmd_type == 'trust':  # initial permissions
             log.info('Resetting user permissions')
             for user_cn in db.get_all_values('user'):
-                db.rm_value('user/' + user_cn)
+                db.rm_value(f"user/{user_cn}")
             for user_cn in cfg_data['authorizations']:
                 register_user_permissions(db, user_cn, ["admin"])
 
@@ -187,7 +187,7 @@ def register_cfg(
                 'PERMISSION_RESET', params={'user_cn': user_cn})
             for existing_user_cn in db.get_all_values('user'):
                 if existing_user_cn == user_cn:
-                    db.rm_value('user/' + user_cn)
+                    db.rm_value(f"user/{user_cn}")
             register_user_permissions(db, user_cn, cfg_data["roles"])
 
         elif cmd_type == 'election':  # register election params
@@ -201,7 +201,7 @@ def register_cfg(
                     'servicestart', 'electionstart', 'electionstop',
                     'servicestop'
             ]:
-                db.set_value('election/' + key, cfg_data['period'][key])
+                db.set_value(f"election/{key}", cfg_data["period"][key])
                 register_service_event(
                     'SET_ELECTION_TIME',
                     params={
@@ -227,7 +227,7 @@ def register_cfg(
                     pass
 
         if cmd_type in ['technical', 'election']:
-            manage_db_mid_fields(db)
+            manage_db_mobileid_fields(db)
             manage_db_tsp_fields(db)
 
     register_cfg_in_fs(
@@ -296,8 +296,8 @@ def check_cmd_loading_state(cmd_type):
             choices_list_version = db.get_value('list/choices')
         if choices_list_version:
             raise IvxvError(
-                'Choices list is already loaded (version: {})'
-                .format(choices_list_version))
+                f"Choices list is already loaded (version: {choices_list_version})"
+            )
 
     # don't allow to load technical config if trust root config is not loaded
     elif cmd_type == 'technical':
@@ -353,7 +353,7 @@ def register_user_permissions(db, user_cn, roles):
     register_service_event(
         'PERMISSION_SET',
         params={'user_cn': user_cn, 'permission': ','.join(roles)})
-    db.set_value('user/' + user_cn, ','.join(roles))
+    db.set_value(f"user/{user_cn}", ",".join(roles))
     populate_user_permissions(db)
 
 

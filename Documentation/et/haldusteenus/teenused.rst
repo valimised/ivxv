@@ -65,4 +65,5 @@ Nimekirjas teenuse kirjel klõpsates avaneb kirje all tabel täpsema infoga:
 
 #. Teenuse TLS-sertifikaadile vastava võtme kontrollsumma (SHA256);
 
-#. Mobiil-ID tugiteenuse jagatud krüptimissaladuse kontrollsumma (SHA256);
+#. Mobiil-ID/Smart-ID tugiteenuste jagatud krüptimissaladuse kontrollsumma
+   (SHA256);

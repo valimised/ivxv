@@ -1,0 +1,12 @@
+# Hardening the binaries with relro and pie is not necessary since memory
+# errors should not occur in Go binaries. Although we could use -buildmode=pie,
+# we have not tested the effect this will have, so leave it off for now.
+ivxv-smartid: hardening-no-relro usr/bin/ivxv-smartid
+ivxv-smartid: hardening-no-pie usr/bin/ivxv-smartid
+
+# We do not provide manpages, since these packages are not meant for
+# distribution.
+ivxv-smartid: binary-without-manpage
+
+# The package depends on ivxv-common, which depends on adduser.
+ivxv-smartid: maintainer-script-needs-depends-on-adduser postinst

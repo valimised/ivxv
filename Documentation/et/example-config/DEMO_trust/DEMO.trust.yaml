@@ -8,7 +8,6 @@ container:
       - !container EE-GovCA2018.pem.crt
     intermediates:
       - !container ESTEID-SK_2015.pem.crt
-      - !container ESTEID-SK_2011.pem.crt
       - !container esteid2018.pem.crt
     profile: TS
     tsp:

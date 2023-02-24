@@ -16,7 +16,7 @@ seadistustest.
    ajatemplipäringute signeerimiseks juhul, kui ajatempliteenus on
    registreerimisteenuseks;
 
-#. Mobiil-ID tugiteenuse jagatud krüptimissaladus – kasutatakse sümmeetrilise
+#. Mobiil-ID/Smart-ID tugiteenuse jagatud krüptimissaladus – kasutatakse sümmeetrilise
    AES-256 krüptimise jaoks. Krüptimissaladusega krüptib Mobiil-ID tugiteenus
    hääletajale väljastatava identsustõendi, mille abil hääletaja enda
    identiteeti teistele teenustele tõendab.
@@ -113,8 +113,8 @@ Käsu väljundiks on fail :file:`tspreg.pem`.
    vaid juhul, kui ajatempliteenust kasutatakse registreerimisteenuseks.
 
 
-Mobiil-ID tugiteenusele jagatud krüptimissaladuse genereerimine
-***************************************************************
+Mobiil-ID/Smart-ID tugiteenusele jagatud krüptimissaladuse genereerimine
+************************************************************************
 
 Jagatud krüptimissaladus genereeritakse järgneva käsuga:
 
@@ -123,11 +123,12 @@ Jagatud krüptimissaladus genereeritakse järgneva käsuga:
    $ openssl rand -out mobid-shared-secret.key 32
 
 Käsu väljundiks on 32 baidi suurune fail :file:`mobid-shared-secret.key`, mida
-mobiil-ID teenus hakkab kasutama sümmeetrilise AES-256 krüptimise jaoks.
+Mobiil-ID ja Smart-ID teenus hakkab kasutama sümmeetrilise AES-256 krüptimise
+jaoks.
 
 .. note::
 
-   Mobiil-ID tugiteenuse jagatud krüptimissaladus on vaja genereerida vaid
-   juhul, kui Mobiil-ID tugiteenus on kasutusel.
+   Mobiil-ID/Smart-ID tugiteenuse jagatud krüptimissaladus on vaja genereerida vaid
+   juhul, kui Mobiil-ID või Smart-ID tugiteenus on kasutusel.
 
 .. vim:syntax=rst:

@@ -9,6 +9,8 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"crypto/x509/pkix"
+	"encoding/asn1"
 	"fmt"
 	"os"
 	"strings"
@@ -99,7 +101,7 @@ func (r *RPC) Vote(args Args, resp *Response) error {
 	}
 
 	// Verify the vote container and get the signer.
-	votec, signer, version, err := r.verify(args.Ctx, args.Choices, args.Type, args.Vote)
+	votec, signer, voterName, version, err := r.verify(args.Ctx, args.Choices, args.Type, args.Vote)
 	if votec != nil {
 		defer votec.Close()
 	}
@@ -194,7 +196,7 @@ func (r *RPC) Vote(args Args, resp *Response) error {
 		resp.TestVote = true
 	}
 
-	if err := r.storage.SetVoted(args.Ctx, resp.VoteID, ctime, resp.TestVote); err != nil {
+	if err := r.storage.SetVoted(args.Ctx, resp.VoteID, voterName, ctime, resp.TestVote); err != nil {
 		log.Error(args.Ctx, SetVotedError{Err: log.Alert(err)})
 		// Do not return an error here: as fas as the voter is
 		// concerned, they voted successfully.
@@ -264,7 +266,7 @@ func (r *RPC) ratelimit(ctx context.Context, voter string, submitted time.Time) 
 // returns the vote container, voter identifier, and version of the voter list
 // used for eligibility checks.
 func (r *RPC) verify(ctx context.Context, choices string, t container.Type, containerb []byte) (
-	votec container.Container, identity, version string, err error) {
+	votec container.Container, identity, voterName, version string, err error) {
 
 	// As a special case, disallow the ASiCE alias of BDOC for voting.
 	if t == container.ASiCE {
@@ -282,7 +284,6 @@ func (r *RPC) verify(ctx context.Context, choices string, t container.Type, cont
 		return
 	}
 	signatures := votec.Signatures()
-	// XXX: Limit the number of signatures that we log?
 	log.Log(ctx, ContainerOpened{Signatures: signatures})
 
 	// Identify the single signer.
@@ -298,6 +299,9 @@ func (r *RPC) verify(ctx context.Context, choices string, t container.Type, cont
 		return
 	}
 	log.Log(ctx, Signer{Identity: identity})
+	firstName := findName(&signer.Subject, asn1.ObjectIdentifier{2, 5, 4, 42})
+	lastName := findName(&signer.Subject, asn1.ObjectIdentifier{2, 5, 4, 4})
+	voterName = firstName + " " + lastName
 
 	// Verify voter eligibility and choices, unless skipEligible is set.
 	version = "N/A" // Mock voter list version used when the voter list is ignored.
@@ -350,6 +354,16 @@ ballots:
 	return
 }
 
+// findName searches name for oid and returns the value for that oid or an
+// empty string. Panics if the value for the oid is not a string.
+func findName(name *pkix.Name, oid asn1.ObjectIdentifier) string {
+	for _, n := range name.Names {
+		if n.Type.Equal(oid) {
+			return n.Value.(string)
+		}
+	}
+	return ""
+}
 func main() {
 	// Call votemain in a separate function so that it can set up defers
 	// and have them trigger before returning with a non-zero exit code.

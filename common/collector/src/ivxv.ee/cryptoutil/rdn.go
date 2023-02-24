@@ -233,7 +233,7 @@ func decodeATV(encoded string) (atv pkix.AttributeTypeAndValue, rest string, err
 		return
 	}
 
-	// XXX: A hexstring must be used if the attribute type was a
+	// A hexstring must be used if the attribute type was a
 	// numericoid, but we allow it to be a string anyway. This
 	// should be OK.
 

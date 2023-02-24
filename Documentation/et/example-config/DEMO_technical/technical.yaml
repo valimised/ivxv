@@ -1,5 +1,7 @@
 debug: true
 
+snidomain: inttest.ivxv.ee
+
 filter:
   tls:
     handshaketimeout: 20

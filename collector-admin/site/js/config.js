@@ -13,6 +13,12 @@ function loadPageData() {
 
   // load collector state
   $.getJSON('data/status.json', function(state) {
+      /*
+       * HTTP GET on https://admin.?.ivxv.ee/ivxv/data/status.json
+       * HTTP GET response that contains HTML tags is not allowed!
+       * state is always an JSON object
+       */
+      state = sanitizeJSON(state);
       display_cfg_panel(
         'trust', state, state['config']['trust'], 'Usaldusjuure seadistus');
       display_cfg_panel(
@@ -66,8 +72,16 @@ var state_filenames = {};
 
 /**
  * Display config state panel
+ *
+ * @param {string} id_prefix
+ * @param {Object} state
+ * @param {Object} cfg
+ * @param {string} title
  */
 function display_cfg_panel(id_prefix, state, cfg, title) {
+  id_prefix = sanitizePrimitive(id_prefix);
+  state = sanitizeJSON(state);
+  cfg = sanitizeJSON(cfg);
   // Create panel if required
   var panel = $('#' + id_prefix + '-cfg-state-panel');
   if (!panel.length) {
@@ -76,7 +90,7 @@ function display_cfg_panel(id_prefix, state, cfg, title) {
       '    <div class="col-lg-12">' +
       '        <div id="' + id_prefix + '-cfg-state-panel" class="panel">' +
       '            <div class="panel-heading">' +
-      '                <h4 class="panel-title">' + title + '</h4>' +
+      '                <h4 class="panel-title">' + sanitizePrimitive(title) + '</h4>' +
       '            </div>' +
       '            <div class="panel-body">' +
       '              <div />' + // Placeholder for config info text
@@ -129,7 +143,7 @@ function display_cfg_panel(id_prefix, state, cfg, title) {
       panel_body
         .find('div:first')
         .html(
-          '<div>Seisund: ' + stateStr + '</div>' +
+          '<div>Seisund: ' + sanitizePrimitive(stateStr) + '</div>' +
           '<div>Rakendatav versioon: <span id="cfg-ver-' + id_prefix + '">[ määramata ]</a></div>' +
           '<div>Rakendamise katseid: 0</div>'
         );
@@ -137,7 +151,7 @@ function display_cfg_panel(id_prefix, state, cfg, title) {
       panel_body
         .find('div:first')
         .html(
-          '<div>Seisund: ' + stateStr + '</div>' +
+          '<div>Seisund: ' + sanitizePrimitive(stateStr) + '</div>' +
           '<div>Rakendatav versioon: <span id="cfg-ver-' + id_prefix + '">' + cfg['version'] + '</a></div>' +
           '<div>Rakendamise katseid: ' + cfg['attempts'] + '</div>'
         );
@@ -176,11 +190,17 @@ function toggle_apply_log(toggle_button) {
  */
 function refresh_log(logbox, filename) {
   var url = '/ivxv/data/commands/' + filename;
-  $.getJSON(url, function(state) {
+  $.getJSON(encodeURI(url), function(state) {
+      /*
+       * HTTP GET on https://admin.?.ivxv.ee/ivxv/data/commands/??
+       * HTTP GET response that contains HTML tags is not allowed!
+       * state is always an JSON object
+       */
+      state = sanitizeJSON(state);
       logbox.text(state['log'][state['attempts'] - 1].join('\n'));
     })
     .fail(function(response) {
-      logbox.text(response.responseText);
+      logbox.text(sanitizePrimitive(response.responseText));
     });
 }
 
@@ -218,12 +238,12 @@ function uploadFiles(event) {
   // Create a formdata object and add the files
   var data = new FormData();
   data.append('upload', files[0]);
-  data.append('type', $('#drop').find(':selected').val());
+  data.append('type', sanitizePrimitive($('#drop').find(':selected').val()));
 
   var form = $('#config-upload-form');
   $.ajax({
-    url: form.attr('action'),
-    type: form.attr('method'),
+    url: encodeURI(form.attr('action')),
+    type: sanitizePrimitive(form.attr('method')),
     data: data,
     cache: false,
     dataType: 'json',
@@ -235,9 +255,9 @@ function uploadFiles(event) {
       console.log(jqXHR.responseJSON.message);
       $('#upload-message')
         .html(
-          jqXHR.responseJSON.message +
+          sanitizePrimitive(jqXHR.responseJSON.message) +
           '<hr />' +
-          '<pre>' + jqXHR.responseJSON.log.join('\n') + '</pre>'
+          '<pre>' + sanitizePrimitive(jqXHR.responseJSON.log.join('\n')) + '</pre>'
         )
         .addClass(jqXHR.responseJSON.success ? 'alert-success' : 'alert-danger')
         .show();
@@ -248,7 +268,7 @@ function uploadFiles(event) {
     error: function(jqXHR, textStatus, errorThrown) {
       console.log(jqXHR);
       $('#upload-message')
-        .html(jqXHR.responseText)
+        .html(sanitizePrimitive(jqXHR.responseText))
         .addClass('alert-danger')
         .show();
     }

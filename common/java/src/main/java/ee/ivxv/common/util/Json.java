@@ -24,7 +24,7 @@ public class Json {
     /**
      * Reads the specified path as JSON file and parses the result into new instance of the
      * specified type.
-     * 
+     *
      * @param path Location of a JSON file.
      * @param type The target class to parse the result into.
      * @return Instance of the target type.
@@ -43,7 +43,7 @@ public class Json {
     /**
      * Writes the specified object in JSON format at the specified path. All parent folders of the
      * specified path will be created.
-     * 
+     *
      * @param o The object to write
      * @param path Location of the JSON file
      * @throws Exception if an i/o or parsing error occurs.
@@ -58,7 +58,7 @@ public class Json {
     public static void write(Object o, OutputStream out) throws Exception {
         ObjectMapper mapper = getMapper();
 
-        // TODO Using pretty print for debugging
+        // Using pretty print for debugging
         mapper.writerWithDefaultPrettyPrinter().writeValue(out, o);
     }
 

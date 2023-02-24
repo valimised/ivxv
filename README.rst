@@ -13,6 +13,11 @@ applications require Java 11::
 
         sudo apt-get install --no-install-recommends openjdk-11-jdk-headless golang-1.9-go
 
+The submodule for external dependencies uses Git LFS. This must be locally
+supported so make sure that it is installed::
+
+        sudo apt-get install --no-install-recommends git-lfs
+
 Next, external dependencies need to be acquired. If working off of an offline
 copy of the IVXV repository, then they are already included and this step can
 be skipped. Otherwise run

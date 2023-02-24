@@ -26,7 +26,7 @@ class IvxvPackageBuilder(build_py):
 
 setup(
     name='IVXVCollectorAdminDaemon',
-    version='1.7.7',
+    version='1.8.2',
     description='IVXV Collector Management Service',
     author='IVXV Developer',
     author_email='info@ivotingcentre.ee',
