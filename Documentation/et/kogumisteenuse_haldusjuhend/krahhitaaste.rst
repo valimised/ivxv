@@ -71,7 +71,7 @@ nimesid korrektselt lahendada.
 #. Krahhimise tuvastamisel tuleb esimeste tegevuste hulgas eemaldada
    nimelahendusest krahhinud teenus, et rakendused enam selle poole
    pöörduda ei saaks.
-#. Kui teenus(ed) pärast krahhi uuesti töökorda saadakse, tuleb
+#. Kui teenused pärast krahhi uuesti töökorda saadakse, tuleb
    viimase sammuna nimelahenduses panna uute teenuste aadressid
    lahenduma vastavalt rakendustes defineeritule.
 
@@ -107,6 +107,7 @@ isendi asendamisest uuega.
 
    * :ref:`teenuse-asendamine`
 
+   * :ref:`recovery-stateless`
 
 Logikogumisteenuse isendi krahh
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -137,6 +138,7 @@ töötanud.
    * `RELP - The Reliable Event Logging Protocol
      <https://www.rsyslog.com/doc/relp.html>`_
 
+   * :ref:`recovery-logcollection`
 
 Varundusteenuse isendi krahh
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -151,6 +153,9 @@ ka pärast häälte kogumise lõppemist, kuid enne häälte kokkulugemist.
    Varundusprotseduuride käivitamist juhitakse haldusteenusest ja seetõttu pole
    varundusteenust võimalik käivitada ega seisma jätta.
 
+.. seealso::
+
+   * :ref:`recovery-backupservice`
 
 Talletusteenuse isendi krahh
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -184,11 +189,12 @@ Talletusteenuse kvoorumist tingitud piirangud:
 
    * :ref:`teenuse-asendamine`
 
+   * :ref:`recovery-storageservice`
 
 .. _talletusteenuste-täielik-krahh:
 
-Talletusteenuste täielik krahh
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Talletusteenuste täielik krahh ehk kogumisteenuse täielik asendamine
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Talletusteenuste täielikul asendamisel tuleb koostada uus tehniline seadistus,
 mis vastab järgmistele tingimustele:
@@ -209,19 +215,6 @@ mis vastab järgmistele tingimustele:
 
    * valikute, ringkondade ja valijate nimekirjad tuleb teenustele uuesti rakendada.
 
+.. seealso::
 
-Kogumisteenuse täielik asendamine
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Kui tekib vajadus kogumisteenuse täielikuks asendamiseks, siis tuleb
-kogumisteenusele teha uus paigaldus ilma andmete taastamiseta, mis on kiireim
-meetod teenuse uuesti töökorda seadmiseks.
-
-Varasemalt kogutud häälte kaasamiseks häälte kokkulugemisele tuleb
-varundusserverisse taastada eelnevalt loodud varukoopiad.
-
-.. important::
-
-   Kogumisteenuse täielikul asendamisel tuleb arvestada, et enne asendamist
-   kogutud hääled säilivad varundusserveritesse tehtud varukoopiates. Pärast
-   varukoopia loomist kogutud hääled lähevad kaotsi.
+   * :ref:`recovery-fullstorage`

@@ -8,385 +8,1751 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-29 16:08+0200\n"
+"POT-Creation-Date: 2025-09-05 11:29+0000\n"
 "PO-Revision-Date: 2024-03-01 17:59+0200\n"
 "Last-Translator: \n"
-"Language-Team: en <LL@li.org>\n"
 "Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"Generated-By: Babel 2.10.3\n"
-"X-Generator: Poedit 3.4.2\n"
+"Generated-By: Babel 2.15.0\n"
 
 #: ../../07-kontrollimine.rst:5
-msgid "Elektroonilise hääle kontrollimine"
-msgstr "Electronic Vote Verification"
+msgid "Elektroonilise hääle kontrollimine eraldi ja e-valimiskasti koosseisus"
+msgstr ""
+"Verification of electronic votes separately and as part of a digital "
+"ballot box"
 
 #: ../../07-kontrollimine.rst:7
 msgid ""
-"Elektroonilist häält kontrollitakse töötlemisrakenduses, kogumisteenuses, "
-"valijarakenduses ja kontrollrakenduses. Kõige põhjalikuma kontrolli läbib "
-"elektrooniline hääl e-valimiskasti koosseisus töötlemisrakenduses, kus otsustatakse "
-"konkreetse hääle lugemisele saatmine või mittesaatmine. Iga üksiku hääle kohta "
-"läbitakse töötlemisrakendusega analoogsel tasemel kontroll valijarakenduses, kus "
-"veendutakse, et kogumisteenus on hääle kvalifitseerinud selliselt, et "
-"töötlemisrakenduses tehtavad kontrollid õnnestuvad. Valijarakendusega analoogsed "
-"kontrollid viib läbi kontrollrakendus."
+"Elektroonilist häält kontrollitakse töötlemisrakenduses, kogumisteenuses,"
+" valijarakenduses ja kontrollrakenduses."
 msgstr ""
-"The electronic vote is verified in the processing application, the collection "
-"service, the voting application and the verification application. The most thorough "
-"check of an electronic vote in a digital ballot box is carried out in the "
-"processing application, where the decision to send or not to send a particular vote "
-"for counting is made. For each individual vote, a similar level of check is "
-"performed in the voting application, which ensures that the collection service has "
-"qualified the vote in such a way that the checks in the processing application are "
-"successful. Checks analogous to those in the voting application are performed by "
-"the verification application."
+"The electronic vote is verified in the processing application, the "
+"collection service, the voting application and the verification "
+"application."
 
-#: ../../07-kontrollimine.rst:17
-msgid "Kontrollid kogumisteenuses"
-msgstr "Checks in the Collection Service"
-
-#: ../../07-kontrollimine.rst:19
-msgid "Valijarakendus saadab kogumisteenusele allkirjastatud hääle koosseisus:"
+#: ../../07-kontrollimine.rst:10
+msgid ""
+"Kõige põhjalikuma kontrolli läbib elektrooniline hääl e-valimiskasti "
+"koosseisus töötlemisrakenduses, kus otsustatakse konkreetse hääle "
+"lugemisele saatmine või mittesaatmine. Nende kontrollide käigus "
+"vaadeldakse e-häält nii eraldi kui ka suhtes kõigi teiste sama valija "
+"poolt antud häältega. Täiendavalt kõrvutatakse e-valimiskasti "
+"registreerimisteenuse väljavõttega."
 msgstr ""
-"The voting application sends a signed vote to the collection service with following "
-"contents:"
+"The most thorough check of an electronic vote takes place in the "
+"processing application within the e-voting box, where the decision to "
+"send or not to send a particular vote is made. During these checks, the "
+"e-vote is examined both individually and in relation to all other votes "
+"cast by the same voter. A further comparison is made with the e-voting "
+"box registration service extract."
 
-#: ../../07-kontrollimine.rst:21
-msgid "krüpteeritud sedeli;"
-msgstr "encrypted ballot;"
+#: ../../07-kontrollimine.rst:16
+msgid ""
+"Iga üksiku hääle kohta läbitakse töötlemisrakendusega analoogsel tasemel "
+"kontroll valijarakenduses, kus veendutakse, et kogumisteenus on hääle "
+"kvalifitseerinud selliselt, et töötlemisrakenduses tehtavad kontrollid "
+"õnnestuvad. Valijarakenduse kontrollidega samaväärsed kontrollid viib "
+"läbi kontrollrakendus."
+msgstr ""
+"For each individual vote, a check is performed in the voting application "
+"at a level analogous to that in the processing application, to ensure "
+"that the collection service has qualified the vote in such a way that the"
+" checks in the processing application are successful. Checks equivalent "
+"to those carried out in the Voting Application shall be carried out by "
+"the Verification Application."
 
-#: ../../07-kontrollimine.rst:23
-msgid "valija allkirja krüpteeritud sedelil;"
-msgstr "the voter's signature on an encrypted ballot;"
-
-#: ../../07-kontrollimine.rst:25
-msgid "valija allkirjastamissertifikaadi."
-msgstr "the voter's signature certificate."
+#: ../../07-kontrollimine.rst:22
+msgid ""
+"Kogumisteenus on lisaks vastutav mitme hääle lõplikuks "
+"kvalifitseerumiseks vajaliku elemendi hankimise eest ning teostab ka "
+"nende hankimise järgselt kontrollid."
+msgstr ""
+"In addition, the collection service is responsible for the procurement of"
+" the elements necessary for the final qualification of several votes, and"
+" also carries out post-qualification checks."
 
 #: ../../07-kontrollimine.rst:27
-msgid "Kogumisteenus viib läbi minimaalselt järgmised kontrollid:"
-msgstr "The collection service will carry out the following minimum checks:"
+msgid "Lõpliku elektroonilise hääle komponendid"
+msgstr "Components of the final electronic voice"
 
 #: ../../07-kontrollimine.rst:29
-msgid "hääle allkirjastaja on valijate nimekirjas;"
-msgstr "the signatory is on the electoral roll;"
-
-#: ../../07-kontrollimine.rst:31 ../../07-kontrollimine.rst:103
-#: ../../07-kontrollimine.rst:167
-msgid "allkirjastatud hääl on esitatud korrektses konteinervormingus;"
-msgstr "the signed vote is in the correct container format;"
-
-#: ../../07-kontrollimine.rst:33 ../../07-kontrollimine.rst:105
-#: ../../07-kontrollimine.rst:169
-msgid "digitaalallkiri krüpteeritud sedelil on korrektne;"
-msgstr "the digital signature on the encrypted ballot is correct;"
-
-#: ../../07-kontrollimine.rst:35
-msgid "hääle allkirjastaja sertifikaat on kehtiv hääle vastuvõtmise ajahetkel."
-msgstr ""
-"the certificate of the person signing the vote is valid at the time the vote is "
-"accepted."
-
-#: ../../07-kontrollimine.rst:37
 msgid ""
-"Hääle allkirjastaja sertifikaadi kehtivuse kontrolliks teeb kogumisteenus päringu "
-"kehtivuskinnitusteenusele. Kogumisteenus verifitseerib kehtivuskinnitusteenuse "
-"vastust sertifikaadi oleku kohta ning lisab selle vastuse häält kvalifitseerivate "
-"elementide hulka."
+"Elemendid, mis on kättesaadavad otsustamise hetkel, kas hääl "
+"kvalifitseerub lugemisele saatmiseks või mitte:"
 msgstr ""
-"To check the validity of the signatory's certificate, the collection service will "
-"make a request to the validation service. The Collection Service verifies the "
-"response from the validation service about the status of the certificate and "
-"includes this response in the elements that qualify the vote."
+"Elements available at the moment of deciding whether or not a vote "
+"qualifies to be sent for counting:"
+
+#: ../../07-kontrollimine.rst:32
+msgid "elektroonilist häält sisaldav konteiner - :ref:`entity-haale-konteiner`;"
+msgstr "container containing electronic voice - :ref:`entity-haale-konteiner`;"
+
+#: ../../07-kontrollimine.rst:34
+msgid "krüpteeritud sedel - :ref:`entity-krypteeritud-sedel`;"
+msgstr "encrypted ballot - :ref:`entity-krypteeritud-sedel`;"
+
+#: ../../07-kontrollimine.rst:36
+msgid "valija signatuur krüpteeritud sedelil - :ref:`entity-haale-signatuur`;"
+msgstr "voter signature on encrypted ballot - :ref:`entity-haale-signatuur`;"
+
+#: ../../07-kontrollimine.rst:38
+msgid "valija allkiri krüpteeritud sedelil - :ref:`entity-haale-allkiri`;"
+msgstr "voter signature on encrypted ballot - :ref:`entity-haale-allkiri`;"
+
+#: ../../07-kontrollimine.rst:40
+msgid "valija allkirjastamissertifikaat - :ref:`entity-valija-sertifikaat`;"
+msgstr "voter signing certificate - :ref:`entity-valija-sertifikaat`;"
 
 #: ../../07-kontrollimine.rst:42
+msgid "valija isikukood - :ref:`entity-valija-identiteet`;"
+msgstr "voter identity code - :ref:`entity-valija-identiteet`;"
+
+#: ../../07-kontrollimine.rst:44
 msgid ""
-"Kogumisteenus registreerib hääle talletamise fakti välises registreerimisteenuses, "
-"allkirjastades registreerimispäringu ning talletades registreerimisteenuse poolt "
-"allkirjastatud registreerimistõendi häält kvalifitseerivate elementide hulka."
+"kvalifitseeriv element - valija sertifikaadi kehtivuskinnitus - :ref"
+":`entity-kehtivuskinnitus`;"
 msgstr ""
-"The collection service will record the fact of depositing the vote in the external "
-"registration service by signing the registration request and storing the "
-"registration confirmation signed by the registration service among the elements "
-"qualifying the vote."
+"qualifying element - confirmation of the validity of the voter's "
+"certificate - :ref:`entity-kehtivuskinnitus`;"
 
 #: ../../07-kontrollimine.rst:47
 msgid ""
-"Kogumisteenus tagastab kõik tema poolt hangitud häält kvalifitseerivad elemendid "
-"valijarakendusele koos hääle unikaalse identifikaatoriga."
+"kvalifitseeriv element - ajatempel allkirjastatud krüpteeritud sedelile -"
+" :ref:`entity-ajatempel`;"
 msgstr ""
-"The collection service returns all the qualifying elements of the votes it has "
-"collected to the voting application, together with the unique identifier of the "
-"vote."
+"qualifying element - timestamp on a signed encrypted ballot - :ref"
+":`entity-ajatempel`;"
 
-#: ../../07-kontrollimine.rst:51
-msgid "Kontrollid valijarakenduses"
-msgstr "Checks in the Voting Application"
+#: ../../07-kontrollimine.rst:50
+msgid ""
+"kvalifitseeriv element - registreerimispäringu konteiner :ref:`entity-"
+"registreerimisparing-konteiner`;"
+msgstr ""
+"Creating a registration request - :ref:`entity-registreerimisparing-"
+"konteiner`"
 
 #: ../../07-kontrollimine.rst:53
 msgid ""
-"Valijarakendus moodustab valija avakujul tahteavalduse põhjal krüpteeritud sedeli "
-"ning allkirjastab selle valija allkirja andmise vahendiga."
+"kvalifitseeriv element - registreerimispäring allkirjastatud krüpteeritud"
+" sedelile - :ref:`entity-registreerimisparing`;"
 msgstr ""
-"The voting application forms an encrypted ballot based on the voter's plaintext "
-"intent and signs it using the voter's signature device."
+"qualifying element - registration certificate for signed and encrypted "
+"vote - :ref:`entity-registreerimisparing`;"
 
 #: ../../07-kontrollimine.rst:56
 msgid ""
-"Valijarakenduse rolliks peale hääle allkirjastamist on veenduda, et kogumisteenus "
-"käitus häält kvaliftseerivate elementide võtmisel protokollikohaselt ning et hääl "
-"on talletatud selliselt, et ta saab töötlemisrakenduse poolt arvesse võetud."
+"kvalifitseeriv element - registreerimistõend allkirjastatud krüpteeritud "
+"sedeli kohta - :ref:`entity-registreerimistoend`;"
 msgstr ""
-"The role of the voting application, after the vote has been signed, is to verify "
-"that the collection service acted in a protocol-compliant manner in taking the "
-"elements that qualify the vote and that the vote has been stored in such a way that "
-"it can be taken into account by the processing application."
+"qualifying element - registration certificate for signed and encrypted "
+"vote - :ref:`entity-registreerimistoend`;"
 
-#: ../../07-kontrollimine.rst:61
-msgid "Valijarakendus viib läbi minimaalselt järgmised kontrollid:"
+#: ../../07-kontrollimine.rst:59
+msgid ""
+"valija ringkonnakuuluvuse tõend hääle andmise hetkel - :ref:`entity-"
+"nimekirjatunnus`."
 msgstr ""
-"As a minimum, the following checks will be carried out by the voting application:"
+"proof of the voter's district eligibility at the time of voting - :ref"
+":`entity-nimekirjatunnus`."
 
 #: ../../07-kontrollimine.rst:63
+msgid ""
+"Elemendid, mis on kättesaadavad otsustamise hetkel, kuidas häält "
+"kokkulugemisel arvesse võtta:"
+msgstr ""
+"The elements available at the moment of deciding how to take the vote "
+"into account in the count:"
+
+#: ../../07-kontrollimine.rst:66
+msgid "miksitud krüpteeritud sedel - :ref:`entity-miksitud-krypteeritud-sedel`;"
+msgstr "mixed encrypted ballot - :ref:`entity-miksitud-krypteeritud-sedel`;"
+
+#: ../../07-kontrollimine.rst:68
+msgid "valija tahteavaldus avakujul - :ref:`entity-tahteavaldus`;"
+msgstr "voter's plaintext intent - :ref:`entity-tahteavaldus`;"
+
+#: ../../07-kontrollimine.rst:70
+msgid "ringkonnakuuluvuse tunnus - :ref:`entity-ringkonnatunnus`;"
+msgstr "district membership - :ref:`entity-ringkonnatunnus`;"
+
+#: ../../07-kontrollimine.rst:72
+msgid ""
+"ringkonnapõhine valikute nimekiri - :ref:`entity-ringkonna-"
+"valikutenimekiri`."
+msgstr "district-based candidate list - :ref:`entity-ringkonna-valikutenimekiri`."
+
+#: ../../07-kontrollimine.rst:75
+msgid "Täiendavad elemendid:"
+msgstr "Additional elements:"
+
+#: ../../07-kontrollimine.rst:77
+msgid ""
+"krüpteerimisel kasutatud juhuslikkus - :ref:`entity-juhuslikkus`; - "
+"luuakse valijarakenduses hääle krüpteerimisel ning vahendatakse ainult "
+"kontrollrakendusele."
+msgstr ""
+"randomness used in encryption - :ref:`entity-juhuslikkus`; - is generated"
+" in the voter application when the vote is encrypted and is only "
+"transmitted to the verification application."
+
+#: ../../07-kontrollimine.rst:86
+msgid "TAHTEAVALDUS"
+msgstr "INTENT"
+
+#: ../../07-kontrollimine.rst:88
+msgid ""
+"Olem moodustatakse valijarakenduses ning tuvastatakse võtmerakenduses. "
+"Tegemist on EHS spetsiifilises vormingus UTF-8 kodeeringus baidijadaga."
+msgstr ""
+"The item is created in the voter application and identified in the key "
+"application. It is an EHS specific format UTF-8 encoded byte string."
+
+#: ../../07-kontrollimine.rst:94
+msgid "TAHTEAVALDUS, vormingu korrektsus"
+msgstr "INTENT, correctness of the format"
+
+#: ../../07-kontrollimine.rst:96
+msgid ""
+"Tahteavalduse vormingu korrektsuse kontroll käesoleva spetsifikatsiooni "
+"suhtes."
+msgstr ""
+"Verification of the correctness of the intent format against this "
+"specification."
+
+#: ../../07-kontrollimine.rst:102
+msgid "TAHTEAVALDUS, RINGKONNATUNNUS, RINGKONNA VALIKUTENIMEKIRI kooskõlalisus"
+msgstr "INTENT, DISTRICT MEMBERSHIP, DISTRICT CHOICES consistency "
+
+#: ../../07-kontrollimine.rst:104
+msgid ""
+"Tahteavalduses sisalduva valiku kontroll ringkonnatunnuse ja valikute "
+"nimekirja suhtes. Kontroll õnnestub, kui tuvastatud valik on kättesaadav "
+"antud ringkonnas."
+msgstr ""
+"Checking the choice identified by the intent against the district "
+"membership and the district choices. The check succeeds if the identified"
+" option is available in the given district."
+
+#: ../../07-kontrollimine.rst:111
+msgid "TAHTEAVALDUS, RINGKONNA VALIKUTENIMEKIRI, kooskõlalisus"
+msgstr "INTENT, DISTRICT CHOICES, consistency"
+
+#: ../../07-kontrollimine.rst:113
+msgid ""
+"Tahteavalduses sisalduva valiku kontroll ringkonnapõhise valikute "
+"nimekirja suhtes. Kontroll õnnestub, kui tuvastatud valik on kättesaadav "
+"antud ringkonnas."
+msgstr ""
+"Checking the choice identified by the intent against the list of "
+"district-based choices. The check succeeds if the identified option is "
+"available in the given district."
+
+#: ../../07-kontrollimine.rst:121
+msgid "JUHUSLIKKUS"
+msgstr "RANDOMNESS"
+
+#: ../../07-kontrollimine.rst:123
+msgid ""
+"Olem moodustatakse valijarakenduses ning kasutatakse ka "
+"kontrollrakenduses. Olem esitatakse EHS spetsiifilises vormingus "
+"baidijadana ning peab olema ühilduv avaliku võtme parameetrite poolt "
+"määratud matemaatilise rühmaga."
+msgstr ""
+"The item is created in the voter application and is also used in the "
+"verification application. The element shall be presented in an EHS "
+"specific format as a byte string and shall be compatible with the "
+"mathematical group specified by the public key parameters."
+
+#: ../../07-kontrollimine.rst:130
+msgid "JUHUSLIKKUS, vormingu korrektsus"
+msgstr "RANDOMNESS, correctness of formatting"
+
+#: ../../07-kontrollimine.rst:132
+msgid ""
+"Juhuslikkuse vormingu korrektsuse kontroll käesoleva spetsifikatsiooni "
+"suhtes."
+msgstr "Randomness format correctness check against this specification."
+
+#: ../../07-kontrollimine.rst:137
+msgid "JUHUSLIKKUS, kooskõlalisus avaliku võtmega"
+msgstr "RANDOMNESS, consistency with the public key"
+
+#: ../../07-kontrollimine.rst:139
+msgid ""
+"Juhuslikkuse kooskõlalisuse kontroll avaliku võtmega. Kontroll õnnestub "
+"kui juhuslikkus on kasutatav skalaarina arvutusteks avaliku võtme "
+"parameetrite poolt määratud matemaatilises rühmas."
+msgstr ""
+"Randomness consistency check with public key. The check succeeds if the "
+"randomness can be used as a scalar for calculations in the mathematical "
+"group specified by the parameters of the public key."
+
+#: ../../07-kontrollimine.rst:147
+msgid "KRÜPTEERITUD SEDEL"
+msgstr "ENCRYPTED BALLOT"
+
+#: ../../07-kontrollimine.rst:149
+msgid ""
+"Olem moodustatakse valijarakenduses. Tegemist on EHS spetsiifilises "
+"vormingus DER-kodeeritud andmestruktuuriga, mille kontrollimise aluseks "
+"on EHS avalik võti, mis muuhulgas määratleb krüpteerimisel kasutatud "
+"matemaatilise rühma."
+msgstr ""
+"The item is formed in the voting application. It is a DER encoded data "
+"structure in a specific format of the EHS, which is verified by the EHS "
+"public key, which, among other things, defines the mathematical group "
+"used for encryption."
+
+#: ../../07-kontrollimine.rst:156
+msgid "KRÜPTEERITUD SEDEL, vormingu korrektsus"
+msgstr "ENCRYPTED BALLOT, format correctness"
+
+#: ../../07-kontrollimine.rst:158
+msgid ""
+"Krüpteeritud sedeli vormingu korrektsuse kontroll käesoleva "
+"spetsifikatsiooni suhtes."
+msgstr "Verification of the encrypted ballot format against this specification."
+
+#: ../../07-kontrollimine.rst:164
+msgid "KRÜPTEERITUD SEDEL, kooskõlalisus avaliku võtmega"
+msgstr "ENCRYPTED BALLOT, consistency with public key"
+
+#: ../../07-kontrollimine.rst:166
+msgid ""
+"Krüpteeritud sedeli kooskõlalisuse kontroll avaliku võtmega. Kontroll "
+"õnnestub kui krüpteeritud sedeli komponendid on kasutatavad rühma "
+"liikmetena arvutusteks avaliku võtme parameetrite poolt määratud "
+"matemaatilises rühmas."
+msgstr ""
+"Checking the consistency of an encrypted ballot with a public key. The "
+"check succeeds if the components of the encrypted ballot are usable as "
+"members of a group for computations in the mathematical group specified "
+"by the public key parameters."
+
+#: ../../07-kontrollimine.rst:173
+msgid "KRÜPTEERITUD SEDEL, JUHUSLIKKUS, kooskõlalisus"
+msgstr "ENCRYPTED BALLOT, RANDOMNESS, consistency"
+
+#: ../../07-kontrollimine.rst:175
+msgid ""
+"Krüpteeritud sedeli kooskõlalisuse kontroll juhuslikkusega lähtudes rühma"
+" parameetritest. Kontroll õnnestub kui õnnestub näidata, et antud "
+"juhuslikkust on kasutatud krüpteeritud sedeli komponendi `uBlind` "
+"arvutamiseks antud rühma parameetrite järgi."
+msgstr ""
+"Checking the consistency of an encrypted ballot with randomness based on "
+"group parameters. A check succeeds if it can be shown that the given "
+"randomness has been used to compute the `uBlind` component of the "
+"ciphertext from the given group parameters."
+
+#: ../../07-kontrollimine.rst:185
+msgid "VALIJA SERTIFIKAAT"
+msgstr "VOTER CERTIFICATE"
+
+#: ../../07-kontrollimine.rst:187
+msgid ""
+"Olem on valijale omistatud süsteemiväliselt. Tegemist on X.509 vormingus "
+"sertifikaadiga, mille kehtivuse kontrolli aluseks on samasse avaliku "
+"võtme infrastruktuuri kuuluvad juursertifikaadid ja "
+"kehtivuskinnitusteenuse osutaja."
+msgstr ""
+"The item is assigned to the voter externally. It is an X.509 format "
+"certificate whose validity is checked by the root certificates and the "
+"validation service provider, which are part of the same public key "
+"infrastructure."
+
+#: ../../07-kontrollimine.rst:194
+msgid "VALIJA SERTIFIKAAT, vormingu korrektsus"
+msgstr "VOTER CERTIFICATE, correct formatting"
+
+#: ../../07-kontrollimine.rst:196
+msgid ""
+"Valija sertifikaadi vormingu korrektsuse kontroll lähtudes X.509 "
+"spetsifikatsioonist."
+msgstr ""
+"Verification of the correctness of the format of the voter certificate "
+"based on the X.509 specification."
+
+#: ../../07-kontrollimine.rst:201
+msgid "VALIJA SERTIFIKAAT, protokollikohane kooskõlalisus valimise seadistustega"
+msgstr "VOTER CERTIFICATE, protocol consistency with election settings"
+
+#: ../../07-kontrollimine.rst:203
+msgid ""
+"Valija sertifikaadi protokollikohase kooskõlalisuse kontroll valimise "
+"seadistustega. Kontroll õnnestub kui:"
+msgstr ""
+"Checking the conformance of the voter certificate with the election "
+"settings. The check succeeds if:"
+
+#: ../../07-kontrollimine.rst:206
+msgid ""
+"Valija sertifikaat on kehtiv lähtudes sertifikaadis sisalduvast "
+"kehtivusajast;"
+msgstr ""
+"The voter's certificate is valid for the period of validity contained in "
+"the certificate;"
+
+#: ../../07-kontrollimine.rst:208
+msgid ""
+"Valija sertifikaat kuulub mõnda valimise seadistustes kirjeldatud "
+"sertifitseerimishierarhiatest."
+msgstr ""
+"The voter certificate belongs to one of the certification hierarchies "
+"described in the election settings."
+
+#: ../../07-kontrollimine.rst:215
+msgid ""
+"VALIJA SERTIFIKAAT, KEHTIVUSKINNITUS, protokollikohane kooskõlalisus "
+"valimise seadistustega"
+msgstr ""
+"VOTER CERTIFICATE, CERTIFICATE VALIDITY PROOF, protocol compliance with "
+"the election settings."
+
+#: ../../07-kontrollimine.rst:217
+msgid ""
+"Valija sertifikaadi ja kehtivuskinnituse protokollikohase kooskõlalisuse "
+"kontroll valimise seadistustega. Kontroll õnnestub kui:"
+msgstr ""
+"Checking that the voter certificate and the certificate validity proof "
+"are in accordance with the protocol and in line with the election "
+"settings. The check succeeds if:"
+
+#: ../../07-kontrollimine.rst:220
+msgid ""
+"Kehtivuskinnitus on korrektselt allkirjastatud kehtivuskinnituse teenuse "
+"osutaja poolt, kellel on seadistuste kohaselt voli valija sertifikaadi "
+"kehtivust tõendada"
+msgstr ""
+"A certificate validity proof is correctly signed by validation service "
+"provider who has the power, according to the settings, to verify the "
+"validity of the voter's certificate."
+
+#: ../../07-kontrollimine.rst:224
+msgid "Kehtivuskinnitus on väljastatud valija sertifikaadi kohta;"
+msgstr "A validation certificate is issued for a voter certificate;"
+
+#: ../../07-kontrollimine.rst:226
+msgid "Kehtivuskinnitus näitab valija sertifikaadi OCSP olekuks 'Kehtiv'."
+msgstr ""
+"The validity confirmation indicates the OCSP status of the voter's "
+"certificate as 'Valid'."
+
+#: ../../07-kontrollimine.rst:233
+msgid "VALIJA IDENTITEET"
+msgstr "VOTER IDENTITY"
+
+#: ../../07-kontrollimine.rst:235
+msgid ""
+"Olem on valijale omistatud süsteemiväliselt. Tegemist on isikukoodiga, "
+"mille kontrollimise aluseks on VALIJA SERTIFIKAAT."
+msgstr ""
+"The item is assigned to the voter externally. It is a personal "
+"identification code, which is verified by the VOTER CERTIFICATE."
+
+#: ../../07-kontrollimine.rst:241
+msgid "VALIJA IDENTITEET, vormingu korrektsus"
+msgstr "VOTER IDENTITY, correctness of formatting"
+
+#: ../../07-kontrollimine.rst:243
+msgid ""
+"Valija identiteedi vormingu korrektsuse kontroll lähtudes Eesti Vabariigi"
+" isikukoodi vormingust."
+msgstr ""
+"Verification of the correctness of the format of the voter's identity "
+"based on the format of the personal identity code of the Republic of "
+"Estonia."
+
+#: ../../07-kontrollimine.rst:249
+msgid "VALIJA IDENTITEET, NIMEKIRJATUNNUS, hääleõigus"
+msgstr "VOTER IDENTITY, DISTRICT ID, eligibility"
+
+#: ../../07-kontrollimine.rst:251
+msgid ""
+"Hääleõiguse kontroll valija identiteedi ja nimekirjatunnuse alusel. "
+"Kontroll õnnestub, kui valija identiteet on kantud nimekirjatunnusele "
+"vastavasse valijate nimekirja. Sellisel juhul on identiteedile omistatud "
+"ka ringkonnatunnus, mis määrab ringkonnaspetsiifilise valikute nimekirja."
+msgstr ""
+"Verification of the right to vote based on voter identity and district "
+"id. The check is successful if the voter's identity is entered in the "
+"electoral roll corresponding to the district id. In this case, the "
+"identity is also assigned a precinct identifier, which determines the "
+"precinct-specific list of choices."
+
+#: ../../07-kontrollimine.rst:260
+msgid "HÄÄLE SIGNATUUR"
+msgstr "VOTE SIGNATURE"
+
+#: ../../07-kontrollimine.rst:262
+msgid ""
+"Olem arvutatakse allkirjastamise vahendi poolt lähtudes valijarakenduse "
+"poolt sisendiks antud KRÜPTEERITUD SEDELI räsist."
+msgstr ""
+"The element is calculated by the signing tool on the basis of the "
+"ENCRYPTED BALLOT given as input by the voter application."
+
+#: ../../07-kontrollimine.rst:268
+msgid "HÄÄLE SIGNATUUR, vormingu korrektsus"
+msgstr "VOTE SIGNATURE, correctness of the format"
+
+#: ../../07-kontrollimine.rst:270
+msgid ""
+"Hääle signatuuri vormingu korrektsuse kontroll lähtudes konkreetsest "
+"signeerimismeetodist."
+msgstr ""
+"Verification of the correctness of the vote signature format based on a "
+"specific signing method."
+
+#: ../../07-kontrollimine.rst:276
+msgid "HÄÄLE SIGNATUUR, KRÜPTEERITUD SEDEL, VALIJA SERTIFIKAAT, kooskõlalisus"
+msgstr "VOTE SIGNATURE, ENCRYPTED BALLOT, VOTER CERTIFICATE, consistency"
+
+#: ../../07-kontrollimine.rst:278
+msgid ""
+"Kontroll, mis õnnestub siis ja ainult siis kui õnnestub verifitseerida, "
+"et hääle signatuur on arvutatud krüpteeritud sedeli räsist kasutades "
+"valija sertifikaadis leiduvale avalikule võtmele vastavat privaatvõtit."
+msgstr ""
+"A check that succeeds if and only if it can be verified that the "
+"signature of the vote is computed from a hash of the encrypted ciphertext"
+" using the private key corresponding to the public key in the voter's "
+"certificate."
+
+#: ../../07-kontrollimine.rst:286
+msgid "HÄÄLE ALLKIRI"
+msgstr "SIGNED VOTE"
+
+#: ../../07-kontrollimine.rst:288
+msgid ""
+"Olem moodustatakse valijarakenduses, talletades hääle signatuuri allkirja"
+" vormingusse."
+msgstr ""
+"An item is formed in the voter application by storing the signature of "
+"the vote in a signature format."
+
+#: ../../07-kontrollimine.rst:293
+msgid "HÄÄLE ALLKIRI, vormingu korrektsus"
+msgstr "SIGNED VOTE, correct formatting"
+
+#: ../../07-kontrollimine.rst:295
+msgid ""
+"Hääle allkirja vormingu korrektsuse kontroll käesoleva spetsifikatsiooni "
+"suhtes."
+msgstr ""
+"Verification of the correctness of the signed vote format against this "
+"specification."
+
+#: ../../07-kontrollimine.rst:300
+msgid "HÄÄLE ALLKIRI, HÄÄLE SIGNATUUR, kooskõlalisus"
+msgstr "SIGNED VOTE, VOTE SIGNATURE, consistency"
+
+#: ../../07-kontrollimine.rst:302
+msgid ""
+"Hääle allkirja ja hääle signatuuri kooskõlalisuse kontroll. Kontroll "
+"õnnestub, kui antud allkiri sisaldab antud signatuuri."
+msgstr ""
+"Verification of the consistency of the signed vote and the vote "
+"signature. The check succeeds if the signed vote contains the given "
+"signature."
+
+#: ../../07-kontrollimine.rst:309
+msgid "HÄÄLE KONTEINER"
+msgstr "VOTE CONTAINER"
+
+#: ../../07-kontrollimine.rst:311
+msgid ""
+"Olem moodustatakse valijarakenduses, luues vormingukohane konteiner, mis "
+"sisaldab muuhulgas krüpteeritud sedelit, hääle allkirja ja valija "
+"sertifikaati."
+msgstr ""
+"The item is formed in the voter application by creating a formatted "
+"container containing, among other things, the encrypted ballot, the "
+"voter's signature and the voter's certificate."
+
+#: ../../07-kontrollimine.rst:317
+msgid "HÄÄLE KONTEINER, vormingu korrektsus"
+msgstr "VOTE CONTAINER, format correctness"
+
+#: ../../07-kontrollimine.rst:319
+msgid ""
+"Hääle konteineri vormingu korrektsuse kontroll käesoleva "
+"spetsifikatsiooni suhtes."
+msgstr ""
+"Verification of the correctness of the vote container format with respect"
+" to this specification."
+
+#: ../../07-kontrollimine.rst:324
+msgid ""
+"HÄÄLE KONTEINER, HÄÄLE ALLKIRI, VALIJA SERTIFIKAAT, KRÜPTEERITUD SEDEL, "
+"kooskõlalisus"
+msgstr ""
+"VOTE CONTAINER, SIGNED VOTE, VOTER CERTIFICATE, ENCRPYPTED BALLOT, "
+"consistency"
+
+#: ../../07-kontrollimine.rst:326
+msgid ""
+"Hääle konteineri, hääle allkirja, valija sertifikaadi ja krüpteeritud "
+"sedeli kooskõlalisuse kontroll. Kontroll õnnestub kui antud konteiner "
+"sisaldab konkreetset hääle allkirja, valija sertifikaati ja krüpteeritud "
+"sedelit."
+msgstr ""
+"Verification of the consistency of the vote container, the signed vote, "
+"the voter certificate and the encrypted ballot. The check succeeds if the"
+" given container contains a specific vote signature, voter certificate "
+"and encrypted ballot."
+
+#: ../../07-kontrollimine.rst:334
+msgid "KEHTIVUSKINNITUS"
+msgstr "CERTIFICATE VALIDITY PROOF"
+
+#: ../../07-kontrollimine.rst:336
+msgid ""
+"Olemi hankimise eest vastutab kogumisteenus. Tegemist on OCSP vormingus "
+"kinnitusega valija sertifikaadi oleku kohta."
+msgstr ""
+"The collection service is responsible for the procurement of the item. "
+"This is a confirmation of the status of the voter's certificate in OCSP "
+"format."
+
+#: ../../07-kontrollimine.rst:342
+msgid "KEHTIVUSKINNITUS, vormingu korrektsus"
+msgstr "CERTIFICATE VALIDITY PROOF, correctness of the format"
+
+#: ../../07-kontrollimine.rst:344
+msgid ""
+"Kehtivuskinnituse vormingu korrektsuse kontroll OCSP spetsifikatsiooni "
+"suhtes."
+msgstr ""
+"Validation of the correctness of the validation format against the OCSP "
+"specification."
+
+#: ../../07-kontrollimine.rst:350
+msgid "KEHTIVUSKINNITUS, AJATEMPEL, ajaline järgnevus"
+msgstr "CERTIFICATE VALIDITY PROOF, TIMESTAMP, chronological sequence"
+
+#: ../../07-kontrollimine.rst:352
+msgid ""
+"Kehtivuskinnituse ja ajatempli ajalise järgnevuse kontroll. Kontroll "
+"õnnestub, kui"
+msgstr ""
+"Verification of the chronological sequence of the certificate validity "
+"proof and the timestamp. The check is successful if"
+
+#: ../../07-kontrollimine.rst:354
+msgid "ajatempel ei ole väljastatud hiljem kui kehtivuskinnitus;"
+msgstr ""
+"the time stamp is issued no later than the date of validity of the "
+"certificate validity proof;"
+
+#: ../../07-kontrollimine.rst:356
+msgid ""
+"ajatempli ja kehtivuskinnituse väljastamise ajaline vahe on väiksem kui "
+"valimise seadistustes ette nähtud aeg."
+msgstr ""
+"the time difference between the issue of the timestamp and the "
+"certificate validity proof is less than determined in election settings."
+
+#: ../../07-kontrollimine.rst:364
+msgid "AJATEMPEL"
+msgstr "TIMESTAMP"
+
+#: ../../07-kontrollimine.rst:366
+msgid ""
+"Olemi hankimise eest vastutab kogumisteenus. Tegemist on PKIX vormingus "
+"ajatempliga."
+msgstr ""
+"The collection service is responsible for the procurement of the item. "
+"This is a timestamp in PKIX format."
+
+#: ../../07-kontrollimine.rst:371
+msgid "AJATEMPEL, vormingu korrektsus"
+msgstr "TIMESTAMP, correctness of formatting"
+
+#: ../../07-kontrollimine.rst:373
+msgid "Ajatempli vormingu korrektsuse kontroll PKIX spetsifikatsiooni suhtes."
+msgstr ""
+"Checking the correctness of the timestamp format against the PKIX "
+"specification."
+
+#: ../../07-kontrollimine.rst:379
+msgid ""
+"AJATEMPEL, HÄÄLE ALLKIRI, protokollikohane kooskõlalisus valimise "
+"seadistustega"
+msgstr "TIMESTAMP, VOTE SIGNATURE, protocol consistency with election settings"
+
+#: ../../07-kontrollimine.rst:381
+msgid ""
+"Ajatempli protokollikohase kooskõlalisuse kontroll valimise "
+"seadistustega. Kontroll õnnestub kui:"
+msgstr ""
+"Checking the timestamp protocol consistency with the election settings. "
+"The check succeeds if:"
+
+#: ../../07-kontrollimine.rst:384
+msgid ""
+"ajatempel on korrektselt allkirjastatud valimise seadistuses volitatud "
+"ajatempliteenuse osutaja poolt;"
+msgstr ""
+"the timestamp is correctly signed by the provider authorized in the "
+"election settings"
+
+#: ../../07-kontrollimine.rst:387
+msgid "ajatempel on võetud hääle allkirjale."
+msgstr "The timestamp has been taken to the signature of the vote."
+
+#: ../../07-kontrollimine.rst:393
+msgid "REGISTREERIMISPÄRING"
+msgstr "REGISTRATION REQUEST"
+
+#: ../../07-kontrollimine.rst:395 ../../07-kontrollimine.rst:443
+msgid ""
+"Olem moodustatakse kogumisteenuses. Olemi talletamise eest vastutab "
+"registreerimisteenuse osutaja."
+msgstr ""
+"The item is formed in the collection service. The storage of the item is "
+"the responsibility of the registration service provider."
+
+#: ../../07-kontrollimine.rst:401
+msgid "REGISTREERIMISPÄRING, vormingu korrektsus"
+msgstr "REGISTRATION REQUEST, correctness of format"
+
+#: ../../07-kontrollimine.rst:403
+msgid ""
+"Registreerimispäringu vormingu korrektsuse kontroll käesoleva "
+"spetsifikatsiooni suhtes."
+msgstr ""
+"Verification of the correctness of the registration request format "
+"against this specification."
+
+#: ../../07-kontrollimine.rst:409
+msgid ""
+"REGISTREERIMISPÄRING, HÄÄLE ALLKIRI, protokollikohane kooskõlalisus "
+"valimise seadistustega"
+msgstr ""
+"REGISTRATION REQUEST, VOTE SIGNATURE, protocol consistency with election "
+"settings"
+
+#: ../../07-kontrollimine.rst:411
+msgid ""
+"Registreerimispäringu ja hääle allkirja protokollikohase kooskõlalisuse "
+"kontroll valimise seadistustega. Kontroll õnnestub kui:"
+msgstr ""
+"Verification of the consistency of the registration request and the vote "
+"signature with the protocol settings for the election. The check succeeds"
+" if:"
+
+#: ../../07-kontrollimine.rst:414
+msgid "Registreerimispäring on koostatud hääle allkirjale;"
+msgstr ""
+"The registration request is drawn up on the basis of the signature of the"
+" vote;"
+
+#: ../../07-kontrollimine.rst:416 ../../07-kontrollimine.rst:428
+#: ../../07-kontrollimine.rst:465
+msgid ""
+"Registreerimispäring on korrektselt allkirjastatud valimise seadistuses "
+"viidatud kogumisteenuse poolt."
+msgstr ""
+"The registration request has been correctly signed by the collection "
+"service shown in the election settings."
+
+#: ../../07-kontrollimine.rst:423
+msgid "REGISTREERIMISPÄRING, REGISTREERIMISTÕEND, kooskõlalisus"
+msgstr "REGISTRATION REQUEST, REGISTRATION CERTIFICATE, consistency"
+
+#: ../../07-kontrollimine.rst:425
+msgid ""
+"Registreerimispäringu ja registreerimistõendi protokollikohase "
+"kooskõlalisuse kontroll valimise seadistustega. Kontroll õnnestub kui:"
+msgstr ""
+"Verification of the consistency of the registration request and the "
+"registration certificate with the protocol election settings. The check "
+"succeeds if:"
+
+#: ../../07-kontrollimine.rst:431
+msgid "Registreerimistõend on koostatud vastuseks samale registreerimispäringule;"
+msgstr ""
+"The registration certificate is issued in response to the same "
+"registration request;"
+
+#: ../../07-kontrollimine.rst:433 ../../07-kontrollimine.rst:499
+msgid ""
+"Registreerimistõend on korrektselt allkirjastatud valimise seadistuses "
+"viidatud registreerimisteenuse poolt."
+msgstr ""
+"The certificate of registration is correctly signed by the service "
+"provider defined in the election settings."
+
+#: ../../07-kontrollimine.rst:441
+msgid "REGISTREERIMISPÄRINGU KONTEINER"
+msgstr "REGISTRATION REQUEST CONTAINER"
+
+#: ../../07-kontrollimine.rst:449
+msgid "REGISTREERIMISPÄRINGU KONTEINER, vormingu korrektsus"
+msgstr "REGISTRATION REQUEST CONTAINER, correctness of format"
+
+#: ../../07-kontrollimine.rst:451
+msgid ""
+"Registreerimispäringu konteineri vormingu korrektsuse kontroll käesoleva "
+"spetsifikatsiooni suhtes."
+msgstr ""
+"Verification of the correctness of the registration request container "
+"format with respect to this specification."
+
+#: ../../07-kontrollimine.rst:458
+msgid ""
+"REGISTREERIMISPÄRINGU KONTEINER, REGISTREERIMISPÄRING, protokollikohane "
+"kooskõlalisus valimise seadistustega"
+msgstr ""
+"REGISTRATION REQUEST CONTAINER, REGISTRATION REQUEST, protocol "
+"consistency with election settings"
+
+#: ../../07-kontrollimine.rst:460
+msgid ""
+"Registreerimispäringu konteineri ja registreerimispäringu "
+"protokollikohase kooskõlalisuse kontroll valimise seadistustega. Kontroll"
+" õnnestub kui:"
+msgstr ""
+"Check the consistency of the registration request container and the "
+"registration request protocol with the election settings. The check "
+"succeeds if:"
+
+#: ../../07-kontrollimine.rst:463
+msgid "Registreerimispäringu konteiner sisaldab registreerimispäringut;"
+msgstr "The registration request container contains the registration request;"
+
+#: ../../07-kontrollimine.rst:473
+msgid "REGISTREERIMISTÕEND"
+msgstr "REGISTRATION CERTIFICATE"
+
+#: ../../07-kontrollimine.rst:475
+msgid ""
+"Olemi hankimise eest vastutab kogumisteenus, olemi moodustab "
+"registreerimisteenuse osutaja."
+msgstr ""
+"The collection service is responsible for the procurement of the item, "
+"the item is formed by the registration service provider."
+
+#: ../../07-kontrollimine.rst:481
+msgid "REGISTREERIMISTÕEND, vormingu korrektsus"
+msgstr "REGISTRATION CERTIFICATE, correctness of format"
+
+#: ../../07-kontrollimine.rst:483
+msgid ""
+"Registreerimistõendi vormingu korrektsuse kontroll käesoleva "
+"spetsifikatsiooni suhtes."
+msgstr ""
+"Verification of the correctness of the format of the registration "
+"certificate against this specification."
+
+#: ../../07-kontrollimine.rst:489
+msgid ""
+"REGISTREERIMISTÕEND, HÄÄLE ALLKIRI, protokollikohane kooskõlalisus "
+"valimise seadistustega"
+msgstr ""
+"REGISTRATION CERTIFICATE, VOTE SIGNATURE, protocol consistency with "
+"election settings"
+
+#: ../../07-kontrollimine.rst:491
+msgid ""
+"Registreerimistõendi ja hääle allkirja protokollikohase kooskõlalisuse "
+"kontroll valimise seadistustega. Kontroll õnnestub kui:"
+msgstr ""
+"Verification of the consistency of the certificate of registration and "
+"the signature of the vote with the protocol settings for the election. "
+"The check succeeds if:"
+
+#: ../../07-kontrollimine.rst:494
+msgid "Registreerimistõend on koostatud hääle allkirjale;"
+msgstr "The registration certificate is drawn up on the signature of the vote;"
+
+#: ../../07-kontrollimine.rst:496
+msgid ""
+"Registreerimistõend sisaldab kogumisteenuse poolt korrektselt "
+"allkirjastatud registreerimispäringut;"
+msgstr ""
+"The registration certificate shall contain the following information, "
+"duly completed by the collection service."
+
+#: ../../07-kontrollimine.rst:507
+msgid "NIMEKIRJATUNNUS"
+msgstr "LIST IDENTIFIER"
+
+#: ../../07-kontrollimine.rst:509
+msgid ""
+"Olem moodustatakse kogumisteenuses ning identifitseerib ühe konkreetse "
+"versiooni valijate nimekirjast."
+msgstr ""
+"An item is formed in the collection service and identifies one specific "
+"version of the voter list."
+
+#: ../../07-kontrollimine.rst:515
+msgid "NIMEKIRJATUNNUS, vormingu korrektsus"
+msgstr "LIST IDENTIFIER, correctness of formatting"
+
+#: ../../07-kontrollimine.rst:517
+msgid ""
+"Nimekirjatunnuse vormingu korrektsuse kontroll käesoleva "
+"spetsifikatsiooni suhtes."
+msgstr ""
+"Verification of the correctness of the list identifier format with "
+"respect to this specification."
+
+#: ../../07-kontrollimine.rst:522
+msgid "NIMEKIRJATUNNUS, protokollikohane kooskõlalisus valimise seadistusega"
+msgstr "LIST IDENTIFIER, protocol consistency with the selection setting"
+
+#: ../../07-kontrollimine.rst:524
+msgid ""
+"Nimekirjatunnuse protokollikohase kooskõlalisuse kontroll valimise "
+"seadistusega. Kontroll õnnestub kui valimise seadistuses sisalduvate "
+"muudatusnimekirjade alusel on võimalik koostada nimekirjatunnusele vastav"
+" nimekiri."
+msgstr ""
+"Checking the protocol consistency of the list identifier with the "
+"election setting. The check succeeds if the voter list updates contained "
+"in the election configuration can be used to generate a voterlist "
+"corresponding to the list identifier."
+
+#: ../../07-kontrollimine.rst:534
+msgid "MIKSITUD KRÜPTEERITUD SEDEL"
+msgstr "MIXED ENCRYPTED BALLOT"
+
+#: ../../07-kontrollimine.rst:536
+msgid ""
+"Olem moodustatakse miksimisrakenduses. Miksitud krüpteeritud sedel on "
+"sisuliselt krüpteeritud sedel ning rakenduvad samad kontrollid, mis "
+"krüpteeritud sedelilegi."
+msgstr ""
+"The element is formed in the mixing application. A mixed encrypted ballot"
+" is essentially an encrypted ballot and the same controls apply as for an"
+" encrypted ballot."
+
+#: ../../07-kontrollimine.rst:543
+msgid "MIKSITUD KRÜPTEERITUD SEDEL, vormingu korrektsus"
+msgstr "MIXED ENCRYPTED BALLOT, format correctness"
+
+#: ../../07-kontrollimine.rst:545
+msgid ""
+"Miksitud krüpteeritud sedeli vormingu korrektsuse kontroll käesoleva "
+"spetsifikatsiooni suhtes."
+msgstr ""
+"Verification of the correctness of the format of the mixed encrypted "
+"ballot with respect to this specification."
+
+#: ../../07-kontrollimine.rst:551
+msgid "MIKSITUD KRÜPTEERITUD SEDEL, kooskõlalisus avaliku võtmega"
+msgstr "MIXED ENCRYPTED BALLOT, consistency with public key"
+
+#: ../../07-kontrollimine.rst:553
+msgid ""
+"Miksitud krüpteeritud sedeli kooskõlalisuse kontroll avaliku võtmega. "
+"Kontroll õnnestub kui miksitud krüpteeritud sedeli komponendid on "
+"kasutatavad rühma liikmetena arvutusteks avaliku võtme parameetrite poolt"
+" määratud matemaatilises rühmas."
+msgstr ""
+"Checking the consistency of a mixed encrypted ballot with a public key. "
+"The check succeeds if the components of the mixed encrypted ballot are "
+"usable as members of a group for computations in the mathematical group "
+"specified by the public key parameters."
+
+#: ../../07-kontrollimine.rst:563
+msgid "RINGKONNATUNNUS"
+msgstr "DISTRICT IDENTIFIER"
+
+#: ../../07-kontrollimine.rst:565
+msgid ""
+"Olem moodustatakse töötlemisrakenduses ning viitab ringkonnapõhisele "
+"valikute nimekirjale."
+msgstr ""
+"The item is created in the processing application and refers to a "
+"district-based list of choices."
+
+#: ../../07-kontrollimine.rst:571
+msgid "RINGKONNATUNNUS, vormingu korrektsus"
+msgstr "DISTRICT IDENTIFIER, correctness of formatting"
+
+#: ../../07-kontrollimine.rst:573
+msgid ""
+"Ringkonnatunnuse vormingu korrektsuse kontroll käesoleva "
+"spetsifikatsiooni suhtes."
+msgstr ""
+"Verification of the correctness of the district identifier format with "
+"respect to this specification."
+
+#: ../../07-kontrollimine.rst:579
+msgid "RINGKONNAPÕHINE VALIKUTE NIMEKIRI"
+msgstr "DISTRICT CHOICES"
+
+#: ../../07-kontrollimine.rst:581
+msgid "Olem on valijale omistatud süsteemiväliselt."
+msgstr "The item is assigned to the voter externally."
+
+#: ../../07-kontrollimine.rst:586
+msgid "RINGKONNAPÕHINE VALIKUTE NIMEKIRI, vormingu korrektsus"
+msgstr "DISTRICT CHOICES, format correctness"
+
+#: ../../07-kontrollimine.rst:588
+msgid ""
+"Ringkonnapõhise valikute nimekirja vormingu korrektsuse kontroll VIS "
+"liideste spetsifikatsiooni suhtes."
+msgstr ""
+"Verification of the correctness of the format of the district-based list "
+"of choices against the VIS interface specification."
+
+#: ../../07-kontrollimine.rst:592
+msgid "Kontrollid kogumisteenuses"
+msgstr "Checks in the Collection Service"
+
+#: ../../07-kontrollimine.rst:594
+msgid ""
+"Kogumisteenus käsitleb talletatavat häält sõltumatult teistest häältest. "
+"Kogumisteenuse ülesandeks on hääle talletamine kogu hääletamisperioodi "
+"vältel ja häälele töötlemise käigus kvalifitseerumiseks vajalike "
+"elementide hankimine."
+msgstr ""
+"The collection service treats the vote to be stored independently of "
+"other votes. The role of the collection service is to store votes "
+"throughout the voting period and to obtain the elements necessary to "
+"qualify a vote during the processing."
+
+#: ../../07-kontrollimine.rst:598
+msgid "Kogumisteenus saab valijarakenduselt järgmised olemid:"
+msgstr "A collection service receives following items from the voter application:"
+
+#: ../../07-kontrollimine.rst:600 ../../07-kontrollimine.rst:712
+#: ../../07-kontrollimine.rst:819 ../../07-kontrollimine.rst:898
+#: ../../07-kontrollimine.rst:1013 ../../07-kontrollimine.rst:1086
+msgid ":ref:`entity-krypteeritud-sedel`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:602 ../../07-kontrollimine.rst:720
+#: ../../07-kontrollimine.rst:750 ../../07-kontrollimine.rst:821
+#: ../../07-kontrollimine.rst:900 ../../07-kontrollimine.rst:1027
+#: ../../07-kontrollimine.rst:1088
+msgid ":ref:`entity-valija-sertifikaat`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:604 ../../07-kontrollimine.rst:722
+#: ../../07-kontrollimine.rst:751 ../../07-kontrollimine.rst:823
+#: ../../07-kontrollimine.rst:902 ../../07-kontrollimine.rst:1029
+#: ../../07-kontrollimine.rst:1090
+msgid ":ref:`entity-valija-identiteet`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:606 ../../07-kontrollimine.rst:726
+#: ../../07-kontrollimine.rst:825 ../../07-kontrollimine.rst:904
+#: ../../07-kontrollimine.rst:1031 ../../07-kontrollimine.rst:1092
+msgid ":ref:`entity-haale-signatuur`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:608 ../../07-kontrollimine.rst:714
+#: ../../07-kontrollimine.rst:827 ../../07-kontrollimine.rst:906
+#: ../../07-kontrollimine.rst:1033 ../../07-kontrollimine.rst:1094
+msgid ":ref:`entity-haale-allkiri`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:610 ../../07-kontrollimine.rst:716
+#: ../../07-kontrollimine.rst:829 ../../07-kontrollimine.rst:908
+#: ../../07-kontrollimine.rst:1035 ../../07-kontrollimine.rst:1096
+msgid ":ref:`entity-haale-konteiner`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:612
+msgid ""
+"Kogumisteenus hangib hääle töötlemise käigus välistelt teenustelt "
+"järgmised olemid:"
+msgstr ""
+"In the course of vote processing, the Collection Service obtains the "
+"following entities from external services:"
+
+#: ../../07-kontrollimine.rst:614 ../../07-kontrollimine.rst:728
+#: ../../07-kontrollimine.rst:779 ../../07-kontrollimine.rst:831
+#: ../../07-kontrollimine.rst:910 ../../07-kontrollimine.rst:1037
+#: ../../07-kontrollimine.rst:1098
+msgid ":ref:`entity-kehtivuskinnitus`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:616 ../../07-kontrollimine.rst:730
+#: ../../07-kontrollimine.rst:780 ../../07-kontrollimine.rst:833
+#: ../../07-kontrollimine.rst:912 ../../07-kontrollimine.rst:1039
+#: ../../07-kontrollimine.rst:1100
+msgid ":ref:`entity-ajatempel`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:618 ../../07-kontrollimine.rst:732
+#: ../../07-kontrollimine.rst:781 ../../07-kontrollimine.rst:835
+#: ../../07-kontrollimine.rst:918 ../../07-kontrollimine.rst:1045
+#: ../../07-kontrollimine.rst:1106
+msgid ":ref:`entity-registreerimistoend`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:620
+msgid "Kogumisteenus tuvastab / loob ise järgmised olemid:"
+msgstr "The collection service detects/creates the following entities:"
+
+#: ../../07-kontrollimine.rst:622 ../../07-kontrollimine.rst:734
+#: ../../07-kontrollimine.rst:782 ../../07-kontrollimine.rst:837
+#: ../../07-kontrollimine.rst:914 ../../07-kontrollimine.rst:1041
+#: ../../07-kontrollimine.rst:1102
+msgid ":ref:`entity-registreerimisparing`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:624 ../../07-kontrollimine.rst:738
+#: ../../07-kontrollimine.rst:843 ../../07-kontrollimine.rst:916
+#: ../../07-kontrollimine.rst:1043 ../../07-kontrollimine.rst:1104
+msgid ":ref:`entity-registreerimisparing-konteiner`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:626 ../../07-kontrollimine.rst:740
+#: ../../07-kontrollimine.rst:845 ../../07-kontrollimine.rst:920
+#: ../../07-kontrollimine.rst:1047 ../../07-kontrollimine.rst:1108
+msgid ":ref:`entity-nimekirjatunnus`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:628 ../../07-kontrollimine.rst:742
+#: ../../07-kontrollimine.rst:847 ../../07-kontrollimine.rst:926
+#: ../../07-kontrollimine.rst:1015 ../../07-kontrollimine.rst:1074
+msgid ":ref:`entity-ringkonnatunnus`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:630 ../../07-kontrollimine.rst:724
+#: ../../07-kontrollimine.rst:839 ../../07-kontrollimine.rst:922
+#: ../../07-kontrollimine.rst:1049 ../../07-kontrollimine.rst:1076
+msgid ":ref:`entity-ringkonna-valikutenimekiri`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:632
+msgid "Kogumisteenus ei puutu vahetult kokku järgmiste olemitega:"
+msgstr "The collection service does not come into direct contact with:"
+
+#: ../../07-kontrollimine.rst:634 ../../07-kontrollimine.rst:708
+#: ../../07-kontrollimine.rst:813 ../../07-kontrollimine.rst:933
+#: ../../07-kontrollimine.rst:1023 ../../07-kontrollimine.rst:1080
+msgid ":ref:`entity-tahteavaldus`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:636 ../../07-kontrollimine.rst:710
+#: ../../07-kontrollimine.rst:817 ../../07-kontrollimine.rst:935
+#: ../../07-kontrollimine.rst:1025 ../../07-kontrollimine.rst:1084
+msgid ":ref:`entity-juhuslikkus`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:638 ../../07-kontrollimine.rst:744
+#: ../../07-kontrollimine.rst:849 ../../07-kontrollimine.rst:931
+#: ../../07-kontrollimine.rst:1019 ../../07-kontrollimine.rst:1072
+msgid ":ref:`entity-miksitud-krypteeritud-sedel`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:640
+msgid ""
+"Kogumisteenus viib läbi järgmised tegevused ja teostab järgmised "
+"kontrollid:"
+msgstr "The collection service will carry out the following activities and checks:"
+
+#: ../../07-kontrollimine.rst:642
+msgid "Hääle talletamise päringu vastuvõtmine valijarakenduselt"
+msgstr "Receiving a vote storage request from a voter application"
+
+#: ../../07-kontrollimine.rst:644 ../../07-kontrollimine.rst:753
+#: ../../07-kontrollimine.rst:853 ../../07-kontrollimine.rst:952
+msgid ":ref:`check-valija-sertifikaat-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:645 ../../07-kontrollimine.rst:754
+#: ../../07-kontrollimine.rst:854 ../../07-kontrollimine.rst:953
+msgid ":ref:`check-valija-sertifikaat-consistency-protocol-settings`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:646 ../../07-kontrollimine.rst:755
+#: ../../07-kontrollimine.rst:856 ../../07-kontrollimine.rst:954
+msgid ":ref:`check-valija-identiteet-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:647 ../../07-kontrollimine.rst:957
+msgid ":ref:`check-valija-identiteet-nimekirjatunnus-eligibility`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:648 ../../07-kontrollimine.rst:770
+#: ../../07-kontrollimine.rst:857 ../../07-kontrollimine.rst:959
+msgid ":ref:`check-haale-signatuur-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:649 ../../07-kontrollimine.rst:771
+#: ../../07-kontrollimine.rst:858 ../../07-kontrollimine.rst:960
+msgid ""
+":ref:`check-haale-signatuur-krypteeritud-sedel-valija-sertifikaat-"
+"consistency`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:650 ../../07-kontrollimine.rst:859
+#: ../../07-kontrollimine.rst:961
+msgid ":ref:`check-haale-allkiri-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:651 ../../07-kontrollimine.rst:860
+#: ../../07-kontrollimine.rst:962
+msgid ":ref:`check-haale-allkiri-haale-signatuur-consistency`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:652 ../../07-kontrollimine.rst:861
+#: ../../07-kontrollimine.rst:963
+msgid ":ref:`check-haale-konteiner-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:653 ../../07-kontrollimine.rst:862
+#: ../../07-kontrollimine.rst:964
+msgid ""
+":ref:`check-haale-konteiner-haale-allkiri-valija-sertifikaat-"
+"krypteeritud-sedel-consistency`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:654 ../../07-kontrollimine.rst:875
+#: ../../07-kontrollimine.rst:998 ../../07-kontrollimine.rst:1055
+msgid ":ref:`check-krypteeritud-sedel-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:655 ../../07-kontrollimine.rst:876
+#: ../../07-kontrollimine.rst:999 ../../07-kontrollimine.rst:1056
+msgid ":ref:`check-krypteeritud-sedel-public-key-consistency`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:657
+msgid "Kehtivuskinnituse hankimine - :ref:`entity-kehtivuskinnitus`"
+msgstr "Obtaining certificate validation proof - :ref:`entity-kehtivuskinnitus`"
+
+#: ../../07-kontrollimine.rst:659 ../../07-kontrollimine.rst:784
+#: ../../07-kontrollimine.rst:863 ../../07-kontrollimine.rst:965
+msgid ":ref:`check-kehtivuskinnitus-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:660 ../../07-kontrollimine.rst:785
+#: ../../07-kontrollimine.rst:855 ../../07-kontrollimine.rst:966
+msgid ":ref:`check-valija-sertifikaat-kehtivuskinnitus-consistency`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:662
+msgid "Ajatempli hankimine - :ref:`entity-ajatempel`"
+msgstr "Getting a timestamp - :ref:`entity-ajatempel`"
+
+#: ../../07-kontrollimine.rst:664 ../../07-kontrollimine.rst:786
+#: ../../07-kontrollimine.rst:864 ../../07-kontrollimine.rst:967
+msgid ":ref:`check-ajatempel-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:665 ../../07-kontrollimine.rst:787
+#: ../../07-kontrollimine.rst:865 ../../07-kontrollimine.rst:968
+msgid ":ref:`check-ajatempel-consistency-protocol-settings`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:667
+msgid "Registreerimispäringu loomine - :ref:`entity-registreerimisparing`"
+msgstr "Creating a registration request - :ref:`entity-registreerimisparing`"
+
+#: ../../07-kontrollimine.rst:669
+msgid "Registreerimistõendi hankimine - :ref:`entity-registreerimistoend`"
+msgstr "Obtaining a registration certificate - :ref:`entity-registreerimistoend`"
+
+#: ../../07-kontrollimine.rst:671 ../../07-kontrollimine.rst:792
+#: ../../07-kontrollimine.rst:869 ../../07-kontrollimine.rst:990
+msgid ":ref:`check-registreerimisparing-registreerimistoend-consistency`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:672 ../../07-kontrollimine.rst:793
+#: ../../07-kontrollimine.rst:870 ../../07-kontrollimine.rst:970
+msgid ":ref:`check-registreerimistoend-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:673 ../../07-kontrollimine.rst:794
+#: ../../07-kontrollimine.rst:871 ../../07-kontrollimine.rst:971
+msgid ":ref:`check-registreerimistoend-haale-allkiri-consistency`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:674 ../../07-kontrollimine.rst:788
+#: ../../07-kontrollimine.rst:866 ../../07-kontrollimine.rst:969
+msgid ":ref:`check-kehtivuskinnitus-ajatempel-order`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:676
+msgid ""
+"Hääle talletamine, kvalifitseerivate elementide ja unikaalse "
+"identifikaatori tagastamine valijarakendusele."
+msgstr ""
+"Vote storage, return of qualifiers and unique identifiers to the voting "
+"application."
+
+#: ../../07-kontrollimine.rst:680
+msgid "Kontrollid valijarakenduses"
+msgstr "Checks in the Voting Application"
+
+#: ../../07-kontrollimine.rst:682
+msgid ""
+"Valijarakendus moodustab valija avakujul tahteavalduse põhjal "
+"krüpteeritud sedeli ning allkirjastab selle valija allkirja andmise "
+"vahendiga."
+msgstr ""
+"The voting application forms an encrypted ballot based on the voter's "
+"plaintext intent and signs it using the voter's signature device."
+
+#: ../../07-kontrollimine.rst:685
+msgid ""
+"Valijarakenduse rolliks peale hääle allkirjastamist on veenduda, et "
+"kogumisteenus käitus häält kvalifitseerivate elementide võtmisel "
+"protokollikohaselt ning et hääl on talletatud selliselt, et ta saab "
+"töötlemisrakenduse poolt arvesse võetud."
+msgstr ""
+"The role of the voting application, after the vote has been signed, is to"
+" make sure that the collection service acted according to protocol in "
+"taking the elements that qualify the vote and that the vote has been "
+"stored in such a way that it can be taken into account by the processing "
+"application."
+
+#: ../../07-kontrollimine.rst:690
+msgid "Valijarakendus viib läbi minimaalselt järgmised kontrollid:"
+msgstr ""
+"As a minimum, the following checks will be carried out by the voting "
+"application:"
+
+#: ../../07-kontrollimine.rst:692
 msgid ""
 "Kogumisteenus võttis kehtivuskinnituse valija sertifikaadile volitatud "
 "kehtivuskinnitusteenuselt. Valijarakendus kontrollib allkirja "
 "kehtivuskinnitusteenuse vastusel."
 msgstr ""
-"The collection service validated the voter's certificate at the authorised "
-"validation service. The voting application verifies the signature in the validation "
-"service response."
+"The collection service validated the voter's certificate at the "
+"authorised validation service. The voting application verifies the "
+"signature in the validation service response."
 
-#: ../../07-kontrollimine.rst:67
+#: ../../07-kontrollimine.rst:696
 msgid ""
 "Kogumisteenus registreeris valija poolt allkirjastatud hääle volitatud "
-"registreerimisteenuses. Valijarakendus kontrollib, et kogumisteenuse poolt "
-"moodustatud päring oli kogumisteenuse poolt signeeritud ning viitas korrektselt "
-"allkirjastatud häälele. Valijarakendus kontrollib, et registreerimisteenuse vastus "
-"on allkirjastatud õige registreerimisteenuse osutaja poolt ning sisaldab "
-"kogumisteenuse poolt allkirjastatud päringut."
+"registreerimisteenuses. Valijarakendus kontrollib, et kogumisteenuse "
+"poolt moodustatud päring oli kogumisteenuse poolt signeeritud ning viitas"
+" korrektselt allkirjastatud häälele. Valijarakendus kontrollib, et "
+"registreerimisteenuse vastus on allkirjastatud õige registreerimisteenuse"
+" osutaja poolt ning sisaldab kogumisteenuse poolt allkirjastatud "
+"päringut."
 msgstr ""
-"The collection service registered the vote signed by the voter in the authorised "
-"registration service. The Voting Application verifies that the request generated by "
-"the Collection Service was signed by the Collection Service and referred to a "
-"correctly signed vote. The Voting Application checks that the confirmation from the "
-"registration service is signed by the correct registration service provider and "
-"includes the request signed by the collection service."
+"The collection service registered the vote signed by the voter in the "
+"authorised registration service. The Voting Application verifies that the"
+" request generated by the Collection Service was signed by the Collection"
+" Service and referred to a correctly signed vote. The Voting Application "
+"checks that the confirmation from the registration service is signed by "
+"the correct registration service provider and includes the request signed"
+" by the collection service."
 
-#: ../../07-kontrollimine.rst:74
+#: ../../07-kontrollimine.rst:703
 msgid ""
-"Kui hääle kvalifitseerimiseks vajalike elementide kontroll ei õnnestu, siis "
-"teavitab valijarakendus sellest kasutajat."
+"Kui hääle kvalifitseerimiseks vajalike elementide kontroll ei õnnestu, "
+"siis teavitab valijarakendus sellest kasutajat."
 msgstr ""
-"If the verification of the elements necessary to qualify a vote fails, the voting "
-"application will notify the user."
+"If the verification of the elements necessary to qualify a vote fails, "
+"the voting application will notify the user."
 
-#: ../../07-kontrollimine.rst:79
+#: ../../07-kontrollimine.rst:706
+msgid "Valijarakendus loob ise järgmised olemid:"
+msgstr "The voting application itself creates the following entities:"
+
+#: ../../07-kontrollimine.rst:718
+msgid "Valijarakendus saab järgmised olemid teistelt osapooltelt:"
+msgstr "The voting application receives the following entities from other parties:"
+
+#: ../../07-kontrollimine.rst:736
+msgid "Valijarakendus ei puutu vahetult kokku järgmiste olemitega:"
+msgstr "The voting application does not come into direct contact with:"
+
+#: ../../07-kontrollimine.rst:746
+msgid ""
+"Valijarakendus viib läbi järgmised tegevused ja teostab järgmised "
+"kontrollid:"
+msgstr "The voting application performs the following actions and checks:"
+
+#: ../../07-kontrollimine.rst:748
+msgid "eID vahendi aktiveerimine ja valija identiteedi tuvastamine"
+msgstr "activation of the eID tool and identification of the voter's identity"
+
+#: ../../07-kontrollimine.rst:757
+msgid ""
+"Ringkonnapõhise valikutenimekirja tuvastamine - :ref:`entity-ringkonna-"
+"valikutenimekiri`"
+msgstr "district-based candidate list - :ref:`entity-ringkonna-valikutenimekiri`."
+
+#: ../../07-kontrollimine.rst:760
+msgid "Tahteavalduse moodustamine - :ref:`entity-tahteavaldus`"
+msgstr "Formation of an intent - :ref:`entity-tahteavaldus`"
+
+#: ../../07-kontrollimine.rst:762
+msgid "Juhuarvu genereerimine - :ref:`entity-juhuslikkus`"
+msgstr "Random number generation - :ref:`entity-juhuslikkus`"
+
+#: ../../07-kontrollimine.rst:764
+msgid "Sedeli krüpteerimine - :ref:`entity-krypteeritud-sedel`"
+msgstr "Encrypting ballot - :ref:`entity-krypteeritud-sedel`"
+
+#: ../../07-kontrollimine.rst:766
+msgid "Krüpteeritud sedeli signeerimine - :ref:`entity-haale-signatuur`"
+msgstr "Signing an encrypted ballot - :ref:`entity-haale-signatuur`"
+
+#: ../../07-kontrollimine.rst:768
+msgid "Allkirja moodustamine signatuurist - :ref:`entity-haale-allkiri`"
+msgstr "Forming a signed vote from a signature - :ref:`entity-haale-allkiri`"
+
+#: ../../07-kontrollimine.rst:773
+msgid "Allkirjastatud konteineri moodustamine - :ref:`entity-haale-konteiner`"
+msgstr "Formation of a signed container - :ref:`entity-haale-konteiner`"
+
+#: ../../07-kontrollimine.rst:775
+msgid "Allkirjastatud konteineri edastamine kogumisteenusele."
+msgstr "Forwarding the signed container to the collection service."
+
+#: ../../07-kontrollimine.rst:777
+msgid "Kogumisteenuse vastuse kontrollimine"
+msgstr "Checking the collection service response"
+
+#: ../../07-kontrollimine.rst:790 ../../07-kontrollimine.rst:867
+#: ../../07-kontrollimine.rst:976
+msgid ":ref:`check-registreerimisparing-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:791 ../../07-kontrollimine.rst:868
+#: ../../07-kontrollimine.rst:989
+msgid ":ref:`check-registreerimisparing-haale-allkiri-consistency`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:797
 msgid "Kontrollid kontrollrakenduses"
 msgstr "Checks in the Verification Application"
 
-#: ../../07-kontrollimine.rst:81
-msgid "Kontrollrakendus saab valijarakendusest järgmise info:"
-msgstr ""
-"The verification application receives the following information from the voting "
-"application:"
-
-#: ../../07-kontrollimine.rst:83
-msgid "Krüpteeritud sedeli moodustamisel kasutatud juhuslikkuse;"
-msgstr "The randomness used in the process of ballot encryption;"
-
-#: ../../07-kontrollimine.rst:85
-msgid "Allkirjastatud hääle unikaalse identifikaatori kogumisteenuses."
-msgstr "Unique identifier of the signed vote in the  collection service."
-
-#: ../../07-kontrollimine.rst:87
+#: ../../07-kontrollimine.rst:799
 msgid ""
-"Kontrollrakendus kasutab hääle unikaalset identifikaatorit kogumisteenusest "
-"järgmise info saamiseks:"
+"Sarnaselt valijarakendusele on kontrollrakenduse rolliks peale hääle "
+"allkirjastamist veenduda, et kogumisteenus käitus häält kvalifitseerivate"
+" elementide võtmisel protokollikohaselt ning et hääl on talletatud "
+"selliselt, et ta saab töötlemisrakenduse poolt arvesse võetud."
 msgstr ""
-"The verification application uses the ballot's unique identifier to retrieve the "
-"following information from the collection service:"
+"Similar to the voter application, the role of the verification "
+"application, once the vote has been signed, is to verify that the "
+"collection service acted in a protocol-compliant manner in capturing the "
+"elements that qualify the vote and that the vote has been stored in such "
+"a way that it can be taken into account by the processing application."
 
-#: ../../07-kontrollimine.rst:90
-msgid "krüpteeritud sedel;"
-msgstr "encrypted ballot;"
-
-#: ../../07-kontrollimine.rst:92
-msgid "valija allkiri krüpteeritud sedelil;"
-msgstr "the voter's signature on an encrypted ballot;"
-
-#: ../../07-kontrollimine.rst:94
-msgid "valija allkirjastamissertifikaat;"
-msgstr "the voter's signature certificate;"
-
-#: ../../07-kontrollimine.rst:96
+#: ../../07-kontrollimine.rst:804
 msgid ""
-"häält kvalifitseerivad elemendid, kaasa arvatud kehtivuskinnitus ja "
-"registreerimistõend;"
+"Täiendavalt on kontrollrakenduse ülesandeks anda valijale tagasisidet, "
+"kas tema tahteavaldus sai valijarakenduse poolt korrektselt hääleks "
+"vormistatud."
 msgstr ""
-"elements qualifying the vote, including a confirmation of validity and a "
-"registration confirmation;"
+"In addition, it is the responsibility of the verification application to "
+"provide feedback to the voter on whether their intent was correctly "
+"formatted as a vote by the voter application."
 
-#: ../../07-kontrollimine.rst:99
-msgid "valija ringkonnapõhine valikute nimekiri hääle andmise hetkel."
-msgstr "the voter's district based list of choices at the time of voting."
-
-#: ../../07-kontrollimine.rst:101
-msgid "Kontrollrakendus teostab järgmised kontrollid:"
-msgstr "The verification application performs the following checks:"
-
-#: ../../07-kontrollimine.rst:107 ../../07-kontrollimine.rst:171
+#: ../../07-kontrollimine.rst:807
 msgid ""
-"hääle allkirjastaja sertifikaat on kehtiv hääle vastuvõtmise ajahetkel, mida "
-"kinnitab korrektne kehtivuskinnitus;"
+"Kui hääle kvalifitseerimiseks vajalike elementide kontroll ei õnnestu, "
+"siis teavitab kontrollrakendus sellest kasutajat. Tahteavalduse "
+"korrektsuses peab valija ise veenduma."
 msgstr ""
-"the vote signatory's certificate is valid at the time the vote is received, as "
-"confirmed by a correct validity confirmation;"
+"If the verification of the elements necessary to qualify the vote fails, "
+"the verification application will inform the user. It is up to the voter "
+"to verify the correctness of the intent."
 
-#: ../../07-kontrollimine.rst:110 ../../07-kontrollimine.rst:174
-msgid "hääl on korrektselt registreeritud õiges registreerimisteenuses."
-msgstr "the vote is correctly registered with the correct registration service."
+#: ../../07-kontrollimine.rst:811
+msgid "Kontrollrakendus tuvastab ise järgmised olemid:"
+msgstr "The verification application itself detects the following entities:"
 
-#: ../../07-kontrollimine.rst:112
+#: ../../07-kontrollimine.rst:815
+msgid "Kontrollrakendus saab järgmised olemid teistelt osapooltelt:"
+msgstr ""
+"A verification application receives the following entities from other "
+"parties:"
+
+#: ../../07-kontrollimine.rst:841
+msgid "Kontrollrakendus ei puutu vahetult kokku järgmiste olemitega:"
+msgstr "The verification application does not directly interact with:"
+
+#: ../../07-kontrollimine.rst:851
 msgid ""
-"Nende kontrollide teostamise järel kuvab kontrollrakendus hääle allkirjastanud "
-"isiku andmeid."
+"Kontrollrakendus viib läbi järgmised tegevused ja teostab järgmised "
+"kontrollid:"
 msgstr ""
-"Once these checks have been carried out, the verification application displays the "
-"details of the person who signed the vote."
+"The verification application will carry out the following activities and "
+"perform the following checks:"
 
-#: ../../07-kontrollimine.rst:115
-msgid ""
-"Täiendavalt kasutab kontrollrakendus krüpteeritud sedeli moodustamisel kasutatud "
-"juhuslikkust krüpteeritud sedeli dekrüpteerimiseks."
+#: ../../07-kontrollimine.rst:872
+msgid ":ref:`check-ringkonna-valikutenimekiri-correctness`"
 msgstr ""
-"In addition, the verification application uses the randomness used to form the "
-"encrypted ballot to decrypt the encrypted ballot."
 
-#: ../../07-kontrollimine.rst:120
-msgid ""
-"Ühe hääle krüpteerimisel kasutatud juhuslikkust saab kasutada ainult selle hääle "
-"dekrüpteerimiseks. Mitme erineva hääle dekrüpteerimiseks läheb vaja häälte "
-"salastamise võtme privaatkomponenti."
+#: ../../07-kontrollimine.rst:873
+msgid ":ref:`check-juhuslikkus-correctness`"
 msgstr ""
-"The randomness used to encrypt a single ballot can only be used to decrypt that "
-"ballot. Decrypting several different ballots requires the private component of the "
-"ballot encryption key."
 
-#: ../../07-kontrollimine.rst:124
-msgid "Kontrollrakendus veendub, et:"
-msgstr "The verification application makes sure that:"
-
-#: ../../07-kontrollimine.rst:126
-msgid "dekrüpteerimisel saadud avatekst vastab avakujul tahteavalduse vorminõuetele;"
+#: ../../07-kontrollimine.rst:874
+msgid ":ref:`check-juhuslikkus-public-key-consistency`"
 msgstr ""
-"the verification application verifies that the plaintext text obtained from the "
-"decryption process meets the formal requirements of the plaintext intent;"
 
-#: ../../07-kontrollimine.rst:128
-msgid "avatekst viitab valikule valikute nimekirjast."
-msgstr "the plaintext refers to a choice from a list of candidates."
-
-#: ../../07-kontrollimine.rst:130
-msgid ""
-"Kontrollrakendus kuvab vorminõuetele vastava tahteavalduse võimaldamaks "
-"kontrollijal veenduda selle tahteavalduse korrektsuses."
+#: ../../07-kontrollimine.rst:877
+msgid ":ref:`check-krypteeritud-sedel-juhuslikkus-consistency`"
 msgstr ""
-"The verification application will display a declaration of intent that complies "
-"with the format requirements to allow the verifier to check that the intent is "
-"correct."
 
-#: ../../07-kontrollimine.rst:135
+#: ../../07-kontrollimine.rst:878 ../../07-kontrollimine.rst:1117
+msgid ":ref:`check-tahteavaldus-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:879
+msgid ":ref:`check-tahteavaldus-ringkonna-valikutenimekiri-consistency`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:882
 msgid "Kontrollid töötlemisrakenduses"
 msgstr "Checks in the Processing Application"
 
-#: ../../07-kontrollimine.rst:137
+#: ../../07-kontrollimine.rst:884
 msgid ""
-"Töötlemisrakendus kontrollib iga üksikut häält eraldi, veendudes muuhulgas, et iga "
-"kogumisteenuse ning registreerimisteenuse poolt esitatud vaated e-valimiskasti sisu "
-"kohta on konsistentsed. Seejärel otsustab töötlemisrakendus iga valija häälte "
-"kohta, milline neist on ajaliselt viimane ning suunatakse töötlemise järgmisesse "
-"etappi, mille tulemusena hääl võib jõuda lugemisele."
+"Töötlemisrakenduse sisendiks on e-valimiskast ja registreerimisteenuse "
+"väljavõte registreerimispäringutest. Töötlemisrakendus kontrollib mõlema "
+"andmehulga elemente kõigepealt eraldi ning seejärel püüab luua vastavuse "
+"nende vahel."
 msgstr ""
-"The processing application checks each individual vote individually, making sure, "
-"among other things, that the views on the content of the digital ballot box "
-"provided by collection service and registration service are consistent. The "
-"processing application then decides for each voter's vote which one is the last in "
-"time and is forwarded to the next stage of processing, which may result in the vote "
-"being counted."
+"The input to the processing application is the e-voting box and the "
+"registration service extract of registration requests. The processing "
+"application first checks the elements of both data sets separately and "
+"then tries to establish a correspondence between them."
 
-#: ../../07-kontrollimine.rst:143
-msgid "Töötlemisrakenduse sisendiks on:"
-msgstr "The input to the processing application is:"
-
-#: ../../07-kontrollimine.rst:145
-msgid "Loend registreerimisteenuse poolt vastuvõetud registreerimispäringutest;"
-msgstr "List of registration requests received by the registration service;"
-
-#: ../../07-kontrollimine.rst:147
-msgid "Loend kogumisteenuses rakendatud valijanimekirjadest;"
-msgstr "List of electoral rolls implemented in the collection service;"
-
-#: ../../07-kontrollimine.rst:149
+#: ../../07-kontrollimine.rst:889
 msgid ""
-"Kogumisteenuse poolt üle antud e-valimiskast, mis sisaldab iga hääle kohta "
-"krüpteeritud sedelit, valija allkirja krüpteeritud sedelil, valija "
-"allkirjastamissertifikaati, sertifikaadi kehtivuskinnitust ning "
-"registreerimistõendit."
+"Töötlemisrakendus otsustab, milline valija häältest oli viimane ning "
+"liigub töötlemise järgmisesse etappi. S.t. üks häält kvalifitseerivatest "
+"elementidest täidab hääle talletamise aja fikseerimise rolli ning selle "
+"elemendi põhjal moodustatakse üksikute häälte ajaline järgnevus. "
+"Olenevalt IVXV profiilist võib see element olla kehtivuskinnituse "
+"koosseisus (BDOC-TM), eraldi ajatemplina (BDOC-TS) või "
+"registreerimistõendi koosseisus (BDOC-TS)."
 msgstr ""
-"A digital ballot box delivered by the collection service, containing an encrypted "
-"ballot for each vote, the voter's signature on the encrypted ballot, the voter's "
-"signature certificate, the validity confirmation of the certificate and the "
-"registration confirmation."
+"The processing application decides which voter's vote was the last and "
+"moves to the next stage of processing. That is, one of the elements "
+"qualifying a vote performs the role of fixing the time at which the vote "
+"was recorded, and the temporal sequence of individual votes is formed "
+"based on this element. Depending on the IVXV profile, this element may be"
+" part of a validity confirmation (BDOC-TM), a separate time stamp (BDOC-"
+"TS) or a registration certificate (BDOC-TS)."
 
-#: ../../07-kontrollimine.rst:154
+#: ../../07-kontrollimine.rst:896
+msgid "Töötlemisrakendusele tehakse kättesaadavaks järgmised olemid:"
+msgstr ""
+"The following entities will be made available to the processing "
+"application:"
+
+#: ../../07-kontrollimine.rst:924
+msgid "Töötlemisrakendus tuvastab/loob järgmised olemid:"
+msgstr "The processing application detects/creates the following entities:"
+
+#: ../../07-kontrollimine.rst:929
+msgid "Töötlemisrakendus ei puutu vahetult kokku järgmiste olemitega:"
+msgstr "The processing application does not come into direct contact with:"
+
+#: ../../07-kontrollimine.rst:937
+msgid "Töötlemisrakenduse töö jaguneb neljaks etapiks:"
+msgstr "The work of the processing application is divided into four phases:"
+
+#: ../../07-kontrollimine.rst:939
+msgid "Kontrollimine"
+msgstr "Check"
+
+#: ../../07-kontrollimine.rst:941
+msgid "Korduvhäälte eemaldamine"
+msgstr "Removal of repeat votes"
+
+#: ../../07-kontrollimine.rst:943
+msgid "Tühistamine/-ennistamine"
+msgstr "Revocation/restoration"
+
+#: ../../07-kontrollimine.rst:945
+msgid "Anonüümimine"
+msgstr "Anonymization"
+
+#: ../../07-kontrollimine.rst:948
+msgid "Töötlemisrakendus teostab kontrollimise etapis järgmised kontrollid:"
+msgstr ""
+"The processing application performs the following checks during the check"
+" phase:"
+
+#: ../../07-kontrollimine.rst:950
 msgid ""
-"Töötlemisrakendus kontrollib registreerimisteenuse ja kogumisteenuse kooskõla ning "
-"väljastab erinevused:"
+"e-valimiskasti elementide kontrollid teostatakse kõigi hääle elementide "
+"kohta:"
 msgstr ""
-"The processing application checks the consistency between the registration service "
-"and the collection service and outputs the differences:"
+"checks on the elements of the digital ballot box are carried out for all "
+"elements of the vote:"
 
-#: ../../07-kontrollimine.rst:157
+#: ../../07-kontrollimine.rst:955
+msgid ":ref:`check-nimekirjatunnus-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:956
+msgid ":ref:`check-nimekirjatunnus-consistency-protocol-settings`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:958 ../../07-kontrollimine.rst:1054
+#: ../../07-kontrollimine.rst:1116
+msgid ":ref:`check-ringkonnatunnus-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:973
 msgid ""
-"Hääled, mille kohta on olemas registreerimispäring kogumisteenuses, kuid vastus ei "
-"ole jõudnud kogumisteenusesse;"
+"registreerimisteenuse väljavõtte kontrollid teostatakse iga "
+"registreerimispäringu kohta"
 msgstr ""
-"Votes for which there is a registration request in the collection service, but the "
-"response has not reached the collection service;"
+"checks on the extract from the registration service are carried out for "
+"every registration request"
 
-#: ../../07-kontrollimine.rst:160
+#: ../../07-kontrollimine.rst:977
+msgid ":ref:`check-registreerimisparing-konteiner-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:978
 msgid ""
-"Hääled, mille kohta on olemas registreerimispäring registreerimisteenuses, kuid "
-"mida kogumisteenus ei ole üle andnud."
+":ref:`check-registreerimisparing-konteiner-registreerimispäring-"
+"consistency`"
 msgstr ""
-"Votes for which there is a registration request in the registration service but "
-"which have not been transferred by the collection service."
 
-#: ../../07-kontrollimine.rst:163
-msgid "Töötlemisrakendus kontrollib iga üksikut häält:"
-msgstr "The processing application checks each individual ballot:"
-
-#: ../../07-kontrollimine.rst:165
-msgid "hääle allkirjastaja oli valijate nimekirjas;"
-msgstr "the signatory was on the electoral roll;"
-
-#: ../../07-kontrollimine.rst:176
+#: ../../07-kontrollimine.rst:980
 msgid ""
-"Töötlemisrakendus otsustab, milline valija häältest oli viimane ning liigub "
-"töötlemise järgmisesse etappi. S.t. üks häält kvalifitseerivatest elementidest "
-"täidab hääle talletamise aja fikseerimise rolli ning selle elemendi põhjal "
-"moodustatakse üksikute häälte ajaline järgnevus. Olenevalt IVXV profiilist võib see "
-"element olla kehtivuskinnituse koosseisus (BDOC-TM), eraldi ajatemplina (BDOC-TS) "
-"või registreerimistõendi koosseisus (BDOC-TS)."
+"Töötlemisrakendus loob vastavuse e-valimiskasti ja registreerimisteenuse "
+"väljavõtte vahel võttes aluseks olemi :ref:`entity-registreerimisparing-"
+"konteiner` registreerimisteenuse väljavõttest ning olemi :ref:`entity-"
+"registreerimistoend` e-valimiskastist. Ühendavaks lüliks kahe vaate vahel"
+" on :ref:`entity-registreerimisparing`."
 msgstr ""
-"The processing application decides which voter's vote was the last and moves to the "
-"next stage of processing. That is, one of the elements qualifying a vote performs "
-"the role of fixing the time at which the vote was recorded, and the temporal "
-"sequence of individual votes is formed based on this element. Depending on the IVXV "
-"profile, this element may be part of a validity confirmation (BDOC-TM), a separate "
-"time stamp (BDOC-TS) or a registration certificate (BDOC-TS)."
+"The processing application creates a match between the digital ballot box"
+" and the registration service extract based on the :ref:`entity-"
+"registreerimisparing-konteiner` from the registration service extract and"
+" the :ref:`entity-registreerimistoend` from the digital ballot box. The "
+"connecting link between the two views is :ref:`entity-"
+"registreerimisparing`."
+
+#: ../../07-kontrollimine.rst:987
+msgid "e-valimiskasti ja registreerimisteenuse väljavõtte vastavuskontrollid"
+msgstr "digital ballot box and registration service extract compliance checks"
+
+#: ../../07-kontrollimine.rst:992
+msgid ""
+"Töötlemisrakendus teostab korduvhäälte eemaldamise etapis järgmised "
+"kontrollid:"
+msgstr ""
+"The processing application performs the following checks during the "
+"squash phase:"
+
+#: ../../07-kontrollimine.rst:994
+msgid "Töötlemisrakendus tuvastab iga valija häälte hulgast ajaliselt viimase."
+msgstr ""
+"The processing application identifies the last of each voter's votes in "
+"time."
+
+#: ../../07-kontrollimine.rst:996
+msgid "Töötlemisrakendus viib läbi krüpteeritud sedeli korrektsuse kontrollid."
+msgstr ""
+"The processing application performs correctness checks on the encrypted "
+"sender."
+
+#: ../../07-kontrollimine.rst:1002
+msgid ""
+"Töötlemisrakenduse töö järgmistes etappides täiendavaid kontrolle ei "
+"teostata. Tühistamis-/ennistamisetapis eemaldatakse/taastatakse "
+"isikukoodile vastavaid hääli korduvhäältest puhastatud e-valimiskastist. "
+"Anonüümimisetapis eemaldatakse e-häältelt kvalifitseerivad elemendid ning"
+" saadud loend krüpteeritud sedelitest suunatakse miksimisrakendusse."
+msgstr ""
+"No further checks will be carried out at subsequent stages of the "
+"processing application. In the cancellation/pre-cancelling phase, the "
+"votes corresponding to the personal identification code are "
+"removed/restored from the e-voting box cleaned of duplicate votes. In the"
+" anonymisation phase, the qualifying elements are removed from the "
+"e-votes and the resulting list of encrypted ballots is passed to the "
+"mixing application."
+
+#: ../../07-kontrollimine.rst:1009
+msgid "Kontrollid miksimisrakenduses"
+msgstr "Controls in the mixing application"
+
+#: ../../07-kontrollimine.rst:1011
+msgid "Miksimisrakendusele tehakse kättesaadavaks järgmised olemid:"
+msgstr "The following entities will be made available to the mixing application:"
+
+#: ../../07-kontrollimine.rst:1017
+msgid "Miksimisrakendus loob järgmised olemid:"
+msgstr "The mixing application creates the following entities:"
+
+#: ../../07-kontrollimine.rst:1021
+msgid "Miksimisrakendus ei puutu vahetult kokku järgmiste olemitega:"
+msgstr "The mixing application does not directly interact with:"
+
+#: ../../07-kontrollimine.rst:1052
+msgid "Miksimisrakendus viib läbi järgmised tegevused ja kontrollid:"
+msgstr "The mixing application performs the following actions and checks:"
+
+#: ../../07-kontrollimine.rst:1058
+msgid ""
+"Miksimisrakendus grupeerib sisendiks antud krüpteeritud sedelid "
+"ringkonnatunnuste kaupa ning järjestab krüpteeritud sedelid ringkonnas "
+"ringi."
+msgstr ""
+"The mixing application groups the encrypted ballots given as input by "
+"district identifiers and reorders the encrypted ballots within a "
+"district."
+
+#: ../../07-kontrollimine.rst:1062
+msgid ""
+"Miksimisrakendus arvutab iga ümberjärjestatud krüpteeritud sedeli kohta "
+"uue miksitud krüpteeritud sedeli."
+msgstr ""
+"The mixing application for each reordered ciphertext calculates a new "
+"ciphertext."
+
+#: ../../07-kontrollimine.rst:1065
+msgid ""
+"Miksimisrakendus koostab nullteadmustõestused sedelite korrektse "
+"miksimise kohta."
+msgstr ""
+"The mixing application generates zero-knowledge proofs of correct mixing "
+"of ballots."
+
+#: ../../07-kontrollimine.rst:1068
+msgid "Kontrollid võtmerakenduses"
+msgstr "Checks in the key application"
+
+#: ../../07-kontrollimine.rst:1070
+msgid "Võtmerakendusele tehakse kättesaadavaks järgmised olemid:"
+msgstr "The following entities will be made available to the key application:"
+
+#: ../../07-kontrollimine.rst:1078
+msgid "Võtmerakendus tuvastab järgmised olemid:"
+msgstr "The key application identifies the following entities:"
+
+#: ../../07-kontrollimine.rst:1082
+msgid "Võtmerakendus ei puutu vahetult kokku järgmiste olemitega:"
+msgstr "The key application does not directly interact with:"
+
+#: ../../07-kontrollimine.rst:1111
+msgid "Võtmerakendus viib läbi järgmised tegevused ja kontrollid:"
+msgstr "The Key Application performs the following activities and checks:"
+
+#: ../../07-kontrollimine.rst:1113
+msgid ":ref:`check-miksitud-krypteeritud-sedel-correctness`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:1114
+msgid ":ref:`check-miksitud-krypteeritud-sedel-public-key-consistency`"
+msgstr ""
+
+#: ../../07-kontrollimine.rst:1115
+msgid "Häälte dekrüpteerimine"
+msgstr "Decryption of votes"
+
+#: ../../07-kontrollimine.rst:1118
+msgid ":ref:`check-tahteavaldus-ringkonnatunnus-valikutenimekiri-consistency`"
+msgstr ""

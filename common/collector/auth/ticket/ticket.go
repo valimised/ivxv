@@ -46,7 +46,7 @@ type T struct {
 func New(key cookie.Key) (t *T, err error) {
 	c, err := cookie.New(key)
 	if err != nil {
-		return nil, NewCookieError{Err: err}
+		return nil, NewCookieError{Err: err, Description: _TICKET_NEW_COOKIE}
 	}
 	return &T{cookie: c}, nil
 }
@@ -56,10 +56,10 @@ func New(key cookie.Key) (t *T, err error) {
 func NewFromSystem() (t *T, err error) {
 	key, err := os.ReadFile("/var/lib/ivxv/service/ticket.key")
 	if err != nil {
-		return nil, ReadKeyError{Err: err}
+		return nil, ReadKeyError{Err: err, Description: _TICKET_KEY}
 	}
 	if t, err = New(key); err != nil {
-		return nil, NewTicketError{Err: err}
+		return nil, NewTicketError{Err: err, Description: _TICKET_NEW}
 	}
 	return
 }
@@ -69,7 +69,7 @@ func NewFromSystem() (t *T, err error) {
 func NewFromSystemAsCookie() (*cookie.C, error) {
 	key, err := os.ReadFile("/var/lib/ivxv/service/ticket.key")
 	if err != nil {
-		return nil, ReadSharedSecretForCookieError{Err: err}
+		return nil, ReadSharedSecretForCookieError{Err: err, Description: _TICKET_KEY}
 	}
 	return cookie.New(key)
 }
@@ -83,12 +83,14 @@ type tt struct {
 func (t *T) Create(subject pkix.Name) (ticket []byte, err error) {
 	vid := make([]byte, 16)
 	if _, err = rand.Read(vid); err != nil {
-		return nil, GenerateVoteIDError{Err: err}
+		return nil, GenerateVoteIDError{Err: err,
+			Description: _TICKET_VOTEID}
 	}
 	subject.ExtraNames = subject.Names // Also marshal unrecognized names.
 	plain, err := asn1.Marshal(tt{Subject: subject.ToRDNSequence(), VoteID: vid})
 	if err != nil {
-		return nil, MarshalTicketError{Err: err}
+		return nil, MarshalTicketError{Err: err,
+			Description: _TICKET_JSON}
 	}
 	return t.cookie.Create(plain), nil
 }
@@ -98,7 +100,7 @@ func (t *T) Create(subject pkix.Name) (ticket []byte, err error) {
 func (t *T) Verify(_ context.Context, token []byte) (name *pkix.Name, err error) {
 	ticket, err := t.open(token)
 	if err != nil {
-		return nil, VerifyOpenError{Err: err}
+		return nil, VerifyOpenError{Err: err, Description: _TICKET_VERIFY}
 	}
 	name = new(pkix.Name)
 	name.FillFromRDNSequence(&ticket.Subject)
@@ -111,7 +113,8 @@ func (t *T) Verify(_ context.Context, token []byte) (name *pkix.Name, err error)
 func (t *T) VoteIdentifier(token []byte) (voteID []byte, err error) {
 	ticket, err := t.open(token)
 	if err != nil {
-		return nil, VoteIdentifierOpenError{Err: err}
+		return nil, VoteIdentifierOpenError{Err: err,
+			Description: _TICKET_VERIFY}
 	}
 	return ticket.VoteID, nil
 }
@@ -135,10 +138,12 @@ func (t *T) open(token []byte) (ticket tt, err error) {
 	}
 	rest, err := asn1.Unmarshal(plain, &ticket)
 	if err != nil {
-		return ticket, UnmarshalTicketError{Err: err}
+		return ticket, UnmarshalTicketError{Err: err,
+			Description: _TICKET_UJSON}
 	}
 	if len(rest) > 0 {
-		return ticket, TrailingDataError{Rest: rest}
+		return ticket, TrailingDataError{Rest: rest,
+			Description: _TICKET_UJSON}
 	}
 	return
 }
@@ -146,7 +151,7 @@ func (t *T) open(token []byte) (ticket tt, err error) {
 func (t *T) openplain(token []byte) (plain []byte, err error) {
 	plain, err = t.cookie.Open(token)
 	if err != nil {
-		return nil, OpenTicketError{Err: err}
+		return nil, OpenTicketError{Err: err, Description: _TICKET_VERIFY}
 	}
 	return
 }

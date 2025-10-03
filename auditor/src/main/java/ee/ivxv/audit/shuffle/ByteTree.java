@@ -1,10 +1,6 @@
 package ee.ivxv.audit.shuffle;
 
-import ee.ivxv.common.math.ECGroupElement;
-import ee.ivxv.common.math.GroupElement;
-import ee.ivxv.common.math.ModPGroup;
-import ee.ivxv.common.math.ModPGroupElement;
-import ee.ivxv.common.math.ProductGroupElement;
+import ee.ivxv.common.math.*;
 import ee.ivxv.common.util.Util;
 import java.io.DataInputStream;
 import java.io.File;
@@ -17,6 +13,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.util.HexFormat;
+import java.util.Objects;
+
+import org.bouncycastle.math.ec.ECFieldElement;
 import org.bouncycastle.util.Arrays;
 
 /**
@@ -95,8 +94,12 @@ public class ByteTree {
             for (int i = 0; i < nodes.length; i++) {
                 if (elements[i] instanceof ProductGroupElement) {
                     nodes[i] = new Node((ProductGroupElement) elements[i]);
-                } else {
+                } else if (elements[i] instanceof ECGroupElement) {
+                    nodes[i] = new Node((ECGroupElement) elements[i]);
+                } else if (elements[i] instanceof ModPGroupElement) {
                     nodes[i] = new Leaf(elements[i]);
+                } else {
+                    throw new IllegalArgumentException("Unknown element type: " + elements[i].getClass().getSimpleName());
                 }
             }
         }
@@ -112,10 +115,32 @@ public class ByteTree {
                 GroupElement ge = element.getElements()[i];
                 if (ge instanceof ProductGroupElement) {
                     nodes[i] = new Node((ProductGroupElement) ge);
-                } else {
+                } else if (ge instanceof ECGroupElement) {
+                    nodes[i] = new Node((ECGroupElement) ge);
+                } else if (ge instanceof ModPGroupElement) {
                     nodes[i] = new Leaf(ge);
+                } else {
+                    throw new IllegalArgumentException("Unknown element type: " + ge.getClass().getSimpleName());
                 }
             }
+        }
+
+        /**
+         * Initialize Node from ECGroupElement.
+         *
+         * @param ec {@link ee.ivxv.common.math.ECGroupElement} instance
+         */
+        public Node(ECGroupElement ec) {
+            // Size is two, because coordinate point (X,Y) == (BigInteger, BigInteger)
+            nodes = new Leaf[2];
+
+            ECFieldElement x = ec.getPoint().getXCoord();
+            ECFieldElement y = ec.getPoint().getYCoord();
+
+            int fieldSizeBytes = ec.getPoint().getCurve().getFieldSize();
+
+            nodes[0] = new Leaf(ecFieldElementToLeaf(fieldSizeBytes, x));
+            nodes[1] = new Leaf(ecFieldElementToLeaf(fieldSizeBytes, y));
         }
 
         /**
@@ -256,6 +281,32 @@ public class ByteTree {
                 subs[i + 1] = nodes[i].toString(indent + 1);
             }
             return String.join("\n", subs);
+        }
+
+        /**
+         * Convert ECFieldElement to Leaf.
+         * Mixnet Verificatum reference:
+         * <a href="https://github.com/verificatum/verificatum-vcr/blob/97974cfc4ebbb323e49396222823e226cae2bebe/src/java/com/verificatum/arithm/ECqPGroupElement.magic#L475">innerToByteArray</a>
+         *
+         * @param fieldSize EC field size
+         * @param ec        EC field element
+         * @return EC field element as Leaf
+         */
+        private byte[] ecFieldElementToLeaf(final int fieldSize, final ECFieldElement ec) {
+            // https://github.com/verificatum/verificatum-vcr/blob/97974cfc4ebbb323e49396222823e226cae2bebe/src/java/com/verificatum/arithm/ECqPGroupElement.magic#L538
+            int fieldSizeBytesPlusOne = MathUtil.toBytesLen(fieldSize) + 1;
+
+            final byte[] leaf = new byte[fieldSizeBytesPlusOne];
+
+            // null means infinity point
+            if (Objects.isNull(ec)) {
+                java.util.Arrays.fill(leaf, (byte) 0xFF);
+            } else {
+                final byte[] ecBytes = ec.toBigInteger().toByteArray();
+                System.arraycopy(ecBytes, 0, leaf, leaf.length - ecBytes.length, ecBytes.length);
+            }
+
+            return leaf;
         }
     }
 
@@ -400,8 +451,8 @@ public class ByteTree {
             return ret;
         }
 
-        private byte[] getEncoded(ECGroupElement value) {
-            throw new UnsupportedOperationException("ECGroupElement not supported currently");
+        private byte[] getEncoded(ECGroupElement v) {
+            return v.getBytes();
         }
 
         /**

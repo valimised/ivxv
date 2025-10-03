@@ -3,9 +3,9 @@ run:
 
 linters:
   enable:
+    - copyloopvar
     - dupl
     - errcheck
-    - exportloopref
     - goconst
     - gocritic
     - gocyclo
@@ -18,13 +18,11 @@ linters:
     - lll
     - nolintlint
     - revive
-    - staticcheck
+    - staticcheck # also checks for deprecated code
     - stylecheck
     - typecheck
     - unconvert
     - unused
-  disable:
-    - structcheck
 
 linters-settings:
   goimports:
@@ -35,3 +33,12 @@ linters-settings:
     allow-unused: false
     allow-leading-space: false
     require-specific: true
+
+issues:
+  # Escape all *_test.log and log_desc.go files from linter
+  exclude-files:
+    - '(.+)_test\.go'
+    - '(.+)log_desc\.go'
+  # Escape code generator from linter
+  exclude-dirs:
+    - 'log/cmd/gen'

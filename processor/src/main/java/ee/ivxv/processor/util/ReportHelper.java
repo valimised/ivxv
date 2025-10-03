@@ -33,6 +33,7 @@ public class ReportHelper {
 
     public static final String OUT_VL_ERR = "voterlist_errors.txt";
     public static final String OUT_BB_ERR = "ballotbox_errors.txt";
+    public static final String OUT_INVALID_ERR = "invalid_votes.txt";
 
     private final ProcessorContext ctx;
     private final I18nConsole console;
@@ -170,7 +171,7 @@ public class ReportHelper {
         Message msg = new Message(Msg.e_bb_ciphertext_checking, voterId, b.getId(), qid, innerMsg);
         String ref = String.format("%s/%s", voterId, b.getId());
 
-        reportErrors(OUT_BB_ERR, s -> String.format("%s\t%s\t%s", ref, res, s), msg.key, msg.args);
+        reportErrors(OUT_INVALID_ERR, s -> String.format("%s\t%s\t%s", ref, res, s), msg.key, msg.args);
     }
 
     private void reportErrors(String type, Enum<?> key, Object... args) {
@@ -280,6 +281,10 @@ public class ReportHelper {
 
     public void writeBbErrors(Path out) {
         writeErrors(out, OUT_BB_ERR, Msg.e_bb_error_report);
+    }
+
+    public void writeInvalidVotesErrors(Path out) {
+        writeErrors(out, OUT_INVALID_ERR, Msg.e_invalid_error_report);
     }
 
     private void writeErrors(Path out, String file, Enum<?> key) {

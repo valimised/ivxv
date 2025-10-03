@@ -1,0 +1,122 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2016-2025, Cybernetica AS
+# This file is distributed under the same license as the Elektroonilise
+# hääletamise infosüsteem package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-03 23:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: et\n"
+"Language-Team: et <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:1
+msgid "Valimissündmuse identifikaator"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:3
+msgid ""
+"Üht valimist puudutav andmestik on seotud unikaalse valimissündmuse "
+"identifikaatori abil."
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:5
+msgid ""
+"Valimissündmuse identifikaator on sõne, mis koosneb kahest kohustuslikust"
+" ja kahest valikulisest osast:"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:6
+msgid "valimissündmuse tüüp, vastavalt allolevale tabelile, nt `RK`."
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:7
+msgid "aastanumbrist (nt `2023`)"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:8
+msgid "valikulisest erakorraliste valimiste tunnusest `_E` ja"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:9
+msgid "valikulisest järjenumbrist <nr>, nt `2`."
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:11
+msgid "Ülalnimetatud osad eraldatakse üksteisest allkriipsudega `_`."
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:13
+msgid ""
+"Järjenummerdatakse tüüpide kaupa. Seejuures aasta esimese samatüübilise "
+"valimissündmuse korral järjenumbrit ei näidata."
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:15
+msgid "Näited:"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:16
+msgid "`KOV_2021`"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:17
+msgid "`RH_2021`"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:18
+msgid "`RH_2021_2` (2021. a teine rahvahääletus)"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:19
+msgid "`RK_2023`"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:20
+msgid "`RK_2023_E` (2023. a Riigikogu erakorralised valimised)"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:21
+msgid "`RK_2023_E_2` (2023. a Riigikogu teised erakorralised valimised)."
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:23
+msgid ""
+"EHSi jaoks on valimise identifikaator kuni 28 ASCII-tähemärgi pikkune "
+"sõne ning eelnevalt kirjeldatud struktuuri põhjal EHS otsuseid ei tee."
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:25
+msgid "Valimissündmuse tüüp"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:27
+msgid "Valimissündmuse tüüp esitatakse koodiga:"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:29
+msgid "`KOV` - Kohaliku omavalitsuse volikogu valimised"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:30
+msgid "`EP` - Euroopa Parlamendi valimised"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:31
+msgid "`RK` - Riigikogu valimised"
+msgstr ""
+
+#: ../../VIS3-EHS/valimissündmuse_identifikaator.md:32
+msgid "`RH` - Rahvahääletus."
+msgstr ""
+

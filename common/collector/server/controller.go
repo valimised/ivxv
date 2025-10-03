@@ -35,7 +35,8 @@ func NewController(v *version.V, startfn, checkfn, stopfn func(context.Context) 
 	// Create a new status reporter for this controller.
 	var err error
 	if c.status, err = newStatus(v); err != nil {
-		return nil, NewControllerStatusError{Err: err}
+		return nil, NewControllerStatusError{Err: err,
+			Description: _SERVER_STAT}
 	}
 	return c, nil
 }
@@ -43,14 +44,18 @@ func NewController(v *version.V, startfn, checkfn, stopfn func(context.Context) 
 // Control calls startfn and calls stopfn when ctx is cancelled.
 func (c *Controller) Control(ctx context.Context) error {
 	// Start the service.
-	log.Log(ctx, StartingControlledService{})
+	log.Log(ctx, StartingControlledService{
+		Description: _SERVER_SYSD_START,
+	})
 	if err := c.startfn(ctx); err != nil {
-		return ControllerStartError{Err: err}
+		return ControllerStartError{Err: err,
+			Description: _SERVER_SYSD_START_FAIL}
 	}
-	log.Log(ctx, ControlledServiceStarted{})
+	log.Log(ctx, ControlledServiceStarted{Description: _SERVER_SYSD_STARTED})
 
 	if err := c.status.serving(); err != nil {
-		return ControlStatusServingError{Err: err}
+		return ControlStatusServingError{Err: err,
+			Description: _SERVER_SYSD_SERVE}
 	}
 
 	// Check the service every second until ctx is cancelled. If the poll
@@ -64,13 +69,14 @@ poll:
 			break poll
 		case <-sleep.C:
 			if err := c.checkfn(ctx); err != nil {
-				log.Error(ctx, ControllerCheckError{Err: err})
+				log.Error(ctx, ControllerCheckError{Err: err,
+					Description: _SERVER_SYSD_CHECK})
 				c.failed++
 
 				// If we have restarted three times without a
 				// check succeeding, then stop trying.
 				if c.failed >= 3 {
-					return ControllerAbortError{}
+					return ControllerAbortError{Description: _SERVER_SYSD_ATTEMPT}
 				}
 
 				return c.Control(ctx)
@@ -83,22 +89,23 @@ poll:
 	// If updating the status returns an error, then only log it: do not
 	// skip the stop function.
 	if err := c.status.stopping(); err != nil {
-		log.Error(ctx, ControlStatusStoppingError{Err: err})
+		log.Error(ctx, ControlStatusStoppingError{Err: err,
+			Description: "Initiate systemd service stopping failed"})
 	}
 
 	// Stop the service.
-	log.Log(ctx, StoppingControlledService{})
+	log.Log(ctx, StoppingControlledService{Description: _SERVER_SYSD_STOP})
 	if err := c.stopfn(ctx); err != nil {
-		return ControllerStopError{Err: err}
+		return ControllerStopError{Err: err, Description: _SERVER_SYSD_STOP_FAIL}
 	}
-	log.Log(ctx, ControlledServiceStopped{})
+	log.Log(ctx, ControlledServiceStopped{Description: _SERVER_SYSD_STOPPED})
 	return nil
 }
 
 // ControlAt waits until start and then calls Control.
 func (c *Controller) ControlAt(ctx context.Context, start time.Time) error {
 	if err := c.status.waiting(); err != nil {
-		return ControlAtStatusWaitingError{Err: err}
+		return ControlAtStatusWaitingError{Err: err, Description: _SERVER_SYSD_WAIT}
 	}
 	return waitStart(ctx, start, c.Control)
 }

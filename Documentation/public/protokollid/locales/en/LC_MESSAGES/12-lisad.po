@@ -1,0 +1,398 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2016-2025, Cybernetica AS
+# This file is distributed under the same license as the Elektroonilise
+# hääletamise infosüsteem package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-03 19:52+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: en <LL@li.org>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../12-lisad.rst:5
+msgid "Lisad"
+msgstr "More"
+
+#: ../../12-lisad.rst:8
+msgid "Andmestruktuuride ASN.1 spetsifikatsioon"
+msgstr "ASN.1 specification of data structures"
+
+#: ../../12-lisad.rst:10
+msgid "IVXV ElGamal üldised andmestruktuurid"
+msgstr "IVXV ElGamal general data structures"
+
+#: ../../12-lisad.rst:16
+msgid "IVXV ElGamal ModP spetsiifilised andmestruktuurid"
+msgstr "IVXV ElGamal ModP specific data structures"
+
+#: ../../12-lisad.rst:22
+msgid "IVXV ElGamal ECC spetsiifilised andmestruktuurid"
+msgstr "IVXV ElGamal ECC specific data structures"
+
+#: ../../12-lisad.rst:31
+msgid "Elektroonilise hääle vormingu spetsifikatsioon"
+msgstr "Specification for electronic voice formatting"
+
+#: ../../12-lisad.rst:33
+msgid ""
+"Käesoleva protokolliversiooniga kooskõlaline ettepanek VVK otsuseks "
+"hääletamissedeli ja elektroonilise hääle vormi kehtestamiseks."
+msgstr ""
+"Proposal for a decision of the IGC establishing the voting form and the "
+"electronic voting form, in conformity with this version of the minutes."
+
+#: ../../12-lisad.rst:40
+msgid "Vead töötlemisprotsessis"
+msgstr "Errors in the processing"
+
+#: ../../12-lisad.rst:42
+msgid ""
+"Anname ülevaate veakoodidest töötlemisprotsessis. Veakoodid kirjeldavad vigu"
+" üksiku elemendi verifitseerimisel - hääl, registreerimistõend, "
+"registreerimispäring - ning häälte, registreerimistõendite ja "
+"registreerimispäringute vahelise vastavuse loomisel."
+msgstr ""
+"We give an overview of error codes in the processing process. Error codes "
+"describe errors in the verification of a single element - vote, registration"
+" certificate, registration request - and in the matching of votes, "
+"registration certificates and registration requests."
+
+#: ../../12-lisad.rst:47
+msgid ""
+"Enamus veaolukordi on pigem hüpoteetilised (nt. `REG_NO_NONCE`), siiski on "
+"tegemist olukordadega, mis programselt võivad esineda ning seetõttu tuleb "
+"neid ka käsitleda."
+msgstr ""
+"Most of the error situations are rather hypothetical (e.g. `REG_NO_NONCE`), "
+"however, they are situations that can occur programmatically and therefore "
+"need to be addressed."
+
+#: ../../12-lisad.rst:51
+msgid ""
+"Veaolukord tähendab, et konkreetne element ei liigu edasi töötlemise "
+"järgmisesse faasi."
+msgstr ""
+"An error condition means that a particular element does not move on to the "
+"next phase of processing."
+
+#: ../../12-lisad.rst:53
+msgid "Töötlemisprotsessi veakoodid"
+msgstr "Error codes for the processing process"
+
+#: ../../12-lisad.rst:57 ../../12-lisad.rst:121
+msgid "Veakood"
+msgstr "Error code"
+
+#: ../../12-lisad.rst:58 ../../12-lisad.rst:122
+msgid "Selgitus"
+msgstr "Explanation"
+
+#: ../../12-lisad.rst:59
+msgid "``INVALID_FILE_NAME``"
+msgstr "``INVALID_FILE_NAME``"
+
+#: ../../12-lisad.rst:60
+msgid "Failinimi ei vasta oodatud mustrile. Viitab tundmatule failile urnis."
+msgstr ""
+"The file name does not match the expected pattern. Refers to an unknown file"
+" in the urn."
+
+#: ../../12-lisad.rst:61
+msgid "``MISSING_FILE``"
+msgstr "``MISSING_FILE``"
+
+#: ../../12-lisad.rst:62
+msgid "Mõni hääle koosseisuks vajalik fail puudub. Nt. ajatempel."
+msgstr ""
+"Some of the files needed to compose the votes are missing. E.g. timestamp."
+
+#: ../../12-lisad.rst:63
+msgid "``REPEATED_FILE``"
+msgstr "``REPEATED_FILE``"
+
+#: ../../12-lisad.rst:64
+msgid "Mõnda hääle koosseisuks vajalikku faili on mitu. Nt. kehtivuskinnitus."
+msgstr ""
+"There are several files needed to compose some votes. E.g. validity "
+"confirmation."
+
+#: ../../12-lisad.rst:65
+msgid "``UNKNOWN_FILE_TYPE``"
+msgstr "``UNKNOWN_FILE_TYPE``"
+
+#: ../../12-lisad.rst:66
+msgid "Faili tüüp on tundmatu või mittetoetatud."
+msgstr "The file type is unknown or unsupported."
+
+#: ../../12-lisad.rst:67
+msgid "``INVALID_FILE_SIZE``"
+msgstr "``INVALID_FILE_SIZE``"
+
+#: ../../12-lisad.rst:68
+msgid ""
+"Allkirjastatud hääle faili suurus ei vasta seadistustes nõutud "
+"kriteeriumitele."
+msgstr ""
+"The size of the signed vote file does not meet the criteria required in the "
+"settings."
+
+#: ../../12-lisad.rst:69
+msgid "``INVALID_BALLOT_SIGNATURE``"
+msgstr "``INVALID_BALLOT_SIGNATURE``"
+
+#: ../../12-lisad.rst:70
+msgid "Hääl on vigase allkirjaga."
+msgstr "The voice has an incorrect signature."
+
+#: ../../12-lisad.rst:71
+msgid "``MISSING_VOTER_SIGNATURE``"
+msgstr "``MISSING_VOTER_SIGNATURE``"
+
+#: ../../12-lisad.rst:72
+msgid "Hääl ei sisalda valija allkirja."
+msgstr "The vote does not include the voter's signature."
+
+#: ../../12-lisad.rst:73
+msgid "``VOTER_NOT_FOUND``"
+msgstr "``VOTER_NOT_FOUND``"
+
+#: ../../12-lisad.rst:74
+msgid "Valija ei olnud hääletamise hetkel valijate nimekirjas."
+msgstr "The voter was not on the electoral roll at the time of voting."
+
+#: ../../12-lisad.rst:75
+msgid "``VOTERLIST_NOT_FOUND``"
+msgstr "``VOTERLIST_NOT_FOUND``"
+
+#: ../../12-lisad.rst:76
+msgid "Versioonile vastavat valijate nimekirja ei leitud."
+msgstr "No voter list matching the version was found."
+
+#: ../../12-lisad.rst:77
+msgid "``TIME_BEFORE_START``"
+msgstr "``TIME_BEFORE_START``"
+
+#: ../../12-lisad.rst:78
+msgid "Hääl on antud enne hääletamisperioodi algust. Viitab testhäälele."
+msgstr ""
+"The vote is cast before the start of the voting period. Refers to a test "
+"vote."
+
+#: ../../12-lisad.rst:79
+msgid "``REG_RESP_INVALID``"
+msgstr "``REG_RESP_INVALID``"
+
+#: ../../12-lisad.rst:80
+msgid "Registreerimistõend/ajatempel on vigane. Viga ATOs või töötlejas."
+msgstr ""
+"The registration certificate/time stamp is invalid. Error in ATO or "
+"processor."
+
+#: ../../12-lisad.rst:81
+msgid "``REG_REQ_INVALID``"
+msgstr "``REG_REQ_INVALID``"
+
+#: ../../12-lisad.rst:82
+msgid "Registreerimispäring on vigane. Viga kogumisteenuses või töötlejas."
+msgstr ""
+"The registration request is invalid. Error in collection service or "
+"processor."
+
+#: ../../12-lisad.rst:83
+msgid "``REG_RESP_NOT_UNIQUE``"
+msgstr "``REG_RESP_NOT_UNIQUE``"
+
+#: ../../12-lisad.rst:84
+msgid ""
+"Registreerimistõend ei ole unikaalne. Viga kogumisteenuses või töötlejas."
+msgstr ""
+"The registration certificate is not unique. Error in collection service or "
+"processor."
+
+#: ../../12-lisad.rst:85
+msgid "``REG_REQ_NOT_UNIQUE``"
+msgstr "``REG_REQ_NOT_UNIQUE``"
+
+#: ../../12-lisad.rst:86
+msgid ""
+"Registreerimispäring ei ole unikaalne. Sama räsiga häält on esitatud "
+"korduvalt."
+msgstr ""
+"The registration request is not unique. The same ragged vote has been "
+"submitted multiple times."
+
+#: ../../12-lisad.rst:87
+msgid "``REG_NO_NONCE``"
+msgstr "``REG_NO_NONCE``"
+
+#: ../../12-lisad.rst:88
+msgid "Registreerimistõendis puudub nonss."
+msgstr "There is no nonss on the registration certificate."
+
+#: ../../12-lisad.rst:89
+msgid "``REG_NONCE_NOT_SIG``"
+msgstr "``REG_NONCE_NOT_SIG``"
+
+#: ../../12-lisad.rst:90
+msgid "Esitatud nonss ei ole IVXV protokolli kohaselt allkirjastatud."
+msgstr ""
+"The submitted nonss have not been signed in accordance with Protocol IVXV."
+
+#: ../../12-lisad.rst:91
+msgid "``REG_NONCE_ALG_MISMATCH``"
+msgstr "``REG_NONCE_ALG_MISMATCH``"
+
+#: ../../12-lisad.rst:92
+msgid "Nonssi allkirjastamisel kasutatud algoritm ei vasta oodatule."
+msgstr ""
+"The algorithm used to sign the nonsense does not match the expected one."
+
+#: ../../12-lisad.rst:93
+msgid "``REG_NONCE_SIG_INVALID``"
+msgstr "``REG_NONCE_SIG_INVALID``"
+
+#: ../../12-lisad.rst:94
+msgid "Nonssi allkiri on vigane."
+msgstr "Nonss's signature is incorrect."
+
+#: ../../12-lisad.rst:95
+msgid "``UNKNOWN_FILE_IN_VOTE_CONTAINER``"
+msgstr "``UNKNOWN_FILE_IN_VOTE_CONTAINER``"
+
+#: ../../12-lisad.rst:96
+msgid "Hääle konteineris on tundmatu fail."
+msgstr "There is an unknown file in the voice container."
+
+#: ../../12-lisad.rst:97
+msgid "``TECHNICAL_ERROR``"
+msgstr "``TECHNICAL_ERROR``"
+
+#: ../../12-lisad.rst:98
+msgid "Töötlemise ajal tekkis tehniline viga."
+msgstr "A technical error occurred during processing."
+
+#: ../../12-lisad.rst:99
+msgid "``REG_RESP_REQ_UNMATCH``"
+msgstr "``REG_RESP_REQ_UNMATCH``"
+
+#: ../../12-lisad.rst:100
+msgid "Registreerimistõendi andmed ei vasta registreerimispäringu andmetele."
+msgstr ""
+"The information on the registration certificate does not match the "
+"information on the registration request."
+
+#: ../../12-lisad.rst:101
+msgid "``REG_REQ_WITHOUT_BALLOT``"
+msgstr "``REG_REQ_WITHOUT_BALLOT``"
+
+#: ../../12-lisad.rst:102
+msgid ""
+"Esitatud on registreerimispäring, kuid hääl puudub urnist. Kogumisteenuse "
+"viga."
+msgstr ""
+"A registration request has been submitted, but there is no vote in the "
+"ballot box. Collection service error."
+
+#: ../../12-lisad.rst:103
+msgid "``BALLOT_WITHOUT_REG_REQ``"
+msgstr "``BALLOT_WITHOUT_REG_REQ``"
+
+#: ../../12-lisad.rst:104
+msgid "Hääl on esitatud ilma vastava registreerimispäringuta. ATO viga."
+msgstr ""
+"The vote is submitted without a corresponding registration request. ATO "
+"error."
+
+#: ../../12-lisad.rst:105
+msgid "``SAME_TIME_AS_LATEST``"
+msgstr "``SAME_TIME_AS_LATEST``"
+
+#: ../../12-lisad.rst:106
+msgid "Kaks häält samalt valijalt võivad olla arvesse võetavad viimasena."
+msgstr "Two votes from the same voter may be counted last."
+
+#: ../../12-lisad.rst:107
+msgid "``INVALID_SIGNATURE_PROFILE``"
+msgstr "``INVALID_SIGNATURE_PROFILE``"
+
+#: ../../12-lisad.rst:108
+msgid "Hääle allkirjaprofiil on vigane."
+msgstr "The signature profile of the vote is incorrect."
+
+#: ../../12-lisad.rst:111
+msgid ""
+"Töötlemise käigus tuvastatakse kehtetud sedelid sellisel määral, mil seda "
+"võimaldavad kontrollid avaliku võtmega. Kuigi kogumisteenus ei luba "
+"kehtetuid sedeleid talletada, peab töötlemisrakendus kontrolle siiski "
+"kordama tagamaks mh. võimalike tarkvaravigade vältimise."
+msgstr ""
+"Invalid tags will be identified during the processing to the extent that "
+"public key checks allow. Although the collection service does not allow the "
+"storage of invalid tags, the processing application must still repeat the "
+"checks to ensure, inter alia, that possible software bugs are avoided."
+
+#: ../../12-lisad.rst:117
+msgid "Krüptogrammide kehtivuse kontrolli veakoodid"
+msgstr "Cryptogram validity check error codes"
+
+#: ../../12-lisad.rst:123
+msgid "``INVALID_BYTES``"
+msgstr "``INVALID_BYTES``"
+
+#: ../../12-lisad.rst:124
+msgid "Baidijada ei ole dekodeeritav ElGamalCiphertext'na"
+msgstr "Baidijada is not decodable by ElGamalCiphertext"
+
+#: ../../12-lisad.rst:125
+msgid "``INVALID_GROUP``"
+msgstr "``INVALID_GROUP``"
+
+#: ../../12-lisad.rst:126
+msgid "Väärtus ei ole oodatud rühma element"
+msgstr "The value is not an expected group element"
+
+#: ../../12-lisad.rst:127
+msgid "``INVALID_RANGE``"
+msgstr "``INVALID_RANGE``"
+
+#: ../../12-lisad.rst:128
+msgid "Väärtus on lubatud vahemikust väljas."
+msgstr "The value is out of range."
+
+#: ../../12-lisad.rst:129
+msgid "``INVALID_QR``"
+msgstr "``INVALID_QR```"
+
+#: ../../12-lisad.rst:130
+msgid "Väärtus ei ole ruutjääk (MODP)."
+msgstr "The value is not a square residual (MODP)."
+
+#: ../../12-lisad.rst:131
+msgid "``INVALID_POINT``"
+msgstr "``INVALID_POINT``"
+
+#: ../../12-lisad.rst:132
+msgid "Väärtus ei ole kõvera punkt (ECC)."
+msgstr "The value is not the point of the curve (ECC)."
+
+#: ../../12-lisad.rst:133
+msgid "``INVALID``"
+msgstr "``INVALID``"
+
+#: ../../12-lisad.rst:134
+msgid "Vigane šifreeritud tekst."
+msgstr "Erroneous shifter text."
+
+#~ msgid "IVXV ElGamal ECC spetsifiilised andmestruktuurid"
+#~ msgstr ""

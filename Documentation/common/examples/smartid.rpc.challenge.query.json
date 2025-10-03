@@ -1,0 +1,9 @@
+{
+    "id": 0.0,
+    "method": "RPC.Challenge",
+    "params": [
+        {
+            "OS": "Operating System,2,0",
+        }
+    ]
+}

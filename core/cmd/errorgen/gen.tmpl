@@ -1,0 +1,31 @@
+{{/* vim: set ft=gotexttmpl: */}}
+package {{.Package.Name}}
+
+import "fmt"
+
+{{range .Literals}}
+// {{.Name}} is auto-generated from {{base .Pos.String}}.
+type {{.Name}} struct {
+	{{range .Fields}}
+	{{.}} {{if eq . "Err"}}error{{else}}interface{}{{end}}
+	{{- end}}
+}
+
+// EntryID implements the tivi.io/core/log.Entry interface.
+func (x {{.Name}}) EntryID() string { return "tivi.io/core/{{$.Package.ImportPath}}.{{.Name}}" }
+
+{{$name := .Name}}
+{{range .Fields}}{{if eq . "Err"}}
+// Cause implements the tivi.io/core/errors.Causer interface.
+func (x {{$name}}) Cause() error { return x.Err }
+{{end}}{{end}}
+
+func (x {{.Name}}) Error() string {
+	return fmt.Sprint(x.EntryID(), "{",
+		{{- range $i, $e := .Fields -}}
+		{{- if gt $i 0}}", ",{{end}}
+		"{{.}}:", x.{{.}},
+		{{- end -}}
+		"}")
+}
+{{end}}

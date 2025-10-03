@@ -1,15 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2016-2024, Cybernetica AS
+# Copyright (C) 2016-2025, Cybernetica AS
 # This file is distributed under the same license as the Elektroonilise
 # hääletamise infosüsteem package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.8.0\n"
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-10 09:47+0300\n"
+"POT-Creation-Date: 2025-09-03 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,7 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.10.3\n"
+"Generated-By: Babel 2.15.0\n"
 
 #: ../../yldpohimotted.rst:4
 msgid "Sissejuhatus"
@@ -73,7 +72,7 @@ msgstr ""
 msgid ""
 "IVXV infosüsteemina teostab \"ümbrikuskeemil\" põhinevat e-hääletamise "
 "protokolli. IVXV toimib hääletamiseelsel etapil, hääletamisetapil, "
-"töötlusetapil ning lugemisetapil ja pakkub vahendeid elektroonilise "
+"töötlusetapil ning lugemisetapil ja pakub vahendeid elektroonilise "
 "hääletamise protsessis osalemiseks Korraldajale, Lugejale, Hääletajale, "
 "Kogujale, Töötlejale, Miksijale, Audiitorile, Klienditoele, Valijate "
 "nimekirja koostajale ja täiendajale."
@@ -179,15 +178,3 @@ msgstr ""
 #: ../../yldpohimotted.rst:72
 msgid "Näiteskeem"
 msgstr "Example scheme"
-
-#~ msgid ""
-#~ "IVXV krüptograafiline protokoll on kirjeldatud"
-#~ " ka protokolli turvaomaduste süsteemiga "
-#~ "[ProVerif]_ formaalset verifitseerimist võimaldavas"
-#~ " notatsioonis."
-#~ msgstr ""
-#~ "The IVXV cryptographic protocol is also"
-#~ " described in a notation that allows"
-#~ " formal verification by the protocol "
-#~ "security properties system [ProVerif]_."
-

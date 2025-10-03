@@ -26,7 +26,7 @@ Description: IVXV admin välised Python sõltuvused
 
 Package: ivxv-admin
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, cron, fonts-font-awesome, ivxv-common, python3-ivxv-common, javascript-common, language-pack-et, libapache2-mod-wsgi-py3, libjs-bootstrap, libjs-jquery, libjs-jquery-datatables, libjs-jquery-datatables-extensions, python3-gdbm, ssl-cert
+Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, cron, ivxv-common, python3-ivxv-common, language-pack-et, libapache2-mod-wsgi-py3, python3-gdbm, ssl-cert
 Description: IVXV kogumisteenuse haldusteenus
  Elektroonilise hääletamise infosüsteem IVXV
  .

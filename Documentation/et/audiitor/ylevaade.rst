@@ -23,15 +23,15 @@ krüptogrammi kui dekrüpteeritud avateksti siduma. Seega on võimalik ründajal
 tekitada seos isiku ja krüptogrammi, ning krüptogrammi ja vastava avateksti
 vahel, st. ta saab teada, mis valiku isik tegi.
 
-Et seda seost eemaldada, kasutatakse IVXVs krüptogrammide segamist (mixnet).
-Mixnet teeb korraga kahte operatsiooni -- järjestab sisendkrüptogrammid ümber
+Et seda seost eemaldada, kasutatakse IVXVs krüptogrammide segamist (miksnet).
+Miksnet teeb korraga kahte operatsiooni -- järjestab sisendkrüptogrammid ümber
 (permuteerib) ja uuendab krüptogrammis olevad juhuslikkust (rerandomiseerib).
-See tähendab, et krüptogrammid, mis lähevad mixneti sisse on väliselt täiesti
-sõltumatud krüptogrammidest, mis tulevad mixnetist välja. Kuna välise
-sõltumatuse tõttu võiks teoreetiliselt mixnet krüptogramme asendada, siis on
+See tähendab, et krüptogrammid, mis lähevad miksneti sisse on väliselt täiesti
+sõltumatud krüptogrammidest, mis tulevad miksnetist välja. Kuna välise
+sõltumatuse tõttu võiks teoreetiliselt miksnet krüptogramme asendada, siis on
 tarvis lisada miksimistõend, mis tõestab krüptograafiliselt, et operatsioonid
 on tehtud korrektselt ja ühtegi täiendavat operatsiooni pole tehtud.
-Kontrollides miksimistõendit, on võimalik garanteerida, et mixnet on töötanud
+Kontrollides miksimistõendit, on võimalik garanteerida, et miksnet on töötanud
 korrektselt.
 
 Väikeste parameetritega kirjutatud näide
@@ -116,7 +116,7 @@ jänes    64        22    (113, 171)
 ===== ========= ======= =============
 
 
-Olgu mixneti kasutatav permutatsioon :math:`\pi` defineeritud järgnevalt:
+Olgu miksneti kasutatav permutatsioon :math:`\pi` defineeritud järgnevalt:
 
 ====== =======
 indeks väärtus
@@ -133,7 +133,7 @@ indeks väärtus
   10      1
 ====== =======
 
-Olgu mixneti rerandomiseerimiseks kasutatavad juhuarvud:
+Olgu miksneti rerandomiseerimiseks kasutatavad juhuarvud:
 
 ====== ================
 indeks täiendav juhuarv

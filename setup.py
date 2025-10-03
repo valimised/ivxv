@@ -26,7 +26,7 @@ class IvxvPackageBuilder(build_py):
 
 setup(
     name='IVXVCollectorAdminDaemon',
-    version='1.9.10',
+    version='1.10.3',
     description='IVXV Collector Management Service',
     author='IVXV Developer',
     author_email='info@ivotingcentre.ee',
@@ -37,6 +37,7 @@ setup(
         'jsonschema',
         'pyopenssl',
         'fasteners',
+        'python-crontab',
         'python-dateutil',
         'python-debian',
         'pyyaml',

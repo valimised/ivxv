@@ -36,19 +36,19 @@ func reload(ctx context.Context, c *conf.Technical,
 
 	cfg, code, err := generate(c, network, service, *tmplp)
 	if err != nil {
-		return code, GenerateHAProxyConfigurationError{Err: err}
+		return code, GenerateHAProxyConfigurationError{Err: err, Description: _PROXY_PARSE_TEMPLATE_EXEC}
 	}
 
 	if code, err = check(ctx, cfg); err != nil {
-		return code, CheckHAProxyConfigurationError{Err: err}
+		return code, CheckHAProxyConfigurationError{Err: err, Description: _PROXY_PARSE_TEMPLATE_VERIFY}
 	}
 
 	if until >= command.Execute {
 		//nolint:gosec // Keep the configuration file permissions.
 		if err = os.WriteFile(*cfgp, cfg, 0644); err != nil {
-			return exit.CantCreate, WriteConfigurationError{Err: err}
+			return exit.CantCreate, WriteConfigurationError{Err: err, Description: _PROXY_HAPROXY_WRITE}
 		}
-		log.Log(ctx, UpdatedHAProxyConfiguration{Path: *cfgp})
+		log.Log(ctx, UpdatedHAProxyConfiguration{Path: *cfgp, Description: _PROXY_HAPROXY_UPDATE})
 
 		// It is possible here that the just created configuration file
 		// gets replaced before HAProxy is restarted. This should not
@@ -59,12 +59,12 @@ func reload(ctx context.Context, c *conf.Technical,
 
 		pid, code, err := readPIDFile(*pidp)
 		if err != nil {
-			return code, ReadHAProxyPIDError{Err: err}
+			return code, ReadHAProxyPIDError{Err: err, Description: _PROXY_HAPROXY_PIDFILE}
 		}
 		if err = restart(ctx, *procp, pid); err != nil {
-			return exit.Unavailable, RestartHAProxyError{Err: err}
+			return exit.Unavailable, RestartHAProxyError{Err: err, Description: _PROXY_HAPROXY_RESTART}
 		}
-		log.Log(ctx, HAProxyRestarted{})
+		log.Log(ctx, HAProxyRestarted{Description: _PROXY_HAPROXY_RESTARTED})
 	}
 	return
 }
@@ -82,17 +82,17 @@ func (p *hapid) start(ctx context.Context) error {
 	// Get the PID of the HAProxy master processes.
 	pid, _, err := readPIDFile(*pidp)
 	if err != nil {
-		return EnableReadPIDError{Err: err}
+		return EnableReadPIDError{Err: err, Description: _PROXY_HAPROXY_PIDFILE}
 	}
 	*p = hapid(pid)
-	log.Log(ctx, HAProxyPID{PID: *p})
+	log.Log(ctx, HAProxyPID{PID: *p, Description: _PROXY_HAPROXY_PID})
 	return nil
 }
 
 // check checks if the HAProxy master process still exists.
 func (p *hapid) check(_ context.Context) error {
 	if err := checkPID(*procp, int(*p)); err != nil {
-		return CheckHAProxyError{PID: *p, Err: err}
+		return CheckHAProxyError{PID: *p, Err: err, Description: _PROXY_NO_PID}
 	}
 	return nil
 }
@@ -122,7 +122,7 @@ func proxymain() (code int) {
 		if code, err = reload(c.Ctx, c.Conf.Technical,
 			c.Network, c.Service, c.Until); err != nil {
 
-			return c.Error(code, ReloadConfigurationError{Err: err},
+			return c.Error(code, ReloadConfigurationError{Err: err, Description: _PROXY_HAPROXY_RELOAD},
 				"reloading new configuration failed:", err)
 		}
 
@@ -133,13 +133,13 @@ func proxymain() (code int) {
 		if s, err = server.NewController(&c.Conf.Version,
 			p.start, p.check, p.stop); err != nil {
 
-			return c.Error(exit.Config, ControllerConfError{Err: err},
+			return c.Error(exit.Config, ControllerConfError{Err: err, Description: _PROXY_HAPROXY_CONTROL},
 				"failed to configure controller:", err)
 		}
 	}
 	if c.Until >= command.Execute {
 		if err = s.Control(c.Ctx); err != nil {
-			return c.Error(exit.Unavailable, ControlError{Err: err},
+			return c.Error(exit.Unavailable, ControlError{Err: err, Description: _PROXY_HAPROXY_SERVE},
 				"failed to control proxy service:", err)
 		}
 	}

@@ -49,25 +49,30 @@ func newreg(reg bool) func(yaml.Node, string) (q11n.Qualifier, error) {
 	return func(n yaml.Node, sensitive string) (q q11n.Qualifier, err error) {
 		var conf tsp.Conf
 		if err = yaml.Apply(n, &conf); err != nil {
-			return nil, YamlApplyError{Err: err}
+			return nil, YamlApplyError{Err: err,
+				Description: _TSA_CFG}
 		}
 
 		c := new(client)
 		if c.tsp, err = tsp.New(&conf); err != nil {
-			return nil, ClientError{Err: err}
+			return nil, ClientError{Err: err,
+				Description: _TSA_NEW}
 		}
 
 		if reg {
 			pem, err := os.ReadFile(filepath.Join(sensitive, "tspreg.key"))
 			if err != nil {
-				return nil, ReadPrivateKeyError{Err: err}
+				return nil, ReadPrivateKeyError{Err: err,
+					Description: _TSA_KEY}
 			}
 			der, err := cryptoutil.PEMDecode(string(pem), "RSA PRIVATE KEY")
 			if err != nil {
-				return nil, DecodePrivateKeyError{Err: err}
+				return nil, DecodePrivateKeyError{Err: err,
+					Description: _TSA_KEY_PARSE}
 			}
 			if c.key, err = x509.ParsePKCS1PrivateKey(der); err != nil {
-				return nil, ParsePrivateKeyError{Err: err}
+				return nil, ParsePrivateKeyError{Err: err,
+					Description: _TSA_KEY_PARSE_RSA}
 			}
 		}
 
@@ -78,30 +83,36 @@ func newreg(reg bool) func(yaml.Node, string) (q11n.Qualifier, error) {
 func (c *client) Qualify(ctx context.Context, container container.Container) ([]byte, error) {
 	sigs := container.Signatures()
 	if len(sigs) != 1 {
-		return nil, NoSingleSignatureError{Count: len(sigs)}
+		return nil, NoSingleSignatureError{Count: len(sigs),
+			Description: _TSA_NO_SIG}
 	}
 	id := sigs[0].ID
 
 	dataer, ok := container.(TimestampDataer)
 	if !ok {
-		return nil, ContainerNotTimestampDataerError{}
+		return nil, ContainerNotTimestampDataerError{
+			Description: _TSA_DATAER,
+		}
 	}
 	data, err := dataer.TimestampData(id)
 	if err != nil {
-		return nil, TimestampDataError{ID: id, Err: err}
+		return nil, TimestampDataError{ID: id, Err: err,
+			Description: _TSA_SIG_VERIFY}
 	}
 
 	var nonce []byte
 	if c.key != nil {
 		nonce, err = c.sign(data)
 		if err != nil {
-			return nil, SignTimestampDataError{Err: err}
+			return nil, SignTimestampDataError{Err: err,
+				Description: _TSA_SIG_TS}
 		}
 	}
 
 	resp, err := c.tsp.Create(ctx, data, nonce)
 	if err != nil {
-		return nil, CreateTimestampError{Err: err}
+		return nil, CreateTimestampError{Err: err,
+			Description: _TSA_REQ}
 	}
 	return resp, nil
 }
@@ -112,7 +123,8 @@ func (c *client) sign(data []byte) (signature []byte, err error) {
 	hash := sha256.Sum256(data)
 	signature, err = rsa.SignPKCS1v15(nil, c.key, crypto.SHA256, hash[:])
 	if err != nil {
-		return nil, SignHashError{Err: err}
+		return nil, SignHashError{Err: err,
+			Description: _TSA_RSA_SIG}
 	}
 
 	return asn1.Marshal(struct {

@@ -37,13 +37,15 @@ func sessionstatus() (code int) {
 	if elec := c.Conf.Election; elec != nil {
 		// Status server starts in a test-voting period
 		if start, err = elec.ServiceStartTime(); err != nil {
-			return c.Error(exit.Config, StartTimeError{Err: err},
+			return c.Error(exit.Config, StartTimeError{Err: err,
+				Description: _SESSIONSTATUS_START},
 				"bad service start time:", err)
 		}
 
 		// Status server shuts down at the same time as all services do
 		if stop, err = elec.ServiceStopTime(); err != nil {
-			return c.Error(exit.Config, StopTimeError{Err: err},
+			return c.Error(exit.Config, StopTimeError{Err: err,
+				Description: _SESSIONSTATUS_STOP},
 				"bad election stop time:", err)
 		}
 	}
@@ -57,7 +59,8 @@ func sessionstatus() (code int) {
 	var storageConf etcd.Conf
 	err = yaml.Apply(c.Conf.Technical.Storage.Conf, &storageConf)
 	if err != nil {
-		return c.Error(exit.Config, GetStorageCAError{Err: err},
+		return c.Error(exit.Config, GetStorageCAError{Err: err,
+			Description: _SESSIONSTATUS_STORAGE_CONF},
 			"failed to get CA cert from a storage config:", err)
 	}
 
@@ -93,7 +96,8 @@ func sessionstatus() (code int) {
 			// TLS configuration
 			ClientCA: storageConf.CA,
 		}, rpc); err != nil {
-			return c.Error(exit.Config, ServerConfError{Err: err},
+			return c.Error(exit.Config, ServerConfError{Err: err,
+				Description: _SESSIONSTATUS_SERVER},
 				"failed to configure server:", err)
 		}
 	}
@@ -101,7 +105,8 @@ func sessionstatus() (code int) {
 	// Start listening for incoming connections during the voting period.
 	if c.Until >= command.Execute {
 		if err = s.ServeAt(c.Ctx, start); err != nil {
-			return c.Error(exit.Unavailable, ServeError{Err: err},
+			return c.Error(exit.Unavailable, ServeError{Err: err,
+				Description: _SESSIONSTATUS_SERVER_SERVE},
 				"failed to serve choices service:", err)
 		}
 	}

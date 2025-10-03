@@ -31,7 +31,7 @@ func (c *Client) getAll(ctx context.Context, keys ...string) (values map[string]
 
 			bval, err := batcher.GetAll(ctx, keys[index:end]...)
 			if err != nil {
-				return nil, GetAllError{Err: err}
+				return nil, GetAllError{Err: err, Description: _STORAGE_BATCH_GET_ALL}
 			}
 			for key, value := range bval {
 				values[key] = value
@@ -50,7 +50,7 @@ func (c *Client) getAll(ctx context.Context, keys ...string) (values map[string]
 		case errors.CausedBy(err, new(NotExistError)) != nil:
 			// Ignore missing keys to match the real GetAll.
 		default:
-			return nil, GetAllSingleError{Key: key, Err: err}
+			return nil, GetAllSingleError{Key: key, Err: err, Description: _STORAGE_GET}
 		}
 	}
 	return
@@ -67,7 +67,7 @@ func (c *Client) getAllStrict(ctx context.Context, keys ...string) (
 		if _, ok := values[key]; !ok {
 			var ne NotExistError
 			ne.Key = key
-			ne.Err = GetAllStrictMissingError{}
+			ne.Err = GetAllStrictMissingError{Description: _STORAGE_BATCH_GET_ALL}
 			return nil, ne
 		}
 	}
@@ -190,7 +190,7 @@ func (c *Client) putAll(ctx context.Context, prefix string,
 	for i := 0; i < workers; i++ {
 		go func() {
 			defer wg.Done()
-			countlog := PutAllProgress{Current: 0}
+			countlog := PutAllProgress{Current: 0, Description: _STORAGE_PUT_PROGRESS}
 			for job := range jobc {
 				n, err := work(job)
 				if err != nil {
@@ -198,7 +198,7 @@ func (c *Client) putAll(ctx context.Context, prefix string,
 					return
 				}
 
-				total := progress(uint64(n))
+				total := progress(uint64(n)) //nolint:gosec
 				if old := atomic.LoadUint64(&logat); total >= old &&
 					atomic.CompareAndSwapUint64(&logat, old, old+logstep) {
 
@@ -229,14 +229,14 @@ func (c *Client) ensureBatch(ctx context.Context, batch []PutAllRequest, keys []
 	case err == nil:
 		return nil
 	case errors.CausedBy(err, new(ExistError)) == nil:
-		return PutAllError{Err: err}
+		return PutAllError{Err: err, Description: _STORAGE_PUT}
 	}
 
 	// Some keys in the batch already exist. Get their values and ensure
 	// that they match the ones being put.
 	existing, err := batcher.GetAll(ctx, keys...)
 	if err != nil {
-		return EnsureBatchGetExistingError{Err: err}
+		return EnsureBatchGetExistingError{Err: err, Description: _STORAGE_BATCH_GET_ALL}
 	}
 
 	// Batch and keys for values that are missing.
@@ -253,9 +253,10 @@ func (c *Client) ensureBatch(ctx context.Context, batch []PutAllRequest, keys []
 
 		if !bytes.Equal(val, kv.Value) {
 			return EnsureBatchExistingMismatchError{
-				Key:      kv.Key,
-				Existing: val,
-				New:      kv.Value,
+				Key:         kv.Key,
+				Existing:    val,
+				New:         kv.Value,
+				Description: _STORAGE_BATCH_RACE,
 			}
 		}
 	}

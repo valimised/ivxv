@@ -42,11 +42,11 @@ func (s Signatures) MarshalJSON() ([]byte, error) {
 			b.WriteByte(',')
 		}
 		if err := e.Encode(fmt.Sprint(
-			c.Signer.Subject.CommonName,
+			c.CommonName(),
 			" ",
 			c.SigningTime.Format(time.RFC3339),
 		)); err != nil {
-			return nil, MarshalSignatureError{Err: err}
+			return nil, MarshalSignatureError{Err: err, Description: _VERSION_JSON}
 		}
 	}
 	b.WriteByte(']')
@@ -58,7 +58,7 @@ func Container(c container.Container) (version string, err error) {
 	b, err := json.Marshal(Signatures(c.Signatures()))
 	version = string(b)
 	if err != nil {
-		err = ContainerError{Err: err}
+		err = ContainerError{Err: err, Description: _VERSION_JSON_ALL}
 	}
 	return
 }

@@ -71,16 +71,19 @@ func voterstatsmain() (code int) {
 	var start, stop time.Time
 	var err error
 	if start, err = c.Conf.Election.ElectionStartTime(); err != nil {
-		return c.Error(exit.Config, ElectionStartTimeError{Err: err},
+		return c.Error(exit.Config, ElectionStartTimeError{Err: err,
+			Description: _VOTERSTATS_START},
 			"failed to parse election start time:", err)
 	}
 	if stop, err = c.Conf.Election.ServiceStopTime(); err != nil {
-		return c.Error(exit.Config, ServiceStopTimeError{Err: err},
+		return c.Error(exit.Config, ServiceStopTimeError{Err: err,
+			Description: _VOTERSTATS_STOP},
 			"failed to parse service stop time:", err)
 	}
 	if start.After(stop) {
 		return c.Error(exit.Config,
-			ElectionStartTimeAfterServiceStopError{Start: start, Stop: stop},
+			ElectionStartTimeAfterServiceStopError{Start: start, Stop: stop,
+				Description: _VOTERSTATS_TIME},
 			"election start time after service stop:", start, ">", stop)
 	}
 
@@ -91,7 +94,8 @@ func voterstatsmain() (code int) {
 	// Load time zone data for the location.
 	loc, err := time.LoadLocation(*timezonep)
 	if err != nil {
-		return c.Error(exit.DataErr, LoadTimeZoneError{Err: err},
+		return c.Error(exit.DataErr, LoadTimeZoneError{Err: err,
+			Description: _VOTERSTATS_TZ},
 			"failed to load time zone:", err)
 	}
 
@@ -103,19 +107,20 @@ func voterstatsmain() (code int) {
 		if errors.CausedBy(err, new(storage.NotExistError)) != nil {
 			code = exit.NoInput
 		}
-		return c.Error(code, GetCountiesError{Err: err},
+		return c.Error(code, GetCountiesError{Err: err, Description: _VOTERSTATS_COUNTIES},
 			"failed to get counties list from storage:", err)
 	}
 	if err := json.Unmarshal(counties, &dists.Counties); err != nil {
-		return c.Error(exit.DataErr, ParseCountiesError{Err: err},
+		return c.Error(exit.DataErr, ParseCountiesError{Err: err,
+			Description: _VOTERSTATS_COUNTIES_JSON},
 			"failed to parse counties list:", err)
 	}
 	if _, ok := dists.Counties[countyForeign]; ok {
-		return c.Error(exit.DataErr, ForeignCountyError{},
+		return c.Error(exit.DataErr, ForeignCountyError{Description: _VOTERSTATS_COUNTIES_FOREIGN},
 			"counties list contains county named", countyForeign)
 	}
 	if _, ok := dists.Counties[countyTotal]; ok {
-		return c.Error(exit.DataErr, TotalCountyError{},
+		return c.Error(exit.DataErr, TotalCountyError{Description: _VOTERSTATS_COUNTIES_TOTAL},
 			"counties list contains county named", countyTotal)
 	}
 
@@ -128,12 +133,13 @@ func voterstatsmain() (code int) {
 	output := c.Args[0]
 	fp, err := os.OpenFile(output, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
-		return c.Error(exit.CantCreate, CreateOutputError{Output: output, Err: err},
+		return c.Error(exit.CantCreate, CreateOutputError{Output: output, Err: err,
+			Description: _VOTERSTATS_FILE},
 			"failed to create output file:", err)
 	}
 	defer func() {
 		if err := fp.Close(); err != nil && code == exit.OK {
-			code = c.Error(exit.IOErr, CloseOutputError{Err: err},
+			code = c.Error(exit.IOErr, CloseOutputError{Err: err, Description: _VOTERSTATS_FILE_CLOSE},
 				"failed to close output file:", err)
 		}
 	}()
@@ -147,7 +153,8 @@ func voterstatsmain() (code int) {
 		stats, err = statsTotal(c.Ctx, c.Conf.Election.Identifier, c.Storage)
 	}
 	if err != nil {
-		return c.Error(exit.Unavailable, ExportStatisticsError{Err: err},
+		return c.Error(exit.Unavailable, ExportStatisticsError{Err: err,
+			Description: _VOTERSTATS_EXP},
 			"failed to export statistics:", err)
 	}
 
@@ -156,7 +163,8 @@ func voterstatsmain() (code int) {
 	encoder.SetIndent("", "    ")
 	err = encoder.Encode(stats)
 	if err != nil {
-		return c.Error(exit.Unavailable, EncodeStatisticsError{Err: err},
+		return c.Error(exit.Unavailable, EncodeStatisticsError{Err: err,
+			Description: _VOTERSTATS_JSON},
 			"failed to encode voter statistics:", err)
 	}
 
@@ -174,7 +182,7 @@ type votersTotalInner struct {
 }
 
 func statsTotal(ctx context.Context, election string, s *storage.Client) (*votersTotal, error) {
-	log.Log(ctx, ExportingTotalStatistics{})
+	log.Log(ctx, ExportingTotalStatistics{Description: _VOTERSTATS_EXP_INFO})
 	progress.Static("Exporting total statistics:")
 	addprogress := progress.Count(0, true)
 	progress.Redraw()
@@ -187,7 +195,7 @@ func statsTotal(ctx context.Context, election string, s *storage.Client) (*voter
 		addprogress(1)
 	}
 	if err := <-errc; err != nil {
-		return nil, GetTotalVotedStatsError{Err: err}
+		return nil, GetTotalVotedStatsError{Err: err, Description: _VOTERSTATS_EXP_FAIL}
 	}
 	return &votersTotal{
 		Total: votersTotalInner{
@@ -218,7 +226,7 @@ func statsDetailed(ctx context.Context, election string,
 	dists *districtlist, periods []period, s *storage.Client, loc *time.Location) (
 	*votersDetailed, error) {
 
-	log.Log(ctx, ExportingDetailedStatistics{})
+	log.Log(ctx, ExportingDetailedStatistics{Description: _VOTERSTATS_EXP_INFO})
 	progress.Static("Exporting detailed statistics:")
 	addprogress := progress.Count(0, true)
 	progress.Redraw()
@@ -243,8 +251,9 @@ func statsDetailed(ctx context.Context, election string,
 		labels := findPeriodLabels(periods, stats.Time)
 		if len(labels) == 0 {
 			nonfatal(ctx, TimeOutsideStatsPeriodError{
-				Voter: stats.Voter,
-				Time:  stats.Time,
+				Voter:       stats.Voter,
+				Time:        stats.Time,
+				Description: _VOTERSTATS_OUTSIDE_TIME,
 			}, "submission time outside of statistics period:", stats.Time)
 			continue
 		}
@@ -255,8 +264,9 @@ func statsDetailed(ctx context.Context, election string,
 			county := dists.findCounty(stats.AdminCode)
 			if county == "" {
 				nonfatal(ctx, AdminUnitWithoutCountyError{
-					Voter:     stats.Voter,
-					AdminCode: stats.AdminCode,
+					Voter:       stats.Voter,
+					AdminCode:   stats.AdminCode,
+					Description: _VOTERSTATS_COUNTY_ADMIN,
 				}, "administrative unit without county:", stats.AdminCode)
 				continue
 			}
@@ -264,7 +274,7 @@ func statsDetailed(ctx context.Context, election string,
 		}
 	}
 	if err := <-errc; err != nil {
-		return nil, GetDetailedVotedStatsError{Err: err}
+		return nil, GetDetailedVotedStatsError{Err: err, Description: _VOTERSTATS_EXP_FAIL}
 	}
 
 	// Convert from map to desired data structure.
@@ -344,7 +354,7 @@ func (d *districtlist) sortedCounties() []string {
 }
 
 func nonfatal(ctx context.Context, err log.ErrorEntry, a ...interface{}) {
-	log.Error(ctx, NonFatalError{Err: err})
+	log.Error(ctx, NonFatalError{Err: err, Description: _VOTERSTATS_NON_FATAL})
 	progress.Hide()
 	fmt.Fprintln(os.Stderr, append([]interface{}{"error: non-fatal error:"}, a...)...)
 	progress.Show()

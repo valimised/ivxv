@@ -1,3 +1,4 @@
+//go:development
 /*
 Package file implements a storage protocol which read and writes data from the
 local filesystem.
@@ -157,7 +158,7 @@ func (f F) GetWithSerial(_ context.Context, key string) (value []byte, serial in
 // CAS implements the storage.PutGetter interface.
 //
 // Note! This method is not actually synchronized.
-func (f F) CAS(_ context.Context, cas string, old, new []byte) (err error) {
+func (f F) CAS(_ context.Context, cas string, old, new []byte) (err error) { //nolint:revive
 
 	// Read the old value and compare it to the expected one.
 	fp, err := os.OpenFile(filepath.Join(f.WD, encode(cas)), os.O_RDWR, 0)

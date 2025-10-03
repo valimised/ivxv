@@ -4,8 +4,12 @@ import ee.ivxv.common.asn1.ASN1DecodingException;
 import ee.ivxv.common.asn1.Field;
 import ee.ivxv.common.crypto.Plaintext;
 import ee.ivxv.common.crypto.rnd.Rnd;
+import org.bouncycastle.math.raw.Mod;
+import org.bouncycastle.pqc.math.linearalgebra.IntegerFunctions;
+
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Arrays;
 
 /**
  * Group of integers modulo a safe prime.
@@ -110,6 +114,11 @@ public class ModPGroup extends Group {
     }
 
     @Override
+    public String getName() {
+        return "ModSafePrime";
+    }
+
+    @Override
     public GroupElement getElement(byte[] data) throws IllegalArgumentException {
         return new ModPGroupElement(this, data);
     }
@@ -160,7 +169,56 @@ public class ModPGroup extends Group {
 
     @Override
     public Plaintext pad(Plaintext msg) {
-        return msg.addPadding(msgBytes());
+        if (msg.padded) {
+            return msg;
+        }
+
+        byte[] padded = msg.getMessage();
+        int totalBytes = msgBytes();
+
+        if (padded.length > totalBytes - 3) {
+            throw new IllegalArgumentException("Padded message length too long");
+        }
+        byte[] padded2 = new byte[totalBytes];
+        int i;
+        padded2[0] = 0x00;
+        padded2[1] = 0x01;
+        padded2[totalBytes - padded.length - 1] = 0x00;
+        for (i = 2; i < totalBytes - padded.length - 1; i++) {
+            padded2[i] = (byte) 0xff;
+        }
+        System.arraycopy(padded, 0, padded2, i + 1, padded.length);
+        return new Plaintext(padded2, true);
+    }
+
+    @Override
+    public Plaintext unpad(Plaintext msg) {
+        if (!msg.padded) {
+            return msg;
+        }
+
+        byte[] padded = msg.getMessage();
+
+        if (padded.length < 3) {
+            throw new IllegalArgumentException("Source message can not contain padding");
+        }
+        if (padded[0] != 0x00 || padded[1] != 0x01) {
+            throw new IllegalArgumentException("Incorrect padding head");
+        }
+        for (int i = 2; i < padded.length; i++) {
+            switch (padded[i]) {
+                case 0:
+                    // found padding end
+                    return new Plaintext(Arrays.copyOfRange(padded, i + 1, padded.length),
+                            false);
+                case (byte) 0xff:
+                    continue;
+                default:
+                    // incorrect padding byte
+                    throw new IllegalArgumentException("Incorrect padding byte");
+            }
+        }
+        throw new IllegalArgumentException("Padding unexpected");
     }
 
     @Override
@@ -219,22 +277,36 @@ public class ModPGroup extends Group {
 
     @Override
     public Decodable isDecodable(GroupElement el) {
-        if (!isGroupElement(el)) {
-            return Decodable.INVALID_GROUP;
-        }
-        BigInteger e = ((ModPGroupElement) el).getValue();
-        if (e.compareTo(BigInteger.ZERO) <= 0) {
+        // Is valid group element
+        Decodable isValid = isGroupElement(el);
+        if (isValid != Decodable.VALID)
+            return isValid;
+
+        // Padded plaintext should be exactly of a group generator order bytes length - 1
+        if (decode((ModPGroupElement) el) == null) {
             return Decodable.INVALID_RANGE;
         }
-        if (e.compareTo(getOrder()) > 0) {
-            return Decodable.INVALID_RANGE;
-        }
-        if (legendre(e) != 1) {
-            return Decodable.INVALID_QR;
-        }
+
         return Decodable.VALID;
     }
 
+    /**
+     * Decodes group element into BigInteger equivalent, or null if group element is not decodable.
+     * @param encoded
+     * @return
+     */
+    private BigInteger decode(ModPGroupElement encoded) {
+        BigInteger e = encoded.getValue();
+
+        BigInteger decoded =
+                e.compareTo(getMultiplicativeGroupOrder()) > 0 ? getOrder().subtract(e) : e;
+
+        // Java strips leading 0x00 padding byte that's why "-1"
+        if (MathUtil.toBytesLen(decoded.bitLength()) != MathUtil.toBytesLen(this.getMultiplicativeGroupOrder().bitLength()) - 1) {
+            return null;
+        }
+        return decoded;
+    }
     /**
      * Decode group element as a message.
      * <p>
@@ -245,15 +317,43 @@ public class ModPGroup extends Group {
      */
     @Override
     public Plaintext decode(GroupElement el) {
-        BigInteger e = ((ModPGroupElement) el).getValue();
-        BigInteger decoded =
-                e.compareTo(getMultiplicativeGroupOrder()) > 0 ? getOrder().subtract(e) : e;
-        return new Plaintext(decoded, msgBits(), true);
+        BigInteger decoded = decode((ModPGroupElement) el);
+        if (decoded == null) {
+            throw new IllegalArgumentException("Element is not decodable");
+        }
+
+        Plaintext padded = new Plaintext(decoded, msgBits(), true);
+        if ((padded.getMessage().length) != MathUtil.toBytesLen(this.getFieldOrder().bitLength())) {
+            throw new IllegalArgumentException("Message not padded to correct length");
+        }
+        return padded;
+
     }
 
     @Override
-    public boolean isGroupElement(GroupElement el) {
-        return this.equals(el.getGroup());
+    public Decodable isGroupElement(GroupElement el) {
+        // Element belongs to group
+        if (!this.equals(el.getGroup())) {
+            return Decodable.INVALID_GROUP;
+        }
+
+        // Element value > 0
+        BigInteger e = ((ModPGroupElement) el).getValue();
+        if (e.compareTo(BigInteger.ZERO) <= 0) {
+            return Decodable.INVALID_RANGE;
+        }
+
+        // Element value < group field order
+        if (e.compareTo(getOrder()) > 0) {
+            return Decodable.INVALID_RANGE;
+        }
+
+        // Is quadratic residue
+        if (IntegerFunctions.jacobi(((ModPGroupElement)el).getValue(), this.getFieldOrder()) != 1) {
+            return Decodable.INVALID_QR;
+        }
+
+        return Decodable.VALID;
     }
 
     /**

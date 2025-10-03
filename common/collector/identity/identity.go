@@ -47,7 +47,7 @@ func Get(t Type) (i Identifier, err error) {
 	defer reglock.RUnlock()
 	i, ok := registry[t]
 	if !ok {
-		return nil, UnlinkedTypeError{Type: t}
+		return nil, UnlinkedTypeError{Type: t, Description: _IDENTITY_UNKNOWN}
 	}
 	return i, nil
 }
@@ -55,11 +55,13 @@ func Get(t Type) (i Identifier, err error) {
 // commonName returns the CommonName from a Distinguished Name.
 func commonName(name *pkix.Name) (id string, err error) {
 	if name == nil {
-		return "", CNEmptyDNError{}
+		return "", CNEmptyDNError{
+			Description: _IDENTITY_NO_DN,
+		}
 	}
 	id = name.CommonName
 	if len(id) == 0 {
-		err = EmptyCNError{}
+		err = EmptyCNError{Description: _IDENTITY_NO_CN}
 	}
 	return
 }
@@ -67,11 +69,15 @@ func commonName(name *pkix.Name) (id string, err error) {
 // serialNumber returns the SerialNumber from a Distinguished Name.
 func serialNumber(name *pkix.Name) (id string, err error) {
 	if name == nil {
-		return "", SerialEmptyDNError{}
+		return "", SerialEmptyDNError{
+			Description: _IDENTITY_NO_DN_SERIAL,
+		}
 	}
 	id = name.SerialNumber
 	if len(id) == 0 {
-		err = EmptySerialError{}
+		err = EmptySerialError{
+			Description: _IDENTITY_NO_CN_SERIAL,
+		}
 	}
 	return
 }
@@ -81,7 +87,9 @@ func serialNumber(name *pkix.Name) (id string, err error) {
 // number in accordance with ETSI EN 319 412-1 section 5.1.3.
 func pnoee(name *pkix.Name) (id string, err error) {
 	if name == nil {
-		return "", PNOEEEmptyDNError{}
+		return "", PNOEEEmptyDNError{
+			Description: _IDENTITY_NO_VOTER_ID,
+		}
 	}
 	id, err = serialNumber(name)
 	return strings.TrimPrefix(id, "PNOEE-"), err

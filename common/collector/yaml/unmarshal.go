@@ -52,7 +52,7 @@ func Apply(n Node, v interface{}) (err error) {
 
 	r := reflect.ValueOf(v)
 	if r.Kind() != reflect.Ptr || r.IsNil() {
-		return ApplyInvalidTargetError{Type: r.Type()}
+		return ApplyInvalidTargetError{Type: r.Type(), Description: _YAML_NOT_PTR_OR_NIL}
 	}
 	apply(n, r)
 	return

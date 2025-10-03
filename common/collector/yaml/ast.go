@@ -53,13 +53,13 @@ func (s Scalar) apply(v reflect.Value) {
 	case reflect.Int64:
 		i, err := strconv.ParseInt(s.String(), 10, 64)
 		if err != nil {
-			s.error(InvalidInt64Error{Value: s, Err: err})
+			s.error(InvalidInt64Error{Value: s, Err: err, Description: _YAML_INT64})
 		}
 		v.SetInt(i)
 	case reflect.Uint64:
 		u, err := strconv.ParseUint(s.String(), 10, 64)
 		if err != nil {
-			s.error(InvalidUint64Error{Value: s, Err: err})
+			s.error(InvalidUint64Error{Value: s, Err: err, Description: _YAML_INT64})
 		}
 		v.SetUint(u)
 	case reflect.Bool:
@@ -69,13 +69,13 @@ func (s Scalar) apply(v reflect.Value) {
 		case "false":
 			v.SetBool(false)
 		default:
-			s.error(InvalidBoolError{Value: s})
+			s.error(InvalidBoolError{Value: s, Description: _YAML_BOOL})
 		}
 	case reflect.Slice:
 		if v.Type().Elem().Kind() == reflect.Uint8 {
 			b, err := base64.StdEncoding.DecodeString(s.String())
 			if err != nil {
-				s.error(InvalidBase64Error{Value: s, Err: err})
+				s.error(InvalidBase64Error{Value: s, Err: err, Description: _YAML_B64})
 			}
 			v.Set(reflect.ValueOf(b))
 			break
@@ -83,7 +83,7 @@ func (s Scalar) apply(v reflect.Value) {
 		fallthrough
 	default:
 		if !reflect.TypeOf(s).AssignableTo(v.Type()) {
-			s.error(InvalidScalarError{Type: v.Type()})
+			s.error(InvalidScalarError{Type: v.Type(), Description: _YAML_SCALAR})
 		}
 		v.Set(reflect.ValueOf(s))
 	}
@@ -99,7 +99,7 @@ func (s Scalar) String() string {
 }
 
 func (s Scalar) error(err error) {
-	stop(ApplyScalarError{Path: s.path, Err: err})
+	stop(ApplyScalarError{Path: s.path, Err: err, Description: _YAML_SCALAR_ERR})
 }
 
 // Sequence represents a YAML sequence.
@@ -120,11 +120,12 @@ func (s Sequence) apply(v reflect.Value) {
 		}
 	case reflect.Array:
 		if v.Len() != len(s.elements) {
-			s.error(InvalidArrayLengthError{Len: v.Len(), Expected: len(s.elements)})
+			s.error(InvalidArrayLengthError{Len: v.Len(), Expected: len(s.elements),
+				Description: _YAML_ARRAY})
 		}
 	default:
 		if !reflect.TypeOf(s).AssignableTo(v.Type()) {
-			s.error(InvalidSliceError{Type: v.Type()})
+			s.error(InvalidSliceError{Type: v.Type(), Description: _YAML_SLICE})
 		}
 		v.Set(reflect.ValueOf(s))
 		return
@@ -154,7 +155,7 @@ func (s Sequence) equal(other Node) bool {
 }
 
 func (s Sequence) error(err error) {
-	stop(ApplySequenceError{Path: s.path, Err: err})
+	stop(ApplySequenceError{Path: s.path, Err: err, Description: _YAML_SEQUENCE_ERR})
 }
 
 // Mapping represents a YAML mapping.
@@ -194,7 +195,8 @@ func (m Mapping) apply(v reflect.Value) {
 	case reflect.Map:
 		ktype := v.Type().Key()
 		if !reflect.TypeOf("").ConvertibleTo(ktype) {
-			m.error(KeyNotConvertibleToStringError{Type: ktype})
+			m.error(KeyNotConvertibleToStringError{Type: ktype,
+				Description: _YAML_STRING})
 		}
 		if v.IsNil() {
 			v.Set(reflect.MakeMap(v.Type()))
@@ -206,7 +208,7 @@ func (m Mapping) apply(v reflect.Value) {
 		}
 	default:
 		if !reflect.TypeOf(m).AssignableTo(v.Type()) {
-			m.error(InvalidMappingError{Type: v.Type()})
+			m.error(InvalidMappingError{Type: v.Type(), Description: _YAML_MAPPING})
 		}
 		v.Set(reflect.ValueOf(m))
 	}
@@ -229,7 +231,7 @@ func (m Mapping) equal(other Node) bool {
 }
 
 func (m Mapping) error(err error) {
-	stop(ApplyMappingError{Path: m.path, Err: err})
+	stop(ApplyMappingError{Path: m.path, Err: err, Description: _YAML_MAPPING_ERR})
 }
 
 // indirect dereferences p until it finds a non-pointer. If any nil values are

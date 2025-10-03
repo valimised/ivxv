@@ -40,7 +40,20 @@ public interface ContainerReader {
     Container read(String path) throws InvalidContainerException;
 
     /**
+     * Reads a signed container from the specified path and returns it if the container is valid.
+     * Container size is limited by limitSize.
+     *
+     * @param path
+     * @param limitSize
+     * @return
+     * @throws InvalidContainerException if the container is not valid.
+     */
+    Container read(String path, int limitSize) throws InvalidContainerException;
+
+    /**
      * Reads a signed container from the specified stream and returns it if the container is valid.
+     * NB! BDOC appended bytes presence is not validated when container is passed as InputStream, use read(String path)
+     * for it.
      * 
      * @param input
      * @param ref The reference name of the container

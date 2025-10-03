@@ -58,6 +58,7 @@ public class SquashTool implements Tool.Runner<SquashArgs> {
 
         removeRecurrentVotes(bb);
         removeInvalidCiphertexts(bb, pub);
+        reporter.writeInvalidVotesErrors(args.out.value());
 
         Path OUT_IVLJSON = Util.prefixedPath(bb.getElection(), OUT_IVLJSON_TMPL);
         Path OUT_IVLPDF = Util.prefixedPath(bb.getElection(), OUT_IVLPDF_TMPL);
@@ -108,9 +109,10 @@ public class SquashTool implements Tool.Runner<SquashArgs> {
         log2Records.add(ctx.reporter.newLog123Record(vid, b));
     }
 
-    private void collectinvalid(String vid, Ballot b) {
+    private void collectinvalid(String vid, Ballot b, String qid, CorrectnessUtil.CiphertextCorrectness cc, byte[] vote) {
         revocationRecords.add(ctx.reporter.newRevocationRecordForInvalidVote(vid, b));
         log2Records.add(ctx.reporter.newLog123Record(vid, b));
+        reporter.reportAbbError(vid, b, qid, cc);
     }
 
     private class CiphertextFilter implements BallotBox.VoteFilter, Closeable {
@@ -131,7 +133,7 @@ public class SquashTool implements Tool.Runner<SquashArgs> {
             p.increase(1);
 
             if (!isValid) {
-                collectinvalid(voterId, b);
+                collectinvalid(voterId, b, qid, res, vote);
             }
 
             return isValid;

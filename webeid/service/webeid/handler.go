@@ -29,11 +29,11 @@ type ChallengeResp struct {
 
 // Challenge is an RPC endpoint to provide a cryptographic nonce.
 func (r *RPC) Challenge(req ChallengeReq, resp *ChallengeResp) (err error) {
-	log.Log(req.Ctx, ChallengeRequest{})
+	log.Log(req.Ctx, ChallengeRequest{Description: _WEBEID_CHALLENGEREQ})
 
 	// Check that election period is not ended
 	if !time.Now().Before(r.authEnd) {
-		log.Log(req.Ctx, ChallengeVotingEnded{})
+		log.Log(req.Ctx, ChallengeVotingEnded{Description: _WEBEID_EXPIRED})
 		return server.ErrVotingEnd
 	}
 
@@ -46,18 +46,21 @@ func (r *RPC) Challenge(req ChallengeReq, resp *ChallengeResp) (err error) {
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(req.Ctx, ChallengeVerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(req.Ctx, ChallengeVerifySessionIDError{Err: err, Description: _WEBEID_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(req.Ctx, ChallengeUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(req.Ctx, ChallengeUpdateSessionIDError{Description: _WEBEID_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
 	// Generate 44 byte nonce
 	nonce, err := cryptoutil.Nonce44Bytes()
 	if err != nil {
-		log.Error(req.Ctx, ChallengeGenerateNonceError{Err: err})
+		// Error in nonce generation
+		log.Error(req.Ctx, ChallengeGenerateNonceError{Err: err, Description: _WEBEID_CHALLENGE})
 		return server.ErrInternal
 	}
 
@@ -70,7 +73,8 @@ func (r *RPC) Challenge(req ChallengeReq, resp *ChallengeResp) (err error) {
 	// Payload is a serialized bearerToken
 	payload, err := bearerToken.Payload()
 	if err != nil {
-		log.Error(req.Ctx, ChallengeExtractPayloadFromBearerError{Err: err})
+		log.Error(req.Ctx, ChallengeExtractPayloadFromBearerError{Err: err,
+			Description: _WEBEID_PAYLOAD})
 		return server.ErrInternal
 	}
 
@@ -85,7 +89,7 @@ func (r *RPC) Challenge(req ChallengeReq, resp *ChallengeResp) (err error) {
 		Build().
 		Marshal()
 	if err != nil {
-		log.Error(req.Ctx, ChallengeMarshalBearerError{Err: err})
+		log.Error(req.Ctx, ChallengeMarshalBearerError{Err: err, Description: _WEBEID_BEARER})
 		return server.ErrInternal
 	}
 
@@ -95,9 +99,11 @@ func (r *RPC) Challenge(req ChallengeReq, resp *ChallengeResp) (err error) {
 	// Return nonce to client
 	resp.Challenge = []byte(nonce)
 
+	// Successful challenge response
 	log.Log(req.Ctx, ChallengeResponse{
-		Challenge: resp.Challenge,
-		Bearer:    resp.Bearer,
+		Challenge:   resp.Challenge,
+		Bearer:      resp.Bearer,
+		Description: _WEBEID_CHALLENGERESP,
 	})
 
 	return nil
@@ -126,11 +132,11 @@ type TokenResp struct {
 
 // Token is an RPC endpoint to validate a Web eID authentication token.
 func (r *RPC) Token(req TokenReq, resp *TokenResp) (err error) {
-	log.Log(req.Ctx, TokenRequest{})
+	log.Log(req.Ctx, TokenRequest{Description: _WEBEID_TOKENREQ})
 
 	// Check that election period is not ended
 	if !time.Now().Before(r.authEnd) {
-		log.Log(req.Ctx, TokenVotingEnded{})
+		log.Log(req.Ctx, TokenVotingEnded{Description: _WEBEID_EXPIRED})
 		return server.ErrVotingEnd
 	}
 
@@ -143,11 +149,13 @@ func (r *RPC) Token(req TokenReq, resp *TokenResp) (err error) {
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(req.Ctx, TokenVerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(req.Ctx, TokenVerifySessionIDError{Err: err, Description: _WEBEID_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(req.Ctx, TokenUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(req.Ctx, TokenUpdateSessionIDError{Description: _WEBEID_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
@@ -157,32 +165,37 @@ func (r *RPC) Token(req TokenReq, resp *TokenResp) (err error) {
 		Build().
 		Unmarshal()
 	if err != nil {
-		log.Error(req.Ctx, TokenUnmarshalBearerError{Err: err})
+		log.Error(req.Ctx, TokenUnmarshalBearerError{Err: err, Description: _WEBEID_BEARER})
 		return server.ErrBadRequest
 	}
 
-	// Get bearer token signature
+	// Extract bearer token signature
 	sig, err := bearerToken.Signature()
 	if err != nil {
-		log.Error(req.Ctx, TokenExtractSignatureFromBearerError{Err: err})
+		log.Error(req.Ctx, TokenExtractSignatureFromBearerError{Err: err,
+			Description: _WEBEID_SIG})
 		return server.ErrBadRequest
 	}
 
 	// Verify bearer token signature
 	data, err := r.cookie.Open(sig)
 	if err != nil {
-		log.Error(req.Ctx, TokenVerifyBearerSignatureError{Err: err})
+		log.Error(req.Ctx, TokenVerifyBearerSignatureError{Err: err,
+			Description: _WEBEID_SIG_VERIFY})
 		return server.ErrBadRequest
 	}
 	if data == nil {
-		log.Error(req.Ctx, TokenBearerSignatureIsEmptyAfterDecryptError{Err: err})
+		// No data in the bearer token
+		log.Error(req.Ctx, TokenBearerSignatureIsEmptyAfterDecryptError{Err: err,
+			Description: _WEBEID_SIG_DATA})
 		return server.ErrBadRequest
 	}
 
 	// Payload returns nonce
 	nonce, err := bearerToken.Payload()
 	if err != nil {
-		log.Error(req.Ctx, TokenExtractPayloadFromBearerError{Err: err})
+		log.Error(req.Ctx, TokenExtractPayloadFromBearerError{Err: err,
+			Description: _WEBEID_PAYLOAD})
 		return server.ErrBadRequest
 	}
 
@@ -194,7 +207,8 @@ func (r *RPC) Token(req TokenReq, resp *TokenResp) (err error) {
 		Build().
 		Unmarshal()
 	if err != nil {
-		log.Error(req.Ctx, TokenUnmarshalWebeidError{Err: err})
+		log.Error(req.Ctx, TokenUnmarshalWebeidError{Err: err,
+			Description: _WEBEID_TOKEN})
 		return server.ErrBadRequest
 	}
 
@@ -208,14 +222,16 @@ func (r *RPC) Token(req TokenReq, resp *TokenResp) (err error) {
 	// Validate auth cert from the req.Ctx and perform OCSP check
 	authCert, _, err := r.auther.Auth.Verify(req.Ctx, auth.TLS, nil)
 	if err != nil {
-		log.Error(req.Ctx, TokenVerifyWebeidAuthCertCAnOCSPError{Err: err})
+		log.Error(req.Ctx, TokenVerifyWebeidAuthCertCAnOCSPError{Err: err,
+			Description: _WEBEID_CERT})
 		return server.ErrCertificate
 	}
 
 	// Verify Web eID auth token signature
 	err = wToken.Verify()
 	if err != nil {
-		log.Error(req.Ctx, TokenVerifyWebeidError{Err: err})
+		log.Error(req.Ctx, TokenVerifyWebeidError{Err: err,
+			Description: _WEBEID_TOKEN_VERIFY})
 		return server.ErrBadRequest
 	}
 
@@ -227,9 +243,12 @@ func (r *RPC) Token(req TokenReq, resp *TokenResp) (err error) {
 
 	// Create client authentication cookie (ticket)
 	if resp.AuthToken, err = r.ticket.Create(cert.Subject); err != nil {
-		log.Error(req.Ctx, TokenAuthenticationTicketError{Err: err})
+		log.Error(req.Ctx, TokenAuthenticationTicketError{Err: err,
+			Description: _WEBEID_AUTHTOKEN})
 		return server.ErrInternal
 	}
+
+	// Successful token response
 
 	log.Log(req.Ctx, TokenResponse{
 		Status:       resp.Status,
@@ -237,6 +256,7 @@ func (r *RPC) Token(req TokenReq, resp *TokenResp) (err error) {
 		Surname:      resp.Surname,
 		PersonalCode: resp.PersonalCode,
 		AuthToken:    log.Sensitive(resp.AuthToken),
+		Description:  _WEBEID_TOKENRESP,
 	})
 
 	return nil

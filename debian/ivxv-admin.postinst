@@ -119,12 +119,6 @@ case "$1" in
             APACHE_RESTART="restart"
         fi
 
-        # enable JavaScript modules for Apache
-        if [ ! -L /etc/apache2/conf-enabled/javascript-common.conf ]; then
-            a2enconf javascript-common
-            APACHE_RESTART="restart"
-        fi
-
         # remove Apache default site config
         if [ -L /etc/apache2/sites-enabled/000-default.conf ]; then
             echo "# Disabling Apache default site"

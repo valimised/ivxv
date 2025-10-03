@@ -286,71 +286,70 @@ def apply_cfg_to_services(services, cfg_type, tech_cfg, cfg_data):
             continue
 
         service_data['service_type'] = service_type  # used by Service()
-        service = Service(service_id, service_data)
+        with Service(service_id, service_data) as service:
+            # apply technical config
+            if cfg_type == 'technical':
+                # initialize service host if required
+                if not host_state[service.hostname]:
+                    log.info("Initializing service host %r", service.hostname)
+                    success = service.init_service_host()
+                    if not success:
+                        results[service_id] = False
+                        continue
+                    with IVXVManagerDb(for_update=True) as db:
+                        db.set_value(f'host/{service.hostname}/state',
+                                     'REGISTERED')
+                    host_state[service.hostname] = 'REGISTERED'
 
-        # apply technical config
-        if cfg_type == 'technical':
-            # initialize service host if required
-            if not host_state[service.hostname]:
-                log.info("Initializing service host %r", service.hostname)
-                success = service.init_service_host()
-                if not success:
-                    results[service_id] = False
-                    continue
-                with IVXVManagerDb(for_update=True) as db:
-                    db.set_value(f'host/{service.hostname}/state',
-                                 'REGISTERED')
-                host_state[service.hostname] = 'REGISTERED'
-
-            # apply config
-            log.info('Service %s: Applying technical config', service_id)
-            cfg_version = cfg_data[cfg_type]['version']
-            attempt_no = service.load_apply_state(
-                cfg_data[cfg_type]['state_file'], attempt_no)
-            cfg_success = service.apply_tech_cfg(cfg_version, tech_cfg)
-            report_applying_result()
-            service.update_apply_state()
-
-        # apply election config
-        elif (cfg_type == 'election'
-              and SERVICE_TYPE_PARAMS[service_type]['require_config']):
-            log.info('Service %s: Applying elections config', service_id)
-            cfg_version = cfg_data[cfg_type]['version']
-            attempt_no = service.load_apply_state(
-                cfg_data[cfg_type]['state_file'], attempt_no)
-            cfg_success = service.apply_election_cfg(cfg_version)
-            report_applying_result()
-            service.update_apply_state()
-
-        # apply choices/districts list
-        elif (cfg_type in ["choices", "districts"] and service_type == "choices"
-              and cfg_type not in applied_lists):
-            log.info("Service %s: Applying %s list", service_id, cfg_type)
-            cfg_version = cfg_data[cfg_type]['version']
-            attempt_no = service.load_apply_state(
-                cfg_data[cfg_type]['state_file'], attempt_no)
-            cfg_success = service.apply_list(cfg_type)
-            report_applying_result()
-            service.update_apply_state(completed=True)
-            applied_lists.append(cfg_type)
-
-        # apply voters lists
-        elif (cfg_type == 'voters' and service_type == 'voting'
-              and 'voters' not in applied_lists):
-            for changeset_no in service_cfg_state[service_id]["voters"]:
-                log.info(
-                    "Service %s: Applying voter list changeset #%d",
-                    service_id,
-                    changeset_no,
-                )
-                voters_list_id = f"voters{changeset_no:04}"
-                cfg_version = cfg_data[voters_list_id]['version']
+                # apply config
+                log.info('Service %s: Applying technical config', service_id)
+                cfg_version = cfg_data[cfg_type]['version']
                 attempt_no = service.load_apply_state(
-                    cfg_data[voters_list_id]['state_file'])
-                cfg_success = service.apply_list(cfg_type, changeset_no)
+                    cfg_data[cfg_type]['state_file'], attempt_no)
+                cfg_success = service.apply_tech_cfg(cfg_version, tech_cfg)
+                report_applying_result()
+                service.update_apply_state()
+
+            # apply election config
+            elif (cfg_type == 'election'
+                  and SERVICE_TYPE_PARAMS[service_type]['require_config']):
+                log.info('Service %s: Applying elections config', service_id)
+                cfg_version = cfg_data[cfg_type]['version']
+                attempt_no = service.load_apply_state(
+                    cfg_data[cfg_type]['state_file'], attempt_no)
+                cfg_success = service.apply_election_cfg(cfg_version)
+                report_applying_result()
+                service.update_apply_state()
+
+            # apply choices/districts list
+            elif (cfg_type in ["choices", "districts"] and service_type == "choices"
+                  and cfg_type not in applied_lists):
+                log.info("Service %s: Applying %s list", service_id, cfg_type)
+                cfg_version = cfg_data[cfg_type]['version']
+                attempt_no = service.load_apply_state(
+                    cfg_data[cfg_type]['state_file'], attempt_no)
+                cfg_success = service.apply_list(cfg_type)
                 report_applying_result()
                 service.update_apply_state(completed=True)
-                applied_lists.append('voters')
+                applied_lists.append(cfg_type)
+
+            # apply voters lists
+            elif (cfg_type == 'voters' and service_type == 'voting'
+                  and 'voters' not in applied_lists):
+                for changeset_no in service_cfg_state[service_id]["voters"]:
+                    log.info(
+                        "Service %s: Applying voter list changeset #%d",
+                        service_id,
+                        changeset_no,
+                    )
+                    voters_list_id = f"voters{changeset_no:04}"
+                    cfg_version = cfg_data[voters_list_id]['version']
+                    attempt_no = service.load_apply_state(
+                        cfg_data[voters_list_id]['state_file'])
+                    cfg_success = service.apply_list(cfg_type, changeset_no)
+                    report_applying_result()
+                    service.update_apply_state(completed=True)
+                    applied_lists.append('voters')
 
     return results
 

@@ -26,15 +26,42 @@ Valija tahteavaldus avakujul
 ============================
 
 Valija tahteavaldus avakujul eksisteerib valijarakenduses ning hiljem ka
-kontrollrakenduses. Tahteavaldus sisaldab nii valiku koodi ringkonnas, ringkonna
-EHAK-koodi kui ka valiku nimekirja nime ning konkreetse valiku nime nimekirjas.
+kontrollrakenduses ja häälte kokkulugemisel võtmerakenduses. Tahteavaldus
+sisaldab valiku koodi ringkonnas ja ringkonna EHAK-koodi. Eraldajana
+kasutatakse ASCII kooditabeli sümbolit `0x2E` ehk ".".
+Vormingus spetsifitseerimata sümbolite kasutamine ei ole lubatud, vormingule
+mittevastavad sedelid loetakse kehtetuks.
 
 .. code-block:: bnf
 
-    choice-name = 1*100UTF-8-CHAR
-    choicelist-name = 1*100UTF-8-CHAR
+   <digit> ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 
-    ballot = district-choice '\x1F' choicelist-name '\x1F' choice-name
+   <ehak-kood> ::= <digit> <digit> <digit> <digit>
+
+   <kandidaadi-number> ::= <digit> <digit> <digit>
+                         | <digit> <digit> <digit> <digit>
+
+   <dot> ::= 0x2E
+
+   <ballot> ::= <ehak-kood> <dot> <kandidaadi-number>
+
+
+Järgmised tahteavaldused on vormistatud korrektselt:
+
+.. code-block:: bnf
+
+   0000.123
+   0321.1234
+   0000.1234
+
+Järgmised tahteavaldused ei ole vormistatud korrektselt:
+
+.. code-block:: bnf
+
+   0000 . 123      (*  vorming ei näe ette tühikute kasutamist     *)
+   0000-123        (*  vorming lubab eraldajana vaid sümbolit "."  *)
+   123             (*  mõlemad vormingukomponendid tuleb esitada   *)
+   321.1234        (*  EHAK kood on 4-kohaline identifikaator      *)
 
 
 Krüpteeritud sedel
@@ -44,67 +71,47 @@ Valija tahteavaldus avakujul :token:`ballot` krüpteeritakse valijarakenduse
 poolt valimise korraldaja genereeritud avaliku võtmega. IVXV vajab
 krüpteerimiseks mitte-deterministlikku, homomorfset avaliku võtme
 krüptosüsteemi. Selliseks süsteemiks sobib ElGamal krüptosüsteem, mida täna
-rakendatakse IVXV kontekstis jäägiklassi rühmal.
+rakendatakse IVXV kontekstis nii jäägiklassiringi `Zp` multiplikatiivsel rühmal
+`Zp*` (MODP tüüpi rühmad) kui ka elliptkõveratel (ECC tüüpi rühmad).
 
 ElGamal avalik võti kodeeritakse koos ElGamal krüptosüsteemi parameetritega ning
 konkreetset valimist iseloomustava identifikaatoriga. Krüptosüsteemi parameetrid
-on osaks algoritmi identifikaatori struktuurist, avalik võti on kodeeritud
-:token:`SubjectPublicKeyInfo` struktuuri.
+on osaks algoritmi identifikaatori struktuurist, avalik võti on kodeeritud X509
+standardis kirjeldatud :token:`SubjectPublicKeyInfo` struktuuri
+:token:`subjectPublicKey` välja.
 
 ::
-
-    elGamalEncryption OBJECT IDENTIFIER ::= {
-        {iso(1) org(3) dod(6) internet(1) private(4) enterprise(1) dds(3029) asymmetric-encryption(2) 1}
-    }
-
-    elGamal-Params-IVXV ::= SEQUENCE {
-        p                   INTEGER,
-        g                   INTEGER,
-        election-identifier GeneralString
-    }
-
-    elGamalPublicKey ::= SEQUENCE {
-        y           INTEGER,
-    }
 
     SubjectPublicKeyInfo ::= SEQUENCE {
         algorithm   AlgorithmIdentifier,
         subjectPublicKey    BIT STRING
     }
 
+MODP tüüpi rühmade korral identifitseerib algoritmi identifikaator
+:token:`id-ivxv-modp-elgamal`. Parameetrid vastavad struktuurile
+:token:`IVXVModPElGamalParameters` ning avalik võti struktuurile
+:token:`IVXVModPElGamalPublicKey` (:ref:`asn-modp`).
+
+ECC tüüpi rühmade korral identifitseerib algoritmi identifikaator
+:token:`id-ivxv-ecc-elgamal`. Parameetrid vastavad struktuurile
+:token:`IVXVECCElGamalParameters` ning avalik võti struktuurile
+:token:`IVXVECCElGamalPublicKey` (:ref:`asn-ecc`).
 
 Valija tahteavalduse krüpteerimiseks võetakse UTF-8 kodeeringus struktuur
 :token:`ballot` ning teisendatakse see ElGamal parameetrite poolt kirjeldatud
-rühma elemendiks. Eeldame, et parameeter :token:`p` on 256 baiti. Sellisel juhul
-võib struktuuri :token:`ballot` pikkus olla 253 baiti. Avakujul tahteavaldus
-pikendatakse parameetri :token:`p` pikkuseni.
+rühma elemendiks vastavalt MODP või ECC algoritmidele. Rühma elemendiks
+teisendatud tahteavaldus krüpteeritakse ElGamal algoritmiga ning kodeeritakse
+MODP korral struktuuri :token:`IVXVModPElGamalCiphertext` (:ref:`asn-modp`) ja
+ECC korral struktuuri :token:`IVXVECCElGamalCiphertext` (:ref:`asn-ecc`).
+Lõplik krüpteeritud tahteavaldus esitatakse struktuuris
+:token:`IVXVElGamalCiphertext` (:ref:`asn-general`), kus väli
+:token:`algorithm` viitab rühma tüübile ning väli :token:`ciphertext`
+rühmaspetsiifilisele krüptogrammile. Andmestruktuuri
+:token:`IVXVElGamalCiphertext` DER-kodeering on krüpteeritud sedel ehk sisemine
+ümbrik topeltümbriku skeemis.
 
-.. code-block:: bnf
-
-    padded-ballot = ballot '\x00' '\x01' *'\xff' '\x00'
-
-
-Pikendatud tahteavaldust interpreteeritakse kui täisarvu, mis kodeeritakse
-ruutjäägina parameetri :token:`p` poolt kirjeldatud rühmas. Kodeerimine on
-üksühene ning oluline krüptogrammi edasise miksimise jaoks.
-
-Tahteavaldus krüpteeritakse vastavalt ElGamal meetodile avaliku võtmega.
-
-::
-
-    elGamalEncryptedMessage ::= SEQUENCE {
-        a           INTEGER,
-        b           INTEGER
-    }
-
-    encryptedBallot ::= SEQUENCE {
-        algorithm   AlgorithmIdentifier,
-        cipher  ANY
-    }
-
-
-Andmestruktuuri :token:`encryptedBallot` DER-kodeering on krüpteeritud sedel ehk
-sisemine ümbrik topeltümbriku skeemis.
+..
+  NB! Nende algoritmide spetsifikatsioonidele tuleb viidata.
 
 Tahteavalduse krüpteerimise käigus genereeritakse valijarakenduses juhuarv, mida
 ElGamal krüpteerimisel kasutab. Sama juhuarv avalikustatakse hiljem
@@ -122,50 +129,70 @@ digitaalselt allkirjastada, milleks on võimalik kasutada kõiki Eesti Vabariigi
 kehtivaid digitaalallkirjavahendeid – ID-kaart, Digi-ID, Mobiil-ID, Smart-ID.
 ID-kaarti saab kasutada nii TLS-CCA kui Web-eID protokolliga.
 
+.. attention::
+
+   Loend digitaalallkirjavahenditest ja nendega seotud protokollidest on
+   tehniliselt korrektne, kuid valimiste korraldajal on võimalus kasutada vaid
+   mõnda alamhulka nimetatud vahenditest.
+
 Käesolev spetsifikatsioon näeb ette Eesti Vabariigi Standardikavandis [BDOC2.1]
 defineeritud BDOC allkirjavormingu kasutamise. BDOC allkirjavorming koosneb ETSI
 standardi TS 101 903 (XadES) profiilist ning OpenDocument konteineri vormingust.
-IVXV protokollistik võimaldab ka alternatiivsete allkirja- ning
-konteinervormingute kasutamist.
 
 Olenevalt käimasoleval valimisel esitatud küsimuste arvust võib digitaalselt
 allkirjastatud hääl sisaldada ühte või mitut andmefaili MIME-tüübiga
 ``application/octet-stream``. Iga andmefaili sisuks on krüpteeritud sedel.
 Andmefaili ja teiste signeeritavate andmeobjektide räsimiseks enne
 allkirjastamist kasutatakse räsifunktsiooni SHA-256. Andmefaili nimi
-moodustatakse laiendist '``ballot``' ning valimise ja küsimuse
-identifikaatorist. Kõik viidatud andmefailid peavad sisalduma
+moodustatakse laiendist '``ballot``' ning valimise identifikaatorist ja
+küsimuse identifikaatorist. Kõik viidatud andmefailid peavad sisalduma
 allkirjakonteineris. Digitaalselt allkirjastatud hääl ei tohi sisaldada muid
 andmefaile kui neid, mis sisaldavad hääli mõne käimasoleva valimise kontekstis.
 Seadistusele mittevastavate häälte vastuvõtmisest, talletamisest ja
 töötlemisest peab kogumisteenus keelduma.
 
+.. attention::
+
+   Valimise identifikaator ja küsimuse identifikaator on defineeritud valimise
+   korraldaja poolt loodud seadistustes ning töötlevad rakendused peavad
+   lähtuma neist seadistustest otsustamaks, millised vormingule vastavad
+   identifikaatorid on konkreetse sündmuse kontekstis lubatud ja millised
+   mitte.
+
 
 .. code-block:: bnf
 
-    extension = "ballot"
+   <ascii-char> ::= [ASCII]
 
-    encrypted-ballot-name = election-identifier '.' question-identifier '.' extension
+   <election-identifier> ::= 1..28 <ascii-char>
+
+   <question-identifier> ::= 1..28 <ascii-char>
+
+   <extension> ::= "ballot"
+
+   <dot> ::= 0x2E
+
+   <encrypted-ballot-name> ::= <election-identifier> <dot> <question-identifier> <dot> <extension>
 
 
 Valija poolt valijarakenduses allkirjastatud hääl moodustatakse nii, et on
 võimalik selle edasine kvalifitseerimine kogumisteenuses. Käesolev
-septsifikatsioon näeb ette hääle kvalifitseerimiseks nii OCSP kehtivuskinnituse
-kui PKIX ajatempli võtmise. Sellisena on lõplik, kvalfitseeritud hääl, BDOC-TS
-vormingus.
+spetsifikatsioon näeb ette hääle kvalifitseerimiseks nii PKIX ajatempli kui
+OCSP kehtivuskinnituse võtmise. Sellisena on lõplik kvalifitseeritud hääl
+vastav BDOC-TS profiilile.
 
 Kui hääl allkirjastatakse ID-kaardi või Digi-ID'ga, siis toimub algse
 allkirjastatud konteineri moodustamine valijarakenduses. Kui hääl
 allkirjastatakse Mobiil-ID või Smart-ID'ga, siis toimub konteineri moodustamine
-valijarakenduse ning kogumisteenuse poolt vahendatava Mobiil-ID/Smart-ID teenuse koostöös.
-Mobiil-ID/Smart-ID juhtumil kasutab kogumisteenus Mobiil-ID/Smart-ID teenust ainult signatuuri
-saamiseks krüpteeritud sedelile. Kõik hääle kvalifitseerimiseks vajalikud
-elemendid hangitakse vastavatelt teenustelt alles siis kui valijarakendus on
-saatnud signeeritud hääle talletamiseks. Kvalifitseeritud hääl esitatakse
-kogumisteenuse poolt valijarakendusele verifitseerimiseks, ainult
-kvalifitseeritud hääl peab vastama BDOC 2.1 standardi tingimustele --
-valijarakenduse poolt moodustatud hääl on vaheetapp kvalifitseeritud hääleni
-jõudmiseks.
+valijarakenduse ning kogumisteenuse poolt vahendatava Mobiil-ID/Smart-ID
+teenuse koostöös. Mobiil-ID/Smart-ID juhtumil kasutab kogumisteenus
+Mobiil-ID/Smart-ID teenust ainult signatuuri saamiseks krüpteeritud sedelile.
+Kõik hääle kvalifitseerimiseks vajalikud elemendid hangitakse vastavatelt
+teenustelt alles siis kui valijarakendus on saatnud signeeritud hääle
+talletamiseks. Kvalifitseeritud hääl esitatakse kogumisteenuse poolt
+valijarakendusele verifitseerimiseks, ainult kvalifitseeritud hääl peab vastama
+BDOC 2.1 standardi tingimustele -- valijarakenduse poolt moodustatud hääl on
+vaheetapp kvalifitseeritud hääleni jõudmiseks.
 
 Valijarakenduses signeeritud häälel peab olema üks ja ainult üks allkiri, mida
 hoitakse signatuurifailis :file:`META-INF/signature0.xml`. Häält ja allkirja
@@ -177,15 +204,15 @@ küsimuse korral.
 
 Räsialgoritmina ``DIGEST_ALG`` on kasutusel SHA-256
 (http://www.w3.org/2001/04/xmlenc#sha256). XML kanoniseerimiseks
-(``CANON_ALG``) kasutatakse meetodit c14n11
+(``CANON_ALG``) kasutatakse meetodit ``c14n11``
 (http://www.w3.org/2006/12/xml-c14n11).
 
-RSA võtmete korral (ID-kaart, Digi-ID) on allkirjastamismeetodiks
-http://www.w3.org/2001/04/xmldsig-more#rsa-sha256. ECC võtmete korral
-(ID-kaart, Mobiil-ID, Smart-ID) http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256.
+ECC võtmete korral on allkirjastamismeetodiks
+http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256. RSA võtmeid enam ei
+kasutata.
 
 Identifikaatorite `VOTE_REF`, `SP_REF`, `SP_URI` ning `SV_URI` täpne väärtus ei
-ole oluline.
+ole fikseeritud.
 
 Element `SignedProperties`
 ---------------------------

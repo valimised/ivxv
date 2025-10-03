@@ -19,7 +19,7 @@ kontrollrakendusega JSON-RPC protokolli vahendusel.
    :linenos:
 
 :error: Võimalik veainfo või ``null`` vea puudumisel
-:id: JSON-RPC päringuidentifikaator, peab ühtima päringus kasutatud id-ga
+:id: JSON-RPC päringuidentifikaator, peab ühtima päringus kasutatud id'ga
 :result: Meetodipõhine vastusandmestruktuur
 
 .. literalinclude:: ../../common/examples/json.rpc.method.response.json
@@ -27,7 +27,7 @@ kontrollrakendusega JSON-RPC protokolli vahendusel.
    :linenos:
 
 Esimese päringuvahetuse käigus mõne IVXV mikroteenusega väljastatakse suhtlevale
-rakendusele HEX-kodeeritud unikaalne seansiidentifkaator (``result.SessionID``),
+rakendusele HEX-kodeeritud unikaalne seansiidentifikaator (``result.SessionID``),
 mida rakendus kasutab edaspidi kõigis kogumisteenuse suunalistes päringutes
 (``params.SessionID``). Seansiidentifikaatori abil seostatakse
 hääletamisega seotud RPC-päringud üheks seansiks. Seostamine on informatiivne
@@ -36,7 +36,7 @@ sisulisi aspekte puudutavad otsused tehakse digiallkirjastatud andmete põhjal.
 
 Transpordiprotokollina on kasutusel TLS. Krüpteeritud kanali termineerimine
 toimub konkreetses mikroteenuses. Võimaldamaks koormuse jaotamist ning
-mikroteenuste paindlikku evitamist kasutatakse TLS-i SNI laiendust, mis lubab
+mikroteenuste paindlikku evitamist kasutatakse TLS-SNI laiendust, mis lubab
 vahendusteenusel TLS voogu termineerimata õigesse mikroteenusinstantsi suunata.
 Vahendusteenus on tüüpiliselt kättesaadav kogumisteenuse välise liidese pordis
 443.
@@ -410,18 +410,41 @@ allkirjastamiseks enne talletamist.
 Autentimistõendi hankimine
 **************************
 
+Valijarakendus teeb päringu ``RPC.Challenge`` Smart-ID kontrollkoodi hankimiseks.
+
+:params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
+
+.. literalinclude:: ../../common/examples/smartid.rpc.challenge.query.json
+   :language: json
+   :linenos:
+
+:result.Challenge: Räsi, millest arvutada Smart-ID kontrollkood valijarakenduses
+                   kuvamiseks
+:result.XSmartIDAuth: Päringu küpsis, kus talletatakse Smart-ID kontrollkoodi
+                      räsi, selle eluea ajatempel ja seansiidentifikaator
+
+.. literalinclude:: ../../common/examples/smartid.rpc.challenge.response.json
+   :language: json
+   :linenos:
+
+Võimalikud veateated päringu ``RPC.Authenticate`` korral.
+
+:BAD_REQUEST: Vigane päring.
+:INTERNAL_SERVER_ERROR: Viga serveri sisemises töös.
+:VOTING_END: Hääletusperiood on lõppenud.
+
 Valijarakendus teeb päringu ``RPC.Authenticate`` Smart-ID autentimise
 algatamiseks.
 
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
+:params.XSmartIDAuth: Päringu küpsis, kus talletatakse Smart-ID kontrollkoodi
+                      räsi, selle eluea ajatempel ja seansiidentifikaator
 :params.Identifier: Smart-ID kasutaja isikukood.
 
 .. literalinclude:: ../../common/examples/smartid.rpc.authenticate.query.json
    :language: json
    :linenos:
 
-:result.Challenge: Räsi, millest arvutada Smart-ID kontrollkood valijarakenduses
-                   kuvamiseks
 :result.SessionCode: Smart-ID seansiidentifikaator edasiste poll-päringute
                      jaoks
 
@@ -439,6 +462,8 @@ Valijarakendus teeb päringu ``RPC.AuthenticateStatus`` autentimisprotsessi olek
 hindamiseks.
 
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
+:params.XSmartIDAuth: Päringu küpsis, kus talletatakse Smart-ID kontrollkoodi
+                      räsi, selle eluea ajatempel ja seansiidentifikaator
 :params.SessionCode: Autentimisseansi identifikaator
 
 .. literalinclude:: ../../common/examples/smartid.rpc.authenticatestatus.query.json
@@ -447,6 +472,8 @@ hindamiseks.
 
 
 :result.AuthToken: Autentimistõend teistele IVXV teenustele esitamiseks või
+                   ``null``, kui päringu töötlemine alles käib.
+:result.DataToken: Hääletaja Smart-ID dokumendi number või
                    ``null``, kui päringu töötlemine alles käib.
 :result.GivenName: Eduka autentimise korral valija eesnimi
 :result.PersonalCode: Eduka autentimise korral valija isikukood
@@ -485,14 +512,13 @@ valikuks.
 
 :params.AuthMethod: Toetatud ainult autentimismeetod ``ticket``.
 :params.AuthToken: Smart-ID autentimistõend.
+:params.DataToken: Hääletaja Smart-ID dokumendi number.
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
 
 .. literalinclude:: ../../common/examples/smartid.rpc.getcertificatechoice.query.json
    :language: json
    :linenos:
 
-:result.Challenge: Räsi, millest arvutada Smart-ID kontrollkood valijarakenduses
-                   kuvamiseks
 :result.SessionCode: Smart-ID seansiidentifikaator edasiste poll-päringute
                      jaoks
 
@@ -512,7 +538,6 @@ oleku hindamiseks.
    :linenos:
 
 :result.Certificate: Allkirjastamissertifikaat X509-vormingus
-:result.DocumentNo: Hääletaja Smart-ID dokumendi number
 :result.Status: Päringu staatus - ``POLL`` viitab vajadusele päringut korrata, ``OK``
                 viitab edukale autentimisele. Vastuse muud väljad sisaldavad
                 infot vaid siis kui väärtus on ``OK``.
@@ -543,7 +568,7 @@ Smart-ID kontrollkoodi arvutab valijarakendus andmevälja ``Hash`` väärtusest.
 :params.HashType: Räsifunktsiooni nimi Smart-ID teenusele edastamiseks, kas
                   ``SHA256``, ``SHA384`` või  ``SHA512``
 :params.OS: Operatsioonisüsteem, millel valijarakendust kasutatakse.
-:params.DocumentNo: Hääle allkirjastaja Smart-ID dokumendi number.
+:params.DataToken: Hääletaja Smart-ID dokumendi number.
 
 .. literalinclude:: ../../common/examples/smartid.rpc.sign.query.json
    :language: json
@@ -623,8 +648,8 @@ algatamiseks.
    :language: json
    :linenos:
 
-:result.Challenge: Räsi, mille valijarakendus kasutab autentimistõendi
-                   allkirja loomiseks.
+:result.Challenge: Base64 kodeeritud räsi, mille dekodeeritud väärtust peab
+                   valijarakendus kasutama autentimistõendi allkirja loomiseks.
 :params.SessionID: Seansiidentifikaator.
 :params.Bearer:    Küpsis, mida server kasutab räsi verifitseerimiseks.
 
@@ -744,7 +769,7 @@ X-tee teenus(xroad-service) teeb päringu ``RPC.Votes`` e-hääletamise paki saa
    :linenos:
 
 :result.batchRecords:
-         E-häälte list
+         E-häälte loend
 :result.batchRecords.seqNo:
          Hääle järjenumber
 :result.batchRecords.idCode:

@@ -1,0 +1,54 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2016-2025, Cybernetica AS
+# This file is distributed under the same license as the Elektroonilise
+# hääletamise infosüsteem package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-03 23:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: et\n"
+"Language-Team: et <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../VIS3-EHS/7_e_haaletamise_yldstatistika/SPEC.md:1
+msgid "7 E-hääletamisest osavõtu üldstatistika"
+msgstr "E-hääletamisest osavõtu üldstatistika"
+
+#: ../../VIS3-EHS/7_e_haaletamise_yldstatistika/SPEC.md:3
+msgid ""
+"EHS annab lühikese perioodiga (nt 15 min) VIS3-le andmeid kui palju "
+"valijaid on e-hääletanud."
+msgstr ""
+
+#: ../../VIS3-EHS/7_e_haaletamise_yldstatistika/SPEC.md:5
+msgid "EHS teeb seda HTTPS päringutega VIS3 poolt pakutava otspunkti vastu."
+msgstr ""
+
+#: ../../VIS3-EHS/7_e_haaletamise_yldstatistika/SPEC.md:7
+msgid "Päringu vastuses tagastatav fail:"
+msgstr ""
+
+#: ../../VIS3-EHS/7_e_haaletamise_yldstatistika/SPEC.md:9
+msgid "JSON-skeem: [online-voters-total.schema](online-voters-total.schema)"
+msgstr ""
+
+#: ../../VIS3-EHS/7_e_haaletamise_yldstatistika/SPEC.md:11
+msgid ""
+"Valimissündmuse identifikaator peab vastama formaadile [Valimissündmuse "
+"identifikaator](../valimissündmuse_identifikaator.md)."
+msgstr ""
+
+#: ../../VIS3-EHS/7_e_haaletamise_yldstatistika/SPEC.md:13
+msgid "Näide (JSON): [online-voters-total.json](online-voters-total.json)"
+msgstr ""
+

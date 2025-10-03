@@ -99,6 +99,11 @@ public class ProductGroup extends Group {
     }
 
     @Override
+    public String getName() {
+        return "ProductGroup";
+    }
+
+    @Override
     public GroupElement getElement(byte[] data) throws IllegalArgumentException {
         return new ProductGroupElement(this, data);
     }
@@ -146,6 +151,12 @@ public class ProductGroup extends Group {
     }
 
     @Override
+    public Plaintext unpad(Plaintext msg) {
+        // this method does not make sense
+        throw new RuntimeException("Invalid use of ProductGroup");
+    }
+
+    @Override
     public Decodable isDecodable(GroupElement el) {
         // this method does not make sense
         throw new RuntimeException("Invalid use of ProductGroup");
@@ -158,8 +169,10 @@ public class ProductGroup extends Group {
     }
 
     @Override
-    public boolean isGroupElement(GroupElement el) {
-        return this.equals(el.getGroup());
+    public Decodable isGroupElement(GroupElement el) {
+        if (this.equals(el.getGroup()))
+            return Decodable.VALID;
+        return Decodable.INVALID_GROUP;
     }
 
     /**

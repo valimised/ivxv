@@ -81,7 +81,7 @@ Sertifikaadi genereerimiseks peab failisüsteemis olema seadistusfail
 :file:`service-cert-openssl.cnf`.
 
 .. literalinclude:: ../../../tests/testdata/testca/service/service-cert-openssl.cnf
-   :caption: Fail service-cert-openssl.cnf
+   :caption: Fail ``service-cert-openssl.cnf``
    :language: ini
 
 

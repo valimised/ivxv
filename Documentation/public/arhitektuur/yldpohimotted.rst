@@ -24,7 +24,7 @@ riiklikel valimistel on antud e-hääletamise raamistiku üldkirjelduses
 
 IVXV infosüsteemina teostab "ümbrikuskeemil" põhinevat e-hääletamise
 protokolli. IVXV toimib hääletamiseelsel etapil, hääletamisetapil,
-töötlusetapil ning lugemisetapil ja pakkub vahendeid elektroonilise hääletamise
+töötlusetapil ning lugemisetapil ja pakub vahendeid elektroonilise hääletamise
 protsessis osalemiseks Korraldajale, Lugejale, Hääletajale, Kogujale,
 Töötlejale, Miksijale, Audiitorile, Klienditoele, Valijate nimekirja koostajale
 ja täiendajale.

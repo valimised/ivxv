@@ -31,14 +31,14 @@ const (
 // where ExistingKeyError will specify the package that returned the error.
 var (
 	// ExistError wraps errors which are caused by a key already existing.
-	_ = ExistError{Key: "", Err: nil}
+	_ = ExistError{Key: "", Err: nil, Description: _STORAGE_WRAP_EXISTS}
 
 	// NotExistError wraps errors which are caused by a key not existing.
-	_ = NotExistError{Key: "", Err: nil}
+	_ = NotExistError{Key: "", Err: nil, Description: _STORAGE_WRAP_N_EXISTS}
 
 	// UnexpectedValueError wraps errors which are caused by
 	// compare-and-swap encountering an unexpected old value.
-	_ = UnexpectedValueError{Key: "", Err: nil}
+	_ = UnexpectedValueError{Key: "", Err: nil, Description: _STORAGE_WRAP_CAS}
 )
 
 // GetWithPrefixResult is a single result from PutGetter.GetWithPrefix.
@@ -83,7 +83,7 @@ type PutGetter interface {
 	// counters.
 	//
 	// Implementations must obey cancellation signals from ctx.Done().
-	CAS(ctx context.Context, cas string, old, new []byte) error
+	CAS(ctx context.Context, cas string, old, new []byte) error //nolint:revive
 
 	// GetWithSerial returns a value and a serial number for the given key.
 	// Serial number for the given key follows the same idea as SQL SERIAL.

@@ -23,7 +23,7 @@ msgstr ""
 
 #: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:1
 msgid "2 Valikute nimekiri (kandidaatide nimekiri)"
-msgstr "2 List of Candidates"
+msgstr "List of Candidates"
 
 #: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:3
 msgid "Protseduur"

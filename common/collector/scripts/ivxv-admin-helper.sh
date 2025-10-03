@@ -40,7 +40,7 @@ check_config() {
 copy_logs_to_logmon() {
   HOST_NAME="$1"
   LOGMON_ADDR="$2"
-  LOGFILE_PATTERN='ivxv-????-??-??.log'
+  LOGFILE_PATTERN='ivxv-????-??-??-??.log'
 
   cd /var/log/ivxv
 

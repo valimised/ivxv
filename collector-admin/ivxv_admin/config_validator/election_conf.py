@@ -76,6 +76,7 @@ class ElectionConfigSchema(Model):
 
         url = URLType(required=True)
         ca = ListType(CertificateType)
+        min = IntType(default=15)
 
     vis = ModelType(VisSchema, required=True)
 
@@ -85,6 +86,14 @@ class ElectionConfigSchema(Model):
         ca = CertificateType(required=True)
 
     xroad = ModelType(XroadSchema, required=True)
+
+    class BallotSchema(Model):
+        """Validating schema for voter ballot."""
+        encpkeygroup = StringType(required=True)  # See available types in docs
+        # PublicKeyType (OpenSSL library under the hood) no support for ElGamal
+        encpkey = StringType(required=False)
+
+    ballot = ModelType(BallotSchema, required=True)
 
     class AuthSchema(Model):
         """Validating schema for voter authentication config."""
@@ -112,7 +121,7 @@ class ElectionConfigSchema(Model):
         """Validating schema for voters age check config."""
         method = StringType(required=True, choices=['estpic'])
         timezone = StringType(required=True)
-        limit = IntType(required=True, min_value=16)
+        limit = IntType(required=True, min_value=14)
 
     age = ModelType(AgeSchema)
 

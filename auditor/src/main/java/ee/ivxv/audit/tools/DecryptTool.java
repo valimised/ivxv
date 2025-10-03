@@ -15,6 +15,8 @@ import ee.ivxv.common.crypto.Plaintext;
 import ee.ivxv.common.crypto.elgamal.ElGamalCiphertext;
 import ee.ivxv.common.crypto.elgamal.ElGamalDecryptionProof;
 import ee.ivxv.common.crypto.elgamal.ElGamalPublicKey;
+import ee.ivxv.common.math.Group;
+import ee.ivxv.common.math.GroupElement;
 import ee.ivxv.common.math.MathException;
 import ee.ivxv.common.model.AnonymousBallotBox;
 import ee.ivxv.common.model.CandidateList;
@@ -106,7 +108,7 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
             // If this step becomes a performance bottleneck, it could be combined with the previous check.
             // Currently, the checks are separate for implementation clarity.
             // Note! Mutates the anonymous ballot box: removes ciphertexts of invalid votes from it.
-            boolean areConsistent = verifyPlaintexts(anonBb, proofs, candidates, false);
+            boolean areConsistent = verifyPlaintexts(pub, anonBb, proofs, candidates, false);
             if (!areConsistent && abortEarly) {
                 printFailure();
                 return true;
@@ -128,7 +130,7 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
         // If this step becomes a performance bottleneck, it could be combined with the previous check.
         // Currently, the checks are separate for implementation clarity.
         // Note! Mutates the anonymous ballot box: removes ciphertexts of valid votes from it.
-        boolean areConsistent = verifyPlaintexts(anonBb, proofs, candidates, true);
+        boolean areConsistent = verifyPlaintexts(pub, anonBb, proofs, candidates, true);
         if (!areConsistent && abortEarly) {
             printFailure();
             return true;
@@ -195,7 +197,7 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
         // - the number of invalid votes should be consistent
         // If this step becomes a performance bottleneck, it should be somehow combined with the
         // validity proof verification stage.
-        boolean consistentValids = verifyValidConsistency(proofs, plainBb, discardedCiphers.size());
+        boolean consistentValids = verifyValidConsistency(pub, proofs, plainBb, discardedCiphers.size());
         console.println(Msg.m_decrypt_consistent_valids, getYesNoMessage(consistentValids));
         if (!consistentValids && abortEarly) {
             printFailure();
@@ -318,17 +320,18 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
      * checked the plaintext. This speeds up subsequent verifications and keeps
      * track of the verification status.
      *
+     * @param pub           the election public key
      * @param abb           the anonymous ballot box
      * @param proofs        the proof file
      * @param candidates    the list of accepted candidates
      * @param expectedValid whether the plaintexts should be valid or invalid
      * @return the result of the checks
      */
-    private boolean verifyPlaintexts(AnonymousBallotBox abb, Proof proofs, CandidateList candidates,
+    private boolean verifyPlaintexts(ElGamalPublicKey pub, AnonymousBallotBox abb, Proof proofs, CandidateList candidates,
                                      boolean expectedValid) {
         // Using a set is fine here even if there are repetitions since we have already verified the proofs:
         // inconsistent repetitions should no longer be possible.
-        Map<String, Plaintext> votes = new HashMap<>();
+        Map<String, GroupElement> votes = new HashMap<>();
         // However, we still need to keep track of how many duplications there are when we compare with the
         // ballot box later.
         Bag<String> multiples = new HashBag<>();
@@ -336,7 +339,7 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
         // Get all ciphertext-message pairs.
         for (Proof.ProofJson proof : proofs.getProofs()) {
             String b64 = Base64.getEncoder().encodeToString(proof.getCiphertext());
-            Plaintext old = votes.put(b64, new Plaintext(proof.getMessage(), true));
+            GroupElement old = votes.put(b64, pub.getParameters().getGroup().getElement(proof.getMessage()));
 
             if (Objects.isNull(old)) continue; // not a duplicate
 
@@ -353,14 +356,17 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
                     while (i.hasNext()) {
                         byte[] c = i.next();
                         String b64 = Base64.getEncoder().encodeToString(c);
-                        Plaintext pt = votes.remove(b64);
+                        GroupElement decrypted = votes.remove(b64);
                         multiples.remove(b64);
-                        if (Objects.isNull(pt)) continue;
+                        if (Objects.isNull(decrypted)) continue;
+                        Group group = pub.getParameters().getGroup();
+                        Plaintext decoded = group.decode(decrypted);
+                        Plaintext unpadded = group.unpad(decoded);
 
-                        boolean isValid = isValidChoice(pt, districtMap.getKey(), candidates);
+                        boolean isValid = isValidChoice(unpadded, districtMap.getKey(), candidates);
                         if (isValid != expectedValid) {
                             log.warn("Plaintext is declared {} but is not: {}",
-                                    expectedValid ? "valid" : "invalid", pt);
+                                    expectedValid ? "valid" : "invalid", unpadded.getUTF8DecodedMessage());
                         }
                         allCorrect = allCorrect && (isValid == expectedValid);
                         i.remove();
@@ -451,30 +457,37 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
     }
 
     private boolean isValidChoice(Plaintext pt, String district, CandidateList candidates) {
-        String voteStr;
+        String candidateCode;
         try {
-            voteStr = pt.stripPadding().getUTF8DecodedMessage();
+            candidateCode = pt.getUTF8DecodedMessage();
         } catch (IllegalArgumentException ignored) {
             return false;
         }
-        String[] voteParts = voteStr.split(Util.UNIT_SEPARATOR, 3);
-        if (voteParts.length != 3) {
-            return false;
-        }
+
+        // Get choices list
         Map<String, Map<String, Map<String, String>>> ds = candidates.getCandidates();
+        // Ensure that vote district exists in a choices list
         if (!ds.containsKey(district)) {
             return false;
         }
+
+        // Get choices for a specific district (district that vote belongs to)
         Map<String, Map<String, String>> ps = ds.get(district);
-        if (!ps.containsKey(voteParts[1])) {
+        // Ensure that there are choices per that district
+        if (ps.isEmpty()) {
             return false;
         }
-        Map<String, String> ids = ps.get(voteParts[1]);
-        if (!ids.containsKey(voteParts[0])) {
-            return false;
+
+        // Loop over all choices per that district
+        for (Map<String, String> parties : ps.values()) {
+            // Is there a candidate code that matches candidateCode
+            if (parties.containsKey(candidateCode)) {
+                return true;
+            }
         }
-        String name = ids.get(voteParts[0]);
-        return name.equals(voteParts[2]);
+
+        // Choice is not valid
+        return false;
     }
 
     private InvalidDecProofs verifyDecryption(Proof input, ElGamalPublicKey pub,
@@ -508,11 +521,11 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
                                                         InvalidDecProofs out,
                                                         Bag<String> b64CTs) {
         return (proofJson) -> {
-            Plaintext pt = new Plaintext(proofJson.getMessage(), true);
+            GroupElement decrypted = pub.getParameters().getGroup().getElement(proofJson.getMessage());
             ElGamalCiphertext ct =
                     new ElGamalCiphertext(pub.getParameters(), proofJson.getCiphertext());
             ElGamalDecryptionProof proof =
-                    new ElGamalDecryptionProof(ct, pt, pub, proofJson.getProof());
+                    new ElGamalDecryptionProof(ct, decrypted, pub, proofJson.getProof());
 
             // Get the base64-encoded ballot for later comparison with the ballot box.
             b64CTs.add(Base64.getEncoder().encodeToString(proofJson.getCiphertext()));
@@ -595,12 +608,13 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
      * on the complete plaintext vote. The full validation of plaintexts in the proofs
      * file must be carried out beforehand for stronger consistency guarantees.
      *
+     * @param pub          the election public key
      * @param proofs       the validity proofs
      * @param pbb          the plaintext ballot box
      * @param invalidCount the number of expected invalid votes
      * @return true if the verification succeeds, false otherwise
      */
-    private boolean verifyValidConsistency(Proof proofs, PlainBallotBox pbb, int invalidCount) {
+    private boolean verifyValidConsistency(ElGamalPublicKey pub, Proof proofs, PlainBallotBox pbb, int invalidCount) {
         Bag<String> plainVotes = new HashBag<>(pbb.byDistrict().values().stream()
                 .flatMap(Collection::stream).toList());
         console.println(Msg.m_plain_count, plainVotes.size());
@@ -611,10 +625,12 @@ public class DecryptTool implements Tool.Runner<DecryptArgs> {
         boolean noExtra = true;
         try {
             for (Proof.ProofJson proof : proofs.getProofs()) {
-                Plaintext pt = new Plaintext(proof.getMessage(), true);
+                GroupElement decrypted = pub.getParameters().getGroup().getElement(proof.getMessage());
+                Group group = decrypted.getGroup();
+                Plaintext decoded = group.decode(decrypted);
                 // Note! Here we do not validate the full vote, meaning that the validation
                 // should be done prior to calling this function.
-                String voteCode = pt.stripPadding().getUTF8DecodedMessage().split(Util.UNIT_SEPARATOR)[0];
+                String voteCode = group.unpad(decoded).getUTF8DecodedMessage();
                 if (plainVotes.remove(voteCode, 1)) continue;
                 noExtra = false;
                 log.warn("A vote for {} is missing from the plaintext ballot box", voteCode);

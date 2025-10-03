@@ -15,6 +15,7 @@ function loadPageData() {
   $('#dataTables-log').DataTable({
       'ajax': '/ivxv/cgi/eventlog',
       stateSave: true,
+      responsive: true,
       'columns': [{
         'data': 'timestamp'
       }, {

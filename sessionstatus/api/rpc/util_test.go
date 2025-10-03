@@ -99,6 +99,7 @@ func TestCastVerifyRequestToServerHeader(t *testing.T) {
 		expected := new(CastVerifyReqToServerHeaderError)
 		expected.Expected = expectedCastForServerHeader
 		expected.Got = reflect.TypeOf(badverifyReq.Request)
+		expected.Description = _SESSIONSTATUS_CAST_VERIFYREQ_TO_SERVERHEADER
 
 		if !reflect.DeepEqual(*expected, err) {
 			msg = "Expected %v, got %v\n"

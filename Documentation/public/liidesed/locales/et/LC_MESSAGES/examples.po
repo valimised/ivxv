@@ -1,0 +1,88 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2016-2025, Cybernetica AS
+# This file is distributed under the same license as the Elektroonilise
+# hääletamise infosüsteem package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-03 23:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: et\n"
+"Language-Team: et <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../examples.rst:3
+msgid "Skeemid ja näited"
+msgstr ""
+
+#: ../../examples.rst:7
+msgid "Valimisringkondade nimekiri"
+msgstr ""
+
+#: ../../examples.rst:10 ../../examples.rst:48 ../../examples.rst:84
+#: ../../examples.rst:119 ../../examples.rst:154 ../../examples.rst:189
+#: ../../examples.rst:206 ../../examples.rst:217
+msgid "Skeem"
+msgstr ""
+
+#: ../../examples.rst:17 ../../examples.rst:61 ../../examples.rst:97
+#: ../../examples.rst:132 ../../examples.rst:167
+msgid "Näide: KOV"
+msgstr ""
+
+#: ../../examples.rst:24 ../../examples.rst:55 ../../examples.rst:91
+#: ../../examples.rst:126 ../../examples.rst:161
+msgid "Näide: EP"
+msgstr ""
+
+#: ../../examples.rst:31 ../../examples.rst:68 ../../examples.rst:103
+#: ../../examples.rst:138 ../../examples.rst:173
+msgid "Näide: RH"
+msgstr ""
+
+#: ../../examples.rst:38 ../../examples.rst:74 ../../examples.rst:109
+#: ../../examples.rst:144 ../../examples.rst:179
+msgid "Näide: RK"
+msgstr ""
+
+#: ../../examples.rst:45
+msgid "Valikute nimekiri"
+msgstr ""
+
+#: ../../examples.rst:81
+msgid "E-hääletanute nimekiri"
+msgstr ""
+
+#: ../../examples.rst:116
+msgid "Tühistusnimekiri"
+msgstr ""
+
+#: ../../examples.rst:151
+msgid "E-hääletamise tulemus"
+msgstr ""
+
+#: ../../examples.rst:186
+msgid "E-hääletamise üldstatistika"
+msgstr ""
+
+#: ../../examples.rst:196
+msgid "Näide"
+msgstr ""
+
+#: ../../examples.rst:203
+msgid "E-hääletamise detailstatistika"
+msgstr ""
+
+#: ../../examples.rst:214
+msgid "E-hääletamiste nimekiri"
+msgstr ""
+

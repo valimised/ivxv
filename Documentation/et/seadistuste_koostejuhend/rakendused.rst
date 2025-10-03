@@ -17,8 +17,8 @@ IVXV rakendused on:
 * töötlemisrakendus `processor` (:numref:`app-processor`),
 * auditirakendus `auditor` (:numref:`app-auditor`).
 
-IVXV rakendused on arendatud programmeerimiskeeles Java, kasutusel on Java 11.
-Rakendused on testitud Windows 10 ja Ubuntu 20.04 platvormil kasutades OpenJDK-d
+IVXV rakendused on arendatud programmeerimiskeeles Java, kasutusel on Java 21.
+Rakendused on testitud Windows 11 ja Ubuntu 22.04 platvormil kasutades OpenJDK'd
 või Oracle Javat.
 
 Rakendused tarnitakse ZIP-vormingus failidena::
@@ -34,7 +34,7 @@ Peale ZIP-faili lahti pakkimist tekib kataloogipuu::
    |-- lib
    |   |-- *.jar
 
-Kui kataloogitee `<rakendus>-<tarnenumber>/bin` panna `PATH`'i, saab rakendust
+Kui kataloogitee `<rakendus>-<tarnenumber>/bin` panna keskkonnamuutujasse `PATH`, saab rakendust
 edaspidi käivitada käsurealt::
 
   $ <rakendus>

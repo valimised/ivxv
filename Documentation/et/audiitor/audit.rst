@@ -17,7 +17,7 @@ kasutades vajadusel käsklust `sudo`.
 
   cd $HOME
 
-Paigaldame tarkvara, mis on vajalik audititööriistade ehitamiseks::
+Paigaldame tarkvara, mis on vajalik audiitori tööriistade ehitamiseks::
 
   sudo apt-get install --no-install-recommends -y autoconf automake build-essential libgmp-dev libtool git openjdk-11-jdk-headless python unzip zip wget make
 
@@ -25,7 +25,7 @@ Paigaldame tarkvara, mis on vajalik audititööriistade ehitamiseks::
 INTCHECK
 --------------------------------------------------------------------------------
 
-Verificatum mixneti tervikluskontroll toimub rakendusega `intcheck`::
+Verificatum miksneti tervikluskontroll toimub rakendusega `intcheck`::
 
   wget https://github.com/vvk-ehk/intcheck/archive/master.zip
   unzip master.zip
@@ -41,7 +41,7 @@ Veendume et rakendus on paigaldatud korrektselt::
 JAVA RAKENDUSED
 --------------------------------------------------------------------------------
 
-Admeauditi läbiviimiseks läheb vaja rakendust `auditor`, mille lähtekood on
+Andmeauditi läbiviimiseks läheb vaja rakendust `auditor`, mille lähtekood on
 avalikustatud IVXV repositooriumis::
 
   wget https://github.com/vvk-ehk/ivxv/archive/master.zip
@@ -53,9 +53,9 @@ avalikustatud IVXV repositooriumis::
 Paigaldame Java sõltuvuspaketid::
 
   cd $HOME/ivxv/common/external
-  wget -O gradle-8.3.zip https://services.gradle.org/distributions/gradle-8.3-bin.zip
-  unzip gradle-8.3.zip
-  rm gradle-8.3.zip
+  wget -O gradle-8.11.zip https://services.gradle.org/distributions/gradle-8.11-bin.zip
+  unzip gradle-8.11.zip
+  rm gradle-8.11.zip
   cd $HOME/ivxv/common/java
   make sync
 
@@ -70,9 +70,9 @@ Ehitame Java rakendused::
 
 RVT'le tarnitavad rakendused::
 
-  $HOME/ivxv/auditor/build/distributions/auditor-1.9.10.zip
-  $HOME/ivxv/key/build/distributions/key-1.9.10.zip
-  $HOME/ivxv/processor/build/distributions/processor-1.9.10.zip
+  $HOME/ivxv/auditor/build/distributions/auditor-1.10.3.zip
+  $HOME/ivxv/key/build/distributions/key-1.10.3.zip
+  $HOME/ivxv/processor/build/distributions/processor-1.10.3.zip
 
 Käivitatavad failid::
 
@@ -84,7 +84,7 @@ Käivitatavad failid::
 VERIFICATUM
 --------------------------------------------------------------------------------
 
-Verificatum mixneti adapter on vajalik miksimistõendi kontrolliks::
+Verificatum miksneti adapter on vajalik miksimistõendi kontrolliks::
 
   cd $HOME
   wget https://github.com/vvk-ehk/ivxv-mixnet-adapter/archive/master.zip
@@ -187,7 +187,7 @@ Tegutsemine on üldjuhul järgmine:
 * Tutvuge konfinäitega
 * Veenduge, et on olemas vajalik RVT sisend
 * Tehke kausta `process` konfinäitest lähtuv failistruktuur
-* Käivitage kaustas `process` rakendus ja tööriist (eelvalmendatud konf on seal
+* Käivitage kaustas `process` rakendus ja tööriist (eelvalmendatud seadistused on seal
   juba ees)
 
 Täpsemad juhised järgnevad.
@@ -205,7 +205,7 @@ Tulemusfaili signeerimisvõti on kodeeritud X509 sertifikaadina failis
 * DER-kodeeritud avaliku võtmena failis `RK2051-pub.der`
 * PEM-kodeeritud avaliku võtmena failis `RK2051-pub.pem`
 
-On võimalik kontrollida, et sertfikaat, mis sisaldab tulemusfaili
+On võimalik kontrollida, et sertifikaat, mis sisaldab tulemusfaili
 signeerimisvõtit, on korrektselt isesigneeritud. Seda saab teha järgnevalt::
 
     openssl verify -CAfile RK2051-sign.pem -check_ss_sig RK2051-sign.pem
@@ -224,9 +224,9 @@ Korrektselt allkirjastatud sertifikaadi korral on väljund::
 
     RK2051-enc.pem: OK
 
-.. note:: Teadaoleva OpenSSL vea tõttu ei suuda OpenSSL versioonist 1.1.1b
+.. note:: Teadaoleva OpenSSL vea tõttu ei suuda OpenSSL versioonist `1.1.1b`
    vanemad versioonid sertifikaadi usaldusahelat kontrollida. Eelneva kontrolli
-   õnnestumise jaoks on eelduseks vähemalt OpenSSL versioon 1.1.1b.
+   õnnestumise jaoks on eelduseks vähemalt OpenSSL versioon `1.1.1b`.
 
 Lisaks on võimalik kontrollida, et häälte salastamise võtme eri kodeeringud
 vastavad üksteisele. Me kontrollime, et X509 sertifikaadis olev võti vastab
@@ -319,7 +319,7 @@ IVXV <-> Verificatum teisenduste korrektsuse kontroll
 --------------------------------------------------------------------------------
 
 Teisenduste korrektsuse kontroll toimub tööriistaga `convert`. NB! Kaust
-`process` tuleb auditor.yaml põhjal sisenditest ettevalmistada::
+`process` tuleb `auditor.yaml` põhjal sisenditest ettevalmistada::
 
   cd $HOME/audit-examples/audit-conv/process
   $HOME/ivxv/auditor/build/install/auditor/bin/auditor convert -c conf.bdoc -p auditor.yaml.bdoc
@@ -328,7 +328,7 @@ Miksimistõendi kontroll tööriistaga `auditor`
 --------------------------------------------------------------------------------
 
 Miksimistõendi kontroll toimub tööriistaga `mixer`. NB! Kaust `process` tuleb
-auditor.yaml põhjal sisenditest ettevalmistada::
+`auditor.yaml` põhjal sisenditest ettevalmistada::
 
   cd $HOME/audit-examples/audit-mix/process
   $HOME/ivxv/auditor/build/install/auditor/bin/auditor mixer -c conf.bdoc -p auditor.yaml.bdoc
@@ -337,7 +337,7 @@ Lugemistõendi kontroll
 --------------------------------------------------------------------------------
 
 Lugemistõendi kontroll toimub tööriistaga `decrypt`. NB! Kaust `process` tuleb
-auditor.yaml põhjal sisenditest ettevalmistada::
+`auditor.yaml` põhjal sisenditest ettevalmistada::
 
   cd $HOME/audit-examples/audit-pdec/process
   $HOME/ivxv/auditor/build/install/auditor/bin/auditor decrypt -c conf.bdoc -p auditor.yaml.bdoc
@@ -354,4 +354,5 @@ Töötlemise audit
 --------------------------------------------------------------------------------
 
 Täiendavalt on lisatud pakki kõik töötlemisrakenduse sisendid ja väljundid
-lihtsustamaks töötlemisprotsessi auditit.
+lihtsustamaks töötlemisprotsessi auditit. Täiendavad auditeerimistööriistad,
+nt. `integrity` on kirjeldatud dokumendis "IVXV seadistuste koostamise juhend".

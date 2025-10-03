@@ -25,7 +25,8 @@ type errorResponse struct {
 func httpGet(ctx context.Context, url string, resp interface{}) error {
 	httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return CreateHTTPGetRequestError{URL: url, Err: err}
+		return CreateHTTPGetRequestError{URL: url, Err: err,
+			Description: _MID_URI}
 	}
 	httpReq = httpReq.WithContext(ctx)
 
@@ -35,12 +36,14 @@ func httpGet(ctx context.Context, url string, resp interface{}) error {
 func httpPost(ctx context.Context, url string, req interface{}, resp interface{}) error {
 	jsonReq, err := json.Marshal(req)
 	if err != nil {
-		return MarshalJSONRequestError{Err: err}
+		return MarshalJSONRequestError{Err: err,
+			Description: _MID_JSON}
 	}
 
 	httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(jsonReq))
 	if err != nil {
-		return CreateHTTPPostRequestError{URL: url, Err: err}
+		return CreateHTTPPostRequestError{URL: url, Err: err,
+			Description: _MID_HTTP}
 	}
 	httpReq = httpReq.WithContext(ctx)
 
@@ -52,27 +55,34 @@ func httpPost(ctx context.Context, url string, req interface{}, resp interface{}
 func httpDo(ctx context.Context, tag string, httpReq *http.Request, resp interface{}) error {
 	reqDump, err := httputil.DumpRequestOut(httpReq, true)
 	if err != nil {
-		return DumpHTTPRequestError{Err: err}
+		return DumpHTTPRequestError{Err: err,
+			Description: _MID_HTTP}
 	}
-	log.Debug(ctx, HTTPRequest{Request: string(reqDump)})
+	log.Debug(ctx, HTTPRequest{Request: string(reqDump),
+		Description: _MID_HTTP_READY})
 
-	log.Log(ctx, SendingRequest{URL: httpReq.URL, Method: httpReq.Method, BodyType: tag})
+	log.Log(ctx, SendingRequest{URL: httpReq.URL, Method: httpReq.Method,
+		BodyType: tag, Description: _MID_HTTP_SEND})
 	httpResp, err := http.DefaultClient.Do(httpReq)
 	if err != nil {
-		return log.Alert(SendRequestError{Err: err})
+		return log.Alert(SendRequestError{Err: err,
+			Description: _MID_RESP_ERR})
 	}
 	defer func() {
 		if cerr := httpResp.Body.Close(); cerr != nil && err == nil {
-			err = ResponseBodyCloseError{Err: cerr}
+			err = ResponseBodyCloseError{Err: cerr,
+				Description: _MID_CLOSE}
 		}
 	}()
-	log.Log(ctx, ReceivedResponse{})
+	log.Log(ctx, ReceivedResponse{Description: _MID_RESP})
 
 	respDump, err := httputil.DumpResponse(httpResp, false)
 	if err != nil {
-		return DumpHTTPResponseError{Err: err}
+		return DumpHTTPResponseError{Err: err,
+			Description: _MID_RESP_PARSE}
 	}
-	log.Debug(ctx, HTTPResponse{Response: string(respDump)})
+	log.Debug(ctx, HTTPResponse{Response: string(respDump),
+		Description: _MID_RESP_PARSE_OK})
 
 	// Does encoding/json.Unmarshal retain any references to the
 	// original byte slice in the unmarshaled structure? If not, then
@@ -81,31 +91,36 @@ func httpDo(ctx context.Context, tag string, httpReq *http.Request, resp interfa
 	// decoding.
 	body, err := io.ReadAll(safereader.New(httpResp.Body, maxResponseSize))
 	if err != nil {
-		return ReadHTTPResponseBodyError{Err: err}
+		return ReadHTTPResponseBodyError{Err: err,
+			Description: _MID_RESP_READ}
 	}
-	log.Debug(ctx, HTTPResponseBody{Body: string(body)})
+	log.Debug(ctx, HTTPResponseBody{Body: string(body),
+		Description: _MID_RESP_READ_OK})
 
 	if httpResp.StatusCode != http.StatusOK {
 		if len(body) > 0 {
 			var jsonErr errorResponse
 			if err = json.Unmarshal(body, &jsonErr); err != nil {
-				return UnmarshalJSONErrorResponseError{Err: err}
+				return UnmarshalJSONErrorResponseError{Err: err,
+					Description: _MID_RESP_JSONCODE}
 			}
 
 			err = ErrorResponseError{
-				HTTPStatus: httpResp.Status,
-				Message:    jsonErr.Error,
-				Time:       jsonErr.Time,
-				TraceID:    jsonErr.TraceID,
+				HTTPStatus:  httpResp.Status,
+				Message:     jsonErr.Error,
+				Time:        jsonErr.Time,
+				TraceID:     jsonErr.TraceID,
+				Description: _MID_RESP_ERR,
 			}
 			return err
 
 		}
-		return HTTPStatusError{Status: httpResp.Status}
+		return HTTPStatusError{Status: httpResp.Status, Description: _MID_ERRCODE}
 	}
 
 	if err = json.Unmarshal(body, &resp); err != nil {
-		return UnmarshalJSONResponseError{Err: err}
+		return UnmarshalJSONResponseError{Err: err,
+			Description: _MID_RESP_JSON}
 	}
 	return nil
 }

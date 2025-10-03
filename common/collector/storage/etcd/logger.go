@@ -18,19 +18,19 @@ func newLogger(ctx context.Context) *logger {
 }
 
 func (l *logger) info(msg string) {
-	log.Log(l.ctx, ClientInfo{Message: msg})
+	log.Log(l.ctx, ClientInfo{Message: msg, Description: _ETCD_LOG_INFO})
 }
 
 func (l *logger) warning(msg string) {
-	log.Log(l.ctx, ClientWarning{Message: msg})
+	log.Log(l.ctx, ClientWarning{Message: msg, Description: _ETCD_LOG_WARN})
 }
 
 func (l *logger) error(msg string) {
-	log.Error(l.ctx, ClientError{Err: errors.New(msg)})
+	log.Error(l.ctx, ClientError{Err: errors.New(msg), Description: _ETCD_LOG_ERROR})
 }
 
 func (l *logger) fatal(msg string) {
-	log.Error(l.ctx, ClientFatal{Err: log.Alert(errors.New(msg))})
+	log.Error(l.ctx, ClientFatal{Err: log.Alert(errors.New(msg)), Description: _ETCD_LOG_FATAL})
 }
 
 func (l *logger) Info(a ...interface{})                    { l.info(fmt.Sprint(a...)) }

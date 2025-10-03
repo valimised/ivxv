@@ -116,9 +116,9 @@ def main():
                      service_id, secret_descr)
             continue
 
-        service = Service(service_id, service_data)
-        if not service.load_secret_file(secret_type, filepath, file_checksum):
-            return 1
+        with Service(service_id, service_data) as service:
+            if not service.load_secret_file(secret_type, filepath, file_checksum):
+                return 1
         register_service_event(
             'SECRET_INSTALL',
             service=service_id,

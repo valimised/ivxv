@@ -1,15 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2016-2024, Cybernetica AS
+# Copyright (C) 2016-2025, Cybernetica AS
 # This file is distributed under the same license as the Elektroonilise
 # hääletamise infosüsteem package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.8.0\n"
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-08 12:14+0300\n"
+"POT-Creation-Date: 2025-09-03 19:48+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,7 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.10.3\n"
+"Generated-By: Babel 2.15.0\n"
 
 #: ../../vallasrezhiim.rst:4
 msgid "Rakendused"
@@ -70,9 +69,9 @@ msgid ""
 "täisarvujäägikorpustel ning P-384 elliptkõveral. Lugemistõend on "
 "realiseeritud Schnorri nullteadmustõestusel põhineval protokollil."
 msgstr ""
-"Relevant applications support the ElGamal cryptosystem on prime order fields "
-"and the P-384 elliptic curve. The decryption proof is implemented using "
-"the Schnorr zero-knowledge protocol."
+"Relevant applications support the ElGamal cryptosystem on prime order "
+"fields and the P-384 elliptic curve. The decryption proof is implemented "
+"using the Schnorr zero-knowledge protocol."
 
 #: ../../vallasrezhiim.rst:30
 msgid "Rakenduste abimoodulid"
@@ -104,8 +103,8 @@ msgid ""
 "konfiguratsioonipakis kirjeldatakse YAML-keeles:"
 msgstr ""
 "The applications are configured either with a digitally signed "
-"configuration package or with command line parameters. The latter do not"
-" support the entry of hierarchically structured configurations. The "
+"configuration package or with command line parameters. The latter do not "
+"support the entry of hierarchically structured configurations. The "
 "settings in the configuration package shall be described in YAML:"
 
 #: ../../vallasrezhiim.rst:88
@@ -188,8 +187,8 @@ msgid ""
 "informatsiooniteoreetiliselt turvaline :math:`t < M` osapoole korral, kus"
 " M on lävipiir."
 msgstr ""
-"The key application uses the [DesmedtF89]_ threshold scheme based on a"
-" trusted dealer and implements Shamir secret-sharing, which is "
+"The key application uses the [DesmedtF89]_ threshold scheme based on a "
+"trusted dealer and implements Shamir secret-sharing, which is "
 "information-theoretically secure for :math:`t < M`, where M is the "
 "threshold."
 
@@ -198,8 +197,8 @@ msgid ""
 "Võtmeosakud genereeritakse operatiivmälus ning talletatakse "
 "PKCS15-liidese vahendusel kiipkaardile."
 msgstr ""
-"The key shares are generated in the operational memory and stored on the smart "
-"card via the PKCS15 interface."
+"The key shares are generated in the operational memory and stored on the "
+"smart card via the PKCS15 interface."
 
 #: ../../vallasrezhiim.rst:135
 msgid "Võtmerakenduse sisend võtme genereerimisel on:"
@@ -214,16 +213,16 @@ msgid ""
 "Krüptosüsteemi ElGamal spetsifikatsioon – täisarvujäägikorpus või P-384 "
 "elliptkõver ning võtmepikkus;"
 msgstr ""
-"Specification of the ElGamal cryptosystem - prime order field or "
-"P-384 elliptic curve and key length;"
+"Specification of the ElGamal cryptosystem - prime order field or P-384 "
+"elliptic curve and key length;"
 
 #: ../../vallasrezhiim.rst:142
 msgid ""
 "M-N läviskeemi spetsifikatsioon, mis peab vastama reeglile :math:`N >= 2 "
 "* M - 1`;"
 msgstr ""
-"Specification of the M-N threshold scheme, which must satisfy the rule :math:`N "
-">= 2 * M - 1`;"
+"Specification of the M-N threshold scheme, which must satisfy the rule "
+":math:`N >= 2 * M - 1`;"
 
 #: ../../vallasrezhiim.rst:145
 msgid "N PKCS15-ühilduvat kiipkaarti;"
@@ -278,8 +277,8 @@ msgid ""
 "Lugemistõend (Schnorri nullteadmustõestusel põhinev protokoll vastavalt "
 "hankedokumentides viidatule);"
 msgstr ""
-"Decryption proof (Schnorr's zero knowledge protocol as "
-"referred to in the contract documents);"
+"Decryption proof (Schnorr's zero knowledge protocol as referred to in the"
+" contract documents);"
 
 #: ../../vallasrezhiim.rst:179
 msgid "Töötlemisrakendus"
@@ -287,9 +286,8 @@ msgstr "Processing application"
 
 #: ../../vallasrezhiim.rst:181
 msgid ""
-"Töötlemisrakendusega verifitseeritakse, tühistatakse ning "
-"anonüümistatakse hääletamisperioodil kogutud hääli vastavalt "
-"Üldkirjelduse jaotisele 7.6."
+"Töötlemisrakendusega verifitseeritakse, tühistatakse ning anonüümitakse "
+"hääletamisperioodil kogutud hääli vastavalt Üldkirjelduse jaotisele 7.6."
 msgstr ""
 "The processing application verifies, revokes and anonymises the votes "
 "collected during the voting period in accordance with Section 7.6 of the "
@@ -317,7 +315,7 @@ msgstr "list of districts;"
 
 #: ../../vallasrezhiim.rst:194
 msgid "tühistusnimekirjad;"
-msgstr "revokation lists;"
+msgstr "revocation lists;"
 
 #: ../../vallasrezhiim.rst:196
 msgid "ennistusnimekirjad."
@@ -354,7 +352,7 @@ msgstr "anonymised ballots."
 #: ../../vallasrezhiim.rst:210
 msgid ""
 "Lisaks varem defineeritud liidestele ja sõltuvustele kasutab "
-"töötlemisrakendus kolmanda osapoole teeki PDF-ide väljastamise "
+"töötlemisrakendus kolmanda osapoole teeki PDF'ide väljastamise "
 "funktsionaalsuse teostamiseks."
 msgstr ""
 "In addition to the interfaces and dependencies defined earlier, the "
@@ -375,7 +373,7 @@ msgid ""
 "töötlemisrakendus võrdleb Kogumisteenuse poolt talletatud häälte hulka "
 "registreerimisteenuse poolt talletatud häälte hulgaga, kontrollib "
 "talletatud häälte vastavust valimiste konfiguratsioonile, tuvastab "
-"loendamisele minevad hääled ning anonüümistab need Võtmerakendusele üle "
+"loendamisele minevad hääled ning anonüümib need Võtmerakendusele üle "
 "andmiseks."
 msgstr ""
 "Complete processing of electronic ballots is the process whereby the "
@@ -411,7 +409,7 @@ msgstr "issuing the original list of electronic voters in PDF format;"
 
 #: ../../vallasrezhiim.rst:238
 msgid "tühistus- ja ennistusnimekirjade verifitseerimine;"
-msgstr "verification of revokation and restoration lists;"
+msgstr "verification of revocation and restoration lists;"
 
 #: ../../vallasrezhiim.rst:240
 msgid "tühistus- ja ennistusnimekirjade kooskõlalisuse kontroll;"
@@ -419,7 +417,7 @@ msgstr "checking the consistency of cancellation and reinstatement lists;"
 
 #: ../../vallasrezhiim.rst:242
 msgid "tühistus- ja ennistusnimekirjade rakendamine;"
-msgstr "the implementation of revokation and restoration lists;"
+msgstr "the implementation of revocation and restoration lists;"
 
 #: ../../vallasrezhiim.rst:244
 msgid ""
@@ -474,7 +472,7 @@ msgid "miksitud hääled;"
 msgstr "mixed ballots;"
 
 #: ../../vallasrezhiim.rst:277
-msgid "Verificatum miksimistõend;"
+msgid "Verificatumi miksimistõend;"
 msgstr "Verificatum mixing proof;"
 
 #: ../../vallasrezhiim.rst:279

@@ -45,7 +45,7 @@ Rakenduse tööks vajalikud parameetrid kuuluvad rühma :token:`params`:
 
 * :token:`verification_url` - Nimekiri kogumisteenuse hostinimedest
   või IP-aadressidest koos pordiga. Järjekord pole oluline. Väärtus
-  peab olema JSON loend ka ühe URL-i puhul.
+  peab olema JSON loend ka ühe URLi puhul.
 * :token:`verification_tls` - Nimekiri kogumisteenuse TLS
   sertifikaatidest PEM vormingus. Järjekord pole oluline. Väärtus peab
   olema JSON loend ka ühe sertifikaadi puhul.

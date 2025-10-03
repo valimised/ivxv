@@ -34,7 +34,7 @@ func newLogger() (logger, error) {
 	// Same facility as used in ivxv.ee/common/collector/log.
 	w, err := syslog.New(syslog.LOG_LOCAL0, "etcd")
 	if err != nil {
-		return logger{nil}, EtcdSyslogError{Err: err}
+		return logger{nil}, EtcdSyslogError{Err: err, Description: _STORAGE_ETCD_SYSLOG}
 	}
 	return logger{w}, nil
 }
@@ -43,7 +43,8 @@ func (l logger) log(ctx context.Context, r io.ReadCloser) {
 	defer r.Close()
 	defer func() {
 		if err := l.Close(); err != nil {
-			log.Error(ctx, EtcdSyslogCloseError{Err: err})
+			log.Error(ctx, EtcdSyslogCloseError{Err: err,
+				Description: _STORAGE_ETCD_SYSLOG_CLOSE})
 		}
 	}()
 
@@ -71,14 +72,16 @@ func (l logger) log(ctx context.Context, r io.ReadCloser) {
 		// After: "{"level": "info", "ts":
 		unescaped, err := url.QueryUnescape(line)
 		if err != nil {
-			log.Error(ctx, QueryUnescapeLogError{Line: line})
+			log.Error(ctx, QueryUnescapeLogError{Line: line,
+				Description: _STORAGE_ETCD_ESCAPE})
 			continue
 		}
 
 		var elog etcdLog
 		err = json.Unmarshal([]byte(unescaped), &elog)
 		if err != nil {
-			log.Error(ctx, EtcdUnexpectedLogError{Line: line})
+			log.Error(ctx, EtcdUnexpectedLogError{Line: line,
+				Description: _STORAGE_ETCD_FORMAT})
 			continue
 		}
 
@@ -99,9 +102,10 @@ func (l logger) log(ctx context.Context, r io.ReadCloser) {
 		}
 		if err != nil {
 			log.Error(ctx, EtcdLogError{
-				Level:   level,
-				Message: msg,
-				Err:     log.Alert(err),
+				Level:       level,
+				Message:     msg,
+				Err:         log.Alert(err),
+				Description: _STORAGE_ETCD_UNKNOWN_LVL,
 			})
 		}
 	}

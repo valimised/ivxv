@@ -61,11 +61,13 @@ func New(c *Conf, services *Services) (client *Client, err error) {
 	defer reglock.RUnlock()
 	n, ok := registry[c.Protocol]
 	if !ok {
-		return nil, UnlinkedProtocolError{Protocol: c.Protocol}
+		return nil, UnlinkedProtocolError{Protocol: c.Protocol,
+			Description: _STORAGE_PROT}
 	}
 	client = new(Client)
 	if client.prot, err = n(c.Conf, services); err != nil {
-		return nil, ConfigureProtocolError{Protocol: c.Protocol, Err: err}
+		return nil, ConfigureProtocolError{Protocol: c.Protocol, Err: err,
+			Description: _STORAGE_PROT_CFG}
 	}
 	if c.OrderTimeout == 0 {
 		client.orderTimeout = 5
@@ -97,18 +99,19 @@ func (c *Client) ensure(ctx context.Context, key string, value []byte) error {
 	case err == nil:
 		return nil
 	case errors.CausedBy(err, new(ExistError)) == nil:
-		return EnsurePutError{Err: err}
+		return EnsurePutError{Err: err, Description: _STORAGE_PUT}
 	}
 
 	existing, err := c.prot.Get(ctx, key)
 	if err != nil {
-		return EnsureGetExistingError{Err: err}
+		return EnsureGetExistingError{Err: err, Description: _STORAGE_GET}
 	}
 
 	if !bytes.Equal(existing, value) {
 		return EnsureExistingMismatchError{
-			Existing: existing,
-			New:      value,
+			Existing:    existing,
+			New:         value,
+			Description: _STORAGE_PUT_GET_FAIL,
 		}
 	}
 	return nil
@@ -130,24 +133,24 @@ func (c *Client) update(ctx context.Context,
 
 	v, err := value(nil)
 	if err != nil {
-		return UpdateInitialValueError{Err: err}
+		return UpdateInitialValueError{Err: err, Description: _STORAGE_UPDATE}
 	}
 
 	switch err := c.prot.Put(ctx, key, v); {
 	case err == nil:
 		return nil
 	case errors.CausedBy(err, new(ExistError)) == nil:
-		return UpdatePutError{Err: err}
+		return UpdatePutError{Err: err, Description: _STORAGE_PUT}
 	}
 
 	for {
 		existing, err := c.prot.Get(ctx, key)
 		if err != nil {
-			return UpdateGetExistingError{Err: err}
+			return UpdateGetExistingError{Err: err, Description: _STORAGE_GET}
 		}
 
 		if v, err = value(existing); err != nil {
-			return UpdateNewValueError{Err: err}
+			return UpdateNewValueError{Err: err, Description: _STORAGE_UPDATE}
 		}
 		if v == nil {
 			return nil // Keep the existing value as-is.
@@ -157,7 +160,7 @@ func (c *Client) update(ctx context.Context,
 		case err == nil:
 			return nil
 		case errors.CausedBy(err, new(UnexpectedValueError)) == nil:
-			return UpdateCASError{Err: err}
+			return UpdateCASError{Err: err, Description: _STORAGE_CAS_UNEXPECTED}
 		}
 	}
 }
@@ -189,29 +192,30 @@ func (c *Client) PutDistricts(ctx context.Context, version string,
 	oldver, err := c.GetDistrictsVersion(ctx)
 	switch {
 	case err == nil:
-		return PutDistrictsExistsError{Version: oldver}
+		return PutDistrictsExistsError{Version: oldver,
+			Description: _STORAGE_PUT_DIST_EXIST}
 	case errors.CausedBy(err, new(NotExistError)) == nil:
-		return PutDistrictsCheckExistingError{Err: err}
+		return PutDistrictsCheckExistingError{Err: err, Description: _STORAGE_GET}
 	}
 
 	// Ensure that no IDs clash with our counties or version key.
 	if _, ok := districts[countiesKey]; ok {
-		return PutDistrictsCountiesIDNotAllowedError{}
+		return PutDistrictsCountiesIDNotAllowedError{Description: _STORAGE_COUNTY}
 	}
 	if _, ok := districts[versionKey]; ok {
-		return PutDistrictsVersionIDNotAllowedError{}
+		return PutDistrictsVersionIDNotAllowedError{Description: _STORAGE_VER}
 	}
 
 	if err = c.putAll(ctx, districtsPrefix, districts, true, progress); err != nil {
-		return PutDistrictsError{Err: err}
+		return PutDistrictsError{Err: err, Description: _STORAGE_PUT_DIST}
 	}
 	if err = c.ensure(ctx, districtsPrefix+countiesKey, counties); err != nil {
-		return PutDistrictsCountiesError{Err: err}
+		return PutDistrictsCountiesError{Err: err, Description: _STORAGE_PUT_ENSURE}
 	}
 
 	// Store the district list version.
 	if err = c.prot.Put(ctx, districtsPrefix+versionKey, []byte(version)); err != nil {
-		return PutDistrictsVersionError{Err: err}
+		return PutDistrictsVersionError{Err: err, Description: _STORAGE_PUT}
 	}
 	return
 }
@@ -219,7 +223,7 @@ func (c *Client) PutDistricts(ctx context.Context, version string,
 // GetCounties retrieves the serialized counties list.
 func (c *Client) GetCounties(ctx context.Context) (counties []byte, err error) {
 	if counties, err = c.prot.Get(ctx, districtsPrefix+countiesKey); err != nil {
-		err = GetCountiesError{Err: err}
+		err = GetCountiesError{Err: err, Description: _STORAGE_GET}
 	}
 	return
 }
@@ -229,7 +233,7 @@ func (c *Client) GetDistrictsVersion(ctx context.Context) (version string, err e
 	vb, err := c.prot.Get(ctx, districtsPrefix+versionKey)
 	version = string(vb)
 	if err != nil {
-		err = GetDistrictsVersionError{Err: err}
+		err = GetDistrictsVersionError{Err: err, Description: _STORAGE_GET}
 	}
 	return
 }
@@ -256,7 +260,8 @@ func encodePair(first, second string) []byte {
 
 func decodePair(encoded []byte) (first, second string, err error) {
 	if len(encoded) == 0 || len(encoded) < 1+int(encoded[0]) {
-		return "", "", EncodedPairLengthError{Len: len(encoded)}
+		return "", "", EncodedPairLengthError{Len: len(encoded),
+			Description: _STORAGE_DECODE_PAIR}
 	}
 	n := encoded[0]
 	return string(encoded[1 : 1+n]), string(encoded[1+n:]), nil
@@ -277,23 +282,23 @@ func (c *Client) PutChoices(ctx context.Context, version string,
 	oldver, err := c.GetChoicesVersion(ctx)
 	switch {
 	case err == nil:
-		return PutChoicesExistsError{Version: oldver}
+		return PutChoicesExistsError{Version: oldver, Description: _STORAGE_GET_OK}
 	case errors.CausedBy(err, new(NotExistError)) == nil:
-		return PutChoicesCheckExistingError{Err: err}
+		return PutChoicesCheckExistingError{Err: err, Description: _STORAGE_GET}
 	}
 
 	// Ensure that no IDs clash with our version key.
 	if _, ok := choices[versionKey]; ok {
-		return PutChoicesVersionIDNotAllowedError{}
+		return PutChoicesVersionIDNotAllowedError{Description: _STORAGE_CHOICES_VER}
 	}
 
 	if err = c.putAll(ctx, choicesPrefix, choices, true, progress); err != nil {
-		return PutChoicesError{Err: err}
+		return PutChoicesError{Err: err, Description: _STORAGE_PUT}
 	}
 
 	// Set the marker that choices lists were successfully stored.
 	if err = c.prot.Put(ctx, choicesPrefix+versionKey, []byte(version)); err != nil {
-		return PutChoicesSetDoneError{Err: err}
+		return PutChoicesSetDoneError{Err: err, Description: _STORAGE_PUT}
 	}
 	return
 }
@@ -301,7 +306,7 @@ func (c *Client) PutChoices(ctx context.Context, version string,
 // GetChoices retrieves the choices list with the given identifier.
 func (c *Client) GetChoices(ctx context.Context, choices string) (list []byte, err error) {
 	if list, err = c.prot.Get(ctx, choicesPrefix+choices); err != nil {
-		err = GetChoicesError{Choices: choices, Err: err}
+		err = GetChoicesError{Choices: choices, Err: err, Description: _STORAGE_GET}
 	}
 	return
 }
@@ -311,7 +316,7 @@ func (c *Client) GetChoicesVersion(ctx context.Context) (version string, err err
 	vb, err := c.prot.Get(ctx, choicesPrefix+versionKey)
 	version = string(vb)
 	if err != nil {
-		err = GetChoicesVersionError{Err: err}
+		err = GetChoicesVersionError{Err: err, Description: _STORAGE_GET}
 	}
 	return
 }
@@ -365,9 +370,9 @@ func (c *Client) PutVoters(ctx context.Context, cversion string, voters map[stri
 	if initial && !notexist {
 		if err != nil {
 			// We encountered some other error.
-			return PutVotersCheckVersionExistsError{Err: err}
+			return PutVotersCheckVersionExistsError{Err: err, Description: _STORAGE_GET}
 		}
-		return PutVotersVersionExistsError{Version: version}
+		return PutVotersVersionExistsError{Version: version, Description: _STORAGE_EXPECT_INITIAL}
 	}
 
 	var oldcver string
@@ -375,7 +380,7 @@ func (c *Client) PutVoters(ctx context.Context, cversion string, voters map[stri
 		// When putting a new list version, the old one must exist and
 		// match expected.
 		if err != nil {
-			return PutVotersGetVersionError{Err: err}
+			return PutVotersGetVersionError{Err: err, Description: _STORAGE_INITIAL_VER}
 		}
 		if version != oldver {
 			// We cannot use a struct literal, because gen would
@@ -383,15 +388,17 @@ func (c *Client) PutVoters(ctx context.Context, cversion string, voters map[stri
 			var err UnexpectedValueError
 			err.Key = vkey
 			err.Err = PutVotersVersionMismatchError{
-				Version:  version,
-				Expected: oldver,
+				Version:     version,
+				Expected:    oldver,
+				Description: _STORAGE_VER_MISMATCH,
 			}
 			return err
 		}
 
 		// Store a reference to the previous list version.
 		if err = c.ensure(ctx, prefix+previousKey, []byte(oldver)); err != nil {
-			return PutVotersPreviousVersionError{Version: newver, Err: err}
+			return PutVotersPreviousVersionError{Version: newver, Err: err,
+				Description: _STORAGE_PUT_ENSURE}
 		}
 
 		// Get the current container versions to concatenate to.
@@ -400,36 +407,37 @@ func (c *Client) PutVoters(ctx context.Context, cversion string, voters map[stri
 			return PutVotersGetContainerVersionsError{
 				ListVersion: version,
 				Err:         err,
+				Description: _STORAGE_BDOC_VER,
 			}
 		}
 	}
 
 	// Ensure that no voters clash with our version or previous key.
 	if _, ok := voters[versionKey]; ok {
-		return PutVotersVersionKeyNotAllowedError{}
+		return PutVotersVersionKeyNotAllowedError{Description: _STORAGE_VOTERS_VER}
 	}
 	if _, ok := voters[previousKey]; ok {
-		return PutVotersPreviousKeyNotAllowedError{}
+		return PutVotersPreviousKeyNotAllowedError{Description: _STORAGE_VOTERS_PREV}
 	}
 
 	// Create a new voters list version.
 	if err = c.putAll(ctx, prefix, voters, true, progress); err != nil {
-		return PutVotersError{Version: newver, Err: err}
+		return PutVotersError{Version: newver, Err: err, Description: _STORAGE_PUT}
 	}
 	if err = c.ensure(ctx, prefix+versionKey, []byte(oldcver+cversion+"\n")); err != nil {
-		return PutVotersContainerVersionsError{Version: newver, Err: err}
+		return PutVotersContainerVersionsError{Version: newver, Err: err, Description: _STORAGE_PUT_ENSURE}
 	}
 
 	// Either create or CAS the new version number.
 	if initial {
 		if err = c.prot.Put(ctx, vkey, []byte(newver)); err != nil {
-			err = PutVotersNewVersionError{Version: newver, Err: err}
+			err = PutVotersNewVersionError{Version: newver, Err: err, Description: _STORAGE_PUT}
 		}
 		return
 	}
 
 	if err = c.prot.CAS(ctx, vkey, []byte(oldver), []byte(newver)); err != nil {
-		err = PutVotersCASVersionError{Old: oldver, New: newver, Err: err}
+		err = PutVotersCASVersionError{Old: oldver, New: newver, Err: err, Description: _STORAGE_CAS}
 	}
 	return
 }
@@ -445,8 +453,9 @@ func (c *Client) GetVoter(ctx context.Context, version, voter string) (
 	}
 	if adminCode, district, err = decodePair(encoded); err != nil {
 		err = log.Alert(GetVoterParseEntryError{
-			Voter: voter,
-			Err:   err,
+			Voter:       voter,
+			Err:         err,
+			Description: _STORAGE_DECODE_PAIR,
 		})
 	}
 	return adminCode, district, err
@@ -467,9 +476,10 @@ func (c *Client) getVoter(ctx context.Context, version, voter string) (encoded [
 				var ne NotExistError
 				ne.Key = prefix + voter
 				ne.Err = GetVoterDeletedError{
-					Version:   version,
-					Voter:     voter,
-					DeletedAt: currentver,
+					Version:     version,
+					Voter:       voter,
+					DeletedAt:   currentver,
+					Description: _STORAGE_DELETED_VOTER,
 				}
 				return nil, ne
 			}
@@ -486,18 +496,20 @@ func (c *Client) getVoter(ctx context.Context, version, voter string) (encoded [
 				var ne NotExistError
 				ne.Key = versionPrefix(version) + voter
 				ne.Err = GetVoterNotFoundError{
-					Version: version,
-					Voter:   voter,
+					Version:     version,
+					Voter:       voter,
+					Description: _STORAGE_GET_N_EXISTS,
 				}
 				return nil, ne
 			}
 			err = verr
 		}
 		return nil, GetVoterError{
-			Version: version,
-			Voter:   voter,
-			Step:    currentver,
-			Err:     err,
+			Version:     version,
+			Voter:       voter,
+			Step:        currentver,
+			Err:         err,
+			Description: _STORAGE_GET,
 		}
 	}
 }
@@ -511,11 +523,11 @@ func (c *Client) VoterChoices(ctx context.Context, voter, foreignAdminCode strin
 	version, choices string, err error) {
 
 	if version, err = c.GetVotersListVersion(ctx); err != nil {
-		return "", "", VoterChoicesVersionError{Err: err}
+		return "", "", VoterChoicesVersionError{Err: err, Description: _STORAGE_GET}
 	}
 	adminDistrict, err := c.getVoter(ctx, version, voter)
 	if err != nil {
-		return "", "", VoterChoicesError{Err: err}
+		return "", "", VoterChoicesError{Err: err, Description: _STORAGE_GET}
 	}
 
 	// It is kind of ugly to handle foreign voter encoding in the storage
@@ -529,7 +541,7 @@ func (c *Client) VoterChoices(ctx context.Context, voter, foreignAdminCode strin
 
 	choicesb, err := c.prot.Get(ctx, districtsPrefix+string(adminDistrict))
 	if err != nil {
-		return "", "", VoterChoicesDistrictError{Err: err}
+		return "", "", VoterChoicesDistrictError{Err: err, Description: _STORAGE_GET}
 	}
 	return version, string(choicesb), nil
 }
@@ -541,7 +553,7 @@ func (c *Client) VoterChoicesByVersion(ctx context.Context, version, voter, fore
 
 	adminDistrict, err := c.getVoter(ctx, version, voter)
 	if err != nil {
-		return "", VoterChoicesByVersionError{Err: err}
+		return "", VoterChoicesByVersionError{Err: err, Description: _STORAGE_GET}
 	}
 
 	// It is kind of ugly to handle foreign voter encoding in the storage
@@ -555,7 +567,7 @@ func (c *Client) VoterChoicesByVersion(ctx context.Context, version, voter, fore
 
 	districtID, err := c.prot.Get(ctx, districtsPrefix+string(adminDistrict))
 	if err != nil {
-		return "", VoterChoicesByVersionDistrictError{Err: err}
+		return "", VoterChoicesByVersionDistrictError{Err: err, Description: _STORAGE_GET}
 	}
 	return string(districtID), nil
 }
@@ -565,13 +577,14 @@ func (c *Client) VoterChoicesByVersion(ctx context.Context, version, voter, fore
 func (c *Client) GetVotersContainerVersions(ctx context.Context) (cversion string, err error) {
 	version, err := c.GetVotersListVersion(ctx)
 	if err != nil {
-		return "", GetVotersContainerVersionsVersionError{Err: err}
+		return "", GetVotersContainerVersionsVersionError{Err: err, Description: _STORAGE_GET}
 	}
 	cversion, err = c.getCVersion(ctx, version)
 	if err != nil {
 		err = GetVotersContainerVersionsError{
 			ListVersion: version,
 			Err:         err,
+			Description: _STORAGE_BDOC_VER,
 		}
 	}
 	return
@@ -581,7 +594,7 @@ func (c *Client) GetVotersContainerVersions(ctx context.Context) (cversion strin
 func (c *Client) GetVotersListVersion(ctx context.Context) (version string, err error) {
 	versionb, err := c.prot.Get(ctx, votersPrefix+versionKey)
 	if err != nil {
-		err = GetVotersListVersionError{Err: err}
+		err = GetVotersListVersionError{Err: err, Description: _STORAGE_GET}
 	}
 	return string(versionb), err
 }
@@ -625,7 +638,7 @@ func (c *Client) SetVoted(ctx context.Context, voteID []byte, voterName string, 
 	idVersionKey := voteIDPrefix(voteID) + versionKey // Effective voter list version.
 	data, err := c.getAllStrict(ctx, idVoterKey, idVersionKey)
 	if err != nil {
-		return SetVotedGetAllError{VoteID: voteID, Err: err}
+		return SetVotedGetAllError{VoteID: voteID, Err: err, Description: _STORAGE_GET}
 	}
 
 	// Get the administrative unit code of voter in voter list version.
@@ -641,7 +654,7 @@ func (c *Client) SetVoted(ctx context.Context, voteID []byte, voterName string, 
 		idAdminCode = ""
 		district = ""
 	default:
-		return SetVotedGetVoterError{Voter: idVoter, Err: err}
+		return SetVotedGetVoterError{Voter: idVoter, Err: err, Description: _STORAGE_GET}
 	}
 
 	ctimeStr := ctime.Format(timefmt)
@@ -661,15 +674,17 @@ func (c *Client) SetVoted(ctx context.Context, voteID []byte, voterName string, 
 			oldAdminCode, oldTimeStr, err := decodePair(existing)
 			if err != nil {
 				return nil, log.Alert(SetVotedStatsDecodeError{
-					Voter: idVoter,
-					Err:   err,
+					Voter:       idVoter,
+					Err:         err,
+					Description: _STORAGE_DECODE_PAIR,
 				})
 			}
 			oldTime, err := time.Parse(timefmt, oldTimeStr)
 			if err != nil {
 				return nil, log.Alert(SetVotedStatsParseTimeError{
-					Voter: idVoter,
-					Err:   err,
+					Voter:       idVoter,
+					Err:         err,
+					Description: _STORAGE_TS_PARSE,
 				})
 			}
 
@@ -682,7 +697,7 @@ func (c *Client) SetVoted(ctx context.Context, voteID []byte, voterName string, 
 				return votedStatsValue, nil // Update the index.
 			}
 		}); err != nil {
-			return SetVotedUpdateStatsError{Err: err}
+			return SetVotedUpdateStatsError{Err: err, Description: _STORAGE_UPDATE}
 		}
 		// voterName is empty when rebuilding voted stats
 		if voterName != "" {
@@ -707,11 +722,13 @@ func (c *Client) SetVoted(ctx context.Context, voteID []byte, voterName string, 
 
 		oldTimeStr, oldVoteID, err := decodePair(existing)
 		if err != nil {
-			return nil, log.Alert(SetVotedLatestDecodeError{Voter: idVoter, Err: err})
+			return nil, log.Alert(SetVotedLatestDecodeError{Voter: idVoter, Err: err,
+				Description: _STORAGE_DECODE_PAIR})
 		}
 		oldTime, err := time.Parse(timefmt, oldTimeStr)
 		if err != nil {
-			return nil, log.Alert(SetVotedLatestParseOldTimeError{Voter: idVoter, Err: err})
+			return nil, log.Alert(SetVotedLatestParseOldTimeError{Voter: idVoter, Err: err,
+				Description: _STORAGE_TS_PARSE})
 		}
 
 		switch {
@@ -726,7 +743,7 @@ func (c *Client) SetVoted(ctx context.Context, voteID []byte, voterName string, 
 			return votedLatestValue, nil // Update the index.
 		}
 	}); err != nil {
-		return SetVotedUpdateLatestError{Err: err}
+		return SetVotedUpdateLatestError{Err: err, Description: _STORAGE_UPDATE}
 	}
 
 	return nil
@@ -740,7 +757,7 @@ func (c *Client) CheckVoted(ctx context.Context, voter string) (voted bool, err 
 	case errors.CausedBy(err, new(NotExistError)) != nil:
 		return false, nil
 	default:
-		return false, CheckVotedError{Voter: voter, Err: err}
+		return false, CheckVotedError{Voter: voter, Err: err, Description: _STORAGE_GET}
 	}
 }
 
@@ -752,7 +769,7 @@ func (c *Client) GetVotesCount(ctx context.Context) (count uint64, err error) {
 	case errors.CausedBy(err, new(NotExistError)) != nil:
 		return 0, nil
 	default:
-		return 0, GetVotesCountError{Err: err}
+		return 0, GetVotesCountError{Err: err, Description: _STORAGE_GET}
 	}
 }
 
@@ -777,16 +794,18 @@ func (c *Client) AddVoteOrder(ctx context.Context, voterName string, idVoter str
 		// turn means that we don't have to add SeqNo for that voter
 		if errors.CausedBy(statsErr, new(NotExistError)) != nil {
 			return AddVoteOrderErrorGetDetailStatsForNonVotedVoter{
-				Err: statsErr,
+				Err: statsErr, Description: _STORAGE_GET_N_EXISTS,
 			}
 		}
 		// Other errors could possibly be caused by database connectivity
 		return AddVoteOrderGetDetailStatsForVoterError{
-			VoterName: voterName,
-			VoterID:   idVoter,
-			AdminCode: idAdminCode,
-			District:  district,
-			Err:       statsErr}
+			VoterName:   voterName,
+			VoterID:     idVoter,
+			AdminCode:   idAdminCode,
+			District:    district,
+			Err:         statsErr,
+			Description: _STORAGE_GET,
+		}
 	}
 
 	// Get amount of successful votes per voter using SeqNo+Batch records
@@ -797,11 +816,12 @@ func (c *Client) AddVoteOrder(ctx context.Context, voterName string, idVoter str
 		// however database is currently not available
 		if errors.CausedBy(seqNoErr, new(NotExistError)) == nil {
 			return AddVoteOrderGetSeqNoStatsForVoterError{
-				VoterName: voterName,
-				VoterID:   idVoter,
-				AdminCode: idAdminCode,
-				District:  district,
-				Err:       seqNoErr}
+				VoterName:   voterName,
+				VoterID:     idVoter,
+				AdminCode:   idAdminCode,
+				District:    district,
+				Err:         seqNoErr,
+				Description: _STORAGE_GET}
 		}
 	}
 
@@ -811,6 +831,7 @@ func (c *Client) AddVoteOrder(ctx context.Context, voterName string, idVoter str
 		log.Log(ctx, AddVoteOrderSeqNoForVoterAlreadyLatest{
 			Voter:       idVoter,
 			LatestSeqNo: seqNoSerial,
+			Description: _STORAGE_DET_STATS_IDX,
 		})
 		return nil
 	}
@@ -818,11 +839,13 @@ func (c *Client) AddVoteOrder(ctx context.Context, voterName string, idVoter str
 	count, countErr := c.GetVotesCount(ctx)
 	if countErr != nil {
 		return AddVoteOrderGetVotesCountError{
-			VoterName: voterName,
-			VoterID:   idVoter,
-			AdminCode: idAdminCode,
-			District:  district,
-			Err:       countErr}
+			VoterName:   voterName,
+			VoterID:     idVoter,
+			AdminCode:   idAdminCode,
+			District:    district,
+			Err:         countErr,
+			Description: _STORAGE_GET,
+		}
 	}
 	var newCount uint64
 	reqAll := make([]*PutAllRequest, 4)
@@ -933,16 +956,19 @@ func (c *Client) AddVoteOrder(ctx context.Context, voterName string, idVoter str
 
 	// Catch all errors here
 	if err != nil {
-		log.Log(ctx, AddVoteOrderError{Err: err})
+		log.Log(ctx, AddVoteOrderError{Err: err,
+			Description: _STORAGE_TXN})
 		return AddVoteOrderStoreVotesStatsError{
-			VoterName: voterName,
-			VoterID:   idVoter,
-			AdminCode: idAdminCode,
-			District:  district}
+			VoterName:   voterName,
+			VoterID:     idVoter,
+			AdminCode:   idAdminCode,
+			District:    district,
+			Description: _STORAGE_TXN,
+		}
 	}
 
 	// Informational purpose, to compare SeqNo with this log records count (should match)
-	log.Debug(ctx, AddVoteOrderSuccess{VoterID: idVoter})
+	log.Debug(ctx, AddVoteOrderSuccess{VoterID: idVoter, Description: _STORAGE_VOTESORDER})
 
 	return nil
 }
@@ -958,7 +984,7 @@ func (c *Client) GetVotesOrder(ctx context.Context, countFrom int, batchSize int
 	}
 	values, err := c.getAll(ctx, keys...)
 	if err != nil {
-		return []VoteOrder{}, GetAllVotesOrderError{Err: err}
+		return []VoteOrder{}, GetAllVotesOrderError{Err: err, Description: _STORAGE_GET}
 	}
 	var votesOrder []VoteOrder
 	for i := countFrom; i < countFrom+batchSize; i++ {
@@ -1017,16 +1043,18 @@ func (c *Client) GetVotedStats(ctx context.Context) (<-chan VotedStats, <-chan e
 			adminCode, timestr, err := decodePair(voted.Value)
 			if err != nil {
 				errc <- log.Alert(GetVotedStatsDecodeError{
-					Voter: voter,
-					Err:   err,
+					Voter:       voter,
+					Err:         err,
+					Description: _STORAGE_DECODE_PAIR,
 				})
 				return
 			}
 			stime, err := time.Parse(timefmt, timestr)
 			if err != nil {
 				errc <- log.Alert(GetVotedStatsParseTimeError{
-					Voter: voter,
-					Err:   err,
+					Voter:       voter,
+					Err:         err,
+					Description: _STORAGE_TS_PARSE,
 				})
 				return
 			}
@@ -1040,7 +1068,7 @@ func (c *Client) GetVotedStats(ctx context.Context) (<-chan VotedStats, <-chan e
 
 		var err error
 		if err = <-proterrc; err != nil {
-			err = log.Alert(GetWithVotedPrefixError{Err: err})
+			err = log.Alert(GetWithVotedPrefixError{Err: err, Description: _STORAGE_GET})
 		}
 		errc <- err
 	}()
@@ -1062,22 +1090,24 @@ func (c *Client) GetVoterRateStats(ctx context.Context, voter string) (
 		err = nil // No attempts yet.
 		return
 	default:
-		err = GetVoterRateStatsError{Voter: voter, Err: err}
+		err = GetVoterRateStatsError{Voter: voter, Err: err, Description: _STORAGE_GET}
 		return
 	}
 
 	// The value is 8 bytes for submissions followed by timestamp.
 	if len(stats) < 8 {
 		err = log.Alert(InvalidVoterRateStatsLengthError{
-			Voter:  voter,
-			Length: len(stats),
+			Voter:       voter,
+			Length:      len(stats),
+			Description: _STORAGE_RATE_BYTES,
 		})
 		return
 	}
 	submissions = binary.BigEndian.Uint64(stats[:8])
 
 	if last, err = time.Parse(timefmt, string(stats[8:])); err != nil {
-		err = log.Alert(ParseVoterRateStatsTimeError{Voter: voter, Err: err})
+		err = log.Alert(ParseVoterRateStatsTimeError{Voter: voter, Err: err,
+			Description: _STORAGE_TS_PARSE})
 	}
 	return
 }
@@ -1106,7 +1136,7 @@ func (c *Client) SetVoterRateStats(ctx context.Context, voter string,
 	// we attempt to perform the usual compare-and-swap.
 	if submissions > 0 || !last.IsZero() {
 		if err = c.prot.CAS(ctx, key, old, newv); err != nil {
-			err = SetVoterRateStatsError{Voter: voter, Err: err}
+			err = SetVoterRateStatsError{Voter: voter, Err: err, Description: _STORAGE_CAS}
 		}
 		return
 	}
@@ -1127,12 +1157,13 @@ func (c *Client) SetVoterRateStats(ctx context.Context, voter string,
 		// report it as a duplicate error type.
 		var unexpected UnexpectedValueError
 		unexpected.Err = SetVoterRateStatsPutExistsError{
-			Voter: voter,
-			Err:   err,
+			Voter:       voter,
+			Err:         err,
+			Description: _STORAGE_PUT_EXISTS,
 		}
 		return unexpected
 	default:
-		return SetVoterRateStatsPutError{Voter: voter, Err: err}
+		return SetVoterRateStatsPutError{Voter: voter, Err: err, Description: _STORAGE_PUT}
 	}
 }
 
@@ -1192,7 +1223,8 @@ const (
 // service.
 func (c *Client) StoreVote(ctx context.Context, vote StoredVote) error {
 	if m := vote.missing(); len(m) > 0 {
-		return StoreIncompleteVoteError{VoteID: vote.VoteID, Missing: m}
+		return StoreIncompleteVoteError{VoteID: vote.VoteID, Missing: m,
+			Description: _STORAGE_INCOMPLETE_VOTE}
 	}
 
 	if err := c.putAll(ctx, voteIDPrefix(vote.VoteID), map[string][]byte{
@@ -1203,7 +1235,7 @@ func (c *Client) StoreVote(ctx context.Context, vote StoredVote) error {
 		versionKey: []byte(vote.Version),
 		countKey:   make([]byte, 8),
 	}, false, noopAdd); err != nil {
-		return log.Alert(StoreVoteError{VoteID: vote.VoteID, Err: err})
+		return log.Alert(StoreVoteError{VoteID: vote.VoteID, Err: err, Description: _STORAGE_PUT})
 	}
 	return nil
 }
@@ -1218,9 +1250,10 @@ func (c *Client) StoreQualifyingProperty(ctx context.Context, voteID []byte,
 	prefix := voteIDPrefix(voteID)
 	if err := c.prot.Put(ctx, prefix+string(protocol), property); err != nil {
 		return log.Alert(StoreQualifyingPropertyError{
-			VoteID:   voteID,
-			Protocol: protocol,
-			Err:      err,
+			VoteID:      voteID,
+			Protocol:    protocol,
+			Err:         err,
+			Description: _STORAGE_PUT,
 		})
 	}
 	return nil
@@ -1271,7 +1304,8 @@ func (c *Client) GetVotes(ctx context.Context, qps []q11n.Protocol, optional []s
 			// Split the storage key into vote ID and value key.
 			voteid, key, err := splitVoteKey(r.Key)
 			if err != nil {
-				errc <- log.Alert(GetVotesSplitKeyError{Key: r.Key, Err: err})
+				errc <- log.Alert(GetVotesSplitKeyError{Key: r.Key, Err: err,
+					Description: _STORAGE_VOTEID_FROM_KEY})
 				continue
 			}
 
@@ -1295,8 +1329,9 @@ func (c *Client) GetVotes(ctx context.Context, qps []q11n.Protocol, optional []s
 			case timeKey:
 				if vote.Time, err = time.Parse(timefmt, string(r.Value)); err != nil {
 					errc <- log.Alert(GetVotesParseTimeError{
-						VoteID: voteid,
-						Err:    err,
+						VoteID:      voteid,
+						Err:         err,
+						Description: _STORAGE_TS_PARSE,
 					})
 					continue
 				}
@@ -1318,8 +1353,9 @@ func (c *Client) GetVotes(ctx context.Context, qps []q11n.Protocol, optional []s
 				}
 
 				errc <- log.Alert(GetVotesInvalidKeyError{
-					VoteID: voteid,
-					Key:    key,
+					VoteID:      voteid,
+					Key:         key,
+					Description: _STORAGE_UNKNOWN_ETCD_KEY,
 				})
 				continue
 			}
@@ -1336,7 +1372,7 @@ func (c *Client) GetVotes(ctx context.Context, qps []q11n.Protocol, optional []s
 			}
 		}
 		if err := <-proterrc; err != nil {
-			errc <- log.Alert(GetVotesFatalError{Err: err})
+			errc <- log.Alert(GetVotesFatalError{Err: err, Description: _STORAGE_GET})
 			return
 		}
 
@@ -1355,8 +1391,9 @@ func (c *Client) GetVotes(ctx context.Context, qps []q11n.Protocol, optional []s
 			// Send an error about any incomplete entries, even if
 			// we sent the partial vote.
 			errc <- GetVotesIncompleteVoteError{
-				VoteID:  vote.VoteID,
-				Missing: vote.missing(qps...),
+				VoteID:      vote.VoteID,
+				Missing:     vote.missing(qps...),
+				Description: _STORAGE_INCOMPLETE_VOTE,
 			}
 		}
 	}()
@@ -1385,20 +1422,21 @@ func (c *Client) GetVerificationStats(ctx context.Context, voteid []byte, foreig
 	prefix := voteIDPrefix(voteid)
 	m, err := c.getAllStrict(ctx, prefix+timeKey, prefix+countKey, prefix+voterKey, prefix+versionKey)
 	if err != nil {
-		err = GetVerificationStatsError{VoteID: voteid, Err: err}
+		err = GetVerificationStatsError{VoteID: voteid, Err: err, Description: _STORAGE_GET}
 		return
 	}
 
 	if at, err = time.Parse(timefmt, string(m[prefix+timeKey])); err != nil {
-		err = log.Alert(ParseVerificationTimeError{VoteID: voteid, Err: err})
+		err = log.Alert(ParseVerificationTimeError{VoteID: voteid, Err: err, Description: _STORAGE_TS_PARSE})
 		return
 	}
 
 	countb := m[prefix+countKey]
 	if len(countb) != 8 {
 		err = log.Alert(InvalidVerificationCountLengthError{
-			VoteID: voteid,
-			Length: len(countb),
+			VoteID:      voteid,
+			Length:      len(countb),
+			Description: _STORAGE_RATE_VERIF_BYTES,
 		})
 		return
 	}
@@ -1413,7 +1451,7 @@ func (c *Client) GetVerificationStats(ctx context.Context, voteid []byte, foreig
 	// we only interested in a district's version that was used during voting.
 	versionAsBytes, ok := m[prefix+versionKey]
 	if !ok {
-		err = log.Alert(VersionDoesntExistError{VoteID: voteid})
+		err = log.Alert(VersionDoesntExistError{VoteID: voteid, Description: _STORAGE_VER_MISMATCH})
 		return
 	}
 
@@ -1425,25 +1463,29 @@ func (c *Client) GetVerificationStats(ctx context.Context, voteid []byte, foreig
 		// Get district ID for a particular voter by voterlist version of a stored vote ID
 		districtID, err = c.VoterChoicesByVersion(ctx, version, voter, foreignAdminCode)
 		if err != nil {
-			err = log.Alert(GetVerificationDistrictIDError{Voter: voter, Err: err})
+			err = log.Alert(GetVerificationDistrictIDError{Voter: voter, Err: err,
+				Description: _STORAGE_GET})
 			return
 		}
 	}
 
 	// Get all choices for particular district ID
 	if choicesList, err = c.GetChoices(ctx, districtID); err != nil {
-		err = log.Alert(GetVerificationChoicesListError{Voter: voter, Err: err})
+		err = log.Alert(GetVerificationChoicesListError{Voter: voter, Err: err,
+			Description: _STORAGE_GET})
 		return
 	}
 
 	votedLatest, err := c.prot.Get(ctx, votedLatestPrefix+voter)
 	if err != nil {
-		err = log.Alert(GetVerificationLatestError{Voter: voter, Err: err})
+		err = log.Alert(GetVerificationLatestError{Voter: voter, Err: err,
+			Description: _STORAGE_GET})
 		return
 	}
 	_, latestVoteID, err := decodePair(votedLatest)
 	if err != nil {
-		err = log.Alert(GetVerificationDecodeLatestError{Voter: voter, Err: err})
+		err = log.Alert(GetVerificationDecodeLatestError{Voter: voter, Err: err,
+			Description: _STORAGE_DECODE_PAIR})
 		return
 	}
 	latest = bytes.Equal(voteid, []byte(latestVoteID))
@@ -1470,7 +1512,7 @@ func (c *Client) GetVerification(ctx context.Context,
 	}
 	m, err := c.getAllStrict(ctx, keys...)
 	if err != nil {
-		err = GetVerificationError{VoteID: voteid, Err: err}
+		err = GetVerificationError{VoteID: voteid, Err: err, Description: _STORAGE_GET}
 		return
 	}
 
@@ -1490,7 +1532,7 @@ func (c *Client) GetVerification(ctx context.Context,
 
 	// Perform the CAS.
 	if err = c.prot.CAS(ctx, prefix+countKey, old, new1); err != nil {
-		err = GetVerificationCASError{VoteID: voteid, Err: err}
+		err = GetVerificationCASError{VoteID: voteid, Err: err, Description: _STORAGE_CAS}
 		return
 	}
 	return
@@ -1513,15 +1555,18 @@ func voteIDPrefix(voteid []byte) string {
 func splitVoteKey(fullkey string) (voteid []byte, key string, err error) {
 	// Note that the vote ID can contain slashes so be careful!
 	if !strings.HasPrefix(fullkey, votePrefix) {
-		return nil, "", SplitVoteKeyNoPrefixError{FullKey: fullkey}
+		return nil, "", SplitVoteKeyNoPrefixError{FullKey: fullkey,
+			Description: _STORAGE_KEY_PREX}
 	}
 	stripped := fullkey[len(votePrefix):]
 	slash := strings.LastIndex(stripped, "/")
 	switch slash {
 	case -1:
-		return nil, "", SplitVoteKeyNoSlashError{FullKey: fullkey}
+		return nil, "", SplitVoteKeyNoSlashError{FullKey: fullkey,
+			Description: _STORAGE_KEY_PREX_SLASH}
 	case len(stripped) - 1:
-		return nil, "", SplitVoteKeyNoKeyError{FullKey: fullkey}
+		return nil, "", SplitVoteKeyNoKeyError{FullKey: fullkey,
+			Description: _STORAGE_KEY_PREX_KEY}
 	}
 	return []byte(stripped[:slash]), stripped[slash+1:], nil
 }

@@ -20,7 +20,7 @@ Building
 IVXV java applications have 2 levels of build systems:
 
 * *make* - the build system facade. Must be installed on the user's machine.
-* *gradle* - the implementation of the build system. Gradle is located under ``common/external/gradle-8.3``, with the executable ``bin/gradle(.bat)``.
+* *gradle* - the implementation of the build system. Gradle is located under ``common/external/gradle-8.11``, with the executable ``bin/gradle(.bat)``.
 
 Building:
 
@@ -44,7 +44,7 @@ Usage:
 * ``processor <tool> --conf certs.bdoc --params processor.yaml.bdoc`` - execute a tool with the *--conf* and *--params* arguments
 * ``processor check --conf certs.bdoc --params processor.yaml.bdoc``
 * ``processor squash --conf certs.bdoc --params processor.yaml.bdoc``
-* ``PROCESSOR_OPTS=-Xmx8G processor squash --conf certs.bdoc --params processor.yaml.bdoc`` - the same as above, but increase maximal memory usage to 8GB.
+* ``PROCESSOR_OPTS=-Xmx16G processor squash --conf certs.bdoc --params processor.yaml.bdoc`` - the same as above, but with increased maximal memory usage to 16GB, which is necessary for complex, parallel computations such like 'processor'.
 
 The ``certs.bdoc`` container is expected to contain all CA, OCSP and TSA certificates required for validating any signed input (including the ``certs.bdoc`` itself) and the file ``ivxv.properties`` that refers to the certificates. Example of ``ivxv.properties``:
 

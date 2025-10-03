@@ -5,4 +5,4 @@ type Declared struct {
 	Field int
 }
 
-var x = Declared{Field: 0}
+var x = Declared{Field: 0, Description: "Declared"}

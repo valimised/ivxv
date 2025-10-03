@@ -40,8 +40,6 @@ class Service:
     """Service management for collector services."""
     service_id = None  #: Service ID (str)
     data = None  #: Service data (dict)
-    log = None  #: Logger for service
-    memory_log_handler = MemoryHandler(1000)  #: Memory handler for log buffering
     #: State report file name for currently applied config (str)
     cfg_state_filepath = None
     cfg_state = None  #: State report for currently applied config (dict)
@@ -60,11 +58,22 @@ class Service:
             }
         self.data = service_data
         self.log = ServiceLogger(log, {"service_id": service_id})
+        self.memory_log_handler = MemoryHandler(1000)  #: Mem-handler for log buffering
         log.addHandler(self.memory_log_handler)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
 
     def __repr__(self):
         """Printable representation of an object."""
         return f'<Service id={self.service_id} type={self.service_type}>'
+
+    def close(self):
+        self.memory_log_handler.close()
+        log.removeHandler(self.memory_log_handler)
 
     @property
     def hostname(self):
@@ -184,17 +193,20 @@ class Service:
         self.log.info('Service installed successfully')
         return True
 
-    def install_service_pkg(self, is_update=False):
+    def install_service_pkg(self, is_update=False, package=None):
         """Install service package to service host.
 
         :return: True on success, False on error.
         :rtype: bool
         """
-        pkg_path = cfg_path(
-            'deb_pkg_path', COLLECTOR_PKG_FILENAMES[self.deb_pkg_name])
+        if not package:
+            pkg_path = cfg_path(
+                'deb_pkg_path', COLLECTOR_PKG_FILENAMES[self.deb_pkg_name])
+        else:
+            pkg_path = package
 
         # check package status in service host
-        if not is_update:
+        if not is_update and not package:
             self.log.info(
                 'Querying state of the service software package %r version %s',
                 self.deb_pkg_name, DEB_PKG_VERSION)
@@ -231,7 +243,7 @@ class Service:
         self.log.info("Installing package %r", self.deb_pkg_name)
         proc = self.ssh(
             'sudo ivxv-admin-sudo install-pkg {}'.format(
-                COLLECTOR_PKG_FILENAMES[self.deb_pkg_name]),
+                pkg_path),
             account='ivxv-admin')
         if proc.returncode:
             self.log.error("Failed to install package %r", self.deb_pkg_name)

@@ -43,6 +43,10 @@ type Header struct {
 	// data. It may be omitted, depending on the authentication
 	// method. Not included in the response.
 	DataToken []byte `json:",omitempty" size:"16000"`
+
+	// XSmartIDAuth is a Smart-ID authentication cookie that is used during
+	// authentication process to generate a verification code for a client.
+	XSmartIDAuth []byte `json:",omitempty" size:"16000"`
 }
 
 // header is an unexported interface to check if a message contains a Header.
@@ -104,7 +108,7 @@ func WithAuthMethod(ctx context.Context, auth string) context.Context {
 func AuthMethod(ctx context.Context) (string, error) {
 	auth, ok := ctx.Value(authMethod).(string)
 	if !ok {
-		return "", UnableToGetAuthMethodFromCtxError{}
+		return "", UnableToGetAuthMethodFromCtxError{Description: _SERVER_AUTHMETHOD}
 	}
 	return auth, nil
 }

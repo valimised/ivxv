@@ -19,6 +19,7 @@ public class ElGamalParameters {
     private final static String OID_MODP = "1.3.6.1.4.1.3029.2.1";
     // unassigned by IANA
     private final static String OID_EC = "1.3.6.1.4.1.99999.1";
+    private final static String P224 = "P-224";
     private final static String P384 = "P-384";
 
     private String oid;
@@ -29,13 +30,13 @@ public class ElGamalParameters {
 
     /**
      * Initialize the parameters using the group and generator.
-     * 
+     *
      * @param group
      * @param generator
      * @throws IllegalArgumentException
      */
     public ElGamalParameters(Group group, GroupElement generator) throws IllegalArgumentException {
-        if (!group.isGroupElement(generator)) {
+        if (group.isGroupElement(generator) != Group.Decodable.VALID) {
             throw new IllegalArgumentException("Generator is not group element");
         }
         if (group instanceof ModPGroup && generator instanceof ModPGroupElement) {
@@ -57,10 +58,10 @@ public class ElGamalParameters {
      * <p>
      * When decoding from a X.509 certificate, it is possible to obtain both the algorithm
      * identifier and the key parameters.
-     * 
+     *
      * @see #getBytes()
      * @see #getOID()
-     * 
+     *
      * @param algOID
      * @param in
      * @throws IllegalArgumentException
@@ -77,7 +78,7 @@ public class ElGamalParameters {
 
     /**
      * Initialize the parameters using the group, generator and election identifier.
-     * 
+     *
      * @param group
      * @param generator
      * @throws IllegalArgumentException
@@ -133,10 +134,20 @@ public class ElGamalParameters {
         }
         switch (fields[0]) {
             case P384:
+                {
                 ec = P384;
                 ECGroup G = new ECGroup(P384);
                 generator = G.getBasePoint();
                 group = G;
+                }
+                break;
+            case P224:
+                {
+                ec = P224;
+                ECGroup G = new ECGroup(P224);
+                generator = G.getBasePoint();
+                group = G;
+                }
                 break;
             default:
                 throw new IllegalArgumentException("Unknown elliptic curve ElGamal curve");
@@ -150,10 +161,10 @@ public class ElGamalParameters {
      * Serialize the parameters using ASN1 DER encoding.
      * <p>
      * Implementation is algorithm-specific.
-     * 
+     *
      * @see #getBytesModP()
      * @see #getBytesEC()
-     * 
+     *
      * @return
      */
     public byte[] getBytes() {
@@ -172,7 +183,7 @@ public class ElGamalParameters {
      * Serialize parameters for group of integers modulo a prime.
      * <p>
      * The parameters are stored in the following structure:
-     * 
+     *
      * {@code
      * SEQUENCE (
      *   group      ModPGroup,
@@ -180,7 +191,7 @@ public class ElGamalParameters {
      *   electionID GeneralString
      *   )
      * }
-     * 
+     *
      * @see ee.ivxv.common.math.ModPGroup#getBytes()
      * @see ee.ivxv.common.math.ModPGroupElement#getBytes()
      * @return
@@ -192,6 +203,8 @@ public class ElGamalParameters {
 
     private byte[] getBytesEC() {
         switch (ec) {
+            case P224:
+                return new Sequence("P-224", getElectionIdentifier()).encode();
             case P384:
                 return new Sequence("P-384", getElectionIdentifier()).encode();
             default:

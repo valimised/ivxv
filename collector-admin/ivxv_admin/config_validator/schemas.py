@@ -91,6 +91,7 @@ class TSPSchemaNoURL(Model):
 
 class BDocSchema(Model):
     """Validating schema for BDoc config."""
+    filecount = IntType(required=True, min_value=1)
     bdocsize = IntType(required=True, min_value=1)
     filesize = IntType(required=True, min_value=1)
     roots = ListType(CertificateType, required=True)

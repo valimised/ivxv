@@ -91,18 +91,21 @@ func (s *serverCodec) ReadRequestHeader(req *rpc.Request) error {
 		s.conn.r = io.TeeReader(s.conn.r, tee)
 		defer func() {
 			if err := log.Request(s.header.Ctx, tee.Bytes()); err != nil {
-				log.Error(s.header.Ctx, LogRequestError{Err: log.Alert(err)})
+				log.Error(s.header.Ctx, LogRequestError{Err: log.Alert(err),
+					Description: _SERVER_LOGGER})
 				// Do not block handling of request.
 			}
 		}()
 	}
 
 	if err := s.conn.SetReadDeadline(time.Now().Add(s.timeout)); err != nil {
-		log.Error(s.header.Ctx, SetReadDeadlineError{Err: log.Alert(err)})
+		log.Error(s.header.Ctx, SetReadDeadlineError{Err: log.Alert(err),
+			Description: _SERVER_SET_TIMEOUT})
 		return errIgnored
 	}
 	if err := s.ServerCodec.ReadRequestHeader(req); err != nil {
-		log.Error(s.header.Ctx, ReadJSONRequestError{Err: err})
+		log.Error(s.header.Ctx, ReadJSONRequestError{Err: err,
+			Description: _SERVER_HEADER})
 		return errIgnored
 	}
 	return nil
@@ -126,6 +129,7 @@ func (s *serverCodec) ReadRequestBody(x interface{}) error {
 		log.Error(s.header.Ctx, UnmarshalRequestParamsError{
 			RequestType: reflect.TypeOf(x),
 			Err:         err,
+			Description: _SERVER_BODY,
 		})
 		return ErrBadRequest
 	}
@@ -140,6 +144,7 @@ func (s *serverCodec) ReadRequestBody(x interface{}) error {
 		log.Error(s.header.Ctx, RequestSizeError{
 			RequestType: reflect.TypeOf(x),
 			Err:         err,
+			Description: _SERVER_REQ_SIZE,
 		})
 		return ErrBadRequest
 	}
@@ -177,7 +182,8 @@ func checkSize(v reflect.Value) error {
 				n = f.Len()
 			case reflect.Struct:
 				if err := checkSize(f); err != nil {
-					return NestedFieldSizeError{Field: t.Name, Err: err}
+					return NestedFieldSizeError{Field: t.Name, Err: err,
+						Description: _SERVER_REQ_FIELD_STRUCT_SIZE}
 				}
 				continue
 			case reflect.Ptr, reflect.Interface:
@@ -191,15 +197,16 @@ func checkSize(v reflect.Value) error {
 				continue
 			}
 			if tag := t.Tag.Get("size"); len(tag) > 0 {
-				max, err := strconv.ParseUint(tag, 10, 64)
+				max, err := strconv.ParseUint(tag, 10, 64) //nolint:revive
 				if err != nil {
 					panic(fmt.Sprintf("invalid %s field size: %v", t.Name, err))
 				}
-				if uint64(n) > max {
+				if uint64(n) > max { //nolint:gosec
 					return FieldSizeError{
-						Field: t.Name,
-						Size:  n,
-						Max:   max,
+						Field:       t.Name,
+						Size:        n,
+						Max:         max,
+						Description: _SERVER_REQ_FIELD_SIZE,
 					}
 				}
 			}
@@ -226,7 +233,8 @@ func checkSize(v reflect.Value) error {
 func (s *serverCodec) WriteResponse(resp *rpc.Response, x interface{}) error {
 	// Log any rpc package errors and replace with generic ones.
 	if strings.HasPrefix(resp.Error, "rpc: ") {
-		log.Error(s.header.Ctx, RPCMethodError{ErrString: resp.Error})
+		log.Error(s.header.Ctx, RPCMethodError{ErrString: resp.Error,
+			Description: _SERVER_RESP_ERR})
 		resp.Error = ErrBadRequest.Error()
 	}
 
@@ -236,11 +244,13 @@ func (s *serverCodec) WriteResponse(resp *rpc.Response, x interface{}) error {
 	}
 
 	if err := s.conn.SetWriteDeadline(time.Now().Add(s.timeout)); err != nil {
-		log.Error(s.header.Ctx, SetWriteDeadlineError{Err: log.Alert(err)})
+		log.Error(s.header.Ctx, SetWriteDeadlineError{Err: log.Alert(err),
+			Description: _SERVER_SET_RESP_TIMEOUT})
 		return errIgnored
 	}
 	if err := s.ServerCodec.WriteResponse(resp, x); err != nil {
-		log.Error(s.header.Ctx, WriteResponseError{Err: err})
+		log.Error(s.header.Ctx, WriteResponseError{Err: err,
+			Description: _SERVER_RESP})
 		return errIgnored
 	}
 	return nil

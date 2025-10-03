@@ -7,6 +7,7 @@ import ee.ivxv.common.crypto.elgamal.ElGamalDecryptionProof;
 import ee.ivxv.common.crypto.elgamal.ElGamalParameters;
 import ee.ivxv.common.crypto.elgamal.ElGamalPrivateKey;
 import ee.ivxv.common.crypto.elgamal.ElGamalPublicKey;
+import ee.ivxv.common.math.GroupElement;
 import ee.ivxv.common.math.LagrangeInterpolation;
 import ee.ivxv.common.math.MathException;
 import ee.ivxv.common.service.smartcard.IndexedBlob;
@@ -159,19 +160,11 @@ public class RecoverDecryption implements DecryptionProtocol {
             if (withProof) {
                 dp = this.sk.provableDecrypt(ct);
             } else {
-                Plaintext pt = this.sk.decrypt(ct, true);
-                dp = new ElGamalDecryptionProof(ct, pt, this.sk.getPublicKey());
+                GroupElement decrypted = this.sk.decrypt(ct, true);
+                dp = new ElGamalDecryptionProof(ct, decrypted, this.sk.getPublicKey());
             }
         } catch (MathException e) {
             throw new ProtocolException("Arithmetic error: " + e.toString());
-        }
-
-        // Check if the recovered padded message is the same size as the ElGamal field prime.
-        // The padded message must be padded to the byte-length of the field prime, otherwise
-        // the ballot should be declared invalid due to not respecting the padding requirements.
-        // The well-formedness of the actual padding is asserted later.
-        if (dp.decrypted.getMessage().length != this.modByteLen) {
-            throw new ProtocolException("Message not padded to correct length");
         }
 
         return dp;

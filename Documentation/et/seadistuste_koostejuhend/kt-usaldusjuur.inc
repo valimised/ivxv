@@ -30,13 +30,19 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
         Alamblokk, mis sisaldab seadistusfailide BDOC-allkirjade kontrollimise
         seadistust.
 
+:container.bdoc.filecount:
+        Kohustuslik väli. Maksimaalne lubatud failide arv ZIP konteineris, ning
+        kuna tegu on BDOC konteineriga, siis sellele väärtusele tuleb alati liita 3,
+        sest BDOC konteineris on lisaks sisufailidele veel ``signatures0.xml``,
+        ``manifest.xml`` ja ``mimetype`` failid.
+
 :container.bdoc.bdocsize:
         Kohustuslik väli.
         BDOC konteineri maksimaalne lubatud suurus baitides.
 
 :container.bdoc.filesize:
         Kohustuslik väli.
-        BDOC konteineris olevate failide maksimaalne lubatud hõrendatud suuru
+        BDOC konteineris olevate failide maksimaalne lubatud hõrendatud suurus
         baitides.
 
 :container.bdoc.roots:
@@ -74,7 +80,7 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
         Kohustuslik väli.
         Kasutatakse ainult juhul kui ``container.bdoc.profile`` on ``TS``.
 
-        Ajatempliteenuseteenuse vastuse allkirjastamise sertifikaadid.
+        Ajatempliteenuse vastuse allkirjastamise sertifikaadid.
 
 :container.bdoc.tsp.delaytime:
 

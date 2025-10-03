@@ -31,13 +31,15 @@ func newreg() func(yaml.Node, string) (q11n.Qualifier, error) {
 	return func(n yaml.Node, _ string) (q q11n.Qualifier, err error) {
 		var conf ocsp.Conf
 		if err = yaml.Apply(n, &conf); err != nil {
-			return nil, YAMLApplyError{Err: err}
+			return nil, YAMLApplyError{Err: err,
+				Description: _OCSP_CFG}
 		}
 
 		c := new(client)
 		c.ocsp, err = ocsp.New(&conf)
 		if err != nil {
-			return nil, ClientError{Err: err}
+			return nil, ClientError{Err: err,
+				Description: _OCPS_NEW}
 		}
 
 		return c, nil
@@ -47,7 +49,8 @@ func newreg() func(yaml.Node, string) (q11n.Qualifier, error) {
 func (c *client) Qualify(ctx context.Context, container container.Container) ([]byte, error) {
 	sigs := container.Signatures()
 	if len(sigs) != 1 {
-		return nil, NoSingleSignatureError{Count: len(sigs)}
+		return nil, NoSingleSignatureError{Count: len(sigs),
+			Description: _OCSP_NO_SIG}
 	}
 	cert := sigs[0].Signer
 	issuer := sigs[0].Issuer
@@ -56,16 +59,17 @@ func (c *client) Qualify(ctx context.Context, container container.Container) ([]
 
 	status, err := c.ocsp.Check(ctx, cert, issuer, nonce)
 	if err != nil {
-		return nil, CheckOCSPError{Err: err}
+		return nil, CheckOCSPError{Err: err,
+			Description: _OCSP_VERIFY}
 	}
 	if !status.Good {
 		if status.Unknown {
 			return nil, q11n.BadCertificateStatusError{
-				Err: StatusUnknownError{},
+				Err: StatusUnknownError{Description: _OCSP_UNKNOWN},
 			}
 		}
 		return nil, q11n.BadCertificateStatusError{
-			Err: RevokedError{Reason: status.RevocationReason},
+			Err: RevokedError{Reason: status.RevocationReason, Description: _OCSP_REVOKED},
 		}
 	}
 	return status.RawResponse, nil

@@ -199,6 +199,7 @@ func TestParseSessionStatus(t *testing.T) {
 		expected.Expected = statusReadRespDBRecordCount
 		expected.Got = 1
 		expected.Record = b64
+		expected.Description = _SESSIONSTATUS_PARSE
 		if reflect.DeepEqual(err, *expected) {
 			t.Errorf(msgExpectOneGotAnother, expected, err)
 		}
@@ -231,6 +232,7 @@ func TestCastAnyToSessionStatusReadReq(t *testing.T) {
 		expected := new(CastToStatusReadReqError)
 		expected.Expected = expectedCastForStatusReadReq
 		expected.Got = reflect.TypeOf(badStatusReadReq)
+		expected.Description = _SESSIONSTATUS_CAST_ANY_TO_SESSSTATUSREADREQ
 		if !reflect.DeepEqual(err, *expected) {
 			t.Errorf(msgExpectOneGotAnother, expected, err)
 		}
@@ -256,6 +258,7 @@ func TestCastAnyToSessionStatusReadResp(t *testing.T) {
 		expected := new(CastToStatusReadRespError)
 		expected.Expected = expectedCastForStatusReadResp
 		expected.Got = reflect.TypeOf(badStatusReadResp)
+		expected.Description = _SESSIONSTATUS_CAST_ANY_TO_SESSSTATREADRESP
 		if !reflect.DeepEqual(err, *expected) {
 			t.Errorf(msgExpectOneGotAnother, expected, err)
 		}
@@ -280,6 +283,7 @@ func TestCastAnyToSessionStatusUpdateReq(t *testing.T) {
 		expected := new(CastToStatusUpdateReqError)
 		expected.Expected = expectedCastForStatusUpdateReq
 		expected.Got = reflect.TypeOf(badStatusUpdateReq)
+		expected.Description = _SESSIONSTATUS_CAST_ANY_TO_SESSSTATUSUPDATEDREQ
 		if !reflect.DeepEqual(err, *expected) {
 			t.Errorf(msgExpectOneGotAnother, expected, err)
 		}
@@ -304,6 +308,7 @@ func TestCastAnyToSessionStatusDeleteReq(t *testing.T) {
 		expected := new(CastToStatusDeleteReqError)
 		expected.Expected = expectedCastForStatusDeleteReq
 		expected.Got = reflect.TypeOf(badStatusDeleteReq)
+		expected.Description = _SESSIONSTATUS_CAST_ANY_TO_SESSSTATUSDELETEDREQ
 		if !reflect.DeepEqual(err, *expected) {
 			t.Errorf(msgExpectOneGotAnother, expected, err)
 		}

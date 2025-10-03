@@ -89,7 +89,7 @@ type BatchRecords struct {
 
 type Batch struct {
 	SeqNo               int    `json:"seqNo"`
-	IdCode              string `json:"idCode"`
+	IdCode              string `json:"idCode"` //nolint:revive,stylecheck
 	VoterName           string `json:"voterName"`
 	KovCode             string `json:"kovCode"`
 	ElectoralDistrictNo int    `json:"electoralDistrictNo"`
@@ -119,7 +119,7 @@ func (e EHSService) GetBatch(electionName string, seqNo int) (ElectionBatch, err
 	var resp BatchRecords
 	err = client.Call("RPC.Votes", VotesArgs{VotesFrom: seqNo, BatchMaxSize: e.batchMaxSize}, &resp)
 	if err != nil {
-		switch {
+		switch { //nolint:gocritic
 		case stderrors.Is(err, errors.ErrBadRequest):
 			err = errors.FieldError{
 				Code:  errors.ErrNotFound.Error(),
@@ -141,7 +141,7 @@ func (e EHSService) isCorrectName(electionName string) (conf.EHS, bool) {
 	return conf.EHS{}, false
 }
 
-func (e EHSService) ehsConn(addr string, certLoc string, clientcert string, clientkey string, serverName string) (*tls.Conn, error) {
+func (e EHSService) ehsConn(addr string, certLoc string, clientcert string, clientkey string, serverName string) (*tls.Conn, error) { //nolint:lll
 	cert, err := os.ReadFile(certLoc)
 	if err != nil {
 		return nil, fmt.Errorf("EHS cert %s: ", err)

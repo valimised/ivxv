@@ -1,0 +1,102 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2016-2025, Cybernetica AS
+# This file is distributed under the same license as the Elektroonilise
+# hääletamise infosüsteem package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-03 23:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: et\n"
+"Language-Team: et <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:1
+msgid "E-hääletamise tulemus"
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:3
+msgid ""
+"E-hääletamise lõppedes genereerib EHS e-hääletamise tulemuste faili "
+"(hääletamistulemuse fail). Fail laetakse VIS3-e (valimistulemuse "
+"moodulisse TUL)."
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:5
+msgid "Protseduur"
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:7
+msgid "Fail edastatakse inim-masin-protseduuriga:"
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:9
+msgid "EHS operaator laeb JSON-faili EHS-st alla;"
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:11
+msgid ""
+"EHS operaator allkirjastab faili digitaalselt väljaspool EHS-i ja annab "
+"selle VIS peakasutajale;"
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:13
+msgid "VIS peakasutaja laeb digikonteinerist välja võetud faili VIS3-i."
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:15
+msgid "Fail on JSON-formaadis."
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:17
+msgid "Edastatav fail"
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:19
+msgid ""
+"Aluseks on EHS senine liides VIS2-ga, mis on spetsifitseeritud dokumendis"
+" \"IVXV protokollide kirjeldus\" (v 1.5.0, IVXV-PR-1.5.0, 20.04.2019), "
+"[https://www.valimised.ee/sites/default/files/uploads/eh/IVXV-"
+"protokollid.pdf](https://www.valimised.ee/sites/default/files/uploads/eh"
+"/IVXV-protokollid.pdf), jaotises \"E-hääletamise tulemus\" (jaotis 9.3)."
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:21
+msgid ""
+"Valimissündmuse identifikaator peab vastama formaadile [Valimissündmuse "
+"identifikaator](../valimissündmuse_identifikaator.md)."
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:23
+msgid "Faili struktuur (JSON-skeem): [results.schema](results.schema)"
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:25
+msgid "Faili näited (JSON):"
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:27
+msgid "[results_EP.json](results_EP.json)"
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:28
+msgid "[results_KOV.json](results_KOV.json)"
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:29
+msgid "[results_RH.json](results_RH.json)"
+msgstr ""
+
+#: ../../VIS3-EHS/6_e_haaletamise_tulemus/SPEC.md:30
+msgid "[results_RK.json](results_RK.json)"
+msgstr ""
+

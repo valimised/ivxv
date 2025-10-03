@@ -1,5 +1,5 @@
 //ivxv:development
-
+//go:development
 /*
 Package dummy implements a dummy container used for testing.
 

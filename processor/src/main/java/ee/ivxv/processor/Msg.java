@@ -63,6 +63,7 @@ public enum Msg implements NameHolder {
     e_reg_resp_req_unmatch, e_reg_req_without_ballot, e_ballot_without_reg_req, //
     e_same_time_as_latest, e_invalid_signature_profile, //
     e_bb_error_report,
+    e_invalid_error_report,
 
     e_rl_read_error, e_rl_election_id, //
     e_rl_processing_error, //

@@ -4,7 +4,7 @@
 # pip-compile to update requirements.txt
 # pip-sync to update venv
 
-docopt
-schema
-polib
-deepl
+docopt==0.6.2
+schema==0.7.7
+polib==1.2.0
+deepl==1.19.1

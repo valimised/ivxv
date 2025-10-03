@@ -1,0 +1,746 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2016-2025, Cybernetica AS
+# This file is distributed under the same license as the Elektroonilise
+# hääletamise infosüsteem package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-03 23:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: et\n"
+"Language-Team: et <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:1
+msgid "3  Valijate nimekiri EHS-le"
+msgstr "Valijate nimekiri EHS-le"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:3
+msgid "1. Annotatsioon"
+msgstr "Annotatsioon"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:5
+msgid ""
+"Spetsifikatsioon määratleb Valimiste infosüsteemi (VIS3) ja e-hääletamise"
+" süsteemi (EHS) vahelise liidese, mille kaudu VIS3 edastab EHS-le "
+"valijate algnimekirja ja valijate nimekirja muudatusi ehk "
+"muudatusnimekirju."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:9
+msgid ""
+"Spetsifikatsioon on avalik. Spetsifikatsioon ei käsitle VIS3 ega EHS "
+"konfidentsiaalset siseehitust ega liidese konfidentsiaalseid elemente."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:12
+msgid ""
+"Käesolevat spetsifikatsiooni tuleb kasutada koos VIS3 EHS API OpenAPI "
+"spetsifikatsiooniga (asub käesolevas repos, failis `vis-ehs-api.yaml`)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:14
+msgid "2. Sõnumivahetus nimekirjade edastamiseks"
+msgstr "Sõnumivahetus nimekirjade edastamiseks"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:16
+msgid ""
+"Valijate nimekirja põhjal tuvastab EHS isiku hääleõiguse ja "
+"ringkonnakuuluvuse. Valijate nimekiri võib hääletamisperioodi jooksul "
+"muutuda, sellest tulenevalt võib valija saada hääleõiguse, jääda oma "
+"hääleõigusest ilma või saada hääleõiguse senisest erinevas ringkonnas. "
+"EHS peab nende muutustega arvestama. Muudatused saab EHS VIS3 vahendusel "
+"muudatusnimekirjadena."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:22
+msgid ""
+"Spetsifikatsioonis defineeritud liidese vahendusel suhtlevad vahetult EHS"
+" ja VIS3:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:25
+msgid ""
+"VIS3 liidestub Rahvastikuregistri andmekoguga ning hangib seal nii "
+"valijate algnimekirja kui ka muudatusnimekirjad."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:27
+msgid "EHS esitab VIS3-le päringuid muudatusnimekirjade saamiseks."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:29
+msgid "Kaudselt on liidesega seotud:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:31
+msgid "Rahvastikuregister, kus toimub nimekirjade haldamine;"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:32
+msgid ""
+"VIS3 ja EHS operaatorid, kes vahetavad taustakanalis algnimekirja ning "
+"suhtlevad võimalike tõrgete lahendamisel;"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:34
+msgid "Audiitor, kes veendub et EHS on VIS3 poolt tarnitud nimekirjad rakendanud;"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:35
+msgid ""
+"EHS vallasrežiimis töötlemisrakendus, mis verifitseerib EHS sidusrežiimi "
+"komponentide poolt üle antud urni."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:38
+msgid "2.1 Ettevalmistused nimekirjade edastamiseks"
+msgstr "Ettevalmistused nimekirjade edastamiseks"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:40
+msgid "![Joonis 1: Sõnumivahetuse ettevalmistamine](model/list_prepare.png)"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:40
+msgid "Joonis 1: Sõnumivahetuse ettevalmistamine"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:42
+msgid ""
+"Valijate alg- ja muudatusnimekirjade vahetamisele eelnevalt tuleb "
+"vahetada nimekirjadele juurdepääsuks ja nimekirjade autentsuse "
+"kontrolliks vajalikud võtmed ja sertifikaadid (sammud 1-5)"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:46
+msgid "2.2 Valijate algnimekirja edastamine"
+msgstr "Valijate algnimekirja edastamine"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:48
+msgid "![Joonis 2: Algnimekirja edastamine](model/list_initial.png)"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:48
+msgid "Joonis 2: Algnimekirja edastamine"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:50
+msgid ""
+"Valijate algnimekiri järjekorranumbriga 0 laetakse EHSi haldusliidese "
+"veebiliidesest. Valijate algnimekirja laadimine on eelduseks "
+"muudatusnimekirjade edasiseks automaatseks laadimiseks."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:54
+msgid "Valijate algnimekirja laadimine toimub järgmistes etappides:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:56
+msgid ""
+"VIS3 kasutab Rahvastikuregistri X-tee teenust valijate algnimekirja "
+"laadimiseks (sammud 1-3)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:58
+msgid ""
+"VIS3 peakasutaja pärib allkirjastatud algnimekirja VIS3 teenusest, ning "
+"allkirjastab algnimekirja täiendavalt ID-kaardiga (sammud 4-6)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:60
+msgid ""
+"VIS3 peakasutaja edastab allkirjastatud algnimekirja EHS operaatorile "
+"(samm 7)"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:62
+msgid ""
+"EHS operaator laeb digitaalselt allkirjastatud algnimekirja EHSi, kus see"
+" rakendatakse (sammud 8-9)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:65
+msgid "2.3 Valijate muudatusnimekirja edastamine"
+msgstr "Valijate muudatusnimekirja edastamine"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:67
+msgid "![Joonis 3: Muudatusnimekirja edastamine](model/list_changeset.png)"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:67
+msgid "Joonis 3: Muudatusnimekirja edastamine"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:69
+msgid ""
+"Valijate nimekirja muudatusnimekirja laadimise algatab EHS. "
+"Muudatusnimekirjad on järjestatud, nii EHS kui ka VIS3 peavad arvet, "
+"milline on viimane loodud muudatusnimekiri."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:73
+msgid ""
+"EHS algatab uue muudatusnimekirja laadimise pöördudes uue "
+"järjekorranumbriga VIS3 vastava otspunkti poole. EHS võib varasemaid "
+"muudatusnimekirju uuesti pärida, kasutades varasemat järjekorranumbrit."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:77
+msgid ""
+"VIS3 saab muudatused Rahvastikuregistri X-tee teenusest. VIS3 poolne "
+"muudatuste hankimine on EHSile muudatuste esitamisest sõltumatu "
+"paralleelprotsess. See tähendab, et üks EHSile minev muudatusnimekiri "
+"võib sisaldada mitut Rahvastikuregistrist tulnud muudatust."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:82
+msgid "Muudatusnimekirjade edastamine EHSi käib järgmiselt:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:84
+msgid "EHS esitab päringu muudatusnimekirja saamiseks (samm 1)"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:85
+msgid "Kui muudatusi ei ole, siis ei ole ka muudatusnimekirja (samm 2)"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:86
+msgid ""
+"EHS kordab mingi aja möödudes päringut muudatusnimekirja saamiseks (samm "
+"3)"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:87
+msgid ""
+"VIS3 edastab vahepeal saabunud muudatused EHSile ning EHS rakendab need "
+"edukalt (sammud 4-5)"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:89
+msgid ""
+"Nii VIS3 kui EHS suurendavad muudatusnimekirjade järjekorranumbrit ning "
+"mõne aja möödudes edastatakse uus muudatusnimekiri (sammud 6-8)"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:92
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:96
+msgid "**Märkused**"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:93
+msgid ""
+"Kui järjekorras järgmise muudatusnimekirja pärimisel muudatuskirjed "
+"puuduvad vastatakse HTTP staatusega `404` (not found)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:97
+msgid ""
+"Kui päritakse muudatusnimekirja suurema järjenumbriga, kui tegelik "
+"järgmise muudatusnimekirja järjenumber, vastatakse HTTP staatusega `409` "
+"(conflict)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:100
+msgid "2.4 Veajuhtumite lahendamine"
+msgstr "Veajuhtumite lahendamine"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:102
+msgid "![Joonis 4: Veajuhtumite lahendamine](model/list_errors.png)"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:102
+msgid "Joonis 4: Veajuhtumite lahendamine"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:104
+msgid ""
+"Muudatusnimekirjade edastamisel ei saa välistada vigu. Olenevalt vea "
+"iseloomust on võimalik taaste, keerulisematel juhtudel tuleb mõni "
+"vigaseks osutunud nimekiri vahele jätta. Veajuhtumi menetlemise ajal "
+"muudatusnimekirju ei edastata."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:109
+msgid "Veajuhtumite lahendamine toimub järgmiselt:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:111
+msgid ""
+"EHS ja VIS3 käivitavad protokolli muudatusnimekirja edastamiseks (sammud "
+"1-3)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:113
+msgid ""
+"EHS tunnistab nimekirja vigaseks ning teavitab sellest operaatorit (samm "
+"4)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:114
+msgid ""
+"Probleemi analüüsides tuvastatakse EHS-poolne tõrge, mida on võimalik "
+"lahendada. Tõrge lahendatakse ning EHS ja VIS3 kordavad edukalt "
+"protokolli (sammud 5-7)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:117
+msgid ""
+"EHS ja VIS3 käivitavad protokolli muudatusnimekirja edastamiseks (sammud "
+"8-10)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:119
+msgid ""
+"EHS tunnistab nimekirja vigaseks ning teavitab sellest operaatorit (samm "
+"11)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:121
+msgid ""
+"Probleemi analüüsides tuvastatakse sisuline probleem nimekirjas. Vigast "
+"nimekirja ei muudeta, luuakse uus korrektne nimekiri. EHS operaator laeb "
+"digitaalselt allkirjastatud korralduse vigase nimekirja vahele jätmiseks "
+"(samm 12)"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:125
+msgid ""
+"EHS ja VIS3 suurendavad järjekorranumbrit ning käivitavad protokolli "
+"muudatusnimekirja edastamiseks (sammud 13-15)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:127
+msgid ""
+"EHS ja VIS3 suurendavad järjekorranumbrit ning käivitavad protokolli "
+"muudatusnimekirja edastamiseks (sammud 16-17). VIS3 vastab HTTP "
+"staatusega 409 (conflict)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:130
+msgid ""
+"EHS tuvastab vale järjenumbriga nimekirja laadimise ning teavitab sellest"
+" operaatorit (samm 18)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:132
+msgid ""
+"Tõrge lahendatakse ning EHS ja VIS3 kordavad edukalt protokolli (sammud "
+"19-21)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:134
+msgid "2.5 Nimekirjade loendi edastamine"
+msgstr "Nimekirjade loendi edastamine"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:136
+msgid "3. Nimekirja andmevorming"
+msgstr "Nimekirja andmevorming"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:138
+msgid ""
+"Nimekirja andmevorming on sama nii valijate algnimekirja kui "
+"muudatusnimekirjade jaoks."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:141
+msgid ""
+"Nimekiri esitatakse UTF-8-NOBOM vormingus tekstifailina. "
+"Andmestruktuuride eraldajaks kasutatakse reavahetusmärki `LF` (ASCII-kood"
+" `0x0A`). Andmestruktuuride väljade eraldajaks kasutatakse tabeldusmärki "
+"`TAB` (ASCII-kood `0x09`)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:146
+msgid "Nimekiri koosneb päiseridadest ja kirjetest."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:148
+msgid "Päiseridade sisu on järgmine:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:150
+msgid ""
+"`version` - andmestruktuuri versiooninumber, mille pikkus on piiratud 2 "
+"tähemärgiga. Spetsifikatsioonile vastava nimekirja korral on selle välja "
+"väärtus 2."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:153
+msgid ""
+"`election_identifier` - valimissündmuse identifikaator, mille pikkus on "
+"piiratud 28 tähemärgiga ASCII kooditabelist. Nimekirja rakendamine toimub"
+" ainult vastava identifikaatoriga valimissündmuse kontekstis. "
+"Valimissündmuse identifikaator peab vastama formaadile [Valimissündmuse "
+"identifikaator](../valimissündmuse_identifikaator.md)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:156
+msgid ""
+"`changeset` - nimekirja järjekorranumber. Rangelt kasvav number (0, 1, 2,"
+" ...), mis defineerib nimekirjade rakendamise järjekorra. Algnimekirja "
+"järjekorranumbriks on 0."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:159
+msgid ""
+"`period` - nimekirjas kajastuvate muudatuste ajavahemik. Esimene väli "
+"sisaldab perioodi algust, teine lõppu. Algnimekirja puhul on perioodi "
+"algus ja lõpu väärtused võrdsed. Väli on informatiivne."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:163
+msgid "Kirje koosneb väljadest, mille sisu on järgmine:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:165
+msgid ""
+"`person_code` - isikukood on valija unikaalne identifikaator, mille "
+"alusel EHS tuvastab isiku hääleõiguse ja ringkonnakuuluvuse."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:167
+msgid ""
+"`voter_name` - valija nimi, informaalne väli, otsuste tegemisel ei "
+"kasutata."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:168
+msgid ""
+"`action` - kirjega seotud tegevus. `lisamine` tähendab uue valija "
+"lisamist ja `kustutamine` olemasoleva valija eemaldamist."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:170
+msgid ""
+"`kov_code` - haldusüksus, kuhu valija kuulub. Haldusüksuse "
+"identifitseerimiseks kasutatakse kohaliku omavalitsuse EHAK-koodi, "
+"Tallinna korral linnaosa EHAK-koodi, alaliselt välisriigis elava valija "
+"korral kasutatakse väärtust `FOREIGN`."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:174
+msgid ""
+"`electoral_district_id` - valimisringkonna number identifitseerib "
+"valimisringkonna, kus valija hääletab. KOV valimiste korral kehtib "
+"identifikaator haldusüksuse sees. RK, EP ja RH valimiste korral on "
+"identifikaator haldusüksuste ülene."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:179
+msgid ""
+"Välju `voter_name`, `kov_code` ja `electoral_district_id` kasutatakse "
+"ainult lisamiskirjes (`action` väärtus `lisamine`)."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:182
+msgid "Andmevormingu formaalne kirjeldus Backus-Naur notatsioonis:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:212
+msgid "3.1 Nimekirja tõlgendamine"
+msgstr "Nimekirja tõlgendamine"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:214
+msgid "Nimekirju töötlev rakendus lähtub järgmistest reeglitest:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:216
+msgid "Nimekiri rakendatakse tervikuna."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:217
+msgid ""
+"Nimekirja rakendamisele eelnevad vormingu ja kooskõlalisuse kontrollid, "
+"vigaseid nimekirju ei rakendata."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:219
+msgid "Rakendus kontrollib nimekirja versiooni."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:220
+msgid "Rakendus kontrollib valimissündmuse identifikaatorit."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:221
+msgid "Rakendus kontrollib nimekirja järjekorranumbrit."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:222
+msgid ""
+"Rakendus kontrollib nimekirja kõigi kirjete kooskõlalisust oma "
+"andmebaasiga."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:223
+msgid "Kooskõlalisust kontrollitakse kirjete esinemisjärjekorras."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:224
+msgid ""
+"Kui tegevus on `lisamine`, siis ei tohi vastava isikukoodiga kirjet "
+"rakenduse andmebaasis olla."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:226
+msgid ""
+"Kui tegevus on `kustutamine`, siis rakendus kontrollib, kas vastava "
+"isikukoodiga kirje on rakenduse andmebaasis olemas. Kui ei ole, siis "
+"rakendus logib veateate ja jätkab järgmiste kirjete töötlust."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:229
+msgid ""
+"Kui valijaga soetud andmeid on vaja muuta, näiteks valija liigub ühest "
+"haldusüksusest või valimisringkonnast teise, siis kantakse valijate "
+"nimekirja muudatuste hulka üks kustutamise kirje, millega valija oma "
+"eelmisest üksusest kustutatakse ja üks lisamise kirje, millega valija "
+"uues üksuses valijate nimekirja lisatakse. Ka kõik teised muudatused "
+"valija andmetes - näiteks nimemuutus - toimuvad läbi vana kirje "
+"kustutamise ja uue lisamise."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:236
+msgid ""
+"Valijate algnimekirjas on ainult lisamiskirjed, iga valija kohta "
+"maksimaalselt üks kirje. Muudatusnimekirjas peavad ühe valija kohta "
+"käivad kirjed olema nimekirjas loogilises järjestuses ning liiasuseta. "
+"Ehk kustutamine enne lisamist ning maksimaalselt üks kustutamise-lisamise"
+" paar."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:241
+msgid ""
+"On võimalik, et valimise ajal muutub valija isikukood. Sellisel juhul "
+"lisatakse nimekirja vana isikukoodiga kustutamise kirje ning uue "
+"isikukoodiga lisamise kirje. Täiendav korduvhääletamise kontroll ei ole "
+"selle liidese skoobis ja teostakse VIS3 poolt eraldi."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:247
+msgid "3.2 Näited nimekirjadest"
+msgstr "Näited nimekirjadest"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:249
+msgid "Valijate algnimekiri, 0."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:267
+msgid "Muudatusnimekiri, 1:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:269
+msgid "Muutub valija 20000000002 haldusüksus."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:270
+msgid "Valija 30000000003 kaotab hääleõiguse."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:271
+msgid "Valijale 11000000011 antakse hääleõigus."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:285
+msgid "Muudatusnimekiri, 2:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:287
+msgid "Muutub valija 20000000002 nimi."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:288
+msgid "Valija 60000000006 kaotab hääleõiguse."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:300
+msgid "Muudatusnimekiri, 3:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:302
+msgid "Muutub valija 20000000003->10000000003 isikukood koos nimega."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:303
+msgid "Valija 60000000006 saab hääleõiguse."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:315
+msgid "4. Nimekirja signeerimine"
+msgstr "Nimekirja signeerimine"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:317
+msgid ""
+"Nii algnimekirjaga kui muudatusnimekirjadega kaasatakse allkirjafail "
+"(FIPS 186-4), mille moodustab andmeallikas, arvutades algsest valijate "
+"nimekirjast SHA256-räsi ning allkirjastades selle räsi ECDSA võtmega "
+"(kasutame P-256 kõverat). Andmeallika poolt genereeritud avalik võti "
+"tehakse taustakanalis kättesaadavaks EHSile ning selle võtme alusel "
+"kontrollitakse EHS komponentides valijate nimekirjade terviklust."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:324
+msgid ""
+"Võtmete genereerimiseks, signeerimiseks ning verifitseerimiseks võib "
+"kasutada tööriista OpenSSL:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:327
+msgid ""
+"Võtme genereerimine: `openssl ecparam -name prime256v1 -genkey -noout "
+"-out private.key.pem`"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:329
+msgid ""
+"Avaliku võtme eraldamine: `openssl ec -in private.key.pem -pubout -out "
+"public.key.pem`"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:331
+msgid ""
+"Andmefaili signeerimine: `openssl dgst -sha256 -sign private.key.pem -out"
+" data.sig data.txt`"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:333
+msgid ""
+"Signatuuri verifitseerimine: `openssl dgst -sha256 -verify public.key.pem"
+" -signature data.sig data.txt`"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:336
+msgid ""
+"Näide antud meetodi kasutamiseks golang keeles on leitav repositooriumis "
+"[DigiSign](https://github.com/e-gov/DigiSign)"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:339
+msgid "5. Transpordiprotokoll"
+msgstr "Transpordiprotokoll"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:341
+msgid "VIS3-EHS käesolev masinliides koosneb kahest API otspunktist."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:343
+msgid ""
+"API otspunkt `ehs-voters-changeset` konkreetse muudatusnimekirja "
+"laadimiseks VIS3-st"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:345
+msgid ""
+"API otspunkt `ehs-list-election-changesets` ülevaate saamiseks "
+"avalikustatud nimekirjadest"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:348
+msgid ""
+"Transpordiprotokoll on HTTPS, kuna volitamata ligipääs nimekirjadele "
+"tuleb tõkestada kasutatakse mõlemapoolselt autenditud TLS ühendusi."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:351
+msgid "5.1 `ehs-voters-changeset`"
+msgstr "`ehs-voters-changeset`"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:353
+msgid ""
+"HTTP meetod on GET. Päringu tegemisel tuleb kasutada kohustuslikke "
+"parameetreid `changeset` ja `election_identifier`, kus"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:356
+msgid "`changeset` on muudatusnimekirja `integer` tüüpi järjekorranumber."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:357
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:379
+msgid "`election_identifier` on `string` tüüpi valimissündmuse identifikaator."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:359
+msgid ""
+"Kui EHS teeb API otspunkti GET päringu, siis juhul kui vastava "
+"identifikaatori ja järjekorranumbriga nimekiri eksisteerib, vastab VIS3 "
+"`application/octet-stream` tüüpi baidijadaga, mis esitab kahest failist "
+"koosnevat ZIP konteinerit:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:364
+msgid "nimekirjafail nimega `<election_identifier>-voters-<changeset>.utf`"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:366
+msgid "signatuurifail nimega `election_identifier<>-voters-<changeset>.sig`"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:369
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:414
+msgid "Sellise vastuse korral on HTTP status 200."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:371
+msgid ""
+"Juhul kui vastava järjekorranumbriga muudatusnimekirja veel ei eksisteeri"
+" antakse vastuses HTTP status 404."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:374
+msgid "5.1 `ehs-list-election-changesets`"
+msgstr "`ehs-list-election-changesets`"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:376
+msgid ""
+"HTTP meetod on GET. Päringu tegemisel tuleb kasutada kohustuslikku "
+"parameetrit `election_identifier`:"
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:381
+msgid ""
+"Kui EHS teeb API otspunkti, siis juhul kui vastava identifikaatoriga "
+"valimine eksisteerib, vastab VIS3 `application/json` tüüpi baidijadaga, "
+"mis sisaldab endas JSON vormingus viiteid kõigile väljastatud "
+"muudatusnimekirjadele."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:385
+msgid ""
+"MÄRKUS. Viidetes tarnitavad URL-id ei ole õiged ja seetõttu "
+"mittekasutatavad. EHS peab konkreetse muudatuste nimekirja poole "
+"pöördumise URL-i koostama vastavalt VIS3 EHS API OpenAPI vormingus "
+"spetsifikatsioonile (asub käesolevas repos, failis `vis3-ehs-api.yaml`). "
+"VIS3 edasisestes versioonides eemaldame viidetest URL-id. 20.07.2021."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:387
+msgid ""
+"MÄRKUS. Viidetes tarnitavate URL-de käsitlust muudetud: elemendis `url` "
+"tarnitakse mitte täis-URL, vaid ainult _path_ ja -query_ osa."
+msgstr ""
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:416
+msgid "6. Näited"
+msgstr "Näited"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:418
+msgid "7. Viited"
+msgstr "Viited"
+
+#: ../../VIS3-EHS/3_Valijate_nimekiri/SPEC.md:420
+msgid ""
+"[\"DigiSign\" - lihtne protokoll edastatavate failide allkirjastamiseks, "
+"koos teostusnäitega](https://github.com/e-gov/DigiSign)"
+msgstr ""
+

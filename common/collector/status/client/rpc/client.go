@@ -37,14 +37,14 @@ func (r *tlsClient) TLSDial(req interface{}) (interface{}, error) {
 	// Establish TLS connection, server should respond
 	tlsConn, err := tls.Dial(tcp, r.addr, r.tls)
 	if err != nil {
-		return nil, TLSDialError{Err: err, Addr: r.addr}
+		return nil, TLSDialError{Err: err, Addr: r.addr, Description: _RPC_TLS}
 	}
 
 	// Any data that is passed to TLSDial should be of a
 	// *StatusReq type, otherwise error
 	statusReq, err := castAnyToStatusReq(req)
 	if err != nil {
-		return nil, CastAnyToStatusReqError{Err: err}
+		return nil, CastAnyToStatusReqError{Err: err, Description: _RPC_ANY_TO_STATUSREQ}
 	}
 
 	// Pass TLS connection to RPC connection and establish it lazily, i.e.
@@ -60,6 +60,7 @@ func (r *tlsClient) TLSDial(req interface{}) (interface{}, error) {
 		return nil, RPCCallError{
 			ServiceMethod: statusReq.ServiceMethod,
 			Err:           err,
+			Description:   _RPC_CALL,
 		}
 	}
 

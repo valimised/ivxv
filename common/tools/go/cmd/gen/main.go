@@ -94,7 +94,7 @@ func pwg(pkg *build.Package) (ok bool) {
 	if !ok {
 		return
 	}
-	literals, ok := walk(pkg.ImportPath, fset, parsed)
+	literals, ok := walk(pkg.Directives, pkg.ImportPath, fset, parsed)
 	if !ok {
 		return
 	}

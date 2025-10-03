@@ -62,11 +62,11 @@ var (
 	// container signing certificate with bad status, e.g., revoked. This
 	// can be returned by any qualifier which checks the status of the
 	// signing certificate.
-	_ = BadCertificateStatusError{Err: nil}
+	_ = BadCertificateStatusError{Err: nil, Description: _Q11N_BAD}
 
 	// NoPreconfiguredQualifiersError raises when "qualification:" section in
 	// election.yml is empty
-	_ = NoPreconfiguredQualifiersError{}
+	_ = NoPreconfiguredQualifiersError{Description: _Q11N_NO}
 )
 
 // NewFunc is the type of functions that create a signature container qualifier
@@ -133,14 +133,16 @@ func Configure(c Conf, sensitive string) (qs Qualifiers, err error) {
 		// ...check if it is linked ...
 		entry, ok := registry[p.Protocol]
 		if !ok {
-			return nil, UnlinkedProtocolError{Protocol: p.Protocol}
+			return nil, UnlinkedProtocolError{Protocol: p.Protocol,
+				Description: _Q11N_PROT}
 		}
 		qs[i].Protocol = p.Protocol
 
 		// ...and if creating the qualifier succeeds.
 		qs[i].Qualifier, err = entry.newQualifier(p.Conf, sensitive)
 		if err != nil {
-			return nil, ConfigureProtocolError{Protocol: p.Protocol, Err: err}
+			return nil, ConfigureProtocolError{Protocol: p.Protocol, Err: err,
+				Description: _Q11N_Q}
 		}
 	}
 	return
@@ -167,7 +169,8 @@ func CanonicalTime(properties Properties) (time.Time, error) {
 
 		entry, ok := registry[protocol]
 		if !ok {
-			return time.Time{}, CanonicalTimeUnlinkedProtocolError{Protocol: protocol}
+			return time.Time{}, CanonicalTimeUnlinkedProtocolError{
+				Protocol: protocol, Description: _Q11N_CTIME}
 		}
 		if entry.parseTime == nil {
 			panic(protocol + " in CanonicalOrder without ParseTimeFunc")
@@ -175,7 +178,8 @@ func CanonicalTime(properties Properties) (time.Time, error) {
 
 		ctime, err := entry.parseTime(property)
 		if err != nil {
-			return time.Time{}, CanonicalTimeParseError{Protocol: protocol, Err: err}
+			return time.Time{}, CanonicalTimeParseError{Protocol: protocol, Err: err,
+				Description: _Q11N_PARSE_CTIME}
 		}
 		return ctime, nil
 	}
@@ -212,7 +216,8 @@ func CompareQualificationTimes(qualifiers Qualifiers, properties Properties) err
 		entry, ok := registry[qualifier.Protocol]
 		if !ok {
 			return CompareQualificationTimesNoRegistryForProtocolError{
-				Protocol: qualifier.Protocol}
+				Protocol:    qualifier.Protocol,
+				Description: _Q11N_TIME_CMP}
 		}
 		if entry.parseTime == nil {
 			panic(qualifier.Protocol + " in CanonicalOrder without ParseTimeFunc")
@@ -221,8 +226,9 @@ func CompareQualificationTimes(qualifiers Qualifiers, properties Properties) err
 		ctime, err := entry.parseTime(properties[qualifier.Protocol])
 		if err != nil {
 			return CompareQualificationTimesCannotParseQualificationTimeError{
-				Protocol: qualifier.Protocol,
-				Err:      err}
+				Protocol:    qualifier.Protocol,
+				Err:         err,
+				Description: _Q11N_PARSE_TIME}
 		}
 
 		// Ensure that previous qualification time is <= ctime
@@ -235,7 +241,8 @@ func CompareQualificationTimes(qualifiers Qualifiers, properties Properties) err
 			CurrentProtocol:                   qualifier.Protocol,
 			CurrentProtocolQualificationTime:  ctime,
 			PreviousProtocol:                  qualificationProtocol,
-			PreviousProtocolQualificationTime: qualificationTime}
+			PreviousProtocolQualificationTime: qualificationTime,
+			Description:                       _Q11N_TIME_CMP_FAIL}
 	}
 
 	// "qualification:" in election.yml is empty

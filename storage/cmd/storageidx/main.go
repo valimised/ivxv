@@ -62,7 +62,8 @@ func storageidxmain() (code int) {
 
 	start, err := c.Conf.Election.ElectionStartTime()
 	if err != nil {
-		return c.Error(exit.Config, ElectionStartTimeError{Err: err},
+		return c.Error(exit.Config, ElectionStartTimeError{Err: err,
+			Description: _STORAGEIDX_START},
 			"failed to parse election start time:", err)
 	}
 
@@ -76,7 +77,8 @@ func storageidxmain() (code int) {
 	}
 
 	if err := rebuildVotedStats(c.Ctx, start, qps, c.Storage); err != nil {
-		return c.Error(exit.Unavailable, RebuildVotedStatsError{Err: err},
+		return c.Error(exit.Unavailable, RebuildVotedStatsError{Err: err,
+			Description: _STORAGEIDX_REBUILD},
 			"failed to rebuild successful voter index:", err)
 	}
 
@@ -86,7 +88,7 @@ func storageidxmain() (code int) {
 func rebuildVotedStats(ctx context.Context, start time.Time, qps []q11n.Protocol,
 	s *storage.Client) error {
 
-	log.Log(ctx, RebuildingVotedStats{})
+	log.Log(ctx, RebuildingVotedStats{Description: _STORAGEIDX_REBUILD_START})
 	progress.Static("Rebuilding successful voter statistics index:")
 	addvoter := progress.Count(0, false)
 	progress.Static("voters with")

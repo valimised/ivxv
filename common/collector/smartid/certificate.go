@@ -15,14 +15,14 @@ type getCertificate struct {
 }
 
 // GetCertificateChoice  starts a Smart-ID certificate choice session.
-func (c *Client) GetCertificateChoice(ctx context.Context, identifier string) (sess string, err error) {
+func (c *Client) GetCertificateChoice(ctx context.Context, documentNo string) (sess string, err error) {
 
 	// We cannot use a struct literal, because gen would report it
 	// as a duplicate error type.
 	var input InputError
 
-	if len(identifier) == 0 {
-		input.Err = GetCertificateNoIDCodeError{}
+	if len(documentNo) == 0 {
+		input.Err = GetCertificateNoIDCodeError{Description: _SID_N_ID}
 		err = input
 	}
 	if err != nil {
@@ -30,12 +30,12 @@ func (c *Client) GetCertificateChoice(ctx context.Context, identifier string) (s
 	}
 
 	var resp startSessionResponse
-	if err = httpPost(ctx, c.url+"certificatechoice/etsi/"+convertToETSI(identifier), getCertificate{
+	if err = httpPost(ctx, c.url+"certificatechoice/document/"+documentNo, getCertificate{
 		RelyingPartyUUID: c.conf.RelyingPartyUUID,
 		RelyingPartyName: c.conf.RelyingPartyName,
 		CertificateLevel: c.conf.CertificateLevel,
 	}, &resp); err != nil {
-		return "", GetMobileCertificateError{Err: err}
+		return "", GetMobileCertificateError{Err: err, Description: _SID_HTTP_CERT}
 	}
 
 	return resp.SessionID, nil
@@ -48,7 +48,8 @@ func (c *Client) GetCertificateChoiceStatus(ctx context.Context, sesscode string
 	var certDER []byte
 	documentno, _, _, certDER, err = c.getSessionStatus(ctx, sesscode)
 	if err != nil {
-		err = GetMobileCertificateStatusError{Err: err}
+		err = GetMobileCertificateStatusError{Err: err,
+			Description: _SID_SESS_STAT}
 		return
 	}
 

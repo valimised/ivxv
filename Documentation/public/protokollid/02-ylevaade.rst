@@ -8,10 +8,8 @@ Elektroonilise hääletamise protokollistik (edaspidi protokollistik) defineerib
 elektroonilise hääletamise süsteemi komponentide vahelise sõnumivahetuse,
 kasutatavad andmestruktuurid, algoritmid ning liidesed väliste süsteemidega.
 Sõnumivahetus esitatakse UML suhtlusskeemidena, mis üheselt defineerivad
-sõnumite järgnevuse. Andmestruktuuride kirjeldused on varustatud Backus-Naur
-või JSON-schema notatsioonis spetsifikatsioonidega.  Andmestruktuuride väljade
-eraldajateks kasutatakse reavahetusmärki ``LF`` (ASCII-kood ``0x0A``) ja
-tabeldusmärki ``TAB`` (ASCII-kood ``0x09``). Algoritmid esitatakse
+sõnumite järgnevuse. Andmestruktuuride kirjeldused on varustatud BNF, ASN.1
+või JSON-schema notatsioonis spetsifikatsioonidega. Algoritmid esitatakse
 pseudokoodina.
 
 NB! Kõigis protokollistiku andmestruktuuride väljades tuleb rangelt kinni pidada
@@ -39,9 +37,9 @@ Elektroonilise hääletamise protokoll spetsifitseerib:
 #. elektroonilise hääle kvalifitseerimise kogumisteenuse poolt, hääle
    vastuvõtmise tähistamiseks;
 
-Protokoll eeldab, et valimise korraldaja on defineerinud valimise ning
-genereerinud häälte salastamise võtmepaari, mille avalik komponent on tehtud
-valijarakendusele kättesaadavaks.
+Protokoll eeldab, et valimise korraldaja defineerib valimise ning genereerib
+häälte salastamise võtmepaari, mille avalik komponent tehakse valijarakendusele
+kättesaadavaks.
 
 Protokolli vahendusel liigub valija tahe kogumisteenuses talletatavasse e-valimiskasti
 ning võetakse tulemuse kujunemisel arvesse järgmist sündmusterida pidi:
@@ -53,31 +51,71 @@ ning võetakse tulemuse kujunemisel arvesse järgmist sündmusterida pidi:
 
    #. vormistatud hääl krüpteeritakse;
 
-   #. krüpteeritud hääl allkirjastatakse digitaalselt.
+   #. krüpteeritud hääl signeeritakse valija arvutis.
 
-#. Kogumisteenus talletab elektroonilise hääle:
-
-   #. digitaalselt allkirjastatud häälele võetakse valija sertifikaadi
-      kehtivust kinnitavad elemendid;
+#. Kogumisteenus talletab elektroonilise hääle, moodustades selle käigus
+   häälele kvalifitseeritud digitaalallkirja:
 
    #. elektrooniline hääl registreeritakse välises registreerimisteenuses;
 
+   #. elektroonilisele häälele võetakse digitaalne ajatempel;
+
+   #. elektroonilisele häälele võetakse valija sertifikaadi
+      kehtivuskinnitus;
+
+   #. elektroonilist häält kvalifitseerivad elemendid tagastatakse mh. ka
+      valijarakendusele kontrollimiseks ning valija informeerimiseks
+      kvalifitseerimise tulemustest;
+
    #. valijale võimaldatakse kvalifitseeritud elektroonilise hääle
       kontrollimine kontrollrakenduse abil.
+
+.. note::
+
+   Elektroonilise hääle digitaalne allkirjastamine erineb tavapärasest
+   dokumentide digitaalallkirjastamisest, kus kõik allkirja kvalifitseerimiseks
+   vajalikud toimingud algatatakse vahetult allkirjastaja seadmes.
+   Elektroonilise hääle kvalifitseerimise kohustus on kogumisteenusel, kelle
+   ülesanne on veenduda vastuvõetavate häälte korrektses allkirjastatuses. Kuna
+   e-hääletamise perioodil on koormus seotud teenustele kõrge, võimaldab
+   kogumisteenuse poolt juhitud kvalifitseerimine tagada paremat teenuse
+   kvaliteeti.
 
 #. Valija võib kasutada kontrollrakendust veendumaks oma hääle korrektses
    käitlemises kogumisteenuse poolt;
 
 #. Hääletamisperioodi lõppedes väljastab kogumisteenus valimise korraldajale
-   e-valimiskasti ning registreerimisteenus loendi kogumisteenuse poolt registreeritud
-   häältest;
+   e-valimiskasti ning registreerimisteenus väljavõtte kogumisteenuse poolt
+   registreeritud häältest;
+
+   #. e-valimiskasti koosseisus antakse valimise korraldajale üle:
+
+      #. valija krüpteeritud tahteavaldus koos signatuuriga;
+
+      #. registreerimisteenuse kinnitus hääle registreerimisest;
+
+      #. ajatempliteenuse poolt väljastatud digitaalne ajatempel
+         elektroonilisele häälele;
+
+      #. kehtivuskinnitusteenuse poolt väljastatud kinnitus valija sertifikaadi
+         kehtivuse kohta;
+
+      #. registreerimisteenuse väljavõtte koosseisus antakse valimise korraldajale üle:
+
+         #. kõik e-hääletamise perioodil kogumisteenuse poolt
+            registreerimisteenusele saadetud päringud elektrooniliste häälte
+            registreerimiseks.
 
 #. Valimise korraldaja arvutab hääletamistulemuse:
 
-   #. veendutakse, et kõik registreerimisteenuses registreeritud hääled on
+   #. kontrollitaks üle antud elektrooniliste häälte allkirjade kehtivust
+
+   #. kontrollitakse, et kõik registreerimisteenuses registreeritud hääled on
       e-valimiskasti koosseisus üle antud;
 
    #. eraldatakse krüpteeritud hääled ja digitaalallkirjad;
+
+   #. anonüümitakse krüpteeritud hääled krüptograafiliselt;
 
    #. dekrüpteeritakse krüpteeritud hääled;
 

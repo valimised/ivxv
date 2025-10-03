@@ -191,7 +191,7 @@ Teenuse taaskäivitamise näide:
    Protseduuri nimetamine käivitamiseks või taaskäivitamiseks sõltub teenuse
    protsessi seisundist. Tehniliselt on tegemist sarnaste protseduuridega, kus
    esmalt veendutakse, et teenus seisab (vajadusel jäetakse see seisma) ja siis
-   püütakse käivitatada hetkel kehtivate seadistustega.
+   püütakse käivitada hetkel kehtivate seadistustega.
 
 
 .. _teenuse-seiskamine:
@@ -390,7 +390,7 @@ Haldusteenus seadistuste varundamine
 
 Haldusteenuse seadistustest varundatakse järgmised andmed:
 
-#. :file:`etc/` - haldusteenusesse laadiditud tarkvarapakid ja hetkel kehtivad
+#. :file:`etc/` - haldusteenusesse laaditud tarkvarapakid ja hetkel kehtivad
    seadistusfailid;
 
 #. :file:`admin-ui-permissions/` - haldusteenuse kasutajaliidese pääsuõigused;
@@ -442,7 +442,7 @@ Logide varundamine
 ^^^^^^^^^^^^^^^^^^
 
 Logikogumisteenustes kogutud logifailide varundamine toimub logifailide
-:file:`/var/log/ivxv/ivxv-YYYY-MM-DD.log` kopeerimisega varundusserverisse. Logide
+:file:`/var/log/ivxv/ivxv-YYYY-MM-DD-HH.log` kopeerimisega varundusserverisse. Logide
 varundamist viib läbi haldusteenus.
 
 Logide varukoopiast taastamise protseduuri pole kogumisteenuses ette nähtud.
@@ -521,7 +521,7 @@ Töötlemisrakenduse sisendi alus koostatakse utiliidi
 Hääletamise statistika eksportimine
 -----------------------------------
 
-Häälestamise statistika koostatake hääletusteenuses ja see koosneb kahest
+Häälestamise statistika koostatakse hääletusteenuses ja see koosneb kahest
 osast: üldstatistika (hääletajate koguarv) ja detailstatistika. Üldstatistika
 kopeeritakse haldusteenusesse ja eksporditakse Valimiste Infosüsteemi 15
 minutilise intervalliga. Detailstatistika koostatakse ja eksporditakse

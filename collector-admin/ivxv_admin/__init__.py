@@ -1,8 +1,8 @@
 # IVXV Internet voting framework
 """Collector Management Service."""
 
-__version__ = '1.9.10'
-DEB_PKG_VERSION = '1.9.10'
+__version__ = '1.10.3'
+DEB_PKG_VERSION = '1.10.3'
 
 #: Management daemon data
 MANAGEMENT_DAEMON_PORT = 8080

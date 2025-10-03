@@ -96,12 +96,12 @@ def register_removed_services(db, cfg, cfg_version):
     db_values = db.get_all_values()['service']
     for service_id in sorted(removed_service_ids):
         log.info('Changing service %s state to REMOVED', service_id)
-        service = Service(service_id, db_values[service_id])
-        service.register_state(
-            db,
-            SERVICE_STATE_REMOVED,
-            bg_info=f'Service removed with technical config: {cfg_version}',
-        )
+        with Service(service_id, db_values[service_id]) as service:
+            service.register_state(
+                db,
+                SERVICE_STATE_REMOVED,
+                bg_info=f'Service removed with technical config: {cfg_version}',
+            )
 
 
 def reset_list_loading_state(db, list_type, list_descr, log_msg):

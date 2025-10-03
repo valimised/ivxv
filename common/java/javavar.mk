@@ -1,4 +1,4 @@
-G := $(ROOTDIR)common/external/gradle-8.3/bin/gradle
+G := $(ROOTDIR)common/external/gradle-8.11/bin/gradle
 G_CACHE := $(ROOTDIR)common/external/java/
 GFLAGS := -g=$(G_CACHE)
 

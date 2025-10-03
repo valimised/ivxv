@@ -23,7 +23,8 @@ func parseSessionStatus(val []byte) ([]string, error) {
 	// Auth is "id" or "mid" or "sid" or "wid"
 	sessionStatus, err := base64.StdEncoding.DecodeString(string(val))
 	if err != nil {
-		return nil, Base64DecodeSessionStatusError{Err: err}
+		return nil, Base64DecodeSessionStatusError{Err: err,
+			Description: _SESSIONSTATUS_PARSE_B64}
 	}
 
 	sessionStatusStr := string(sessionStatus)
@@ -31,9 +32,10 @@ func parseSessionStatus(val []byte) ([]string, error) {
 	array := strings.Split(sessionStatusStr, separator)
 	if len(array) != statusReadRespDBRecordCount {
 		return nil, InvalidReadStatusDatabaseRecordCountError{
-			Expected: statusReadRespDBRecordCount,
-			Got:      len(array),
-			Record:   sessionStatusStr,
+			Expected:    statusReadRespDBRecordCount,
+			Got:         len(array),
+			Record:      sessionStatusStr,
+			Description: _SESSIONSTATUS_PARSE,
 		}
 	}
 
@@ -46,8 +48,9 @@ func castAnyToSessionStatusReadReq(req interface{}) (*api.StatusReadReq, error) 
 	sessionStatusReadReq, ok := req.(*api.StatusReadReq)
 	if !ok {
 		return nil, CastToStatusReadReqError{
-			Expected: expectedCastForStatusReadReq,
-			Got:      reflect.TypeOf(req),
+			Expected:    expectedCastForStatusReadReq,
+			Got:         reflect.TypeOf(req),
+			Description: _SESSIONSTATUS_CAST_ANY_TO_SESSSTATUSREADREQ,
 		}
 	}
 
@@ -60,8 +63,9 @@ func castAnyToSessionStatusReadResp(req interface{}) (*api.StatusReadResp, error
 	sessionStatusReadResp, ok := req.(*api.StatusReadResp)
 	if !ok {
 		return nil, CastToStatusReadRespError{
-			Expected: expectedCastForStatusReadResp,
-			Got:      reflect.TypeOf(req),
+			Expected:    expectedCastForStatusReadResp,
+			Got:         reflect.TypeOf(req),
+			Description: _SESSIONSTATUS_CAST_ANY_TO_SESSSTATREADRESP,
 		}
 	}
 
@@ -74,8 +78,9 @@ func castAnyToSessionStatusUpdateReq(req interface{}) (*api.StatusUpdateReq, err
 	sessionStatusUpdateReq, ok := req.(*api.StatusUpdateReq)
 	if !ok {
 		return nil, CastToStatusUpdateReqError{
-			Expected: expectedCastForStatusUpdateReq,
-			Got:      reflect.TypeOf(req),
+			Expected:    expectedCastForStatusUpdateReq,
+			Got:         reflect.TypeOf(req),
+			Description: _SESSIONSTATUS_CAST_ANY_TO_SESSSTATUSUPDATEDREQ,
 		}
 	}
 
@@ -88,8 +93,9 @@ func castAnyToSessionStatusDeleteReq(req interface{}) (*api.StatusDeleteReq, err
 	sessionStatusDeleteReq, ok := req.(*api.StatusDeleteReq)
 	if !ok {
 		return nil, CastToStatusDeleteReqError{
-			Expected: expectedCastForStatusDeleteReq,
-			Got:      reflect.TypeOf(req),
+			Expected:    expectedCastForStatusDeleteReq,
+			Got:         reflect.TypeOf(req),
+			Description: _SESSIONSTATUS_CAST_ANY_TO_SESSSTATUSDELETEDREQ,
 		}
 	}
 

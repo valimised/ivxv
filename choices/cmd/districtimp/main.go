@@ -58,7 +58,9 @@ func districtimpmain() (code int) {
 		version1, err := c.Storage.GetDistrictsVersion(c.Ctx)
 		if err != nil {
 			if errors.CausedBy(err, new(storage.NotExistError)) == nil {
-				return c.Error(exit.Unavailable, CheckVersionError{Err: err},
+				return c.Error(exit.Unavailable, CheckVersionError{Err: err,
+					Description: _DISTRICTS_VERSION_FROM_DB,
+				},
 					"failed to check imported list version:", err)
 			}
 		} else {
@@ -80,7 +82,8 @@ func districtimpmain() (code int) {
 				code = exit.NoInput
 			}
 		}
-		return c.Error(code, OpenContainerError{Container: path, Err: err},
+		return c.Error(code, OpenContainerError{Container: path, Err: err,
+			Description: _DISTRICTS_LIST_BDOC_OPEN},
 			"failed to open district list container:", err)
 	}
 	defer cnt.Close()
@@ -88,32 +91,37 @@ func districtimpmain() (code int) {
 	// Ensure that the container is signed and log the signatures.
 	signatures := cnt.Signatures()
 	if len(signatures) == 0 {
-		return c.Error(exit.DataErr, UnsignedContainerError{Container: path},
-			"unsigned district list container")
+		return c.Error(exit.DataErr, UnsignedContainerError{Container: path,
+			Description: _DISTRICTS_LIST_BDOC_NO_SIG},
+			"unsigned districts list container")
 	}
 	for _, s := range signatures {
-		log.Log(c.Ctx, ContainerSignature{Signer: s.Signer, SigningTime: s.SigningTime})
+		log.Log(c.Ctx, ContainerSignature{Signer: s.Signer, SigningTime: s.SigningTime,
+			Description: _DISTRICTS_LIST_BDOC_SIG_INFO})
 	}
 
 	// Get the version string of the container.
 	version1, err := version.Container(cnt)
 	if err != nil {
-		return c.Error(exit.DataErr, ContainerVersionError{Container: path, Err: err},
+		return c.Error(exit.DataErr, ContainerVersionError{Container: path, Err: err,
+			Description: _DISTRICTS_LIST_BDOC_SIG_TO_JSON},
 			"failed to format container version string:", err)
 	}
 
 	// Check that the container only has a single file.
 	data := cnt.Data()
 	if len(data) != 1 {
-		return c.Error(exit.DataErr, DataCountError{Count: len(data)},
-			"district list container has", len(data), "files, expected 1")
+		return c.Error(exit.DataErr, DataCountError{Count: len(data),
+			Description: _DISTRICTS_LIST_BDOC_HAS_MANY_FILES},
+			"districts list container has", len(data), "files, expected 1")
 	}
 
 	// Process the district list. We do not know the key, so do a single cycle loop.
 	for key, list := range data {
-		log.Log(c.Ctx, ProcessingList{List: key})
+		log.Log(c.Ctx, ProcessingList{List: key, Description: _DISTRICTS_LIST_READ})
 		if err := districtimp(c.Ctx, c.Until, c.Conf, c.Storage, version1, list); err != nil {
-			return c.Error(exit.Unavailable, ImportDistrictsError{Err: err},
+			return c.Error(exit.Unavailable, ImportDistrictsError{Err: err,
+				Description: _DISTRICTS_LIST_TO_DB_UPLOAD},
 				"failed to import district list", key+":", err)
 		}
 	}
@@ -138,12 +146,13 @@ func districtimp(ctx context.Context, until int, c *conf.C, s *storage.Client,
 
 	var l districtlist
 	if err := json.Unmarshal(list, &l); err != nil {
-		return JSONUnmarshalError{Err: err}
+		return JSONUnmarshalError{Err: err, Description: _DISTRICTS_LIST_INVALID_JSON}
 	}
 
 	// Ensure that the election identifier matches the configured one.
 	if l.Election != c.Election.Identifier {
-		return ElectionIDMismatchError{Conf: c.Election.Identifier, List: l.Election}
+		return ElectionIDMismatchError{Conf: c.Election.Identifier, List: l.Election,
+			Description: _DISTRICTS_LIST_ID_MISMATCH}
 	}
 
 	// Convert districts to lookup table where a administrative unit code
@@ -157,11 +166,12 @@ func districtimp(ctx context.Context, until int, c *conf.C, s *storage.Client,
 	// type, i.e., a JSON object with string array values.
 	var counties map[string][]string
 	if err := json.Unmarshal(l.Counties, &counties); err != nil {
-		return JSONUnmarshalCountiesError{Err: err}
+		return JSONUnmarshalCountiesError{Err: err, Description: _DISTRICTS_LIST_INVALID_COUNTIES_JSON}
 	}
 
 	if until >= command.Execute {
-		log.Log(ctx, ImportingDistricts{Count: len(l.Districts)})
+		log.Log(ctx, ImportingDistricts{Count: len(l.Districts),
+			Description: _DISTRICTS_LIST_PREPARE_UPLOAD_TO_DB})
 		progress.Static(fmt.Sprintf("Importing %d districts:", len(l.Districts)))
 		addprogress := progress.Percent(uint64(len(districts)), true)
 		progress.Redraw()
@@ -169,7 +179,7 @@ func districtimp(ctx context.Context, until int, c *conf.C, s *storage.Client,
 
 		err := s.PutDistricts(ctx, version, districts, l.Counties, addprogress)
 		if err != nil {
-			return PutDistrictsError{Err: err}
+			return PutDistrictsError{Err: err, Description: _DISTRICTS_LIST_UPLOAD_TO_DB_FAIL}
 		}
 	}
 	return nil
@@ -185,15 +195,15 @@ func districtsLookup(list districtlist) (map[string][]byte, error) {
 		splits := strings.Split(id, ".")
 		if len(splits) != 2 || len(splits[0]) == 0 || len(splits[1]) == 0 {
 			// Must contain a single period, but not first or last.
-			return nil, DistrictIDFormatError{District: id}
+			return nil, DistrictIDFormatError{District: id,
+				Description: _DISTRICTS_LIST_INVALID_DISTRICT_ID}
 		}
 		code, nr := splits[0], splits[1]
 
 		for _, parish := range district.Parish {
 			if parishCode, ok := parishCodes[parish]; ok && code != parishCode {
-				return nil, ParishWithMultipleDistrictCodesError{
-					First:  parishCode,
-					Second: code,
+				return nil, ParishWithMultipleDistrictCodesError{First: parishCode, Second: code,
+					Description: _DISTRICTS_LIST_PARISH_CONTAINS_SAME_DISTRICT_CODES,
 				}
 			}
 

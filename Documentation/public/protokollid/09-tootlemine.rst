@@ -1,8 +1,8 @@
 ..  IVXV protokollid
 
-=========================
-E-valimiskasti töötlemine
-=========================
+==============================================
+E-valimiskasti töötlemisetapi andmestruktuurid
+==============================================
 
 
 Tühistus- ja ennistusnimekiri

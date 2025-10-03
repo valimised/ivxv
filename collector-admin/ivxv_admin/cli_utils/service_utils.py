@@ -13,6 +13,7 @@ import tempfile
 import time
 import zipfile
 from collections import OrderedDict
+from crontab import CronTab
 from jinja2 import Environment, PackageLoader
 
 import fasteners
@@ -43,6 +44,9 @@ from . import init_cli_util, log
 
 #: JSON formatting options
 JSON_DUMP_ARGS = dict(indent=2, sort_keys=True)
+
+IVXV_ADMIN_CRON_USER = 'ivxv-admin'
+VOTER_LIST_DOWNLOAD_CRON_JOB = 'if [ -x /usr/bin/ivxv-voter-list-download ]; then /usr/bin/ivxv-voter-list-download --log-level=WARNING; fi'  # noqa: E501
 
 
 def export_votes_util():
@@ -89,39 +93,39 @@ def export_votes(must_consolidate, output_filename):
         raise IvxvError('Backup service is not defined')
     assert len(services) == 1
 
-    backup_service = Service(*list(services.items())[0])
-    log.debug('Backup service: %s', backup_service.service_id)
-    ballot_box_filepath = datetime.datetime.now().strftime(
-        '/var/lib/ivxv/ballot-box-consolidated-%Y%m%d_%H%M.zip')
+    with Service(*list(services.items())[0]) as backup_service:
+        log.debug('Backup service: %s', backup_service.service_id)
+        ballot_box_filepath = datetime.datetime.now().strftime(
+            '/var/lib/ivxv/ballot-box-consolidated-%Y%m%d_%H%M.zip')
 
-    # run consolidation in backup service
-    if must_consolidate:
-        proc = backup_service.ssh([
-            'ivxv-voteunion', ballot_box_filepath,
-            '/var/backups/ivxv/ballot-box/ballot-box-????????_????.zip'
-        ])
-        if proc.returncode:
-            raise IvxvError('Consolidation command failed in backup service')
-    else:  # export without consolidation
-        # detect last backup filename
-        cmd = [
-            'ls', '/var/backups/ivxv/ballot-box/ballot-box-????????_????.zip'
-        ]
-        proc = backup_service.ssh(cmd, stdout=subprocess.PIPE, check=True)
-        ballot_box_filepath = proc.stdout.decode('UTF-8').strip().split(
-            '\n')[-1]
+        # run consolidation in backup service
+        if must_consolidate:
+            proc = backup_service.ssh([
+                'ivxv-voteunion', ballot_box_filepath,
+                '/var/backups/ivxv/ballot-box/ballot-box-????????_????.zip'
+            ])
+            if proc.returncode:
+                raise IvxvError('Consolidation command failed in backup service')
+        else:  # export without consolidation
+            # detect last backup filename
+            cmd = [
+                'ls', '/var/backups/ivxv/ballot-box/ballot-box-????????_????.zip'
+            ]
+            proc = backup_service.ssh(cmd, stdout=subprocess.PIPE, check=True)
+            ballot_box_filepath = proc.stdout.decode('UTF-8').strip().split(
+                '\n')[-1]
 
-    # copy consolidated ballot box from backup
-    log.info('Copying ballot box to management service')
-    if not backup_service.scp(
-            output_filename,
-            ballot_box_filepath,
-            "consolidated ballot box" if must_consolidate else "ballot box",
-            to_remote=False):
-        raise IvxvError('Failed to copy ballot box to management service')
-    if must_consolidate:
-        log.info('Removing consolidated ballot box from backup service')
-        backup_service.ssh(['rm', '-v', ballot_box_filepath])
+        # copy consolidated ballot box from backup
+        log.info('Copying ballot box to management service')
+        if not backup_service.scp(
+                output_filename,
+                ballot_box_filepath,
+                "consolidated ballot box" if must_consolidate else "ballot box",
+                to_remote=False):
+            raise IvxvError('Failed to copy ballot box to management service')
+        if must_consolidate:
+            log.info('Removing consolidated ballot box from backup service')
+            backup_service.ssh(['rm', '-v', ballot_box_filepath])
 
     log.info("Collected votes archive is written to %r", output_filename)
 
@@ -479,11 +483,18 @@ def update_software_pkg_util():
     This utility checks versions of software packages in service hosts
     and installs new versions if required.
 
-    Usage: ivxv-update-packages [--force]
+    Usage: ivxv-update-packages [--force] [--service=<type>] [--package=<package>]
 
     Options:
-        --force     Update even package version does not require update
+        --force                 Update even package version does not require update
+        --service=<type>        Update only specific service package (e.g. ivxv-voting)
+        --package=<package>     Path to the service package
     """)
+
+    if (not args['--service'] and args['--package']
+            or args['--service'] and not args['--package']):
+        log.error('--service and --package should be set at the same time')
+        return 1
 
     # generate list of voting services that are in required state
     services = get_services(
@@ -497,7 +508,9 @@ def update_software_pkg_util():
             SERVICE_STATE_INSTALLED,
             SERVICE_STATE_CONFIGURED,
             SERVICE_STATE_FAILURE,
-        ])
+        ],
+        include_types=[args['--service'] or []]
+    )
     if not services:
         return 1
 
@@ -516,38 +529,42 @@ def update_software_pkg_util():
         return proc.stdout.decode('UTF-8').strip()
 
     for service_id, service_data in sorted(services.items()):
-        service = Service(service_id, service_data)
+        with Service(service_id, service_data) as service:
+            # check ivxv-common version
+            host_version = host_versions.get(service.hostname)
+            pkg_name = 'ivxv-common'
+            # if specific service is requested to update, then skip
+            install_pkg = bool(args['--force']) or bool(args['--service'])
+            if not install_pkg and host_version != __version__:
+                host_versions[service.hostname] = get_installed_pkg_ver()
+                install_pkg = host_versions[service.hostname] != __version__
 
-        # check ivxv-common version
-        host_version = host_versions.get(service.hostname)
-        pkg_name = 'ivxv-common'
-        install_pkg = bool(args['--force'])
-        if not install_pkg and host_version != __version__:
-            host_versions[service.hostname] = get_installed_pkg_ver()
-            install_pkg = host_versions[service.hostname] != __version__
+            # install ivxv-common if required, don't install if specific service
+            # is requested
+            if install_pkg and not bool(args['--service']):
+                if not service.update_ivxv_common_pkg():
+                    update_res['failure'].append([service_id, pkg_name])
+                    continue
+                update_res['install'].append([service_id, pkg_name])
+                host_versions[service.hostname] = __version__
+            else:
+                update_res['skip'].append([service_id, pkg_name])
 
-        # install ivxv-common if required
-        if install_pkg:
-            if not service.update_ivxv_common_pkg():
-                update_res['failure'].append([service_id, pkg_name])
-                continue
-            update_res['install'].append([service_id, pkg_name])
-            host_versions[service.hostname] = __version__
-        else:
-            update_res['skip'].append([service_id, pkg_name])
+            # check service package version and upgrade if required,
+            # package will be upgraded if specific service requested
+            pkg_name = service.deb_pkg_name
+            install_pkg = (args['--force'] or get_installed_pkg_ver() != __version__
+                           or args['--service'])
 
-        # check service package version and upgrade if required
-        pkg_name = service.deb_pkg_name
-        install_pkg = args['--force'] or get_installed_pkg_ver() != __version__
-
-        # install package if required
-        if install_pkg:
-            if not service.install_service_pkg(is_update=True):
-                update_res['failure'].append([service_id, pkg_name])
-                continue
-            update_res['install'].append([service_id, pkg_name])
-        else:
-            update_res['skip'].append([service_id, pkg_name])
+            # install package if required
+            if install_pkg:
+                if not service.install_service_pkg(is_update=True,
+                                                   package=args['--package']):
+                    update_res['failure'].append([service_id, pkg_name])
+                    continue
+                update_res['install'].append([service_id, pkg_name])
+            else:
+                update_res['skip'].append([service_id, pkg_name])
 
     # output result
     for service_id, pkg_name in update_res['install']:
@@ -601,25 +618,24 @@ def manage_service():
                 exit_code = 1
             continue
 
-        service = Service(service_id, services[service_id])
-
-        if action == 'stop':
-            log.info('Stopping service %s', service_id)
-            if service.stop_service():
-                log.info('Service %s stopped', service_id)
-            else:
-                log.error('Failed to stop service %s', service_id)
-                exit_code = 1
-            continue
+        with Service(service_id, services[service_id]) as service:
+            if action == 'stop':
+                log.info('Stopping service %s', service_id)
+                if service.stop_service():
+                    log.info('Service %s stopped', service_id)
+                else:
+                    log.error('Failed to stop service %s', service_id)
+                    exit_code = 1
+                continue
 
         # start, restart
         log.info('%sing service %s', action.capitalize(), service_id)
-        service = Service(service_id, services[service_id])
-        if service.restart_service():
-            log.info('Service %s %sed', service_id, action)
-        else:
-            log.error('Failed to %s service %s', action, service_id)
-            exit_code = 1
+        with Service(service_id, services[service_id]) as service:
+            if service.restart_service():
+                log.info('Service %s %sed', service_id, action)
+            else:
+                log.error('Failed to %s service %s', action, service_id)
+                exit_code = 1
 
     return exit_code
 
@@ -686,15 +702,15 @@ def voterstats_util():
             log.error("No voting service %r found", service_id)
         return 1
     service_logging.log.setLevel(args["--log-level"])
-    service = Service(service_id, services[service_id])
-
-    # import stats
-    try:
-        if action in ["all", "import"]:
-            import_voterstats(stats_type, service, filepath, args["--log-level"])
-    except IvxvError:
-        log.error("Failed to import %s stats from service %r", stats_type, service_id)
-        return 1
+    with Service(service_id, services[service_id]) as service:
+        # import stats
+        try:
+            if action in ["all", "import"]:
+                import_voterstats(stats_type, service, filepath, args["--log-level"])
+        except IvxvError:
+            log.error(
+                "Failed to import %s stats from service %r", stats_type, service_id)
+            return 1
 
     # export stats to VIS only if requested
     command_file.log.setLevel(args["--log-level"])
@@ -1304,3 +1320,22 @@ def voting_facts_util():
         return 1
 
     return 0
+
+
+def create_voter_list_download_crontab(cfg: dict):
+    """
+    Creates a cron job for running CLI ivxv-voter-list-download every X minute as
+    defined in configuration file vis:min: section, X defaults to 15 minutes.
+    :param cfg: configuration file
+    """
+    # read `vis:` section from a configuration file and parse 'min:' int value out
+    minutes = cfg.get('vis', {}).get('min', 15)
+
+    with CronTab(user=IVXV_ADMIN_CRON_USER) as cron:
+        # remove old ivxv-voter-list-download job
+        for job in cron:
+            if job.command == VOTER_LIST_DOWNLOAD_CRON_JOB:
+                cron.remove(job)
+
+        # install new one
+        cron.new(command=VOTER_LIST_DOWNLOAD_CRON_JOB).minute.every(minutes)

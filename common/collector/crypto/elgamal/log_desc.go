@@ -1,0 +1,25 @@
+package elgamal
+
+const (
+	_CIP_SEQ          = "Failed to read ElGamal ciphertext ASN.1 sequence"
+	_CIP_AID          = "Failed to read ElGamal ciphertext AlgorithmIdentifier"
+	_CIP_AID_OID      = "Failed to read ElGamal ciphertext AlgorithmIdentifier's Algorithm oid"
+	_CIP_OID_MISMATCH = "Ciphertext oid is not ElGamal oid"
+	_CIP_DATA         = "Failed to read ElGamal ciphertext data ASN.1 sequence"
+	_CIP_A            = "Failed to read ElGamal ciphertext A ASN.1 element"
+	_CIP_B            = "Failed to read ElGamal ciphertext B ASN.1 element"
+	_CIP_TRAIL        = "Trailing bytes left while reading ASN.1 ElGamal ciphertext"
+	_CIP_MARSHAL      = "Failed to ASN.1 marshal ElGamal ciphertext"
+	_CIP_VERIFY       = "Failed to verify ASN.1 ElGamal ciphertext"
+	_PUB_MODP_PARAMS  = "Failed to ASN.1 unmarshal x509 key ModP group parameters"
+	_PUB_ECP_PARAMS   = "Failed to ASN.1 unmarshal x509 key ECp group parameters"
+	_PUB_ALGO         = "Unknown ASN.1 unmarshalled x509 key parameters algorithm"
+	_PUB_PARAMS       = "Failed to ASN.1 unmarshal x509 key parameters"
+	_PUB_DATA         = "Failed to ASN.1 unmarshal x509 key data"
+	_PUB_TRAIL        = "ASN.1 unmarshalling x509 key data left trailing bytes behind"
+	_PUB_EL           = "Failed to ASN.1 unmarshal ElGamal public key element"
+	_MODP_LEN         = "Unsupported ModP element length"
+	_MODP_G           = "Unknown ModP group"
+	_ECP_LEN          = "Unsupported ECp element length"
+	_ECP_G            = "Unknown ECp group"
+)

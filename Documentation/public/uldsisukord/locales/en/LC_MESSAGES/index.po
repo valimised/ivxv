@@ -6,7 +6,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.8.2\n"
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-02-29 10:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -21,4 +21,4 @@ msgstr ""
 
 #: ../../index.rst:4
 msgid "IVXV dokumentatsiooni üldsisukord"
-msgstr "IVXV General documentation"
+msgstr "IVXV documentation overview"

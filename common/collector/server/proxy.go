@@ -19,7 +19,8 @@ func readPROXY(c net.Conn) (wc net.Conn, addr net.Addr, health bool, err error) 
 	// We are willing to read less, so accept an unexpected EOF.
 	header := make([]byte, 16)
 	if err = readTimeout(c, header); err != nil && err != io.ErrUnexpectedEOF {
-		return c, nil, false, ReadPROXYHeaderError{Err: err}
+		return c, nil, false, ReadPROXYHeaderError{Err: err,
+			Description: _SERVER_PROXY}
 	}
 
 	if !bytes.Equal(header[:12], proxySig) {
@@ -35,7 +36,8 @@ func readPROXY(c net.Conn) (wc net.Conn, addr net.Addr, health bool, err error) 
 		local = true
 	case 0x21:
 	default:
-		return c, nil, false, InvalidPROXYVerCmdError{VerCmd: vercmd}
+		return c, nil, false, InvalidPROXYVerCmdError{VerCmd: vercmd,
+			Description: _SERVER_PROXY_CONN}
 	}
 
 	extralen := int(binary.BigEndian.Uint16(header[14:16]))
@@ -45,16 +47,19 @@ func readPROXY(c net.Conn) (wc net.Conn, addr net.Addr, health bool, err error) 
 		switch transport := header[13]; transport {
 		case 0x11: // TCP over IPv4.
 			if addr, err = readTCPAddr(c, 4); err != nil {
-				return c, nil, false, ReadPROXYTCPIP4AddressError{Err: err}
+				return c, nil, false, ReadPROXYTCPIP4AddressError{
+					Err: err, Description: _SERVER_PROXY_IP4}
 			}
 			extralen -= 12
 		case 0x21: // TCP over IPv6.
 			if addr, err = readTCPAddr(c, 16); err != nil {
-				return c, nil, false, ReadPROXYTCPIP6AddressError{Err: err}
+				return c, nil, false, ReadPROXYTCPIP6AddressError{Err: err,
+					Description: _SERVER_PROXY_IP6}
 			}
 			extralen -= 36
 		default:
-			return c, nil, false, InvalidPROXYTransportError{Transport: transport}
+			return c, nil, false, InvalidPROXYTransportError{
+				Transport: transport, Description: _SERVER_PROXY_TRS}
 		}
 	}
 
@@ -62,7 +67,8 @@ func readPROXY(c net.Conn) (wc net.Conn, addr net.Addr, health bool, err error) 
 		// Discard any extra bytes.
 		null := make([]byte, extralen)
 		if _, err = io.ReadFull(c, null); err != nil {
-			return c, nil, false, DiscardPROXYExtraError{Err: err}
+			return c, nil, false, DiscardPROXYExtraError{Err: err,
+				Description: _SERVER_PROXY_READ_EX}
 		}
 	}
 
@@ -82,7 +88,8 @@ func readPROXY(c net.Conn) (wc net.Conn, addr net.Addr, health bool, err error) 
 				}
 			}
 		}
-		return c, nil, false, ReadPostPROXYError{Err: err}
+		return c, nil, false, ReadPostPROXYError{Err: err,
+			Description: _SERVER_PROXY_READ}
 	}
 	return &prefixConn{Conn: c, prefix: one}, addr, false, nil
 }
@@ -102,7 +109,7 @@ func readTimeout(c net.Conn, buf []byte) error {
 	// This timeout does not need to be configurable, because the messages
 	// are small and coming from the proxy server.
 	if err := c.SetDeadline(time.Now().Add(time.Second)); err != nil {
-		return SetPROXYTimeoutError{Err: err}
+		return SetPROXYTimeoutError{Err: err, Description: _SERVER_PROXY_TIME}
 	}
 	_, err := io.ReadFull(c, buf)
 	return err

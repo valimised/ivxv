@@ -53,62 +53,62 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Kasutusvajadus
 
    *  - `Bootstrap <http://getbootstrap.com>`_
-      - 3.4.1
+      - 3.4.1, JavaScript
       - MIT
       - Kogumisteenuse haldusteenuse kasutajaliidese kujundus
 
    *  - Bouncy Castle
-      - 1.70
+      - 1.78.1, Java
       - MIT
       - ASN1 käsitlemine, andmetüübi BigInteger abifunktsioonid
 
    *  - `Bottle <https://bottlepy.org/>`_
-      - 0.12.25
+      - 0.13.2, Python
       - MIT
       - Raamistik kogumisteenuse haldusteenuse veebiliidese teostamiseks
 
    *  - CAL10N
-      - 0.8.1
+      - 0.8.1, Java
       - MIT
       - Mitmekeelsuse tugi, tõlkefailide valideerimine
 
    *  - Digidoc 4j
-      - 5.1.0
+      - 5.3.1, Java
       - LGPL-2.1-only
       - BDoc konteinerite käsitlemine
 
    *  - Apache Commons (collections4 4.4)
-      - -
+      - Java
       - Apache-2.0
       - Digidoc 4j ja PDFBox sõltuvused
 
    *  - `Docopt <http://docopt.org/>`_
-      - 0.6.2
+      - 0.6.2, Python
       - MIT
       - Kogumisteenuse haldusutiliitide käsurealiidese teostus
 
    *  - `Fasteners <https://github.com/harlowja/fasteners>`_
-      - 0.19
+      - 0.19, Python
       - Apache-2.0
       - Kogumisteenuse haldusteenuse protsesside lukustus
 
    *  - `gin-gonic <https://github.com/gin-gonic>`_
-      - 1.9.1
+      - 1.9.1, Go
       - MIT
       - Veebiraamistik x-tee liidese jaoks
 
    *  - `etcd <https://coreos.com/etcd>`_
-      - 3.5.9
+      - 3.5.9, Go
       - Apache-2.0
       - Talletusteenusena kasutatav hajus võti-väärtus andmebaas
 
    *  - Glassfish JAXB
-      - 2.3.8
+      - 4.0.5, Java
       - BSD-3-Clause
       - Java XML teek
 
    *  - Gradle
-      - 8.3
+      - 8.11, Java
       - Apache-2.0
       - Java rakenduste ehitamise raamistik
 
@@ -117,90 +117,99 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - GPL-2.0-or-later
       - Vahendusteenusena kasutatav TCP-proksi
 
-   *  - IvyPot
-      - 2.3.0
-      - Apache-2.0
-      - Gradle ehitusraamistiku laiendus sõltuvuste haldamiseks ja rakenduste
-        ehitamiseks vallasrežiimis
-
    *  - Jackson
-      - 2.15.2
+      - 2.18.1, Java
       - Apache-2.0
       - JSON vormingus failide lugemine ja kirjutamine
 
    *  - Jinja2
-      - 3.1.2
+      - 3.1.4, Python
       - BSD
       - Jinja mallide kasutamine haldusteenuses
 
    *  - `jQuery <https://jquery.org/>`_
-      - 3.3.1
+      - 3.7.1, JavaScript
       - MIT
       - Kogumisteenuse haldusteenuse kasutajaliides
 
    *  - jsonschema
-      - 4.19.1
+      - 4.23.0, Python
       - MIT
       - JSON valideerimine haldusteenuses
 
    *  - Logback
-      - 4.11
+      - 1.5.12, Java
       - EPL-1.0 or LGPL-v2.1-only
       - Logimise API teostus
 
    *  - Logback JSON
-      - 0.1.5
+      - 0.1.5, Java
       - EPL-1.0 or LGPL-v2.1-only
       - Logback logija laiendus JSON vormingus logikirjete koostamiseks
         Jackson teegi abil
 
    *  - `Logrus <https://github.com/sirupsen/logrus>`_
-      - 1.9.3
+      - 1.9.3, Go
       - MIT
       - Logimisraamistik x-tee liidese jaoks
 
    *  - `metisMenu <https://github.com/onokumus/metisMenu>`_
-      - 1.1.3
+      - 1.1.3, JavaScript
+      - MIT
+      - Kogumisteenuse haldusteenuse kasutajaliides
+
+   *  - `FontAwesome <https://github.com/FortAwesome/Font-Awesome>`_
+      - 6.7.2, JavaScript
+      - MIT
+      - Kogumisteenuse haldusteenuse kasutajaliides
+
+   *  - `DataTables <https://github.com/DataTables/DataTablesSrc>`_
+      - 2.3.2, JavaScript
       - MIT
       - Kogumisteenuse haldusteenuse kasutajaliides
 
    *  - PDFBox
-      - 2.0.29
+      - 3.0.3, Java
       - Apache-2.0
       - PDF vormingus raportite genereerimise tugi Java rakendustele
 
    *  - `PyYAML <http://pyyaml.org/>`_
-      - 6.0.1
+      - 6.0.2, Python
       - MIT
       - Kogumisteenuse seadistusfailide töötlemise tugi haldusteenusele
 
+   *  - python-crontab
+      - 3.3.0, Python
+      - LGPLv3
+      - Crontab haldusteenuses
+
    *  - python-dateutil
-      - 2.8.2
+      - 2.9.0, Python
       - BSD
       - Kuupäevad ja kellaajad haldusteenuses
 
    *  - python-debian
-      - 0.1.49
+      - 0.1.49, Python
       - GPLv2
       - Debian pakkide lugemine haldusteenuses
 
    *  - pyopenssl
-      - 23.2.0
+      - 24.2.1, Python
       - Apache
       - OpenSSL kasutus haldusteenuses
 
    *  - `Schematics <https://github.com/schematics/schematics>`_
-      - 2.1.1
+      - 2.1.1, Python
       - BSD-3-Clause
       - Kogumisteenuse seadistusfailide valideerimise tugi haldusteenusele
 
    *  - SnakeYAML
-      - 2.2
+      - 2.3, Java
       - Apache-2.0
       - YAML vormingus andmete lugemine
 
    *  - `SB Admin 2 <https://github.com/BlackrockDigital/startbootstrap-sb-admin-2>`_
-      - 3.3.7+1
+      - 3.3.7+1, JavaScript
       - MIT
       - Kogumisteenuse haldusteenuse kasutajaliidese kujundus
 
@@ -216,22 +225,22 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Kasutusvajadus
 
    *  - Hamcrest
-      - 2.2
+      - 3.0, Java
       - BSD-3-Clause
       - Loetavam assert-meetodite kasutamine Java üksuste testides
 
    *  - JUnit
-      - 4.13.2
+      - 5.10.0, Java
       - EPL-1.0
       - Java testimisraamistik
 
    *  - JUnitParams
-      - 1.1.1
+      - 1.1.1, Java
       - Apache-2.0
       - Testide parametriseerimise tugi
 
    *  - Mockito
-      - 5.5.0
+      - 5.14.2, Java
       - MIT
       - Testitava koodi sõltuvuste mockimise tugi
 
@@ -241,12 +250,12 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Testandmete genereerimine
 
    *  - PyTest
-      - 7.4.2
+      - 7.4.2, Python
       - MIT
       - Üksuste testimise tugi Pythonile
 
    *  - Requests
-      - 2.31.0
+      - 2.32.3, Python
       - Apache 2.0
       - HTTP päringute moodul Pythoni testidele
 
@@ -262,7 +271,7 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Kasutusvajadus
 
    *  - `Behave <https://github.com/behave/behave>`_
-      - 1.2.6
+      - 1.2.6, Python
       - BSD-2-Clause
       - Regressioonitestide käivitaja (*Behavior-driven development*)
 
@@ -272,6 +281,6 @@ Kõik kogumisteenuses kasutatavad komponendid on avatud lähtekoodiga.
       - Regressioonitestide läbiviimise keskkond - tarkvarakonteinerid
 
    *  - `Sphinx <http://www.sphinx-doc.org/>`_
-      - 7.2.5
+      - 7.2.5, Python
       - BSD
       - Dokumentatsiooni genereerimine

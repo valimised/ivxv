@@ -5,6 +5,8 @@ Description=IVXV Management Service Agent Daemon
 ExecStart=/usr/bin/ivxv-agent-daemon
 User=ivxv-admin
 Group=www-data
+Restart=always
+RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target

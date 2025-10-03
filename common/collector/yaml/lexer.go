@@ -45,7 +45,7 @@ func (l *lexer) pend(content string, line, column int) {
 	l.pending.content += content
 }
 
-var canceled = Canceled{}
+var canceled = Canceled{Description: _YAML_CTX_DONE}
 
 // send sends the given lexeme, also flushing any pending sends. Empty content
 // will not be sent, only triggering a send of pending content.
@@ -209,7 +209,7 @@ func (l *lexer) discardBOM() {
 		}
 	case io.EOF:
 	default:
-		l.error(LexPeekBOMError{Err: err})
+		l.error(LexPeekBOMError{Err: err, Description: _YAML_MORE_BYTES_LEFT})
 	}
 }
 
@@ -232,13 +232,13 @@ func (l *lexer) rune() (r rune, eof bool) {
 		// Do not rely on the same error happening again on ReadRune.
 		// It might have been a temporary failure, which results in
 		// ReadRune succeeding and bypassing normalization.
-		l.error(LexPeekError{Err: err})
+		l.error(LexPeekError{Err: err, Description: _YAML_MORE_BYTES_LEFT})
 	}
 
 	r, _, err := l.b.ReadRune()
 	eof = err == io.EOF
 	if err != nil && !eof {
-		l.error(LexReadError{Err: err})
+		l.error(LexReadError{Err: err, Description: _YAML_EOF})
 	}
 	if r == '\r' { // Also normalize a lone \r to \n.
 		r = '\n'
@@ -250,7 +250,7 @@ func (l *lexer) rune() (r rune, eof bool) {
 func (l *lexer) unread() {
 	err := l.b.UnreadRune()
 	if err != nil {
-		l.error(LexUnreadError{Err: err})
+		l.error(LexUnreadError{Err: err, Description: _YAML_READ_RUNE})
 	}
 	l.column--
 }
@@ -297,5 +297,5 @@ func (l *lexer) whileEq(set string, eq bool) (read string, next rune, eof bool) 
 // error stops the lexical analysis with the provided error, wrapping it with
 // the current line and column.
 func (l *lexer) error(err error) {
-	stop(LexicalAnalysisError{Line: l.line, Column: l.column, Err: err})
+	stop(LexicalAnalysisError{Line: l.line, Column: l.column, Err: err, Description: _YAML_ERR_WRAP})
 }

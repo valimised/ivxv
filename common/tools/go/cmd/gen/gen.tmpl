@@ -4,12 +4,17 @@ package {{.Package.Name}}
 import "fmt"
 
 {{range .Literals}}
-// {{.Name}} is auto-generated from {{base .Pos.String}}.
+// BEGIN {{.Name}}
+
+// auto-generated from {{base .Pos.String}}.
+// ivxv.ee/{{$.Package.ImportPath}}.{{.Name}}
+// {{.Comment}}
 type {{.Name}} struct {
 	{{range .Fields}}
-	{{.}} {{if eq . "Err"}}error{{else}}interface{}{{end}}
+	{{.}} {{if eq . "Err"}}error{{else if eq . "Description"}}string `+"`json:\"-\"`"+`{{else}}interface{}{{end}}
 	{{- end}}
 }
+// END {{.Name}}
 
 // EntryID implements the ivxv.ee/log.Entry interface.
 func (x {{.Name}}) EntryID() string { return "ivxv.ee/{{$.Package.ImportPath}}.{{.Name}}" }
@@ -24,7 +29,7 @@ func (x {{.Name}}) Error() string {
 	return fmt.Sprint(x.EntryID(), "{",
 		{{- range $i, $e := .Fields -}}
 		{{- if gt $i 0}}", ",{{end}}
-		"{{.}}:", x.{{.}},
+		{{if ne . "Description"}}"{{.}}:", x.{{.}},{{end}}
 		{{- end -}}
 		"}")
 }

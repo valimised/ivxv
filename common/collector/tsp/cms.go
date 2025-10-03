@@ -82,7 +82,8 @@ var (
 
 func (c *Client) checkSignedData(token timeStampToken, gen time.Time) error {
 	if !token.ContentType.Equal(idSignedData) {
-		return UnexpectedTSTContentType{ContentType: token.ContentType}
+		return UnexpectedTSTContentType{ContentType: token.ContentType,
+			Description: _TSP_CONTENT_TYPE}
 	}
 	sData := token.Content
 
@@ -90,7 +91,7 @@ func (c *Client) checkSignedData(token timeStampToken, gen time.Time) error {
 	// Since eContentType is other than id-data the version is 3.
 	if sData.Version != 3 {
 		return UnexpectedSignedDataVersionError{
-			Version: sData.Version,
+			Version: sData.Version, Description: _TSP_TOKEN_CONTENT_VERSION,
 		}
 	}
 
@@ -102,14 +103,16 @@ func (c *Client) checkSignedData(token timeStampToken, gen time.Time) error {
 
 	// We expect only one signature and one signer
 	if len(sData.SignerInfos) != 1 {
-		return NotASingleSignerError{Count: len(sData.SignerInfos)}
+		return NotASingleSignerError{Count: len(sData.SignerInfos),
+			Description: _TSP_ONE_SIG}
 	}
 	sInfo := sData.SignerInfos[0]
 
 	// Find the signer's certificate from our trusted pool.
 	cert, err := findCertificate(sInfo, c.signers)
 	if err != nil {
-		return UntrustedSigningCertificateError{Err: err}
+		return UntrustedSigningCertificateError{Err: err,
+			Description: _TSP_CERT}
 	}
 
 	// Require that the certificate be included in the response.
@@ -121,15 +124,16 @@ func (c *Client) checkSignedData(token timeStampToken, gen time.Time) error {
 		}
 	}
 	if !included {
-		return MissingSignerCertificateError{Signer: cert.Subject.CommonName}
+		return MissingSignerCertificateError{Signer: cert.Subject.CommonName,
+			Description: _TSP_CERT_EQUAL}
 	}
 
 	if err := c.checkSignedAttributes(sInfo, sData.EncapContentInfo, gen, cert); err != nil {
-		return SignedAttributeCheckError{Err: err}
+		return SignedAttributeCheckError{Err: err, Description: _TSP_ATTR}
 	}
 
 	if err := checkSignature(sInfo, cert); err != nil {
-		return CheckSignatureError{Err: err}
+		return CheckSignatureError{Err: err, Description: _TSP_SIG}
 	}
 
 	return nil
@@ -143,7 +147,7 @@ func findCertificate(sInfo signerInfo, certs []*x509.Certificate) (c *x509.Certi
 		issuer := sInfo.IssuerAndSerialNumber.Issuer
 		serial := sInfo.IssuerAndSerialNumber.SerialNumber
 		if len(issuer) == 0 {
-			return nil, Version1MissingIASNError{}
+			return nil, Version1MissingIASNError{Description: _TSP_CERT_ISSUER}
 		}
 		for _, c := range certs {
 			if hasIssuerSerial(c, issuer, serial) {
@@ -151,21 +155,24 @@ func findCertificate(sInfo signerInfo, certs []*x509.Certificate) (c *x509.Certi
 			}
 		}
 		return nil, IASNCertificateNotFoundError{
-			Issuer: issuer,
-			Serial: serial,
+			Issuer:      issuer,
+			Serial:      serial,
+			Description: _TSP_CERT_SERIAL,
 		}
 	case 3:
 		if len(sInfo.SubjectKeyIdentifier) == 0 {
-			return nil, Version3MissingSKIError{}
+			return nil, Version3MissingSKIError{Description: _TSP_SKI}
 		}
 		for _, c := range certs {
 			if bytes.Equal(sInfo.SubjectKeyIdentifier, c.SubjectKeyId) {
 				return c, nil
 			}
 		}
-		return nil, SKICertificateNotFoundError{SKI: sInfo.SubjectKeyIdentifier}
+		return nil, SKICertificateNotFoundError{SKI: sInfo.SubjectKeyIdentifier,
+			Description: _TSP_CERT_SKI}
 	default:
-		return nil, SignerInfoVersionError{Version: sInfo.Version}
+		return nil, SignerInfoVersionError{Version: sInfo.Version,
+			Description: _TSP_CERT_VER}
 	}
 }
 
@@ -184,7 +191,8 @@ func (c *Client) checkSignedAttributes(sInfo signerInfo, encap encapsulatedConte
 		// Check that there are no duplicate signed attributes
 		attrID := attr.AttrType.String()
 		if attrMap[attrID] {
-			return DuplicateSignedAttrError{Attribute: attrID}
+			return DuplicateSignedAttrError{Attribute: attrID,
+				Description: _TSP_ATTR_DUP}
 		}
 		attrMap[attrID] = true
 
@@ -196,52 +204,52 @@ func (c *Client) checkSignedAttributes(sInfo signerInfo, encap encapsulatedConte
 		// Since unmarshaling of a raw value has succeeded, we can
 		// assume that at least the tag and length bytes exist.
 		if tag := attr.AttrValue.FullBytes[0]; tag != 49 {
-			return AttributeValueNotASetError{Tag: tag}
+			return AttributeValueNotASetError{Tag: tag, Description: _TSP_ATTR_TAG}
 		}
 		value := attr.AttrValue.Bytes
 
 		switch attrID {
 		case idContentType:
 			if err = checkContentType(value, encap.EContentType); err != nil {
-				return CheckContentTypeError{Err: err}
+				return CheckContentTypeError{Err: err, Description: _TSP_ATTR_VER}
 			}
 		case idMessageDigest:
 			if err = checkMessageDigest(value,
 				sInfo.DigestAlgorithm, encap.EContent); err != nil {
 
-				return CheckMsgDigestError{Err: err}
+				return CheckMsgDigestError{Err: err, Description: _TSP_ATTR_DIG}
 			}
 		case idSigningTime:
 			if err = c.checkSigningTime(value, gen); err != nil {
-				return CheckSigningTimeError{Err: err}
+				return CheckSigningTimeError{Err: err, Description: _TSP_ATTR_TIME}
 			}
 		case idSigningCert:
 			if err = checkSigningCert(value, signer, false); err != nil {
-				return CheckSigningCertError{Err: err}
+				return CheckSigningCertError{Err: err, Description: _TSP_ATTR_CERT}
 			}
 		case idSigningCertV2:
 			if err = checkSigningCert(value, signer, true); err != nil {
-				return CheckSigningCertV2Error{Err: err}
+				return CheckSigningCertV2Error{Err: err, Description: _TSP_ATTR_CERT}
 			}
 		case idCMSAlgorithmProtection:
 			if err = checkCMSAlgorithmProtection(value, sInfo); err != nil {
-				return CheckCMSAlgorithmProtectionError{Err: err}
+				return CheckCMSAlgorithmProtectionError{Err: err, Description: _TSP_ATTR_ALG_PROT}
 			}
 		default:
-			return UnknownAttributeError{Attr: attrID}
+			return UnknownAttributeError{Attr: attrID, Description: _TSP_ATTR_UNKNOWN}
 		}
 	}
 	if !attrMap[idContentType] {
-		return NoSignedContentTypeError{}
+		return NoSignedContentTypeError{Description: _TSP_ATTR_NO_VER}
 	}
 	if !attrMap[idMessageDigest] {
-		return NoSignedMsgDigestError{}
+		return NoSignedMsgDigestError{Description: _TSP_ATTR_NO_DIG}
 	}
 	if !attrMap[idSigningTime] {
-		return NoSignedGenTimeError{}
+		return NoSignedGenTimeError{Description: _TSP_ATTR_NO_TIME}
 	}
 	if !attrMap[idSigningCert] && !attrMap[idSigningCertV2] {
-		return NoSigningCertError{}
+		return NoSigningCertError{Description: _TSP_ATTR_NO_CERT}
 	}
 	return
 }
@@ -250,15 +258,16 @@ func checkContentType(value []byte, encapType asn1.ObjectIdentifier) (err error)
 	var oid asn1.ObjectIdentifier
 	rest, err := asn1.Unmarshal(value, &oid)
 	if err != nil {
-		return ContentTypeUnmarshalError{Err: err}
+		return ContentTypeUnmarshalError{Err: err, Description: _TSP_JSON_OID}
 	}
 	if len(rest) > 0 {
-		return ContentTypeUnmarshalExcessBytesError{Bytes: rest}
+		return ContentTypeUnmarshalExcessBytesError{Bytes: rest, Description: _TSP_JSON_OID}
 	}
 	if !oid.Equal(encapType) {
 		return SignedAttrContentTypeMismatchError{
 			SignedAttribute: oid,
 			EContentType:    encapType,
+			Description:     _TSP_OID_EQ,
 		}
 	}
 	return
@@ -268,15 +277,16 @@ func checkMessageDigest(value []byte, alg pkix.AlgorithmIdentifier, encap []byte
 	var digest []byte
 	rest, err := asn1.Unmarshal(value, &digest)
 	if err != nil {
-		return MessageDigestUnmarshalError{Err: err}
+		return MessageDigestUnmarshalError{Err: err, Description: _TSP_JSON_DIG}
 	}
 	if len(rest) > 0 {
-		return MessageDigestUnmarshalExcessBytesError{Bytes: rest}
+		return MessageDigestUnmarshalExcessBytesError{Bytes: rest, Description: _TSP_JSON_DIG}
 	}
 
 	chash, ok := digestAlgs[alg.Algorithm.String()]
 	if !ok {
-		return UnsupportedDigestAlgorithm{Algorithm: alg.Algorithm}
+		return UnsupportedDigestAlgorithm{Algorithm: alg.Algorithm,
+			Description: _TSP_ALG_SUP}
 	}
 	hash := chash.New()
 	hash.Write(encap)
@@ -286,6 +296,7 @@ func checkMessageDigest(value []byte, alg pkix.AlgorithmIdentifier, encap []byte
 		return SignedAttributeMsgDigestMismatchError{
 			SignedAttribute: digest,
 			CalculatedHash:  calculated,
+			Description:     _TSP_DIG_DIFF,
 		}
 	}
 	return
@@ -295,10 +306,10 @@ func (c *Client) checkSigningTime(value []byte, gen time.Time) (err error) {
 	var t time.Time
 	rest, err := asn1.Unmarshal(value, &t)
 	if err != nil {
-		return SigningTimeUnmarshalError{Err: err}
+		return SigningTimeUnmarshalError{Err: err, Description: _TSP_JSON_TIME}
 	}
 	if len(rest) > 0 {
-		return SigningTimeUnmarshalExcessBytesError{Bytes: rest}
+		return SigningTimeUnmarshalExcessBytesError{Bytes: rest, Description: _TSP_JSON_TIME}
 	}
 
 	diff := t.Sub(gen)
@@ -306,6 +317,7 @@ func (c *Client) checkSigningTime(value []byte, gen time.Time) (err error) {
 		return SignedAttrSigningTimeMismatch{
 			SignedAttribute: t,
 			GenTime:         gen,
+			Description:     _TSP_TIME_OFF,
 		}
 	}
 	return
@@ -317,14 +329,14 @@ func checkSigningCert(value []byte, signer *x509.Certificate, v2 bool) (err erro
 	var signingCert signingCertificateV2
 	rest, err := asn1.Unmarshal(value, &signingCert)
 	if err != nil {
-		return SigningCertUnmarshalError{Err: err}
+		return SigningCertUnmarshalError{Err: err, Description: _TSP_JSON_CERT}
 	}
 	if len(rest) > 0 {
-		return SigningCertUnmarshalExcessBytes{Bytes: rest}
+		return SigningCertUnmarshalExcessBytes{Bytes: rest, Description: _TSP_JSON_CERT}
 	}
 
 	if len(signingCert.Certs) == 0 {
-		return SigningCertAttrCertsMissing{}
+		return SigningCertAttrCertsMissing{Description: _TSP_ATTR_NO_CERT}
 	}
 
 	// https://tools.ietf.org/html/rfc5035#section-3
@@ -345,7 +357,8 @@ func checkSigningCert(value []byte, signer *x509.Certificate, v2 bool) (err erro
 			var ok bool
 			if chash, ok = digestAlgs[hashOID.String()]; !ok {
 				return SigningCertUnsupportedDigestAlgorithm{
-					Algoritm: hashOID.String(),
+					Algoritm:    hashOID.String(),
+					Description: _TSP_ALG_SUP,
 				}
 			}
 		}
@@ -355,7 +368,8 @@ func checkSigningCert(value []byte, signer *x509.Certificate, v2 bool) (err erro
 		chash = crypto.SHA1
 		if hashOID != nil {
 			return SigningCertV1AttributeAlgorithmError{
-				Algorithm: hashOID.String(),
+				Algorithm:   hashOID.String(),
+				Description: _TSP_NO_DIG,
 			}
 		}
 	}
@@ -366,6 +380,7 @@ func checkSigningCert(value []byte, signer *x509.Certificate, v2 bool) (err erro
 		return SingingCertAttrHashMismatch{
 			SigningAttrHash: essCert.CertHash,
 			CertificateHash: certHash,
+			Description:     _TSP_DIG_DIFF,
 		}
 	}
 
@@ -379,6 +394,7 @@ func checkSigningCert(value []byte, signer *x509.Certificate, v2 bool) (err erro
 				SignerSerial: signer.SerialNumber,
 				AttrIssuer:   issuer,
 				AttrSerial:   serial,
+				Description:  _TSP_CERT_SERIAL,
 			}
 		}
 	}
@@ -389,10 +405,10 @@ func checkCMSAlgorithmProtection(value []byte, sInfo signerInfo) (err error) {
 	var protection cmsAlgorithmProtection
 	rest, err := asn1.Unmarshal(value, &protection)
 	if err != nil {
-		return CMSAlgorithmProtectionUnmarshalError{Err: err}
+		return CMSAlgorithmProtectionUnmarshalError{Err: err, Description: _TSP_JSON_ALG_PROT}
 	}
 	if len(rest) > 0 {
-		return CMSAlgorithmProtectionUnmarshalExcessBytesError{Bytes: rest}
+		return CMSAlgorithmProtectionUnmarshalExcessBytesError{Bytes: rest, Description: _TSP_JSON_ALG_PROT}
 	}
 
 	if !cryptoutil.AlgorithmIdentifierCmp(
@@ -401,6 +417,7 @@ func checkCMSAlgorithmProtection(value []byte, sInfo signerInfo) (err error) {
 		return SignedAttrCMSAlgorithmProtectionDigestMismatchError{
 			SignerInfo:             sInfo.DigestAlgorithm.Algorithm,
 			CMSAlgorithmProtection: protection.DigestAlgorithm.Algorithm,
+			Description:            _TSP_DIG_DIFF,
 		}
 	}
 
@@ -410,6 +427,7 @@ func checkCMSAlgorithmProtection(value []byte, sInfo signerInfo) (err error) {
 		return SignedAttrCMSAlgorithmProtectionSignatureMismatchError{
 			SignerInfo:             sInfo.SignatureAlgorithm.Algorithm,
 			CMSAlgorithmProtection: protection.SignatureAlgorithm.Algorithm,
+			Description:            _TSP_DIG_DIFF,
 		}
 	}
 	return nil
@@ -417,34 +435,36 @@ func checkCMSAlgorithmProtection(value []byte, sInfo signerInfo) (err error) {
 
 func checkSignature(sInfo signerInfo, cert *x509.Certificate) (err error) {
 	if len(sInfo.Signature) == 0 {
-		return NoSignatureError{}
+		return NoSignatureError{Description: _TSP_NO_SIG}
 	}
 
 	signatureOID := sInfo.SignatureAlgorithm.Algorithm.String()
 	algo, ok := signatureAlgs[signatureOID]
 	if !ok {
 		return SigAlgorithmNotSupportedError{
-			Algorithm: sInfo.SignatureAlgorithm.Algorithm,
+			Algorithm:   sInfo.SignatureAlgorithm.Algorithm,
+			Description: _TSP_SIG_ALG,
 		}
 	}
 
 	if sInfo.DigestAlgorithm.Algorithm.String() != signatureDigestOIDs[signatureOID] {
 		return SigDigestAlgorithmMismatchError{
-			Signature: sInfo.SignatureAlgorithm.Algorithm,
-			Digest:    sInfo.DigestAlgorithm.Algorithm,
+			Signature:   sInfo.SignatureAlgorithm.Algorithm,
+			Digest:      sInfo.DigestAlgorithm.Algorithm,
+			Description: _TSP_SIG_ALG_DIFF,
 		}
 	}
 
 	var content []byte
 	if content, err = asn1.Marshal(sInfo.SignedAttrs); err != nil {
-		return SignedAttrsMarshalError{Err: err}
+		return SignedAttrsMarshalError{Err: err, Description: _TSP_ATTR_JSON}
 	}
 
 	// https://tools.ietf.org/html/rfc5652#section-5.4
 	content[0] = 49 // SET OF
 
 	if err = cert.CheckSignature(algo, content, sInfo.Signature); err != nil {
-		return CertificateCheckSignatureError{Err: err}
+		return CertificateCheckSignatureError{Err: err, Description: _TSP_SIG_VERIFY}
 	}
 
 	return

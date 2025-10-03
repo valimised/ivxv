@@ -1,5 +1,5 @@
 
-.history
+`.history`
 ---------------
 
 .. literalinclude:: history.txt

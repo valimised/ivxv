@@ -93,7 +93,7 @@ func newFilters(conf *FilterConf, r *rpc.Server, cert tls.Certificate, end time.
 
 	tlsFilter, err := newTLSFilter(&conf.TLS, cert)
 	if err != nil {
-		return nil, TLSConfError{Err: err}
+		return nil, TLSConfError{Err: err, Description: _SERVER_FILTER_TLS}
 	}
 	if certPool != nil {
 		tlsFilter.tlsConf.ClientCAs = certPool
@@ -139,18 +139,22 @@ func (cfs connFilters) optional(auth auth.Auther, id identity.Identifier, age *a
 // close logs entry if not nil, closes c, and logs any closing errors.
 func close(ctx context.Context, c io.Closer, err log.ErrorEntry) { //nolint: revive
 	if err != nil {
+		// Error to be logged while closing the connection
 		log.Error(ctx, err)
 	}
 	if err := c.Close(); err != nil {
-		log.Error(ctx, CloseError{Err: err})
+		// Error while closing connection
+		log.Error(ctx, CloseError{Err: err, Description: _SERVER_CLOSE})
 	}
 }
 
 // logFilter logs when a new connection is accepted and closed.
 func logFilter(ctx context.Context, c net.Conn, chain connFilters) context.Context {
-	log.Log(ctx, AcceptedConnection{Remote: c.RemoteAddr()})
+	log.Log(ctx, AcceptedConnection{Remote: c.RemoteAddr(),
+		Description: _SERVER_FILTER_LOG})
 	ctx = chain.next(ctx, c)
-	log.Log(ctx, ClosedConnection{Remote: c.RemoteAddr()})
+	log.Log(ctx, ClosedConnection{Remote: c.RemoteAddr(),
+		Description: _SERVER_FILTER_LOG_CLOSE})
 	return ctx
 }
 
@@ -159,11 +163,15 @@ func logFilter(ctx context.Context, c net.Conn, chain connFilters) context.Conte
 func connIDFilter(ctx context.Context, c net.Conn, chain connFilters) context.Context {
 	cid := make([]byte, 16)
 	if _, err := rand.Read(cid); err != nil {
-		close(ctx, c, GenerateConnectionIDError{Err: log.Alert(err)})
+		// Error generating a random connection identifier
+		close(ctx, c, GenerateConnectionIDError{Err: log.Alert(err),
+			Description: _SERVER_FILTER_CONNID})
 		return ctx
 	}
 	ctx = log.WithConnectionID(ctx, hex.EncodeToString(cid))
-	log.Log(ctx, AssignedConnectionID{Remote: c.RemoteAddr()})
+	// Log the identifier that we have assigned to the connection
+	log.Log(ctx, AssignedConnectionID{Remote: c.RemoteAddr(),
+		Description: _SERVER_FILTER_CONNID_OK})
 	return chain.next(ctx, c)
 }
 
@@ -179,16 +187,18 @@ func connIDFilter(ctx context.Context, c net.Conn, chain connFilters) context.Co
 func proxyFilter(ctx context.Context, c net.Conn, chain connFilters) context.Context {
 	c, addr, health, err := readPROXY(c)
 	if err != nil {
-		close(ctx, c, PROXYProtocolError{Err: err})
+		close(ctx, c, PROXYProtocolError{Err: err, Description: _SERVER_FILTER_PROXY_HEADER})
 		return ctx
 	}
 	if health {
-		log.Log(ctx, HealthCheck{})
+		// Log health check
+		log.Log(ctx, HealthCheck{Description: _SERVER_FILTER_PROXY_HC})
 		close(ctx, c, nil)
 		return ctx
 	}
 	if addr != nil {
-		log.Log(ctx, PROXYProtocol{Address: addr})
+		// Log actual remote received via proxy
+		log.Log(ctx, PROXYProtocol{Address: addr, Description: _SERVER_FILTER_PROXY_CLIENT_ADDR})
 	}
 
 	// Put remote address into context for addrFilter. Remove once
@@ -229,7 +239,9 @@ func newTLSFilter(conf *TLSConf, cert tls.Certificate) (*tlsFilter, error) {
 	for _, name := range conf.CipherSuites {
 		value, ok := tlsCipherSuites[name] // Generated above.
 		if !ok {
-			return nil, UnsupportedTLSCipherSuiteError{CipherSuite: name}
+			// Unsupported ciphersuite detected
+			return nil, UnsupportedTLSCipherSuiteError{CipherSuite: name,
+				Description: _SERVER_FILTER_TLS_CIPHERS}
 		}
 		f.tlsConf.CipherSuites = append(f.tlsConf.CipherSuites, value)
 	}
@@ -240,10 +252,12 @@ func (f *tlsFilter) filter(ctx context.Context, c net.Conn, chain connFilters) c
 	// Create the TLS connection.
 	tlsc := tls.Server(c, f.tlsConf)
 
-	// Before interacting with the client, check if we are done.
+	// Before interacting with the client, check if we are done
+	// If it indeed is the case - close with an error
 	select {
 	case <-ctx.Done():
-		close(ctx, tlsc, CancelingBeforeHandshake{Err: ctx.Err()})
+		close(ctx, tlsc, CancelingBeforeHandshake{Err: ctx.Err(),
+			Description: _SERVER_FILTER_TLS_HSHAKE})
 		return ctx
 	default:
 	}
@@ -251,21 +265,25 @@ func (f *tlsFilter) filter(ctx context.Context, c net.Conn, chain connFilters) c
 	// Explicitly perform the handshake to catch any errors early.
 	deadline := time.Now().Add(time.Duration(f.serverConf.HandshakeTimeout) * time.Second)
 	if err := tlsc.SetDeadline(deadline); err != nil {
-		close(ctx, tlsc, SetHandshakeTimeoutError{Err: err})
+		// Error in setting TLS handshake timeout
+		close(ctx, tlsc, SetHandshakeTimeoutError{Err: err,
+			Description: _SERVER_FILTER_TLS_HSHAKE_TIME})
 		return ctx
 	}
 	if err := tlsc.Handshake(); err != nil {
-		close(ctx, tlsc, HandshakeError{Err: err})
+		// Error in the TLS handshake
+		close(ctx, tlsc, HandshakeError{Err: err, Description: _SERVER_FILTER_TLS_HSHAKE_ERR})
 		return ctx
 	}
 
-	// Log the TLS connection details.
+	// Log the TLS connection details for successful connection
 	state := tlsc.ConnectionState()
 	log.Log(ctx, HandshakeComplete{
 		Version:            state.Version,
 		CipherSuite:        state.CipherSuite,
 		ServerName:         state.ServerName,
 		ClientCertificates: state.PeerCertificates,
+		Description:        _SERVER_FILTER_TLS_HSHAKE_OK,
 	})
 
 	// Add PeerCertificates to the context and pass tlsc to next.
@@ -338,7 +356,8 @@ type endFilter time.Time
 
 func (e endFilter) filter(header *Header, chain headerFilters) error {
 	if !time.Now().Before(time.Time(e)) { // not before == equal or after
-		log.Log(header.Ctx, VotingEnded{})
+		// Time that is set in election.yml for period:servicestop is over
+		log.Log(header.Ctx, VotingEnded{Description: _SERVER_FILTER_END})
 		return ErrVotingEnd
 	}
 	return chain.next(header)
@@ -351,19 +370,22 @@ func sessIDFilter(header *Header, chain headerFilters) error {
 	if len(header.SessionID) == 0 {
 		sid := make([]byte, 16)
 		if _, err := rand.Read(sid); err != nil {
-			log.Error(header.Ctx, GenerateSessionIDError{Err: log.Alert(err)})
+			// Error in generating new random session identifier
+			log.Error(header.Ctx, GenerateSessionIDError{Err: log.Alert(err),
+				Description: _SERVER_FILTER_SESSID})
 			return ErrInternal
 		}
 		header.SessionID = hex.EncodeToString(sid)
-		entry = AssignedSessionID{}
+		entry = AssignedSessionID{Description: _SERVER_FILTER_SESSID_OK}
 	} else {
-		entry = ReadSessionID{}
+		entry = ReadSessionID{Description: _SERVER_FILTER_SESSID_REUSE}
 	}
 
-	// True if header.SessionID is not a valid HEX
+	// Validate that the header.SessionID is valid HEX
 	invalidSessionID, _ := regexp.MatchString("[^0-9A-Fa-f]", header.SessionID)
 	if invalidSessionID {
-		log.Error(header.Ctx, InvalidSessionID{Value: header.SessionID})
+		log.Error(header.Ctx, InvalidSessionID{Value: header.SessionID,
+			Description: _SERVER_FILTER_SESSID_REGEX})
 		return ErrBadRequest
 	}
 
@@ -379,7 +401,8 @@ func sessIDFilter(header *Header, chain headerFilters) error {
 // This is a temporary filter until the log monitor is capable of
 // extracting the address based on ConnectionID.
 func addrFilter(header *Header, chain headerFilters) error {
-	log.Log(header.Ctx, RemoteAddress{Address: header.Ctx.Value(addrKey)})
+	log.Log(header.Ctx, RemoteAddress{Address: header.Ctx.Value(addrKey),
+		Description: _SERVER_FILTER_ADDR})
 	return chain.next(header)
 }
 
@@ -387,7 +410,8 @@ func addrFilter(header *Header, chain headerFilters) error {
 // perform the request, e.g., the operating system, and clears the fields from
 // the header so that they are not included in the response.
 func infoFilter(header *Header, chain headerFilters) error {
-	log.Log(header.Ctx, OperatingSystem{OS: header.OS})
+	log.Log(header.Ctx, OperatingSystem{OS: header.OS,
+		Description: _SERVER_FILTER_OS})
 	header.OS = ""
 	return chain.next(header)
 }
@@ -399,9 +423,11 @@ type authFilter auth.Auther
 
 func (a authFilter) filter(header *Header, chain headerFilters) error {
 	if len(header.AuthMethod) > 0 {
+		// Initiate authentication with specific method. Token is sensitive.
 		log.Log(header.Ctx, Authenticating{
-			Method: header.AuthMethod,
-			Token:  log.Sensitive(header.AuthToken),
+			Method:      header.AuthMethod,
+			Token:       log.Sensitive(header.AuthToken),
+			Description: _SERVER_FILTER_AUTH,
 		})
 		name, voteid, err := auth.Auther(a).Verify(
 			header.Ctx, auth.Type(header.AuthMethod), header.AuthToken)
@@ -410,7 +436,9 @@ func (a authFilter) filter(header *Header, chain headerFilters) error {
 		header.Ctx = WithAuthMethod(header.Ctx, header.AuthMethod)
 
 		if err != nil {
-			log.Error(header.Ctx, AuthenticationError{Err: err})
+			// Based on client RPC "Header.AuthMethod" type, backend has chosen an
+			// authentication service and the result of that authentication has failed
+			log.Error(header.Ctx, AuthenticationError{Err: err, Description: _SERVER_FILTER_AUTH_FAIL})
 			switch {
 			case errors.CausedBy(err, new(auth.UnconfiguredTypeError)) != nil:
 				fallthrough
@@ -423,24 +451,34 @@ func (a authFilter) filter(header *Header, chain headerFilters) error {
 			}
 			return ErrInternal
 		}
+		// Log successful authentication
 		header.Ctx = context.WithValue(header.Ctx, authClientKey, name)
-		log.Log(header.Ctx, Authenticated{ClientName: name})
+		log.Log(header.Ctx, Authenticated{ClientName: name, Description: _SERVER_FILTER_AUTH_OK})
 
 		if len(voteid) > 0 {
+			// Log VoteID provided with the authentication
 			header.Ctx = context.WithValue(header.Ctx, voterIDKey, voteid)
-			log.Log(header.Ctx, AuthenticationVoteID{VoteID: voteid})
+			log.Log(header.Ctx, AuthenticationVoteID{VoteID: voteid,
+				Description: _SERVER_FILTER_AUTH_VID})
 		}
 		if header.DataToken != nil {
+			// In case of DataToken, log the value, treating it as sensitive
 			log.Log(header.Ctx, AuthData{
-				Token: log.Sensitive(header.DataToken),
+				Token:       log.Sensitive(header.DataToken),
+				Description: _SERVER_FILTER_AUTH_DTOKEN,
 			})
 			data, err := auth.Auther(a).Data(auth.Type(header.AuthMethod), header.DataToken)
 			if err != nil {
-				log.Error(header.Ctx, AuthenticationDataError{Err: err})
+				// If client has passed RPC "Header.DataToken" (Smart-ID/mobile-ID) and that
+				// data token verification has failed
+				log.Error(header.Ctx, AuthenticationDataError{Err: err,
+					Description: _SERVER_FILTER_AUTH_DTOKEN_FAIL})
 				return ErrInternal
 			}
+			// Log data that was encoded in the DataToken
 			header.Ctx = context.WithValue(header.Ctx, voterIDNumber, string(data))
-			log.Log(header.Ctx, AuthenticationData{Number: string(data)})
+			log.Log(header.Ctx, AuthenticationData{Number: string(data),
+				Description: _SERVER_FILTER_AUTH_DTOKEN_OK})
 		}
 
 	}
@@ -459,11 +497,14 @@ func (i identityFilter) filter(header *Header, chain headerFilters) error {
 	if name := AuthenticatedClient(header.Ctx); name != nil {
 		id, err := identity.Identifier(i)(name)
 		if err != nil {
-			log.Error(header.Ctx, IdentityError{Err: err})
+			// Voter's personal code was not extracted correctly from authenticated data
+			log.Error(header.Ctx, IdentityError{Err: err,
+				Description: _SERVER_FILTER_IDENTITY})
 			return ErrIneligible
 		}
+		// Log detected personal code
 		header.Ctx = context.WithValue(header.Ctx, voterIDKey, id)
-		log.Log(header.Ctx, Identity{Identity: id})
+		log.Log(header.Ctx, Identity{Identity: id, Description: _SERVER_FILTER_IDENTITY_OK})
 	}
 	return chain.next(header)
 }
@@ -475,7 +516,8 @@ type ageFilter age.Checker
 func (a *ageFilter) filter(header *Header, chain headerFilters) error {
 	if id := VoterIdentity(header.Ctx); len(id) > 0 {
 		if err := (*age.Checker)(a).Check(id); err != nil {
-			log.Error(header.Ctx, AgeError{Err: err})
+			// Voter does not pass the age verification, most likely too young (nested error)
+			log.Error(header.Ctx, AgeError{Err: err, Description: _SERVER_FILTER_AGE})
 			if errors.CausedBy(err, new(age.TooYoungError)) != nil {
 				return ErrTooYoung
 			}

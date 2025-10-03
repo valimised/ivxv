@@ -53,7 +53,7 @@ type Response struct {
 // Verify is the remote procedure call performed by clients to retrieve votes
 // from the collector for verification.
 func (r *RPC) Verify(args Args, resp *Response) error {
-	log.Log(args.Ctx, VerifyReq{VoteID: args.VoteID})
+	log.Log(args.Ctx, VerifyReq{VoteID: args.VoteID, Description: _VERIFICATION_VERIFYREQ})
 	now := time.Now()
 
 	// Build up VerifyReq for session status service
@@ -65,11 +65,13 @@ func (r *RPC) Verify(args Args, resp *Response) error {
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(args.Ctx, VerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(args.Ctx, VerifySessionIDError{Err: err, Description: _VERIFICATION_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(args.Ctx, VerifyUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(args.Ctx, VerifyUpdateSessionIDError{Description: _VERIFICATION_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
@@ -84,10 +86,14 @@ func (r *RPC) Verify(args Args, resp *Response) error {
 			args.Ctx, args.VoteID, r.foreignCode, r.predefinedDistrictID)
 		if err != nil {
 			if errors.CausedBy(err, new(storage.NotExistError)) != nil {
-				log.Error(args.Ctx, BadVoteIDError{Err: err})
+				// Client has passed "RPC.Verify.VoteID" argument,
+				// but this particular vote ID hasn't voted
+				log.Error(args.Ctx, BadVoteIDError{Err: err, Description: _VERIFICATION_NO_VOTES})
 				return server.ErrBadRequest
 			}
-			log.Error(args.Ctx, GetVerificationStatsError{Err: log.Alert(err)})
+			// Backend internal error, database is unreachable
+			log.Error(args.Ctx, GetVerificationStatsError{Err: log.Alert(err),
+				Description: _VERIFICATION_NO_DB})
 			return server.ErrInternal
 		}
 
@@ -95,21 +101,26 @@ func (r *RPC) Verify(args Args, resp *Response) error {
 		// to look exactly like a bad vote identifier was submitted, so
 		// return ErrBadRequest instead of a more descriptive error.
 		if limit := r.election.Verification.Count; limit > 0 && count >= limit {
-			log.Error(args.Ctx, VerificationCountError{Count: count})
+			// election.yml verification:count has been reached, client
+			// has no more attempt to verify its vote
+			log.Error(args.Ctx, VerificationCountError{Count: count, Description: _VERIFICATION_LIMIT})
 			return server.ErrBadRequest
 		}
 
 		// Check that we are inside the time limit.
 		if limit := r.election.Verification.Minutes; limit > 0 &&
-			now.After(at.Add(time.Duration(limit)*time.Minute)) {
-
-			log.Error(args.Ctx, VerificationTimeError{At: at})
+			now.After(at.Add(time.Duration(limit)*time.Minute)) { //nolint:gosec
+			// election.yml veritication:minutes has ended for a vote verification
+			log.Error(args.Ctx, VerificationTimeError{At: at, Description: _VERIFICATION_TIMEOUT})
 			return server.ErrBadRequest
 		}
 
 		// Check if this is the latest vote.
 		if r.election.Verification.LatestOnly && !latest {
-			log.Error(args.Ctx, VerificationNotLatestError{})
+			// Client has passed "RPC.Verify.VoteID" argument, but VoteID is an old its vote,
+			// which is not yet expired, but client wish to verify it, this is prohibited,
+			// only latest vote is verifiable
+			log.Error(args.Ctx, VerificationNotLatestError{Description: _VERIFICATION_OLD_VOTE})
 			return server.ErrBadRequest
 		}
 
@@ -119,10 +130,13 @@ func (r *RPC) Verify(args Args, resp *Response) error {
 		vote, err := r.storage.GetVerification(args.Ctx, args.VoteID, count, r.qps...)
 		if err != nil {
 			if errors.CausedBy(err, new(storage.UnexpectedValueError)) != nil {
-				log.Log(args.Ctx, ConcurrentVerificationWarning{Err: err})
+				log.Log(args.Ctx, ConcurrentVerificationWarning{Err: err,
+					Description: _VERIFICATION_RACE})
 				continue
 			}
-			log.Error(args.Ctx, GetVerificationError{Err: log.Alert(err)})
+			// Backend internal error, database may be unreachable
+			log.Error(args.Ctx, GetVerificationError{Err: log.Alert(err),
+				Description: _VERIFICATION_VOTE_NO_DB})
 			return server.ErrInternal
 		}
 
@@ -137,10 +151,12 @@ func (r *RPC) Verify(args Args, resp *Response) error {
 		for p, b := range vote.Qualification {
 			logq11n[p] = b
 		}
+		// Successful verify response, treat vote as sensitive
 		log.Log(args.Ctx, VerifyResp{
 			Type:          resp.Type,
 			Vote:          log.Sensitive(resp.Vote),
 			Qualification: logq11n,
+			Description:   _VERIFICATION_VERIFYRESP,
 		})
 		return nil
 	}
@@ -173,12 +189,12 @@ func verifymain() (code int) {
 	if c.Conf.Election != nil {
 		// Check election configuration time values.
 		if start, err = c.Conf.Election.ServiceStartTime(); err != nil {
-			return c.Error(exit.Config, StartTimeError{Err: err},
+			return c.Error(exit.Config, StartTimeError{Err: err, Description: _VERIFICATION_START},
 				"bad service start time:", err)
 		}
 
 		if stop, err = c.Conf.Election.VerificationStopTime(); err != nil {
-			return c.Error(exit.Config, StopTimeError{Err: err},
+			return c.Error(exit.Config, StopTimeError{Err: err, Description: _VERIFICATION_STOP},
 				"bad service stop time:", err)
 		}
 
@@ -210,7 +226,7 @@ func verifymain() (code int) {
 			Filter:   &c.Conf.Technical.Filter,
 			Version:  &c.Conf.Version,
 		}, rpc); err != nil {
-			return c.Error(exit.Config, ServerConfError{Err: err},
+			return c.Error(exit.Config, ServerConfError{Err: err, Description: _VERIFICATION_SERVER},
 				"failed to configure server:", err)
 		}
 	}
@@ -218,7 +234,7 @@ func verifymain() (code int) {
 	// Start listening for incoming connections during the voting period.
 	if c.Until >= command.Execute {
 		if err = s.ServeAt(c.Ctx, start); err != nil {
-			return c.Error(exit.Unavailable, ServeError{Err: err},
+			return c.Error(exit.Unavailable, ServeError{Err: err, Description: _VERIFICATION_SERVER_SERVE},
 				"failed to serve verification service:", err)
 		}
 	}

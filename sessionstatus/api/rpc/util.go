@@ -15,8 +15,9 @@ func CastVerifyRequestToServerHeader(req *statusRpc.VerifyReq) (*server.Header, 
 	header, ok := req.Request.(server.Header)
 	if !ok {
 		return nil, CastVerifyReqToServerHeaderError{
-			Expected: expectedCastForServerHeader,
-			Got:      reflect.TypeOf(req.Request),
+			Expected:    expectedCastForServerHeader,
+			Got:         reflect.TypeOf(req.Request),
+			Description: _SESSIONSTATUS_CAST_VERIFYREQ_TO_SERVERHEADER,
 		}
 	}
 

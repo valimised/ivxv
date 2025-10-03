@@ -8,17 +8,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-29 16:08+0200\n"
+"POT-Creation-Date: 2025-09-25 12:59+0000\n"
 "PO-Revision-Date: 2024-03-01 18:24+0200\n"
 "Last-Translator: \n"
-"Language-Team: en <LL@li.org>\n"
 "Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"Generated-By: Babel 2.10.3\n"
-"X-Generator: Poedit 3.4.2\n"
+"Generated-By: Babel 2.15.0\n"
 
 #: ../../08-haaletamine.rst:5
 msgid "Suhtlusprotokollid"
@@ -30,8 +29,8 @@ msgstr "Interface"
 
 #: ../../08-haaletamine.rst:10
 msgid ""
-"Kogumisteenuse valijale suunatud mikroteenused suhtlevad valijarakendusega ja "
-"kontrollrakendusega JSON-RPC protokolli vahendusel."
+"Kogumisteenuse valijale suunatud mikroteenused suhtlevad "
+"valijarakendusega ja kontrollrakendusega JSON-RPC protokolli vahendusel."
 msgstr ""
 "The micro-services at the collection service communicate with the voting "
 "application and the verification application via the JSON-RPC protocol."
@@ -69,8 +68,8 @@ msgid "Võimalik veainfo või ``null`` vea puudumisel"
 msgstr "Possible error information or \"null\" in the absence of error"
 
 #: ../../08-haaletamine.rst:22
-msgid "JSON-RPC päringuidentifikaator, peab ühtima päringus kasutatud id-ga"
-msgstr "JSON-RPC query identifier, must match the id used in the query"
+msgid "JSON-RPC päringuidentifikaator, peab ühtima päringus kasutatud id'ga"
+msgstr "JSON-RPC query identifier, must match the id used in the query."
 
 #: ../../08-haaletamine.rst
 msgid "result"
@@ -82,36 +81,40 @@ msgstr "Method-dependent response data structure"
 
 #: ../../08-haaletamine.rst:29
 msgid ""
-"Esimese päringuvahetuse käigus mõne IVXV mikroteenusega väljastatakse suhtlevale "
-"rakendusele HEX-kodeeritud unikaalne seansiidentifkaator (``result.SessionID``), "
-"mida rakendus kasutab edaspidi kõigis kogumisteenuse suunalistes päringutes "
-"(``params.SessionID``). Seansiidentifikaatori abil seostatakse hääletamisega seotud "
-"RPC-päringud üheks seansiks. Seostamine on informatiivne ning selle eesmärk on "
-"logianalüüsi lihtsustamine, hääle ringkonnakuuluvust jm. sisulisi aspekte "
-"puudutavad otsused tehakse digiallkirjastatud andmete põhjal."
+"Esimese päringuvahetuse käigus mõne IVXV mikroteenusega väljastatakse "
+"suhtlevale rakendusele HEX-kodeeritud unikaalne seansiidentifikaator "
+"(``result.SessionID``), mida rakendus kasutab edaspidi kõigis "
+"kogumisteenuse suunalistes päringutes (``params.SessionID``). "
+"Seansiidentifikaatori abil seostatakse hääletamisega seotud RPC-päringud "
+"üheks seansiks. Seostamine on informatiivne ning selle eesmärk on "
+"logianalüüsi lihtsustamine, hääle ringkonnakuuluvust jm. sisulisi aspekte"
+" puudutavad otsused tehakse digiallkirjastatud andmete põhjal."
 msgstr ""
-"During the first query exchange with one of the IVXV microservices, a HEX-encoded "
-"unique session identifier (``result.SessionID``) is issued to the communicating "
-"application, which is used by the application in all subsequent queries to the "
-"collection service (``params.SessionID``). The session identifier is used to "
-"associate RPC requests related to voting into a single session. The association is "
-"informative and is intended to simplify log analysis. Decisions on substantive "
+"During the first query exchange with one of the IVXV microservices, a "
+"HEX-encoded unique session identifier (``result.SessionID``) is issued to"
+" the communicating application, which is used by the application in all "
+"subsequent queries to the collection service (``params.SessionID``). The "
+"session identifier is used to associate RPC requests related to voting "
+"into a single session. The association is informative and is intended to "
+"simplify log analysis, vote circularity, etc. Decisions on substantive "
 "aspects are made on the basis of the digitally signed data."
 
 #: ../../08-haaletamine.rst:37
 msgid ""
-"Transpordiprotokollina on kasutusel TLS. Krüpteeritud kanali termineerimine toimub "
-"konkreetses mikroteenuses. Võimaldamaks koormuse jaotamist ning mikroteenuste "
-"paindlikku evitamist kasutatakse TLS-i SNI laiendust, mis lubab vahendusteenusel "
-"TLS voogu termineerimata õigesse mikroteenusinstantsi suunata. Vahendusteenus on "
-"tüüpiliselt kättesaadav kogumisteenuse välise liidese pordis 443."
+"Transpordiprotokollina on kasutusel TLS. Krüpteeritud kanali "
+"termineerimine toimub konkreetses mikroteenuses. Võimaldamaks koormuse "
+"jaotamist ning mikroteenuste paindlikku evitamist kasutatakse TLS-SNI "
+"laiendust, mis lubab vahendusteenusel TLS voogu termineerimata õigesse "
+"mikroteenusinstantsi suunata. Vahendusteenus on tüüpiliselt kättesaadav "
+"kogumisteenuse välise liidese pordis 443."
 msgstr ""
-"TLS is used as the transport protocol. The termination of the encrypted channel "
-"takes place in a specific microservice. To enable load balancing and flexible "
-"provisioning of microservices, the SNI extension of TLS is used, which allows the "
-"proxy service to route the TLS stream to the correct microservice instance without "
-"termination. The dispatcher service is typically available on port 443 of the "
-"external interface to the collection service."
+"TLS is used as the transport protocol. The termination of the encrypted "
+"channel takes place in a specific microservice. To enable load balancing "
+"and flexible provisioning of microservices, the TLS-SNI extension is "
+"used, which allows the proxy service to route the TLS stream to the "
+"correct microservice instance without termination. The broker service is "
+"typically available on port 443 of the external interface to the "
+"collection service."
 
 #: ../../08-haaletamine.rst:45
 msgid "Valikute nimekirja hankimine"
@@ -119,14 +122,15 @@ msgstr "Retrieving the List of Choices"
 
 #: ../../08-haaletamine.rst:47
 msgid ""
-"Valikute nimekirja hankimine tähendab valijarakenduse suhtlemist nimekirjateenusega "
-"(SNI ``choices.ivxv.invalid``). Valikute nimekirja hankimine eeldab valija "
-"autentimist ning tema ringkonnakuuluvuse tuvastamist."
+"Valikute nimekirja hankimine tähendab valijarakenduse suhtlemist "
+"nimekirjateenusega (SNI ``choices.ivxv.invalid``). Valikute nimekirja "
+"hankimine eeldab valija autentimist ning tema ringkonnakuuluvuse "
+"tuvastamist."
 msgstr ""
-"Retrieving the list of choices means the interaction of the voting application with "
-"the choices service (SNI ``choices.ivxv.invalid``). Getting a list of choices "
-"requires authentication of the voter and verification of the voter's electoral "
-"district."
+"Retrieving the list of choices means the interaction of the voting "
+"application with the choices service (SNI ``choices.ivxv.invalid``). "
+"Getting a list of choices requires authentication of the voter and "
+"verification of the voter's electoral district."
 
 #: ../../08-haaletamine.rst:51
 msgid "Valijarakendus teeb päringu ``RPC.VoterChoices`` nimekirjade hankimiseks."
@@ -147,45 +151,47 @@ msgstr "params.OS"
 #: ../../08-haaletamine.rst:54 ../../08-haaletamine.rst:146
 #: ../../08-haaletamine.rst:230 ../../08-haaletamine.rst:256
 #: ../../08-haaletamine.rst:305 ../../08-haaletamine.rst:337
-#: ../../08-haaletamine.rst:361 ../../08-haaletamine.rst:416
-#: ../../08-haaletamine.rst:441 ../../08-haaletamine.rst:488
-#: ../../08-haaletamine.rst:507 ../../08-haaletamine.rst:545
-#: ../../08-haaletamine.rst:569 ../../08-haaletamine.rst:620
-#: ../../08-haaletamine.rst:643
+#: ../../08-haaletamine.rst:361 ../../08-haaletamine.rst:415
+#: ../../08-haaletamine.rst:439 ../../08-haaletamine.rst:464
+#: ../../08-haaletamine.rst:516 ../../08-haaletamine.rst:533
+#: ../../08-haaletamine.rst:570 ../../08-haaletamine.rst:594
+#: ../../08-haaletamine.rst:645 ../../08-haaletamine.rst:668
 msgid "Operatsioonisüsteem, millel valijarakendust kasutatakse."
 msgstr "The operating system on which the voting application is used."
 
 #: ../../08-haaletamine.rst:56
 msgid ""
-"Päring ``RPC.VoterChoices`` ID-kaardiga autentimise korral - autentimine toimub TLS-"
-"protokolli tasemel päringu töötlemise ajal kasutades ID-kaardi "
-"autentimissertifikaati."
+"Päring ``RPC.VoterChoices`` ID-kaardiga autentimise korral - autentimine "
+"toimub TLS-protokolli tasemel päringu töötlemise ajal kasutades ID-kaardi"
+" autentimissertifikaati."
 msgstr ""
-"Query ``RPC.VoterChoices`` in case of ID-card authentication - authentication is "
-"performed at the TLS protocol level during query processing using the ID-card "
-"authentication certificate."
+"Query ``RPC.VoterChoices`` in case of ID-card authentication - "
+"authentication is performed at the TLS protocol level during query "
+"processing using the ID-card authentication certificate."
 
 #: ../../08-haaletamine.rst:64
 msgid ""
-"Päring ``RPC.VoterChoices`` Mobiil-ID'ga autentimise korral - päringu sooritamiseks "
-"tuleb eelnevalt kasutada Mobiil-ID vahendusteenuse (SNI ``mid.ivxv.invalid``) abi "
-"allkirjastatud autentimistõendi saamiseks."
+"Päring ``RPC.VoterChoices`` Mobiil-ID'ga autentimise korral - päringu "
+"sooritamiseks tuleb eelnevalt kasutada Mobiil-ID vahendusteenuse (SNI "
+"``mid.ivxv.invalid``) abi allkirjastatud autentimistõendi saamiseks."
 msgstr ""
-"Query ``RPC.VoterChoices`` in case of Mobile-ID authentication - to perform the "
-"query, the Mobile-ID Intermediary Service (SNI ``mid.ivxv.invalid``) must be used "
-"in advance to obtain a signed authentication certificate."
+"Query ``RPC.VoterChoices`` in case of Mobile-ID authentication - to "
+"perform the query, the Mobile-ID Intermediary Service (SNI "
+"``mid.ivxv.invalid``) must be used in advance to obtain a signed "
+"authentication certificate."
 
 #: ../../08-haaletamine.rst
 msgid "params.AuthToken"
 msgstr "params.AuthToken"
 
-#: ../../08-haaletamine.rst:68 ../../08-haaletamine.rst:83 ../../08-haaletamine.rst:98
+#: ../../08-haaletamine.rst:68 ../../08-haaletamine.rst:83
+#: ../../08-haaletamine.rst:98
 msgid ""
-"Autentimisteenuse vahendusel allkirjastatud tõend, mis sisaldab endas valija "
-"unikaalset identifikaatorit."
+"Autentimisteenuse vahendusel allkirjastatud tõend, mis sisaldab endas "
+"valija unikaalset identifikaatorit."
 msgstr ""
-"A certificate signed by an authentication service containing a unique identifier of "
-"the voter."
+"A certificate signed by an authentication service containing a unique "
+"identifier of the voter."
 
 #: ../../08-haaletamine.rst
 msgid "params.SessionID"
@@ -194,48 +200,53 @@ msgstr "params.SessionID"
 #: ../../08-haaletamine.rst:71
 msgid ""
 "Kuna Mobiil-ID korral on nimekirja hankimisele eelnenud interaktsioon "
-"autentimistõendi saamiseks, on olemas seansiidentifikaator, mida tuleb kasutada."
+"autentimistõendi saamiseks, on olemas seansiidentifikaator, mida tuleb "
+"kasutada."
 msgstr ""
-"Since the Mobile ID has been preceded by an interaction to obtain an authentication "
-"certificate, there is a session identifier that must be used."
+"Since the Mobile ID has been preceded by an interaction to obtain an "
+"authentication certificate, there is a session identifier that must be "
+"used."
 
 #: ../../08-haaletamine.rst:79
 msgid ""
-"Päring ``RPC.VoterChoices`` Smart-ID'ga autentimise korral - päringu sooritamiseks "
-"tuleb eelnevalt kasutada Smart-ID vahendusteenuse (SNI ``smartid.ivxv.invalid``) "
-"abi allkirjastatud autentimistõendi saamiseks."
+"Päring ``RPC.VoterChoices`` Smart-ID'ga autentimise korral - päringu "
+"sooritamiseks tuleb eelnevalt kasutada Smart-ID vahendusteenuse (SNI "
+"``smartid.ivxv.invalid``) abi allkirjastatud autentimistõendi saamiseks."
 msgstr ""
-"Query ``RPC.VoterChoices`` in case of authentication with Smart-ID - to perform the "
-"query, the Smart-ID Intermediary Service (SNI ``smartid.ivxv.invalid``) must be "
-"used beforehand to obtain a signed authentication certificate."
+"Query ``RPC.VoterChoices`` in case of authentication with Smart-ID - to "
+"perform the query, the Smart-ID Intermediary Service (SNI "
+"``smartid.ivxv.invalid``) must be used beforehand to obtain a signed "
+"authentication certificate."
 
 #: ../../08-haaletamine.rst:86
 msgid ""
 "Kuna Smart-ID korral on nimekirja hankimisele eelnenud interaktsioon "
-"autentimistõendi saamiseks, on olemas seansiidentifikaator, mida tuleb kasutada."
+"autentimistõendi saamiseks, on olemas seansiidentifikaator, mida tuleb "
+"kasutada."
 msgstr ""
-"Since the Smart-ID has an interaction to obtain an authentication proof prior to "
-"the list acquisition, there is a session identifier to be used."
+"Since the Smart-ID has an interaction to obtain an authentication proof "
+"prior to the list acquisition, there is a session identifier to be used."
 
 #: ../../08-haaletamine.rst:94
 msgid ""
-"Päring ``RPC.VoterChoices`` Web eID'ga autentimise korral - päringu sooritamiseks "
-"tuleb eelnevalt kasutada Web eID vahendusteenuse (SNI ``webeid.ivxv.invalid``) abi "
-"allkirjastatud autentimistõendi saamiseks."
+"Päring ``RPC.VoterChoices`` Web eID'ga autentimise korral - päringu "
+"sooritamiseks tuleb eelnevalt kasutada Web eID vahendusteenuse (SNI "
+"``webeid.ivxv.invalid``) abi allkirjastatud autentimistõendi saamiseks."
 msgstr ""
-"Query ``RPC.VoterChoices`` in case of authentication with ID-card using Web eID "
-"protocol - to perform the query, the Web eID Intermediary Service (SNI ``webeid."
-"ivxv.invalid``) must be used beforehand to obtain a signed authentication "
-"certificate."
+"Query ``RPC.VoterChoices`` in case of authentication with ID-card using "
+"Web eID protocol - to perform the query, the Web eID Intermediary Service"
+" (SNI ``webeid.ivxv.invalid``) must be used beforehand to obtain a signed"
+" authentication certificate."
 
 #: ../../08-haaletamine.rst:101
 msgid ""
 "Kuna Web eID korral on nimekirja hankimisele eelnenud interaktsioon "
-"autentimistõendi saamiseks, on olemas seansiidentifikaator, mida tuleb kasutada."
+"autentimistõendi saamiseks, on olemas seansiidentifikaator, mida tuleb "
+"kasutada."
 msgstr ""
-"Since in the case of a Web eID, the list acquisition is preceded by an interaction "
-"to obtain an authentication certificate, there is a session identifier that must be "
-"used."
+"Since in the case of a Web eID, the list acquisition is preceded by an "
+"interaction to obtain an authentication certificate, there is a session "
+"identifier that must be used."
 
 #: ../../08-haaletamine.rst:109
 msgid "Nimekirjateenuse vastus päringule ``RPC.VoterChoices``."
@@ -263,11 +274,11 @@ msgstr "result.Voted"
 
 #: ../../08-haaletamine.rst:113
 msgid ""
-"Kui valija on juba hääletanud, siis ``true``, vastasel juhul seda välja vastuses ei "
-"ole."
+"Kui valija on juba hääletanud, siis ``true``, vastasel juhul seda välja "
+"vastuses ei ole."
 msgstr ""
-"If the voter has already voted, then ``true``, otherwise it will not appear in the "
-"response."
+"If the voter has already voted, then ``true``, otherwise it will not "
+"appear in the response."
 
 #: ../../08-haaletamine.rst:120
 msgid "Võimalikud veateated päringu ``RPC.VoterChoices`` korral."
@@ -288,11 +299,12 @@ msgstr "BAD_REQUEST"
 #: ../../08-haaletamine.rst:123 ../../08-haaletamine.rst:204
 #: ../../08-haaletamine.rst:249 ../../08-haaletamine.rst:284
 #: ../../08-haaletamine.rst:321 ../../08-haaletamine.rst:353
-#: ../../08-haaletamine.rst:389 ../../08-haaletamine.rst:434
-#: ../../08-haaletamine.rst:469 ../../08-haaletamine.rst:530
-#: ../../08-haaletamine.rst:561 ../../08-haaletamine.rst:596
-#: ../../08-haaletamine.rst:637 ../../08-haaletamine.rst:667
-#: ../../08-haaletamine.rst:703 ../../08-haaletamine.rst:765
+#: ../../08-haaletamine.rst:389 ../../08-haaletamine.rst:432
+#: ../../08-haaletamine.rst:457 ../../08-haaletamine.rst:496
+#: ../../08-haaletamine.rst:555 ../../08-haaletamine.rst:586
+#: ../../08-haaletamine.rst:621 ../../08-haaletamine.rst:662
+#: ../../08-haaletamine.rst:692 ../../08-haaletamine.rst:728
+#: ../../08-haaletamine.rst:790
 msgid "Vigane päring."
 msgstr "Malformed query."
 
@@ -311,12 +323,12 @@ msgstr "INTERNAL_SERVER_ERROR"
 #: ../../08-haaletamine.rst:125 ../../08-haaletamine.rst:208
 #: ../../08-haaletamine.rst:250 ../../08-haaletamine.rst:285
 #: ../../08-haaletamine.rst:322 ../../08-haaletamine.rst:354
-#: ../../08-haaletamine.rst:390 ../../08-haaletamine.rst:435
-#: ../../08-haaletamine.rst:470 ../../08-haaletamine.rst:531
-#: ../../08-haaletamine.rst:562 ../../08-haaletamine.rst:597
-#: ../../08-haaletamine.rst:638 ../../08-haaletamine.rst:668
-#: ../../08-haaletamine.rst:704 ../../08-haaletamine.rst:732
-#: ../../08-haaletamine.rst:766
+#: ../../08-haaletamine.rst:390 ../../08-haaletamine.rst:433
+#: ../../08-haaletamine.rst:458 ../../08-haaletamine.rst:497
+#: ../../08-haaletamine.rst:556 ../../08-haaletamine.rst:587
+#: ../../08-haaletamine.rst:622 ../../08-haaletamine.rst:663
+#: ../../08-haaletamine.rst:693 ../../08-haaletamine.rst:729
+#: ../../08-haaletamine.rst:757 ../../08-haaletamine.rst:791
 msgid "Viga serveri sisemises töös."
 msgstr "An error in the internal workings of the server."
 
@@ -343,12 +355,12 @@ msgstr "VOTING_END"
 #: ../../08-haaletamine.rst:128 ../../08-haaletamine.rst:212
 #: ../../08-haaletamine.rst:251 ../../08-haaletamine.rst:294
 #: ../../08-haaletamine.rst:326 ../../08-haaletamine.rst:355
-#: ../../08-haaletamine.rst:398 ../../08-haaletamine.rst:436
-#: ../../08-haaletamine.rst:477 ../../08-haaletamine.rst:534
-#: ../../08-haaletamine.rst:563 ../../08-haaletamine.rst:604
-#: ../../08-haaletamine.rst:639 ../../08-haaletamine.rst:670
-#: ../../08-haaletamine.rst:705 ../../08-haaletamine.rst:733
-#: ../../08-haaletamine.rst:767
+#: ../../08-haaletamine.rst:398 ../../08-haaletamine.rst:434
+#: ../../08-haaletamine.rst:459 ../../08-haaletamine.rst:504
+#: ../../08-haaletamine.rst:559 ../../08-haaletamine.rst:588
+#: ../../08-haaletamine.rst:629 ../../08-haaletamine.rst:664
+#: ../../08-haaletamine.rst:695 ../../08-haaletamine.rst:730
+#: ../../08-haaletamine.rst:758 ../../08-haaletamine.rst:792
 msgid "Hääletusperiood on lõppenud."
 msgstr "The voting period has ended."
 
@@ -358,18 +370,19 @@ msgstr "Sending a signed vote for storage"
 
 #: ../../08-haaletamine.rst:134
 msgid ""
-"Allkirjastatud hääle saatmine talletamiseks tähendab valijarakenduse suhtlemist "
-"hääletamisteenusega (SNI ``voting.ivxv.invalid``)."
+"Allkirjastatud hääle saatmine talletamiseks tähendab valijarakenduse "
+"suhtlemist hääletamisteenusega (SNI ``voting.ivxv.invalid``)."
 msgstr ""
-"Sending a signed vote to be stored implies the interaction of the voter application "
-"with the voting service (SNI ``voting.ivxv.invalid``)."
+"Sending a signed vote to be stored implies the interaction of the voter "
+"application with the voting service (SNI ``voting.ivxv.invalid``)."
 
 #: ../../08-haaletamine.rst:137
 msgid ""
-"Valijarakendus teeb päringu ``RPC.Vote`` allkirjastatud hääle talletamiseks "
-"saatmiseks."
+"Valijarakendus teeb päringu ``RPC.Vote`` allkirjastatud hääle "
+"talletamiseks saatmiseks."
 msgstr ""
-"The voting application will query ``RPC.Vote`` to send the signed vote for storage."
+"The voting application will query ``RPC.Vote`` to send the signed vote "
+"for storage."
 
 #: ../../08-haaletamine.rst
 msgid "params.Choices"
@@ -377,21 +390,21 @@ msgstr "params.Choices"
 
 #: ../../08-haaletamine.rst:141
 msgid ""
-"Valija ringkonnakuuluvuse identifikaator ``VoterDistrict`` mis kehtis valikute "
-"nimekirja hankimise ajal. Parameetri korrektne kasutamine võimaldab kogumisteenusel "
-"valijat hoiatada kui tema ringkonnakuuluvus on võrreldes hääletamise algushetkega "
-"muutunud."
+"Valija ringkonnakuuluvuse identifikaator ``VoterDistrict`` mis kehtis "
+"valikute nimekirja hankimise ajal. Parameetri korrektne kasutamine "
+"võimaldab kogumisteenusel valijat hoiatada kui tema ringkonnakuuluvus on "
+"võrreldes hääletamise algushetkega muutunud."
 msgstr ""
-"The voter's district identifier ``VoterDistrict`` that was in effect at the time "
-"the list of choices was obtained. Correct use of this parameter allows the "
-"collection service to alert the voter if his/her district affiliation has changed "
-"since the start of the voting process."
+"The voter's district identifier ``VoterDistrict`` that was in effect at "
+"the time the list of choices was obtained. Correct use of this parameter "
+"allows the collection service to alert the voter if his/her district "
+"affiliation has changed since the start of the voting process."
 
 #: ../../08-haaletamine.rst
 msgid "params.Type"
 msgstr "params.Type"
 
-#: ../../08-haaletamine.rst:147 ../../08-haaletamine.rst:691
+#: ../../08-haaletamine.rst:147 ../../08-haaletamine.rst:716
 msgid "Allkirjastatud hääle vorming. Hetkel on ainus toetatud väärtus ``bdoc``."
 msgstr "Signed ballot format. Currently the only supported value is ``bdoc``."
 
@@ -399,11 +412,13 @@ msgstr "Signed ballot format. Currently the only supported value is ``bdoc``."
 msgid "params.Vote"
 msgstr "params.Vote"
 
-#: ../../08-haaletamine.rst:149 ../../08-haaletamine.rst:693
+#: ../../08-haaletamine.rst:149 ../../08-haaletamine.rst:718
 msgid ""
-"BASE64-kodeeritud hääl ``SignedVote`` eelpoolmääratud vormingus (:ref:`signed-"
+"BASE64-kodeeritud hääl ``SignedVote`` eelpoolmääratud vormingus (:ref"
+":`signed-vote`)."
+msgstr ""
+"BASE64-encoded vote in ``SignedVote`` predefined format (:ref:`signed-"
 "vote`)."
-msgstr "BASE64-encoded vote in ``SignedVote`` predefined format (:ref:`signed-vote`)."
 
 #: ../../08-haaletamine.rst:152
 msgid "Päring ``RPC.Vote`` ID-kaardiga autentimise korral."
@@ -435,26 +450,28 @@ msgstr "result.Qualification.tspreg"
 
 #: ../../08-haaletamine.rst:180
 msgid ""
-"Kogumisteenuse poolt hangitud täiendavad tõendid valijarakenduse poolt loodud hääle "
-"``SignedVote`` (:ref:`signed-vote`) kvalifitseerimiseks ning korrektseks "
-"registreerimiseks. Vastuse koosseis sõltub kogumisteenuse konkreetsest "
-"seadistusest, antud juhul kasutatakse standardset OCSP protokolli valija "
-"allkirjasertifikaadi kehtivuse kontrolliks ning PKIX ajatempliprotokolli põhist "
-"registreerimisteenust nii hääle andmise aja fikseerimiseks kui elektroonilise hääle "
-"registreerimiseks välises sõltumatus teenuses.  Valijarakendusele kontrollimiseks "
-"edastatakse nii OCSP vastus kui PKIX vormingus ajatempel koos "
-"registreerimisteenusele vajalike täiendustega."
+"Kogumisteenuse poolt hangitud täiendavad tõendid valijarakenduse poolt "
+"loodud hääle ``SignedVote`` (:ref:`signed-vote`) kvalifitseerimiseks ning"
+" korrektseks registreerimiseks. Vastuse koosseis sõltub kogumisteenuse "
+"konkreetsest seadistusest, antud juhul kasutatakse standardset OCSP "
+"protokolli valija allkirjasertifikaadi kehtivuse kontrolliks ning PKIX "
+"ajatempliprotokolli põhist registreerimisteenust nii hääle andmise aja "
+"fikseerimiseks kui elektroonilise hääle registreerimiseks välises "
+"sõltumatus teenuses.  Valijarakendusele kontrollimiseks edastatakse nii "
+"OCSP vastus kui PKIX vormingus ajatempel koos registreerimisteenusele "
+"vajalike täiendustega."
 msgstr ""
-"Additional evidence obtained by the collection service for the qualification and "
-"correct registration of the ``SignedVote`` (:ref:`signed-vote`) generated by the "
-"voting application. The composition of the response depends on the specific "
-"configuration of the collection service, in this case the standard OCSP protocol is "
-"used to verify the validity of the voter's signature certificate and the PKIX "
-"timestamp protocol based registration service is used both to record the time of "
-"casting the vote and to register the electronic vote in an external independent "
-"service.  Both the OCSP response and the timestamp in PKIX format, with the "
-"necessary additions to the registration service, are transmitted to the voting "
-"application for verification."
+"Additional evidence obtained by the collection service for the "
+"qualification and correct registration of the ``SignedVote`` (:ref"
+":`signed-vote`) generated by the voting application. The composition of "
+"the response depends on the specific configuration of the collection "
+"service, in this case the standard OCSP protocol is used to verify the "
+"validity of the voter's signature certificate and the PKIX timestamp "
+"protocol based registration service is used both to record the time of "
+"casting the vote and to register the electronic vote in an external "
+"independent service.  Both the OCSP response and the timestamp in PKIX "
+"format, with the necessary additions to the registration service, are "
+"transmitted to the voting application for verification."
 
 #: ../../08-haaletamine.rst
 msgid "result.TestVote"
@@ -462,13 +479,14 @@ msgstr "result.TestVote"
 
 #: ../../08-haaletamine.rst:189
 msgid ""
-"Kui hääl esitati enne hääletamise algust ning läks arvesse proovihäälena, siis "
-"``true``, vastasel juhul seda välja vastuses ei ole. Valijarakendus kuvab valijale "
-"proovihääle korral sellekohase hoiatuse."
+"Kui hääl esitati enne hääletamise algust ning läks arvesse proovihäälena,"
+" siis ``true``, vastasel juhul seda välja vastuses ei ole. Valijarakendus"
+" kuvab valijale proovihääle korral sellekohase hoiatuse."
 msgstr ""
-"If the vote was cast before voting started and counted as a test vote, then "
-"``true``, otherwise it is not included in the response. The voting application will "
-"display a warning to the voter in the case of a test vote."
+"If the vote was cast before voting started and counted as a test vote, "
+"then ``true``, otherwise it is not included in the response. The voting "
+"application will display a warning to the voter in the case of a test "
+"vote."
 
 #: ../../08-haaletamine.rst
 msgid "result.VoteID"
@@ -476,11 +494,11 @@ msgstr "result.VoteID"
 
 #: ../../08-haaletamine.rst:193
 msgid ""
-"Hääle identifikaator talletusteenuses, mille alusel on kontrollrakendusel võimalik "
-"häält hilisemaks analüüsiks välja nõuda."
+"Hääle identifikaator talletusteenuses, mille alusel on kontrollrakendusel"
+" võimalik häält hilisemaks analüüsiks välja nõuda."
 msgstr ""
-"The identifier of the ballot in the storage service, which allows the verification "
-"application to retrieve the ballot for later analysis."
+"The identifier of the ballot in the storage service, which allows the "
+"verification application to retrieve the ballot for later analysis."
 
 #: ../../08-haaletamine.rst:201
 msgid "Võimalikud veateated päringu ``RPC.Vote`` korral."
@@ -505,7 +523,8 @@ msgstr "OUTDATED_CHOICES"
 #: ../../08-haaletamine.rst:209
 msgid "Valija ringkonnakuuluvus on nimekirja hankimisest muutunud."
 msgstr ""
-"The district eligibility of a candidate has changed since the list was obtained."
+"The district eligibility of a candidate has changed since the list was "
+"obtained."
 
 #: ../../08-haaletamine.rst:216
 msgid "Hääletamine Mobiil-ID'ga"
@@ -513,27 +532,28 @@ msgstr "Voting with Mobile-ID"
 
 #: ../../08-haaletamine.rst:218
 msgid ""
-"Mobiil-ID kasutamine allkirjastamis- ning autentimisvahendina tingib Mobiil-ID "
-"teenusega liidestuva abiteenuse (SNI ``mid.ivxv.invalid``) kasutamise "
-"autentimistõendi hankimiseks enne valikute nimekirja hankimist ning hääle "
-"allkirjastamiseks enne talletamist."
+"Mobiil-ID kasutamine allkirjastamis- ning autentimisvahendina tingib "
+"Mobiil-ID teenusega liidestuva abiteenuse (SNI ``mid.ivxv.invalid``) "
+"kasutamise autentimistõendi hankimiseks enne valikute nimekirja hankimist"
+" ning hääle allkirjastamiseks enne talletamist."
 msgstr ""
-"The use of Mobile-ID as a signature and authentication tool implies the use of an "
-"auxiliary service (SNI ``mid.ivxv.invalid``) that interfaces with the Mobile-ID "
-"service to obtain an authentication certificate before retrieving the list of "
-"options and to sign the vote before storing it."
+"The use of Mobile-ID as a signature and authentication tool implies the "
+"use of an auxiliary service (SNI ``mid.ivxv.invalid``) that interfaces "
+"with the Mobile-ID service to obtain an authentication certificate before"
+" retrieving the list of options and to sign the vote before storing it."
 
 #: ../../08-haaletamine.rst:225 ../../08-haaletamine.rst:411
-#: ../../08-haaletamine.rst:615
+#: ../../08-haaletamine.rst:640
 msgid "Autentimistõendi hankimine"
 msgstr "Retrieving an Authentication Certificate"
 
 #: ../../08-haaletamine.rst:227
 msgid ""
-"Valijarakendus teeb päringu ``RPC.Authenticate`` Mobiil-ID autentimise algatamiseks."
+"Valijarakendus teeb päringu ``RPC.Authenticate`` Mobiil-ID autentimise "
+"algatamiseks."
 msgstr ""
-"The voting application will make a request ``RPC.Authenticate`` to initiate Mobile "
-"ID authentication."
+"The voting application will make a request ``RPC.Authenticate`` to "
+"initiate Mobile ID authentication."
 
 #: ../../08-haaletamine.rst
 msgid "params.IDCode"
@@ -558,8 +578,8 @@ msgstr "result.Challenge"
 #: ../../08-haaletamine.rst:238
 msgid "Räsi, millest arvutada Mobiil-ID kontrollkood valijarakenduses kuvamiseks"
 msgstr ""
-"Hash from which to calculate the Mobile ID verification code to display in the "
-"voting application"
+"Hash from which to calculate the Mobile ID verification code to display "
+"in the voting application"
 
 #: ../../08-haaletamine.rst
 msgid "result.SessionCode"
@@ -569,24 +589,25 @@ msgstr "result.SessionCode"
 msgid "Mobiil-ID seansiidentifikaator edasiste poll-päringute jaoks"
 msgstr "Mobile-ID session identifier for further poll requests"
 
-#: ../../08-haaletamine.rst:247 ../../08-haaletamine.rst:432
+#: ../../08-haaletamine.rst:247 ../../08-haaletamine.rst:430
+#: ../../08-haaletamine.rst:455
 msgid "Võimalikud veateated päringu ``RPC.Authenticate`` korral."
 msgstr "Possible error messages in case of ``RPC.Authenticate`` request."
 
-#: ../../08-haaletamine.rst:253 ../../08-haaletamine.rst:438
+#: ../../08-haaletamine.rst:253 ../../08-haaletamine.rst:461
 msgid ""
-"Valijarakendus teeb päringu ``RPC.AuthenticateStatus`` autentimisprotsessi oleku "
-"hindamiseks."
+"Valijarakendus teeb päringu ``RPC.AuthenticateStatus`` "
+"autentimisprotsessi oleku hindamiseks."
 msgstr ""
-"The voting application queries ``RPC.AuthenticateStatus`` to assess the status of "
-"the authentication process."
+"The voting application queries ``RPC.AuthenticateStatus`` to assess the "
+"status of the authentication process."
 
 #: ../../08-haaletamine.rst
 msgid "params.SessionCode"
 msgstr "params.SessionCode"
 
-#: ../../08-haaletamine.rst:257 ../../08-haaletamine.rst:442
-#: ../../08-haaletamine.rst:508
+#: ../../08-haaletamine.rst:257 ../../08-haaletamine.rst:467
+#: ../../08-haaletamine.rst:534
 msgid "Autentimisseansi identifikaator"
 msgstr "Authentication session identifier"
 
@@ -594,20 +615,20 @@ msgstr "Authentication session identifier"
 msgid "result.AuthToken"
 msgstr "result.AuthToken"
 
-#: ../../08-haaletamine.rst:264 ../../08-haaletamine.rst:449
+#: ../../08-haaletamine.rst:264 ../../08-haaletamine.rst:474
 msgid ""
-"Autentimistõend teistele IVXV teenustele esitamiseks või ``null``, kui päringu "
-"töötlemine alles käib."
+"Autentimistõend teistele IVXV teenustele esitamiseks või ``null``, kui "
+"päringu töötlemine alles käib."
 msgstr ""
-"Authentication certificate for submission to other IVXV services, or ``null`` if "
-"the request is still being processed."
+"Authentication certificate for submission to other IVXV services, or "
+"``null`` if the request is still being processed."
 
 #: ../../08-haaletamine.rst
 msgid "result.GivenName"
 msgstr "result.GivenName"
 
-#: ../../08-haaletamine.rst:266 ../../08-haaletamine.rst:451
-#: ../../08-haaletamine.rst:653
+#: ../../08-haaletamine.rst:266 ../../08-haaletamine.rst:478
+#: ../../08-haaletamine.rst:678
 msgid "Eduka autentimise korral valija eesnimi"
 msgstr "First name of voter in case of successful authentication"
 
@@ -615,36 +636,38 @@ msgstr "First name of voter in case of successful authentication"
 msgid "result.PersonalCode"
 msgstr "result.PersonalCode"
 
-#: ../../08-haaletamine.rst:267 ../../08-haaletamine.rst:452
-#: ../../08-haaletamine.rst:654
+#: ../../08-haaletamine.rst:267 ../../08-haaletamine.rst:479
+#: ../../08-haaletamine.rst:679
 msgid "Eduka autentimise korral valija isikukood"
-msgstr "Voter's personal identification number in case of successful authentication"
+msgstr ""
+"Voter's personal identification number in case of successful "
+"authentication"
 
 #: ../../08-haaletamine.rst
 msgid "result.Status"
 msgstr "result.Status"
 
-#: ../../08-haaletamine.rst:268 ../../08-haaletamine.rst:453
-#: ../../08-haaletamine.rst:516
+#: ../../08-haaletamine.rst:268 ../../08-haaletamine.rst:480
+#: ../../08-haaletamine.rst:541
 msgid ""
-"Päringu staatus - ``POLL`` viitab vajadusele päringut korrata, ``OK`` viitab "
-"edukale autentimisele. Vastuse muud väljad sisaldavad infot vaid siis kui väärtus "
-"on ``OK``."
+"Päringu staatus - ``POLL`` viitab vajadusele päringut korrata, ``OK`` "
+"viitab edukale autentimisele. Vastuse muud väljad sisaldavad infot vaid "
+"siis kui väärtus on ``OK``."
 msgstr ""
-"Query status - ``POLL`` indicates the need to repeat the query, ``OK`` indicates "
-"successful authentication. The other fields in the response contain information "
-"only if the value is ``OK``."
+"Query status - ``POLL`` indicates the need to repeat the query, ``OK`` "
+"indicates successful authentication. The other fields in the response "
+"contain information only if the value is ``OK``."
 
 #: ../../08-haaletamine.rst
 msgid "result.Surname"
 msgstr "result.Surname"
 
-#: ../../08-haaletamine.rst:271 ../../08-haaletamine.rst:456
-#: ../../08-haaletamine.rst:658
+#: ../../08-haaletamine.rst:271 ../../08-haaletamine.rst:483
+#: ../../08-haaletamine.rst:683
 msgid "Eduka autentimise korral valija perekonnanimi"
 msgstr "In case of successful authentication, the voter's surname"
 
-#: ../../08-haaletamine.rst:282 ../../08-haaletamine.rst:467
+#: ../../08-haaletamine.rst:282 ../../08-haaletamine.rst:494
 msgid "Võimalikud veateated päringu ``RPC.AuthenticateStatus`` korral."
 msgstr "Possible error messages in case of ``RPC.AuthenticateStatus`` request."
 
@@ -670,11 +693,11 @@ msgstr "MID_OPERATOR"
 
 #: ../../08-haaletamine.rst:288 ../../08-haaletamine.rst:393
 msgid ""
-"Probleem valija mobiiltelefoni SIM kaardiga, mille lahendamiseks tuleb pöörduda "
-"mobiilioperaatori poole."
+"Probleem valija mobiiltelefoni SIM kaardiga, mille lahendamiseks tuleb "
+"pöörduda mobiilioperaatori poole."
 msgstr ""
-"A problem with the SIM card of the voter's mobile phone, which needs to be solved "
-"by contacting the mobile operator."
+"A problem with the SIM card of the voter's mobile phone, which needs to "
+"be solved by contacting the mobile operator."
 
 #: ../../08-haaletamine.rst
 msgid "MID_ABSENT"
@@ -709,20 +732,20 @@ msgstr "MID_GENERAL"
 msgid "Viga Mobiil-ID teenuse töös."
 msgstr "An error in the operation of the Mobile ID service."
 
-#: ../../08-haaletamine.rst:298 ../../08-haaletamine.rst:481
+#: ../../08-haaletamine.rst:298 ../../08-haaletamine.rst:508
 msgid "Hääle allkirjastamine"
 msgstr "Signing the vote"
 
 #: ../../08-haaletamine.rst:300
 msgid ""
-"Valijarakendus teeb päringu ``RPC.GetCertificate`` allkirjastamissertifikaadi "
-"hankimiseks."
+"Valijarakendus teeb päringu ``RPC.GetCertificate`` "
+"allkirjastamissertifikaadi hankimiseks."
 msgstr ""
-"The voting application makes a query ``RPC.GetCertificate`` to retrieve the signing "
-"certificate."
+"The voting application makes a query ``RPC.GetCertificate`` to retrieve "
+"the signing certificate."
 
 #: ../../08-haaletamine.rst:303 ../../08-haaletamine.rst:332
-#: ../../08-haaletamine.rst:486 ../../08-haaletamine.rst:540
+#: ../../08-haaletamine.rst:513 ../../08-haaletamine.rst:565
 msgid "Toetatud ainult autentimismeetod ``ticket``."
 msgstr "Only the authentication method ``ticket`` is supported."
 
@@ -738,7 +761,7 @@ msgstr "Telephone number of the person who signed the vote"
 msgid "result.Certificate"
 msgstr "result.Certificate"
 
-#: ../../08-haaletamine.rst:313 ../../08-haaletamine.rst:514
+#: ../../08-haaletamine.rst:313 ../../08-haaletamine.rst:540
 msgid "Allkirjastamissertifikaat X509-vormingus"
 msgstr "Signature certificate in X509 format"
 
@@ -752,18 +775,19 @@ msgstr "Error with the voter's Mobile-ID signature certificate."
 
 #: ../../08-haaletamine.rst:329
 msgid ""
-"Valijarakendus teeb päringu ``RPC.Sign`` hääle allkirjastamise algatamiseks. Mobiil-"
-"ID kontrollkoodi arvutab valijarakendus andmevälja ``Hash`` väärtusest."
+"Valijarakendus teeb päringu ``RPC.Sign`` hääle allkirjastamise "
+"algatamiseks. Mobiil-ID kontrollkoodi arvutab valijarakendus andmevälja "
+"``Hash`` väärtusest."
 msgstr ""
-"The voting application will make a query ``RPC.Sign`` to initiate the signing of "
-"the vote. The mobile ID verification code is calculated by the voter application "
-"from the value of the ``Hash`` field."
+"The voting application will make a query ``RPC.Sign`` to initiate the "
+"signing of the vote. The mobile ID verification code is calculated by the"
+" voter application from the value of the ``Hash`` field."
 
 #: ../../08-haaletamine.rst
 msgid "params.Hash"
 msgstr "params.hash"
 
-#: ../../08-haaletamine.rst:334 ../../08-haaletamine.rst:542
+#: ../../08-haaletamine.rst:334 ../../08-haaletamine.rst:567
 msgid "BASE64-kodeeritud elektroonilise hääle räsi"
 msgstr "BASE64-encoded hash of the ballot"
 
@@ -773,27 +797,27 @@ msgstr "params.HashType"
 
 #: ../../08-haaletamine.rst:335
 msgid ""
-"Räsifunktsiooni nimi Mobiil-ID teenusele edastamiseks, kas ``SHA256``, ``SHA384`` "
-"või  ``SHA512``"
+"Räsifunktsiooni nimi Mobiil-ID teenusele edastamiseks, kas ``SHA256``, "
+"``SHA384`` või  ``SHA512``"
 msgstr ""
-"The name of the hash function to be forwarded to the Mobile-ID service, either "
-"``SHA256``, ``SHA384`` or ``SHA512``"
+"The name of the hash function to be forwarded to the Mobile-ID service, "
+"either ``SHA256``, ``SHA384`` or ``SHA512``"
 
 #: ../../08-haaletamine.rst:344
 msgid "Mobiil-ID seansiidentifikaator edasiste poll-päringute jaoks."
 msgstr "Mobile ID session identifier for further poll requests."
 
-#: ../../08-haaletamine.rst:351 ../../08-haaletamine.rst:559
+#: ../../08-haaletamine.rst:351 ../../08-haaletamine.rst:584
 msgid "Võimalikud veateated päringu ``RPC.Sign`` korral."
 msgstr "Possible error messages in case of ``RPC.Sign`` query."
 
-#: ../../08-haaletamine.rst:358 ../../08-haaletamine.rst:566
+#: ../../08-haaletamine.rst:358 ../../08-haaletamine.rst:591
 msgid ""
-"Valijarakendus teeb päringu ``RPC.SignStatus`` allkirjastamisprotsessi seisundi "
-"hindamiseks."
+"Valijarakendus teeb päringu ``RPC.SignStatus`` allkirjastamisprotsessi "
+"seisundi hindamiseks."
 msgstr ""
-"The voting application queries ``RPC.SignStatus`` to assess the status of the "
-"signing process."
+"The voting application queries ``RPC.SignStatus`` to assess the status of"
+" the signing process."
 
 #: ../../08-haaletamine.rst:362
 msgid "Mobiil-ID seansiidentifikaator"
@@ -805,11 +829,11 @@ msgstr "result.Signature"
 
 #: ../../08-haaletamine.rst:368
 msgid ""
-"Juhul kui vastuse ``Status`` väli on ``OK``, BASE-64 kodeeritud PKCS1-vormingus "
-"signatuur, vastasel juhul ``null``."
+"Juhul kui vastuse ``Status`` väli on ``OK``, BASE-64 kodeeritud "
+"PKCS1-vormingus signatuur, vastasel juhul ``null``."
 msgstr ""
-"If the ``Status`` field of the response is ``OK``, the BASE-64 encoded PKCS1 format "
-"signature, otherwise ``zero``."
+"If the ``Status`` field of the response is ``OK``, the BASE-64 encoded "
+"PKCS1 format signature, otherwise ``zero``."
 
 #: ../../08-haaletamine.rst
 msgid "result.Algorithm"
@@ -817,29 +841,29 @@ msgstr "result.Algorithm"
 
 #: ../../08-haaletamine.rst:370
 msgid ""
-"Juhul kui vastuse ``Status`` väli on ``OK``, Mobiil-ID teenuse poolt tagastatud "
-"signatuuri algoritm. Võimalikud väärtused on ``SHA256WithECEncryption``, "
-"``SHA256WithRSAEncryption``, ``SHA384WithECEncryption``, "
-"``SHA384WithRSAEncryption``, ``SHA512WithECEncryption`` ja "
-"``SHA512WithRSAEncryption``."
+"Juhul kui vastuse ``Status`` väli on ``OK``, Mobiil-ID teenuse poolt "
+"tagastatud signatuuri algoritm. Võimalikud väärtused on "
+"``SHA256WithECEncryption``, ``SHA256WithRSAEncryption``, "
+"``SHA384WithECEncryption``, ``SHA384WithRSAEncryption``, "
+"``SHA512WithECEncryption`` ja ``SHA512WithRSAEncryption``."
 msgstr ""
-"If the ``Status`` field of the response is ``OK``, the signature algorithm returned "
-"by the Mobile-ID service. The possible values are ``SHA256WithECEncryption``, "
-"``SHA256WithRSAEncryption``, ``SHA384WithECEncryption``, "
-"``SHA384WithRSAEncryption``, ``SHA512WithECEncryption`` and "
-"``SHA512WithRSAEncryption``."
+"If the ``Status`` field of the response is ``OK``, the signature "
+"algorithm returned by the Mobile-ID service. The possible values are "
+"``SHA256WithECEncryption``, ``SHA256WithRSAEncryption``, "
+"``SHA384WithECEncryption``, ``SHA384WithRSAEncryption``, "
+"``SHA512WithECEncryption`` and ``SHA512WithRSAEncryption``."
 
-#: ../../08-haaletamine.rst:375 ../../08-haaletamine.rst:582
+#: ../../08-haaletamine.rst:375 ../../08-haaletamine.rst:607
 msgid ""
-"Päringu staatus - ``POLL`` viitab vajadusele päringut korrata, ``OK`` viitab "
-"edukale allkirjastamisele. Vastuse muud väljad sisaldavad infot vaid siis kui "
-"väärtus on ``OK``."
+"Päringu staatus - ``POLL`` viitab vajadusele päringut korrata, ``OK`` "
+"viitab edukale allkirjastamisele. Vastuse muud väljad sisaldavad infot "
+"vaid siis kui väärtus on ``OK``."
 msgstr ""
-"Query status - ``POLL`` indicates the need to repeat the query, ``OK`` indicates a "
-"successful signature. The other fields in the response contain information only if "
-"the value is ``OK``."
+"Query status - ``POLL`` indicates the need to repeat the query, ``OK`` "
+"indicates a successful signature. The other fields in the response "
+"contain information only if the value is ``OK``."
 
-#: ../../08-haaletamine.rst:387 ../../08-haaletamine.rst:594
+#: ../../08-haaletamine.rst:387 ../../08-haaletamine.rst:619
 msgid "Võimalikud veateated päringu ``RPC.SignStatus`` korral."
 msgstr "Possible error messages in case of ``RPC.SignStatus`` query."
 
@@ -849,46 +873,83 @@ msgstr "Voting with Smart-ID"
 
 #: ../../08-haaletamine.rst:404
 msgid ""
-"Smart-ID kasutamine allkirjastamis- ning autentimisvahendina tingib Smart-ID "
-"teenusega liidestuva abiteenuse (SNI ``smartid.ivxv.invalid``) kasutamise "
-"autentimistõendi hankimiseks enne valikute nimekirja hankimist ning hääle "
-"allkirjastamiseks enne talletamist."
+"Smart-ID kasutamine allkirjastamis- ning autentimisvahendina tingib "
+"Smart-ID teenusega liidestuva abiteenuse (SNI ``smartid.ivxv.invalid``) "
+"kasutamise autentimistõendi hankimiseks enne valikute nimekirja hankimist"
+" ning hääle allkirjastamiseks enne talletamist."
 msgstr ""
-"The use of Smart-ID as a signature and authentication tool implies the use of an "
-"auxiliary service (SNI ``smartid.ivxv.invalid``) interfacing with the Smart-ID "
-"service to obtain an authentication certificate before retrieving the list of "
-"choices and to sign the vote before storing it."
+"The use of Smart-ID as a signature and authentication tool implies the "
+"use of an auxiliary service (SNI ``smartid.ivxv.invalid``) interfacing "
+"with the Smart-ID service to obtain an authentication certificate before "
+"retrieving the list of choices and to sign the vote before storing it."
 
 #: ../../08-haaletamine.rst:413
 msgid ""
-"Valijarakendus teeb päringu ``RPC.Authenticate`` Smart-ID autentimise algatamiseks."
+"Valijarakendus teeb päringu ``RPC.Challenge`` Smart-ID kontrollkoodi "
+"hankimiseks."
 msgstr ""
-"The voting application will query ``RPC.Authenticate`` to initiate Smart-ID "
-"authentication."
+"The voter application will query ``RPC.Challenge`` to retrieve the Smart-"
+"ID verification code."
+
+#: ../../08-haaletamine.rst:421
+msgid "Räsi, millest arvutada Smart-ID kontrollkood valijarakenduses kuvamiseks"
+msgstr ""
+"Hash from which to calculate the Smart-ID verification code to display in"
+" the voting application"
+
+#: ../../08-haaletamine.rst
+msgid "result.XSmartIDAuth"
+msgstr "result.XSmartIDAuth"
+
+#: ../../08-haaletamine.rst:423 ../../08-haaletamine.rst:440
+#: ../../08-haaletamine.rst:465
+msgid ""
+"Päringu küpsis, kus talletatakse Smart-ID kontrollkoodi räsi, selle eluea"
+" ajatempel ja seansiidentifikaator"
+msgstr ""
+"A query cookie storing a hash of the Smart-ID verification code, a "
+"timestamp of its lifetime and a session identifier."
+
+#: ../../08-haaletamine.rst:436
+msgid ""
+"Valijarakendus teeb päringu ``RPC.Authenticate`` Smart-ID autentimise "
+"algatamiseks."
+msgstr ""
+"The voting application will query ``RPC.Authenticate`` to initiate Smart-"
+"ID authentication."
+
+#: ../../08-haaletamine.rst
+msgid "params.XSmartIDAuth"
+msgstr "params.XSmartIDAuth"
 
 #: ../../08-haaletamine.rst
 msgid "params.Identifier"
 msgstr "params.Identifier"
 
-#: ../../08-haaletamine.rst:417
+#: ../../08-haaletamine.rst:442
 msgid "Smart-ID kasutaja isikukood."
 msgstr "Smart-ID user ID."
 
-#: ../../08-haaletamine.rst:423 ../../08-haaletamine.rst:494
-msgid "Räsi, millest arvutada Smart-ID kontrollkood valijarakenduses kuvamiseks"
-msgstr ""
-"Hash from which to calculate the Smart-ID verification code to display in the "
-"voting application"
-
-#: ../../08-haaletamine.rst:425 ../../08-haaletamine.rst:496
+#: ../../08-haaletamine.rst:448 ../../08-haaletamine.rst:522
 msgid "Smart-ID seansiidentifikaator edasiste poll-päringute jaoks"
 msgstr "Smart-ID session identifier for further poll requests"
+
+#: ../../08-haaletamine.rst
+msgid "result.DataToken"
+msgstr ""
+
+#: ../../08-haaletamine.rst:476
+msgid ""
+"Hääletaja Smart-ID dokumendi number või ``null``, kui päringu töötlemine "
+"alles käib."
+msgstr ""
+"Voter's Smart-ID document number or ``null``, when the query is pending."
 
 #: ../../08-haaletamine.rst
 msgid "SMARTID_BAD_CERTIFICATE"
 msgstr "SMARTID_BAD_CERTIFICATE"
 
-#: ../../08-haaletamine.rst:471 ../../08-haaletamine.rst:598
+#: ../../08-haaletamine.rst:498 ../../08-haaletamine.rst:623
 msgid "Viga valija Smart-ID isikutuvastussertifikaadiga."
 msgstr "Error with the voter's Smart-ID identity certificate."
 
@@ -896,7 +957,7 @@ msgstr "Error with the voter's Smart-ID identity certificate."
 msgid "SMARTID_VERIFICATION"
 msgstr "SMARTID_VERIFICATION"
 
-#: ../../08-haaletamine.rst:472 ../../08-haaletamine.rst:599
+#: ../../08-haaletamine.rst:499 ../../08-haaletamine.rst:624
 msgid "Valija valis vale verifitseerimiskoodi."
 msgstr "The voter selected the wrong verification code."
 
@@ -904,7 +965,7 @@ msgstr "The voter selected the wrong verification code."
 msgid "SMARTID_ACCOUNT"
 msgstr "SMARTID_ACCOUNT"
 
-#: ../../08-haaletamine.rst:473 ../../08-haaletamine.rst:600
+#: ../../08-haaletamine.rst:500 ../../08-haaletamine.rst:625
 msgid "Viga valija Smart-ID kontos."
 msgstr "An error in the voter's Smart-ID account."
 
@@ -912,7 +973,7 @@ msgstr "An error in the voter's Smart-ID account."
 msgid "SMARTID_CANCELED"
 msgstr "SMARTID_CANCELED"
 
-#: ../../08-haaletamine.rst:474 ../../08-haaletamine.rst:601
+#: ../../08-haaletamine.rst:501 ../../08-haaletamine.rst:626
 msgid "Valija katkestas Smart-ID seansi."
 msgstr "The Smart-ID session has been interrupted by the voter."
 
@@ -920,7 +981,7 @@ msgstr "The Smart-ID session has been interrupted by the voter."
 msgid "SMARTID_EXPIRED"
 msgstr "SMARTID_EXPIRED"
 
-#: ../../08-haaletamine.rst:475 ../../08-haaletamine.rst:602
+#: ../../08-haaletamine.rst:502 ../../08-haaletamine.rst:627
 msgid "Smart-ID seanss on aegunud."
 msgstr "The Smart-ID session has expired."
 
@@ -928,126 +989,125 @@ msgstr "The Smart-ID session has expired."
 msgid "SMARTID_GENERAL"
 msgstr "SMARTID_GENERAL"
 
-#: ../../08-haaletamine.rst:476 ../../08-haaletamine.rst:533
-#: ../../08-haaletamine.rst:603
+#: ../../08-haaletamine.rst:503 ../../08-haaletamine.rst:558
+#: ../../08-haaletamine.rst:628
 msgid "Viga Smart-ID teenuse töös."
 msgstr "Error in the Smart-ID service."
 
-#: ../../08-haaletamine.rst:483
+#: ../../08-haaletamine.rst:510
 msgid ""
-"Valijarakendus teeb päringu ``RPC.GetCertificateChoice`` allkirjastamissertifikaadi "
-"valikuks."
+"Valijarakendus teeb päringu ``RPC.GetCertificateChoice`` "
+"allkirjastamissertifikaadi valikuks."
 msgstr ""
-"The voting application makes a query ``RPC.GetCertificateChoice`` to select the "
-"signing certificate."
+"The voting application makes a query ``RPC.GetCertificateChoice`` to "
+"select the signing certificate."
 
-#: ../../08-haaletamine.rst:487 ../../08-haaletamine.rst:541
+#: ../../08-haaletamine.rst:514 ../../08-haaletamine.rst:566
 msgid "Smart-ID autentimistõend."
 msgstr "Smart-ID authentication certificate."
 
-#: ../../08-haaletamine.rst:503
+#: ../../08-haaletamine.rst
+msgid "params.DataToken"
+msgstr ""
+
+#: ../../08-haaletamine.rst:515 ../../08-haaletamine.rst:571
+msgid "Hääletaja Smart-ID dokumendi number."
+msgstr "Voter's Smart-ID documentnumber"
+
+#: ../../08-haaletamine.rst:529
 msgid ""
 "Valijarakendus teeb päringu ``RPC.GetCertificateChoiceStatus`` "
 "allkirjastamissertifikaadi oleku hindamiseks."
 msgstr ""
-"The voting application makes a query ``RPC.GetCertificateChoiceStatus`` to evaluate "
-"the status of the signing certificate."
+"The voting application makes a query ``RPC.GetCertificateChoiceStatus`` "
+"to evaluate the status of the signing certificate."
 
-#: ../../08-haaletamine.rst
-msgid "result.DocumentNo"
-msgstr "result.DocumentNo"
-
-#: ../../08-haaletamine.rst:515
-msgid "Hääletaja Smart-ID dokumendi number"
-msgstr "Voter Smart ID document number"
-
-#: ../../08-haaletamine.rst:528
+#: ../../08-haaletamine.rst:553
 msgid "Võimalikud veateated päringu ``RPC.GetCertificateChoiceStatus`` korral."
 msgstr "Possible error messages for the query ``RPC.GetCertificateChoiceStatus``."
 
-#: ../../08-haaletamine.rst:532
+#: ../../08-haaletamine.rst:557
 msgid "Viga valija Smart-ID allkirjastamissertifikaadiga."
 msgstr "Error with the voter's Smart-ID signature certificate."
 
-#: ../../08-haaletamine.rst:537
+#: ../../08-haaletamine.rst:562
 msgid ""
-"Valijarakendus teeb päringu ``RPC.Sign`` hääle allkirjastamise algatamiseks. Smart-"
-"ID kontrollkoodi arvutab valijarakendus andmevälja ``Hash`` väärtusest."
+"Valijarakendus teeb päringu ``RPC.Sign`` hääle allkirjastamise "
+"algatamiseks. Smart-ID kontrollkoodi arvutab valijarakendus andmevälja "
+"``Hash`` väärtusest."
 msgstr ""
-"The voting application will make a query ``RPC.Sign`` to initiate the signing of "
-"the vote. The Smart-ID verification code is calculated by the voter application "
-"from the value of the ``Hash`` field."
+"The voting application will make a query ``RPC.Sign`` to initiate the "
+"signing of the vote. The Smart-ID verification code is calculated by the "
+"voter application from the value of the ``Hash`` field."
 
-#: ../../08-haaletamine.rst:543
+#: ../../08-haaletamine.rst:568
 msgid ""
-"Räsifunktsiooni nimi Smart-ID teenusele edastamiseks, kas ``SHA256``, ``SHA384`` "
-"või  ``SHA512``"
+"Räsifunktsiooni nimi Smart-ID teenusele edastamiseks, kas ``SHA256``, "
+"``SHA384`` või  ``SHA512``"
 msgstr ""
-"The name of the hash function to transmit to the Smart-ID service, either "
-"``SHA256``, ``SHA384`` or ``SHA512``"
+"The name of the hash function to transmit to the Smart-ID service, either"
+" ``SHA256``, ``SHA384`` or ``SHA512``"
 
-#: ../../08-haaletamine.rst
-msgid "params.DocumentNo"
-msgstr "params.DocumentNo"
-
-#: ../../08-haaletamine.rst:546
-msgid "Hääle allkirjastaja Smart-ID dokumendi number."
-msgstr "Smart ID document number of the person who signed the vote."
-
-#: ../../08-haaletamine.rst:552
+#: ../../08-haaletamine.rst:577
 msgid "Smart-ID seansiidentifikaator edasiste poll-päringute jaoks."
 msgstr "Smart-ID session identifier for further poll requests."
 
-#: ../../08-haaletamine.rst:570
+#: ../../08-haaletamine.rst:595
 msgid "Smart-ID seansiidentifikaator"
 msgstr "Smart-ID session identifier"
 
-#: ../../08-haaletamine.rst:576
+#: ../../08-haaletamine.rst:601
 msgid ""
-"Juhul kui vastuse ``Status`` väli on ``OK``, BASE-64 kodeeritud signatuur, vastasel "
-"juhul ``null``."
+"Juhul kui vastuse ``Status`` väli on ``OK``, BASE-64 kodeeritud "
+"signatuur, vastasel juhul ``null``."
 msgstr ""
-"If the ``Status`` field of the response is ``OK``, BASE-64 encoded signature, "
-"otherwise ``null``."
+"If the ``Status`` field of the response is ``OK``, BASE-64 encoded "
+"signature, otherwise ``null``."
 
-#: ../../08-haaletamine.rst:578
+#: ../../08-haaletamine.rst:603
 msgid ""
-"Juhul kui vastuse ``Status`` väli on ``OK``, Smart-ID teenuse poolt tagastatud "
-"signatuuri algoritm. Võimalikud väärtused on ``sha256WithRSAEncryption``, "
-"``sha384WithRSAEncryption``, ja ``sha512WithRSAEncryption``."
+"Juhul kui vastuse ``Status`` väli on ``OK``, Smart-ID teenuse poolt "
+"tagastatud signatuuri algoritm. Võimalikud väärtused on "
+"``sha256WithRSAEncryption``, ``sha384WithRSAEncryption``, ja "
+"``sha512WithRSAEncryption``."
 msgstr ""
-"If the ``Status`` field of the response is ``OK``, the signature algorithm returned "
-"by the Smart-ID service. Possible values are ``sha256WithRSAEncryption``, "
-"``sha384WithRSAEncryption``, and ``sha512WithRSAEncryption``."
+"If the ``Status`` field of the response is ``OK``, the signature "
+"algorithm returned by the Smart-ID service. Possible values are "
+"``sha256WithRSAEncryption``, ``sha384WithRSAEncryption``, and "
+"``sha512WithRSAEncryption``."
 
-#: ../../08-haaletamine.rst:607
+#: ../../08-haaletamine.rst:632
 msgid "Hääletamine Web eID'ga"
 msgstr "Voting with Web eID"
 
-#: ../../08-haaletamine.rst:609
+#: ../../08-haaletamine.rst:634
 msgid ""
-"Web eID kasutamine autentimisvahendina tingib Web eID teenusega liidestuva "
-"abiteenuse (SNI ``webeid.ivxv.invalid``) kasutamise autentimistõendi hankimiseks "
-"enne valikute nimekirja hankimist."
+"Web eID kasutamine autentimisvahendina tingib Web eID teenusega "
+"liidestuva abiteenuse (SNI ``webeid.ivxv.invalid``) kasutamise "
+"autentimistõendi hankimiseks enne valikute nimekirja hankimist."
 msgstr ""
-"The use of Web eID as an authentication tool implies the use of an auxiliary "
-"service (SNI ``webeid.ivxv.invalid``) interfacing with the Web eID service to "
-"obtain an authentication certificate before retrieving the list of choices."
+"The use of Web eID as an authentication tool implies the use of an "
+"auxiliary service (SNI ``webeid.ivxv.invalid``) interfacing with the Web "
+"eID service to obtain an authentication certificate before retrieving the"
+" list of choices."
 
-#: ../../08-haaletamine.rst:617
+#: ../../08-haaletamine.rst:642
 msgid ""
-"Valijarakendus teeb päringu ``RPC.Challenge`` Web eID autentimise algatamiseks."
+"Valijarakendus teeb päringu ``RPC.Challenge`` Web eID autentimise "
+"algatamiseks."
 msgstr ""
-"The voting application makes a request to ``RPC.Challenge`` to initiate Web eID "
-"authentication."
+"The voting application makes a request to ``RPC.Challenge`` to initiate "
+"Web eID authentication."
 
-#: ../../08-haaletamine.rst:626
-msgid "Räsi, mille valijarakendus kasutab autentimistõendi allkirja loomiseks."
+#: ../../08-haaletamine.rst:651
+msgid ""
+"Base64 kodeeritud räsi, mille dekodeeritud väärtust peab valijarakendus "
+"kasutama autentimistõendi allkirja loomiseks."
 msgstr ""
-"A hash, which is used by the voter's application to generate the authentication "
-"signature."
+"A Base64 encoded hash whose decoded value must be used by the voter "
+"application to generate the authentication proof signature."
 
-#: ../../08-haaletamine.rst:628 ../../08-haaletamine.rst:644
+#: ../../08-haaletamine.rst:653 ../../08-haaletamine.rst:669
 msgid "Seansiidentifikaator."
 msgstr "Session identifier."
 
@@ -1055,61 +1115,64 @@ msgstr "Session identifier."
 msgid "params.Bearer"
 msgstr "params.Bearer"
 
-#: ../../08-haaletamine.rst:629 ../../08-haaletamine.rst:646
+#: ../../08-haaletamine.rst:654 ../../08-haaletamine.rst:671
 msgid "Küpsis, mida server kasutab räsi verifitseerimiseks."
 msgstr "A cookie used by the server to verify hashes."
 
-#: ../../08-haaletamine.rst:635
+#: ../../08-haaletamine.rst:660
 msgid "Võimalikud veateated päringu ``RPC.Challenge`` korral."
 msgstr "Possible error messages in case of ``RPC.Challenge`` query."
 
-#: ../../08-haaletamine.rst:641
-msgid "Valijarakendus teeb päringu ``RPC.Token`` autentimistõendi valideerimiseks."
+#: ../../08-haaletamine.rst:666
+msgid ""
+"Valijarakendus teeb päringu ``RPC.Token`` autentimistõendi "
+"valideerimiseks."
 msgstr ""
-"The voting application will query ``RPC.Token`` to validate the authentication "
-"token."
+"The voting application will query ``RPC.Token`` to validate the "
+"authentication token."
 
 #: ../../08-haaletamine.rst
 msgid "params.Token"
 msgstr "params.Token"
 
-#: ../../08-haaletamine.rst:645
+#: ../../08-haaletamine.rst:670
 msgid "Web eID autentimistõend."
 msgstr "Web eID authentication certificate."
 
-#: ../../08-haaletamine.rst:652
+#: ../../08-haaletamine.rst:677
 msgid "Autentimistõend teistele IVXV teenustele esitamiseks"
 msgstr "Proof of authentication for submission to other IVXV services"
 
-#: ../../08-haaletamine.rst:655
+#: ../../08-haaletamine.rst:680
 msgid ""
-"Päringu staatus - ``OK`` viitab edukale autentimisele. Vastuse muud väljad "
-"sisaldavad infot vaid siis kui väärtus on ``OK``."
+"Päringu staatus - ``OK`` viitab edukale autentimisele. Vastuse muud "
+"väljad sisaldavad infot vaid siis kui väärtus on ``OK``."
 msgstr ""
-"Query status - ``OK`` indicates successful authentication. The other fields in the "
-"response contain information only if the value is ``OK``."
+"Query status - ``OK`` indicates successful authentication. The other "
+"fields in the response contain information only if the value is ``OK``."
 
-#: ../../08-haaletamine.rst:665
+#: ../../08-haaletamine.rst:690
 msgid "Võimalikud veateated päringu ``RPC.Token`` korral."
 msgstr "Possible error messages in case of ``RPC.Token`` query."
 
-#: ../../08-haaletamine.rst:669
+#: ../../08-haaletamine.rst:694
 msgid "Viga valija Web eID isikutuvastussertifikaadiga."
 msgstr "Error with the voter's Web eID identity certificate."
 
-#: ../../08-haaletamine.rst:673
+#: ../../08-haaletamine.rst:698
 msgid "Hääle kontrollimine"
 msgstr "Vote verification"
 
-#: ../../08-haaletamine.rst:675
+#: ../../08-haaletamine.rst:700
 msgid ""
-"Kontrollrakendus teeb päringu ``RPC.Verify`` allkirjastatud hääle ning häält "
-"kvalifitseerivate tõendite allalaadimiseks kogumisteenusest."
+"Kontrollrakendus teeb päringu ``RPC.Verify`` allkirjastatud hääle ning "
+"häält kvalifitseerivate tõendite allalaadimiseks kogumisteenusest."
 msgstr ""
-"The Verification Application will query ``RPC.Verify`` to download the signed vote "
-"and the evidence that qualifies the vote from the collection service."
+"The Verification Application will query ``RPC.Verify`` to download the "
+"signed vote and the evidence that qualifies the vote from the collection "
+"service."
 
-#: ../../08-haaletamine.rst:678
+#: ../../08-haaletamine.rst:703
 msgid "Operatsioonisüsteem, millel kontrollrakendust kasutatakse."
 msgstr "The operating system on which the verification application is used."
 
@@ -1117,14 +1180,15 @@ msgstr "The operating system on which the verification application is used."
 msgid "params.VoteID"
 msgstr "params.VoteID"
 
-#: ../../08-haaletamine.rst:679
+#: ../../08-haaletamine.rst:704
 msgid ""
-"QR-koodi vahendusel valijarakendusest saadud hääle identifikaator talletusteenuses."
+"QR-koodi vahendusel valijarakendusest saadud hääle identifikaator "
+"talletusteenuses."
 msgstr ""
-"The identifier of the vote received from the voting application via QR code in the "
-"storage service."
+"The identifier of the vote received from the voting application via QR "
+"code in the storage service."
 
-#: ../../08-haaletamine.rst:688
+#: ../../08-haaletamine.rst:713
 msgid "Vaata peatükki hääle verifitseerimisest"
 msgstr "See chapter on vote verification"
 
@@ -1140,67 +1204,69 @@ msgstr "result.Vote"
 msgid "result.ChoicesList"
 msgstr "result.ChoicesList"
 
-#: ../../08-haaletamine.rst:695
+#: ../../08-haaletamine.rst:720
 msgid "JSON-vormingus ringkonnapõhine valikute nimekiri."
 msgstr "A JSON-formatted list of district-based options."
 
-#: ../../08-haaletamine.rst:701
+#: ../../08-haaletamine.rst:726
 msgid "Võimalikud veateated päringu ``RPC.Verify`` korral."
 msgstr "Possible error messages in case of ``RPC.Verify`` request."
 
-#: ../../08-haaletamine.rst:709
+#: ../../08-haaletamine.rst:734
 msgid "E-hääletamise jooksev nimekiri"
 msgstr "List of e-votes"
 
-#: ../../08-haaletamine.rst:711
+#: ../../08-haaletamine.rst:736
 msgid ""
-"X-tee teenusega(xroad-service) liidestuva abiteenuse (SNI ``votesorder.ivxv."
-"invalid``) kasutatakse informatsiooni edastamiseks X-tee turvaserverile."
+"X-tee teenusega(xroad-service) liidestuva abiteenuse (SNI "
+"``votesorder.ivxv.invalid``) kasutatakse informatsiooni edastamiseks "
+"X-tee turvaserverile."
 msgstr ""
-"The auxiliary service (SNI ``votesorder.ivxv.invalid``), which interfaces with the "
-"X-road service (xroad-service), is used to send information to the X-road security "
-"server."
+"The auxiliary service (SNI ``votesorder.ivxv.invalid``), which interfaces"
+" with the X-road service (xroad-service), is used to send information to "
+"the X-road security server."
 
-#: ../../08-haaletamine.rst:716
+#: ../../08-haaletamine.rst:741
 msgid "Viimane järjenumber"
 msgstr "Last serial number"
 
-#: ../../08-haaletamine.rst:717
+#: ../../08-haaletamine.rst:742
 msgid ""
-"X-tee teenus(xroad-service) teeb päringu ``RPC.VotesSeqNo`` viimase järjenumbri "
-"saamiseks."
+"X-tee teenus(xroad-service) teeb päringu ``RPC.VotesSeqNo`` viimase "
+"järjenumbri saamiseks."
 msgstr ""
-"The X-road service (xroad-service) makes a query ``RPC.VotesSeqNo`` for the last "
-"sequence number."
+"The X-road service (xroad-service) makes a query ``RPC.VotesSeqNo`` for "
+"the last sequence number."
 
 #: ../../08-haaletamine.rst
 msgid "result.SeqNo"
 msgstr "result.SeqNo"
 
-#: ../../08-haaletamine.rst:724
+#: ../../08-haaletamine.rst:749
 msgid "Viimane järjenumber."
 msgstr "Latest sequence number."
 
-#: ../../08-haaletamine.rst:730
+#: ../../08-haaletamine.rst:755
 msgid "Võimalikud veateated päringu ``RPC.VotesSeqNo`` korral."
 msgstr "Possible error messages in case of query ``RPC.VotesSeqNo``."
 
-#: ../../08-haaletamine.rst:736
+#: ../../08-haaletamine.rst:761
 msgid "E-hääletamiste pakk"
 msgstr "E-voting package"
 
-#: ../../08-haaletamine.rst:737
+#: ../../08-haaletamine.rst:762
 msgid ""
-"X-tee teenus(xroad-service) teeb päringu ``RPC.Votes`` e-hääletamise paki saamiseks."
+"X-tee teenus(xroad-service) teeb päringu ``RPC.Votes`` e-hääletamise paki"
+" saamiseks."
 msgstr ""
-"The X-road service (xroad-service) makes a request for an ``RPC.Votes`` e-voting "
-"packet."
+"The X-road service (xroad-service) makes a request for an ``RPC.Votes`` "
+"e-voting packet."
 
 #: ../../08-haaletamine.rst
 msgid "params.VotesFrom"
 msgstr "params.VotesFrom"
 
-#: ../../08-haaletamine.rst:739
+#: ../../08-haaletamine.rst:764
 msgid "E-hääled alates sellest järjenumbrist."
 msgstr "E-votes from this serial number."
 
@@ -1208,7 +1274,7 @@ msgstr "E-votes from this serial number."
 msgid "params.BatchMaxSize"
 msgstr "params.BatchMaxSize"
 
-#: ../../08-haaletamine.rst:740
+#: ../../08-haaletamine.rst:765
 msgid "E-hääletamise paki suurus."
 msgstr "Size of e-voting package."
 
@@ -1216,15 +1282,15 @@ msgstr "Size of e-voting package."
 msgid "result.batchRecords"
 msgstr "result.batchRecords"
 
-#: ../../08-haaletamine.rst:747
-msgid "E-häälte list"
-msgstr "E-votes list"
+#: ../../08-haaletamine.rst:772
+msgid "E-häälte loend"
+msgstr "List of e-votes"
 
 #: ../../08-haaletamine.rst
 msgid "result.batchRecords.seqNo"
 msgstr "result.batchRecords.seqNo"
 
-#: ../../08-haaletamine.rst:749
+#: ../../08-haaletamine.rst:774
 msgid "Hääle järjenumber"
 msgstr "Voice of the sequel"
 
@@ -1232,7 +1298,7 @@ msgstr "Voice of the sequel"
 msgid "result.batchRecords.idCode"
 msgstr "result.batchRecords.idCode"
 
-#: ../../08-haaletamine.rst:751
+#: ../../08-haaletamine.rst:776
 msgid "Hääletaja isikukood"
 msgstr "Voter identification code"
 
@@ -1240,7 +1306,7 @@ msgstr "Voter identification code"
 msgid "result.batchRecords.voterName"
 msgstr "result.batchRecords.voterName"
 
-#: ../../08-haaletamine.rst:753
+#: ../../08-haaletamine.rst:778
 msgid "Hääletaja nimi"
 msgstr "Name of voter"
 
@@ -1248,7 +1314,7 @@ msgstr "Name of voter"
 msgid "result.batchRecords.kovCode"
 msgstr "result.batchRecords.kovCode"
 
-#: ../../08-haaletamine.rst:755
+#: ../../08-haaletamine.rst:780
 msgid "KOV EHAK kood"
 msgstr "KOV EHAK code"
 
@@ -1256,10 +1322,20 @@ msgstr "KOV EHAK code"
 msgid "result.batchRecords.electoralDistrictNo"
 msgstr "result.batchRecords.electoralDistrictNo"
 
-#: ../../08-haaletamine.rst:757
+#: ../../08-haaletamine.rst:782
 msgid "Valimisringkonna number"
 msgstr "Constituency number"
 
-#: ../../08-haaletamine.rst:763
+#: ../../08-haaletamine.rst:788
 msgid "Võimalikud veateated päringu ``RPC.Votes`` korral."
 msgstr "Possible error messages in case of ``RPC.Votes`` query."
+
+#~ msgid "result.DocumentNo"
+#~ msgstr "result.DocumentNo"
+
+#~ msgid "params.DocumentNo"
+#~ msgstr "params.DocumentNo"
+
+#~ msgid "Hääle allkirjastaja Smart-ID dokumendi number."
+#~ msgstr "Smart ID document number of the person who signed the vote."
+

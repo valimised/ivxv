@@ -15,6 +15,7 @@ import (
 	"log/syslog"
 	"net/url"
 	"reflect"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -520,6 +521,9 @@ func (e *encoder) encodeMap(v reflect.Value) (err error) {
 func (e *encoder) encodeStruct(v reflect.Value) (err error) {
 	e.WriteByte('{')
 	for i := 0; i < v.NumField(); i++ {
+		if strings.EqualFold(v.Type().Field(i).Name, "Description") {
+			continue
+		}
 		if i > 0 {
 			e.WriteByte(',')
 		}

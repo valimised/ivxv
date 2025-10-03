@@ -5,9 +5,11 @@ package container // import "ivxv.ee/container"
 
 import (
 	"crypto/x509"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -20,6 +22,17 @@ type Signature struct {
 	Signer      *x509.Certificate
 	Issuer      *x509.Certificate
 	SigningTime time.Time
+}
+
+func (s *Signature) CommonName() string {
+	pattern := regexp.MustCompile("[0-9]+")
+	if pattern.FindString(s.Signer.Subject.CommonName) == "" {
+		personalCode := strings.TrimPrefix(s.Signer.Subject.SerialNumber, "PNOEE-")
+
+		return fmt.Sprint(s.Signer.Subject.CommonName + "," + personalCode)
+	}
+
+	return fmt.Sprint(s.Signer.Subject.CommonName)
 }
 
 // Container is a container that protects data with one or multiple signatures.
@@ -71,18 +84,21 @@ func Configure(c Conf) (o Opener, err error) {
 		// ...check if it is linked, ...
 		re, ok := registry[t]
 		if !ok {
-			return nil, UnlinkedTypeError{Type: t}
+			return nil, UnlinkedTypeError{Type: t,
+				Description: _CONTAINER_PARSE}
 		}
 
 		// ...is configured with the canonical name ...
 		if t != re.canonical {
-			return nil, ConfiguredAliasError{Type: t, Canonical: re.canonical}
+			return nil, ConfiguredAliasError{Type: t, Canonical: re.canonical,
+				Description: _CONTAINER_CNAME}
 		}
 
 		// ...and if creating an opening function succeeds.
 		f, err := re.newOpen(y)
 		if err != nil {
-			return nil, ConfigureTypeError{Type: t, Err: err}
+			return nil, ConfigureTypeError{Type: t, Err: err,
+				Description: _CONTAINER_PARSER}
 		}
 		for _, alias := range re.aliases {
 			o[alias] = f
@@ -97,7 +113,8 @@ func Configure(c Conf) (o Opener, err error) {
 func (o Opener) Open(t Type, container io.Reader) (c Container, err error) {
 	f, ok := o[t]
 	if !ok {
-		return nil, UnconfiguredTypeError{Type: t}
+		return nil, UnconfiguredTypeError{Type: t,
+			Description: _CONTAINER_PARSE}
 	}
 	return f(container)
 }
@@ -107,15 +124,16 @@ func (o Opener) Open(t Type, container io.Reader) (c Container, err error) {
 func (o Opener) OpenFile(path string) (c Container, err error) {
 	fp, err := os.Open(path)
 	if err != nil {
-		return nil, OpenFileError{Path: path, Err: err}
+		return nil, OpenFileError{Path: path, Err: err,
+			Description: _CONTAINER_OPEN}
 	}
 	defer fp.Close()
 
 	ext := strings.TrimPrefix(filepath.Ext(path), ".")
 	if len(ext) == 0 {
-		return nil, MissingExtensionError{Path: path}
+		return nil, MissingExtensionError{Path: path,
+			Description: _CONTAINER_EXT}
 	}
-
 	return o.Open(Type(ext), fp)
 }
 
@@ -130,7 +148,8 @@ func UnverifiedOpen(t Type, container io.Reader) (c Container, err error) {
 	defer reglock.RUnlock()
 	re, ok := registry[t]
 	if !ok {
-		return nil, OpenUnlinkedTypeError{Type: t}
+		return nil, OpenUnlinkedTypeError{Type: t,
+			Description: _CONTAINER_PARSE}
 	}
 	return re.unverifiedOpen(container)
 }

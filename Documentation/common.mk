@@ -34,16 +34,21 @@ export IVXV_DOCUMENT := $(notdir $(patsubst %/,%,$(abspath $(SOURCEDIR))))
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
+translation-et:
+	@$(SPHINXBUILD) -M gettext "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	@$(SPHINXINTL) update -p _build/gettext -l et
 
 translation:
 	@$(SPHINXBUILD) -M gettext "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	@$(SPHINXINTL) update -p _build/gettext -l en
 
+spelling:
+	@$(SPHINXBUILD) -M spelling "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-english: clean
+english: clean $(DEPENDENCIES)
 	export SPHINXOPTS="-D language='en'" && $(SPHINXBUILD) -M latexpdf "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-estonian: clean
+estonian: clean $(DEPENDENCIES)
 	@$(SPHINXBUILD) -M latexpdf "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 
@@ -94,7 +99,7 @@ master-latex: $(master)
 	fi
 
 $(master):
-	git worktree add $@ 1.8.3
+	git worktree add $@ 1.9.10
 
 # Installation rules.
 .PHONY: install-pdf

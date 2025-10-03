@@ -67,13 +67,15 @@ func New(c *Conf) (checker *Checker, err error) {
 	defer reglock.RUnlock()
 	g, ok := registry[c.Method]
 	if !ok {
-		return nil, UnlinkedMethodError{Method: c.Method}
+		return nil, UnlinkedMethodError{Method: c.Method,
+			Description: _AGE_CHECKER_UNKNOWN}
 	}
 	loc, err := time.LoadLocation(c.TimeZone)
 	if err != nil {
-		return nil, LocationError{Err: err}
+		return nil, LocationError{Err: err,
+			Description: _AGE_TZ}
 	}
-	return &Checker{g, loc, int(c.Limit), time.Now}, nil
+	return &Checker{g, loc, int(c.Limit), time.Now}, nil //nolint:gosec
 }
 
 // Check gets the voters's date of birth, calculates their age in the
@@ -85,7 +87,7 @@ func (c *Checker) Check(voter string) (err error) {
 
 	dob, err := c.get(voter)
 	if err != nil {
-		return GetAgeError{Err: err}
+		return GetAgeError{Err: err, Description: _AGE_DOF}
 	}
 	now := c.now().In(c.loc)       // Get current time in configured zone.
 	age := now.Year() - dob.Year() // Years since date of birth.
@@ -93,7 +95,7 @@ func (c *Checker) Check(voter string) (err error) {
 		age-- // If before the date, then subtract one year.
 	}
 	if age < c.limit {
-		err = TooYoungError{Age: age, Limit: c.limit}
+		err = TooYoungError{Age: age, Limit: c.limit, Description: _AGE_YOUNG}
 	}
 	return
 }
@@ -105,14 +107,14 @@ var estpicre = regexp.MustCompile(`^[1-6][0-9]{2}(0[1-9]|1[012])(0[1-9]|[12][0-9
 // voter's age.
 func estpic(voter string) (dob time.Time, err error) {
 	if !estpicre.MatchString(voter) {
-		return dob, EstPICInvalidFormat{}
+		return dob, EstPICInvalidFormat{Description: _AGE_ID}
 	}
 	dobs := make([]byte, 0, 8)   // yyyymmdd.
 	pre := 18 + (voter[0]-'1')/2 // '1' and '2' = 18xx, '3' and '4' = 19xx, ...
 	dobs = strconv.AppendUint(dobs, uint64(pre), 10)[:8]
 	copy(dobs[2:], voter[1:7]) // Copy yymmdd from pic.
 	if dob, err = time.Parse("20060102", string(dobs)); err != nil {
-		err = EstPICParseDOBError{Err: err}
+		err = EstPICParseDOBError{Err: err, Description: _AGE_DOF_FORMAT}
 	}
 	return
 }

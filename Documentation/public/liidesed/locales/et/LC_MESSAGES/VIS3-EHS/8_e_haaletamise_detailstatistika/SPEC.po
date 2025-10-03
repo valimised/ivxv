@@ -1,0 +1,77 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2016-2025, Cybernetica AS
+# This file is distributed under the same license as the Elektroonilise
+# hääletamise infosüsteem package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-03 23:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: et\n"
+"Language-Team: et <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../VIS3-EHS/8_e_haaletamise_detailstatistika/SPEC.md:1
+msgid "8 E-hääletamisest osavõtu detailne statistika"
+msgstr "E-hääletamisest osavõtu detailne statistika"
+
+#: ../../VIS3-EHS/8_e_haaletamise_detailstatistika/SPEC.md:3
+msgid ""
+"E-hääletamise lõppedes annab EHS VIS3-le e-hääletamisest osavõtu detailse"
+" statistika."
+msgstr ""
+
+#: ../../VIS3-EHS/8_e_haaletamise_detailstatistika/SPEC.md:5
+msgid ""
+"E-hääletamisest osavõtu statistikat kuvatakse valimiste veebilehel, "
+"samuti edastatakse masintöödeldaval kujul meediaorganisatsioonidele ja "
+"lõpuks publitseeritakse avaandmetena."
+msgstr ""
+
+#: ../../VIS3-EHS/8_e_haaletamise_detailstatistika/SPEC.md:7
+msgid "Protseduur"
+msgstr ""
+
+#: ../../VIS3-EHS/8_e_haaletamise_detailstatistika/SPEC.md:9
+msgid "EHS operaator laeb faili alla."
+msgstr ""
+
+#: ../../VIS3-EHS/8_e_haaletamise_detailstatistika/SPEC.md:11
+msgid "EHS operaator edastab faili VIS3 peakasutajale."
+msgstr ""
+
+#: ../../VIS3-EHS/8_e_haaletamise_detailstatistika/SPEC.md:13
+msgid "VIS3 peakasutaja laeb faili VIS3-e üles."
+msgstr ""
+
+#: ../../VIS3-EHS/8_e_haaletamise_detailstatistika/SPEC.md:15
+msgid "Faili edastatakse eelhääletamise ajal, kord päevas."
+msgstr ""
+
+#: ../../VIS3-EHS/8_e_haaletamise_detailstatistika/SPEC.md:17
+msgid "Edastatav fail"
+msgstr ""
+
+#: ../../VIS3-EHS/8_e_haaletamise_detailstatistika/SPEC.md:19
+msgid "JSON-skeem: [online-voters-counties.schema](online-voters-counties.schema)"
+msgstr ""
+
+#: ../../VIS3-EHS/8_e_haaletamise_detailstatistika/SPEC.md:21
+msgid ""
+"Valimissündmuse identifikaator peab vastama formaadile [Valimissündmuse "
+"identifikaator](../valimissündmuse_identifikaator.md)."
+msgstr ""
+
+#: ../../VIS3-EHS/8_e_haaletamise_detailstatistika/SPEC.md:23
+msgid "Näide (JSON): [online-voters-counties.json](online-voters-counties.json)"
+msgstr ""
+

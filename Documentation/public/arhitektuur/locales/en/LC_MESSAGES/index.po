@@ -1,13 +1,12 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2016-2024, Cybernetica AS
+# Copyright (C) 2016-2025, Cybernetica AS
 # This file is distributed under the same license as the Elektroonilise
 # hääletamise infosüsteem package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.8.0\n"
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-02-29 10:35+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"

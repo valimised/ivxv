@@ -66,28 +66,29 @@ func New(c *Conf, handler interface{}) (*S, error) {
 	// Parse the TLS certificate-key pair.
 	tlsCert, err := tls.LoadX509KeyPair(c.CertPath, c.KeyPath)
 	if err != nil {
-		return nil, TLSKeyPairError{Err: err}
+		return nil, TLSKeyPairError{Err: err, Description: _SERVER_CERT_K}
 	}
 	var certPool *x509.CertPool
 	if c.ClientCA != "" {
 		certPool, err = cryptoutil.PEMCertificatePool(c.ClientCA)
 		if err != nil {
-			return nil, ClientCAParsingError{Err: err}
+			return nil, ClientCAParsingError{Err: err, Description: _SERVER_CA}
 		}
 	}
 	// Setup the chain of filters that serves a connection using r.
 	if s.filters, err = newFilters(c.Filter, r, tlsCert, c.End, certPool); err != nil {
-		return nil, FilterConfError{Err: err}
+		return nil, FilterConfError{Err: err, Description: _SERVER_FILTERS}
 	}
 
 	// Resolve the requested listen address.
 	if s.addr, err = net.ResolveTCPAddr("tcp", c.Address); err != nil {
-		return nil, ResolveAddressError{Address: c.Address, Err: err}
+		return nil, ResolveAddressError{Address: c.Address, Err: err,
+			Description: _SERVER_ADDR}
 	}
 
 	// Create a new status reporter for this server.
 	if s.status, err = newStatus(c.Version); err != nil {
-		return nil, NewStatusError{Err: err}
+		return nil, NewStatusError{Err: err, Description: _SERVER_STATUS}
 	}
 	return s, nil
 }
@@ -105,7 +106,7 @@ func NewAuthConf(a auth.Conf, i identity.Type, g *age.Conf) (AuthConf, error) {
 	var err error
 	if len(a) > 0 {
 		if conf.Auth, err = auth.Configure(a); err != nil {
-			return conf, AuthConfError{Err: err}
+			return conf, AuthConfError{Err: err, Description: _SERVER_AUTH}
 		}
 	}
 
@@ -113,20 +114,25 @@ func NewAuthConf(a auth.Conf, i identity.Type, g *age.Conf) (AuthConf, error) {
 		// Determining the voter's unique identifier requires for them
 		// to be authenticated.
 		if conf.Auth == nil {
-			return conf, IdentityWithoutAuthError{}
+			return conf, IdentityWithoutAuthError{
+				Description: _SERVER_ID_W_N_AUTH,
+			}
 		}
 		if conf.Identity, err = identity.Get(i); err != nil {
-			return conf, IdentityTypeError{Err: err}
+			return conf, IdentityTypeError{Err: err, Description: _SERVER_IDENTITY}
 		}
 	}
 
 	if g != nil && g.Limit > 0 {
 		// Checking the voter's age requires a unique identifier.
 		if conf.Identity == nil {
-			return conf, AgeWithoutIdentityError{}
+			return conf, AgeWithoutIdentityError{
+				Description: _SERVER_AGE_W_N_IDENTITY,
+			}
 		}
 		if conf.Age, err = age.New(g); err != nil {
-			return conf, AgeConfError{Err: err}
+			return conf, AgeConfError{Err: err,
+				Description: _SERVER_AGE}
 		}
 	}
 	return conf, nil
@@ -146,18 +152,20 @@ func (s *S) WithAuth(conf AuthConf) *S {
 func (s *S) Serve(ctx context.Context) error {
 	l, err := net.ListenTCP("tcp", s.addr)
 	if err != nil {
-		return ServeListenError{Address: s.addr, Err: err}
+		return ServeListenError{Address: s.addr, Err: err,
+			Description: _SERVER_LISTEN_TCP}
 	}
 
 	// Set the server state to serving and set to ended at s.end.
 	if err := s.status.serving(); err != nil {
-		return ServeStatusServingError{Err: err}
+		return ServeStatusServingError{Err: err, Description: _SERVER_SYSD_SERVE}
 	}
 
 	//nolint:errcheck // Only returns nil or context canceled errors.
 	go wait(ctx, s.end, func(ctx context.Context) error { // Required by wait.
 		if err := s.status.ended(); err != nil {
-			log.Error(ctx, ServeStatusEndedError{Err: err})
+			log.Error(ctx, ServeStatusEndedError{Err: err,
+				Description: _SERVER_CLOSED})
 		}
 		return nil
 	})
@@ -166,12 +174,13 @@ func (s *S) Serve(ctx context.Context) error {
 	defer func() {
 		// Wait until all connections are handled.
 		wg.Wait()
-		log.Log(ctx, AllConnectionsClosed{})
+		log.Log(ctx, AllConnectionsClosed{Description: _SERVER_CLOSE_ALL})
 	}()
 
 	errc := make(chan error, 1)
 	go func() {
-		log.Log(ctx, AcceptingConnections{Address: l.Addr()})
+		log.Log(ctx, AcceptingConnections{Address: l.Addr(),
+			Description: _SERVER_ACC})
 		for {
 			conn, err := l.Accept()
 			if err != nil {
@@ -185,7 +194,8 @@ func (s *S) Serve(ctx context.Context) error {
 				// longer receiving on errc and the error in
 				// the buffered channel will just get garbage
 				// collected and never logged.
-				errc <- log.Alert(AcceptError{Err: err})
+				errc <- log.Alert(AcceptError{Err: err,
+					Description: _SERVER_ACC_FAIL})
 				return
 			}
 
@@ -196,8 +206,9 @@ func (s *S) Serve(ctx context.Context) error {
 				defer func() {
 					if r := recover(); r != nil {
 						log.Error(ctx, ConnectionPanicError{
-							Err:   log.Alert(fmt.Errorf("%v", r)),
-							Stack: string(debug.Stack()),
+							Err:         log.Alert(fmt.Errorf("%v", r)),
+							Stack:       string(debug.Stack()),
+							Description: _SERVER_CONN_PANIC,
 						})
 						// Ensure c is closed. This is
 						// a last resort close without
@@ -214,19 +225,20 @@ func (s *S) Serve(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 	case err := <-errc:
-		log.Error(ctx, AcceptingConnectionFailed{Err: err})
+		log.Error(ctx, AcceptingConnectionFailed{Err: err, Description: _SERVER_CONN_FAIL})
 	}
 
 	// If updating the status returns an error, then only log it: do not
 	// skip closing the listener.
 	if err := s.status.stopping(); err != nil {
-		log.Error(ctx, ServeStatusStoppingError{Err: err})
+		log.Error(ctx, ServeStatusStoppingError{Err: err,
+			Description: _SERVER_CONN_STOP})
 	}
 
 	if err := l.Close(); err != nil {
-		return CloseListenerError{Err: err}
+		return CloseListenerError{Err: err, Description: _SERVER_CLOSED_GRACE}
 	}
-	log.Log(ctx, ListeningSocketClosed{})
+	log.Log(ctx, ListeningSocketClosed{Description: _SERVER_SYSD_CLOSED})
 	return nil
 }
 
@@ -246,14 +258,16 @@ func (s *S) ServeAt(ctx context.Context, start time.Time) error {
 	// checks.
 	l, err := net.ListenTCP("tcp", s.addr)
 	if err != nil {
-		return ServeAtListenError{Address: s.addr, Err: err}
+		return ServeAtListenError{Address: s.addr, Err: err,
+			Description: _SERVER_LISTEN_TCP}
 	}
 	if err := l.Close(); err != nil {
-		return ServeAtCloseListenerError{Err: err}
+		return ServeAtCloseListenerError{Err: err, Description: _SERVER_CLOSED_GRACE}
 	}
 
 	if err := s.status.waiting(); err != nil {
-		return ServeAtStatusWaitingError{Err: err}
+		return ServeAtStatusWaitingError{Err: err,
+			Description: _SERVER_SYSD_WAIT}
 	}
 	return waitStart(ctx, start, s.Serve)
 }

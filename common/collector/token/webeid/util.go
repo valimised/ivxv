@@ -16,7 +16,8 @@ func formatRegex(format string) (string, error) {
 	// format is expected to be web-eid:1.0
 	re := regexp.MustCompile(formatRegexp)
 	if !re.MatchString(format) {
-		return "", FormatRegexError{Format: format}
+		return "", FormatRegexError{Format: format,
+			Description: _WEBEID_REGEX}
 	}
 
 	// [web-eid:1.0, 1, 0]
@@ -28,8 +29,9 @@ func formatRegex(format string) (string, error) {
 func formatMajorRelease(release string) error {
 	if release != majorRelease {
 		return FormatMajorReleaseError{
-			Expected: majorRelease,
-			Got:      release,
+			Expected:    majorRelease,
+			Got:         release,
+			Description: _WEBEID_VER,
 		}
 	}
 	return nil
@@ -41,7 +43,8 @@ func hashIt(it []byte, algo string) ([]byte, error) {
 	h, err := hashAlgorithm(algo)
 
 	if err != nil {
-		return nil, HashDataError{Err: err}
+		return nil, HashDataError{Err: err,
+			Description: WEBEID_ALG}
 	}
 
 	// Hash it with algo hashing algorithm
@@ -53,7 +56,8 @@ func hashIt(it []byte, algo string) ([]byte, error) {
 func algorithmRegex(algo string) (string, error) {
 	re := regexp.MustCompile(algorithm)
 	if !re.MatchString(algo) {
-		return "", AlgorithmRegexError{Algorithm: algo}
+		return "", AlgorithmRegexError{Algorithm: algo,
+			Description: WEBEID_ALG_REGEX}
 	}
 
 	// For example "ES512" is [ES512, ES, 512]
@@ -66,7 +70,8 @@ func hashAlgorithm(algo string) (hash.Hash, error) {
 	// Check regex over Algorithm first
 	sigHash, err := algorithmRegex(algo)
 	if err != nil {
-		return nil, MalformedAlgorithmError{Err: err}
+		return nil, MalformedAlgorithmError{Err: err,
+			Description: WEBEID_ALG_REGEX}
 	}
 
 	switch sigHash {
@@ -77,7 +82,8 @@ func hashAlgorithm(algo string) (hash.Hash, error) {
 	case "512":
 		return sha512.New(), nil
 	default:
-		return nil, UnsupportedAlgorithmError{Algorithm: algo}
+		return nil, UnsupportedAlgorithmError{Algorithm: algo,
+			Description: WEBEID_ALG}
 	}
 }
 

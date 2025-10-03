@@ -11,8 +11,11 @@ import (
 )
 
 const (
-	// This should be a StatusReadResp.Caller value when calling RPC.Authenticate
+	// This should be a StatusReadResp.Caller value when calling RPC.Challenge
 	Empty = ""
+
+	// This should be a StatusReadResp.Caller value when calling RPC.Authenticate
+	Challenge = "RPC.Challenge"
 
 	// This should be a StatusReadResp.Caller value when calling RPC.AuthenticateStatus
 	Authenticate = "RPC.Authenticate"
@@ -63,18 +66,20 @@ func (r *RPC) Verify(dto interface{}) (bool, error) {
 	// dto should cast to *status.VerifyReq
 	verifyReq, err := status.CastAnyToVerifyReq(dto)
 	if err != nil {
-		return false, CastAnyToVerifyReqError{Err: err}
+		return false, CastAnyToVerifyReqError{Err: err, Description: _SESSIONSTATUS_CAST_ANY_TO_VERIFYREQ}
 	}
 
 	// verifyReq.Request should cast to server.Header
 	header, err := api.CastVerifyRequestToServerHeader(verifyReq)
 	if err != nil {
-		return false, CastVerifyRequestToServerHeaderError{Err: err}
+		return false, CastVerifyRequestToServerHeaderError{Err: err,
+			Description: _SESSIONSTATUS_CAST_VERIFYREQ_TO_SERVERHEADER}
 	}
 
 	ok, err := r.verifyAndUpdateSessionStatus(verifyReq.ServiceMethod, *header)
 	if err != nil {
-		return false, VerifyAndUpdateSessionStatusError{Err: err}
+		return false, VerifyAndUpdateSessionStatusError{Err: err,
+			Description: _SESSIONSTATUS_SEND_UPDATE_REQ_AND_VERIFY_IT}
 	}
 
 	return ok, nil
@@ -101,7 +106,7 @@ func (r *RPC) verifyAndUpdateSessionStatus(serviceMethod string, h server.Header
 	// RPC call to .WithServiceMethod(...)
 	respReadRaw, err := r.client.TLSDial(&reqReadRPC)
 	if err != nil {
-		return false, SessionReadReqTLSDialError{Err: err}
+		return false, SessionReadReqTLSDialError{Err: err, Description: _SESSIONSTATUS_TLS_DIAL}
 	}
 
 	// Process raw RPC response, doesn't care about the embedded status type
@@ -118,6 +123,9 @@ func (r *RPC) verifyAndUpdateSessionStatus(serviceMethod string, h server.Header
 	var ok bool
 	var ttl string
 	switch serviceMethod {
+	case Challenge:
+		ok, err = verifyStatusReadResp(&respRead, challengeHandler)
+		ttl = strconv.FormatInt(r.authTTL, 10)
 	case Authenticate:
 		ok, err = verifyStatusReadResp(&respRead, authenticateHandler)
 		ttl = strconv.FormatInt(r.authTTL, 10)
@@ -139,7 +147,7 @@ func (r *RPC) verifyAndUpdateSessionStatus(serviceMethod string, h server.Header
 		ttl = strconv.FormatInt(r.voteTTL, 10)
 	}
 	if !ok || err != nil {
-		return ok, VerifyStatusReadRespError{Err: err}
+		return ok, VerifyStatusReadRespError{Err: err, Description: _SESSIONSTATUS_RESP_VERIFY}
 	}
 
 	// Create new session update status request
@@ -160,7 +168,7 @@ func (r *RPC) verifyAndUpdateSessionStatus(serviceMethod string, h server.Header
 	// RPC call to .WithServiceMethod(...)
 	respUpdateRaw, err := r.client.TLSDial(&reqUpdateRPC)
 	if err != nil {
-		return false, SessionUpdateReqTLSDialError{Err: err}
+		return false, SessionUpdateReqTLSDialError{Err: err, Description: _SESSIONSTATUS_TLS_DIAL}
 	}
 
 	// Process raw RPC response, doesn't care about the embedded status type
@@ -177,8 +185,9 @@ func (r *RPC) verifyAndUpdateSessionStatus(serviceMethod string, h server.Header
 	ok = respUpdate.Ok
 	if !ok {
 		return false, SessionStatusUpdateError{
-			Caller: reqUpdate.Caller,
-			Auth:   respRead.Auth,
+			Caller:      reqUpdate.Caller,
+			Auth:        respRead.Auth,
+			Description: _SESSIONSTATUS_UPDATE_FAIL,
 		}
 	}
 
@@ -191,18 +200,19 @@ func verifyStatusReadResp(r *api.StatusReadResp,
 	return h(r)
 }
 
-// authenticateHandler performs filter operation on StatusReadResp r to
-// detect invalid SessionID in a client RPC.Authenticate request.
-func authenticateHandler(r *api.StatusReadResp) (bool, error) {
-	// RPC.Authenticate is the very first client request to IVXV,
+// challengeHandler performs filter operation on StatusReadResp r to
+// detect invalid SessionID in a client RPC.Challenge request.
+func challengeHandler(r *api.StatusReadResp) (bool, error) {
+	// RPC.Challenge is the very first client request to IVXV,
 	// so IVXV requires no previous interactions
 	firstTime := r.Caller == Empty && r.Auth == client.NoAuth
 
 	if !(firstTime) {
-		return false, AuthenticateInvalidCallerOrAuthForSessionID{
-			Method: Authenticate,
-			Caller: r.Caller,
-			Auth:   r.Auth,
+		return false, ChallengeInvalidCallerOrAuthForSessionID{
+			Method:      Challenge,
+			Caller:      r.Caller,
+			Auth:        r.Auth,
+			Description: _SESSIONSTATUS_MALFORMED_SESSION_ID_CHAL,
 		}
 	}
 
@@ -210,10 +220,29 @@ func authenticateHandler(r *api.StatusReadResp) (bool, error) {
 	return true, nil
 }
 
+// authenticateHandler performs filter operation on StatusReadResp r to
+// detect invalid SessionID in a client RPC.Authenticate request.
+func authenticateHandler(r *api.StatusReadResp) (bool, error) {
+	// RPC.Authenticate is the second client request to IVXV,
+	// so IVXV requires no previous interactions
+	firstTime := r.Caller == Challenge && r.Auth == client.SmartIDAuth
+
+	if !(firstTime) {
+		return false, AuthenticateInvalidCallerOrAuthForSessionID{
+			Method:      Authenticate,
+			Caller:      r.Caller,
+			Auth:        r.Auth,
+			Description: _SESSIONSTATUS_MALFORMED_SESSION_ID_AUTHENTICATE,
+		}
+	}
+
+	return true, nil
+}
+
 // authenticateStatusHandler performs filter operation on StatusReadResp r to
 // detect invalid SessionID in a client RPC.AuthenticateStatus request.
 func authenticateStatusHandler(r *api.StatusReadResp) (bool, error) {
-	// RPC.AuthenticateStatus is the second client request to IVXV,
+	// RPC.AuthenticateStatus is the third client request to IVXV,
 	// so IVXV requires RPC.Authenticate previously interacted
 	secondTime := r.Caller == Authenticate && r.Auth == client.SmartIDAuth
 
@@ -225,9 +254,10 @@ func authenticateStatusHandler(r *api.StatusReadResp) (bool, error) {
 
 	if !(secondTime) && !(nTime) {
 		return false, AuthenticateStatusInvalidCallerOrAuthForSessionID{
-			Method: AuthenticateStatus,
-			Caller: r.Caller,
-			Auth:   r.Auth,
+			Method:      AuthenticateStatus,
+			Caller:      r.Caller,
+			Auth:        r.Auth,
+			Description: _SESSIONSTATUS_MALFORMED_SESSION_ID_AUTHENTICATE_STATUS,
 		}
 	}
 	return true, nil
@@ -242,9 +272,10 @@ func getCertificateHandler(r *api.StatusReadResp) (bool, error) {
 
 	if !(fourthTime) {
 		return false, GetCertificateInvalidCallerOrAuthForSessionID{
-			Method: GetCertificate,
-			Caller: r.Caller,
-			Auth:   r.Auth,
+			Method:      GetCertificate,
+			Caller:      r.Caller,
+			Auth:        r.Auth,
+			Description: _SESSIONSTATUS_MALFORMED_SESSION_ID_GET_CERTIFICATE,
 		}
 	}
 	return true, nil
@@ -265,9 +296,10 @@ func getCertificateStatusHandler(r *api.StatusReadResp) (bool, error) {
 
 	if !(fifthTime) && !(nTime) {
 		return false, GetCertificateStatusInvalidCallerOrAuthForSessionID{
-			Method: GetCertificateStatus,
-			Caller: r.Caller,
-			Auth:   r.Auth,
+			Method:      GetCertificateStatus,
+			Caller:      r.Caller,
+			Auth:        r.Auth,
+			Description: _SESSIONSTATUS_MALFORMED_SESSION_ID_GET_CERTIFICATE_STATUS,
 		}
 	}
 	return true, nil
@@ -282,9 +314,10 @@ func signHandler(r *api.StatusReadResp) (bool, error) {
 
 	if !(sixthTime) {
 		return false, SignInvalidCallerOrAuthForSessionID{
-			Method: Sign,
-			Caller: r.Caller,
-			Auth:   r.Auth,
+			Method:      Sign,
+			Caller:      r.Caller,
+			Auth:        r.Auth,
+			Description: _SESSIONSTATUS_MALFORMED_SESSION_ID_SIGN,
 		}
 	}
 	return true, nil
@@ -305,9 +338,10 @@ func signStatusHandler(r *api.StatusReadResp) (bool, error) {
 
 	if !(seventhTime) && !(nTime) {
 		return false, SignStatusInvalidCallerOrAuthForSessionID{
-			Method: SignStatus,
-			Caller: r.Caller,
-			Auth:   r.Auth,
+			Method:      SignStatus,
+			Caller:      r.Caller,
+			Auth:        r.Auth,
+			Description: _SESSIONSTATUS_MALFORMED_SESSION_ID_SIGN_STATUS,
 		}
 	}
 	return true, nil

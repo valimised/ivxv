@@ -50,7 +50,7 @@ public class LocaleConfLoader {
         String[] langs = langProps.getProperty(LANGS_KEY).split(",");
         log.info("Loaded languages: {}", Arrays.asList(langs));
         Stream.of(langs).map(String::trim).filter(s -> !s.isEmpty())
-                .forEach(s -> locales.add(new Locale(s)));
+                .forEach(s -> locales.add(Locale.of(s)));
 
         if (locales.isEmpty()) {
             throw new MessageException(Msg.e_langs_empty, LANG_PROPERTIES, LANGS_KEY);

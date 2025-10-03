@@ -13,4 +13,4 @@ func x() {
 	_ = InnerLocal{Field: 0}
 }
 
-var _ = OuterLocal{Field: 0}
+var _ = OuterLocal{Field: 0, Description: "OuterLocal"}

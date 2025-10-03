@@ -1,10 +1,14 @@
 package ee.ivxv.common.crypto;
 
 import ee.ivxv.common.asn1.Field;
+import ee.ivxv.common.math.Group;
 import ee.ivxv.common.util.Util;
+
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HexFormat;
+import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Plaintext instance represents an immutable plaintext suitable for encryption. It includes
@@ -13,7 +17,7 @@ import java.util.HexFormat;
  */
 public class Plaintext {
     private final byte[] msg;
-    private final boolean padded;
+    public final boolean padded;
 
     /**
      * Initialize the Plaintext instance from byte array.
@@ -103,64 +107,6 @@ public class Plaintext {
     }
 
     /**
-     * Return a Plaintext with additional padding.
-     * 
-     * @param totalBytes The number of bytes to pad to.
-     * @return Plaintext with padded message.
-     * @throws IllegalArgumentException If the message does not fit into given number of bytes.
-     */
-    public Plaintext addPadding(int totalBytes) throws IllegalArgumentException {
-        if (this.padded) {
-            return this;
-        }
-        if (this.msg.length > totalBytes - 3) {
-            throw new IllegalArgumentException("Padded message length too long");
-        }
-        byte[] padded = new byte[totalBytes];
-        int i;
-        padded[0] = 0x00;
-        padded[1] = 0x01;
-        padded[totalBytes - this.msg.length - 1] = 0x00;
-        for (i = 2; i < totalBytes - this.msg.length - 1; i++) {
-            padded[i] = (byte) 0xff;
-        }
-        System.arraycopy(this.msg, 0, padded, i + 1, this.msg.length);
-        return new Plaintext(padded, true);
-    }
-
-    /**
-     * Strip padding. No-op if message is already unpadded.
-     * 
-     * @return Unpadded Plaintext.
-     * @throws IllegalArgumentException If padding is invalid.
-     */
-    public Plaintext stripPadding() throws IllegalArgumentException {
-        if (!this.padded) {
-            return this;
-        }
-        if (this.msg.length < 3) {
-            throw new IllegalArgumentException("Source message can not contain padding");
-        }
-        if (this.msg[0] != 0x00 || this.msg[1] != 0x01) {
-            throw new IllegalArgumentException("Incorrect padding head");
-        }
-        for (int i = 2; i < this.msg.length; i++) {
-            switch (this.msg[i]) {
-                case 0:
-                    // found padding end
-                    return new Plaintext(Arrays.copyOfRange(this.msg, i + 1, this.msg.length),
-                            false);
-                case (byte) 0xff:
-                    continue;
-                default:
-                    // incorrect padding byte
-                    throw new IllegalArgumentException("Incorrect padding byte");
-            }
-        }
-        throw new IllegalArgumentException("Padding unexpected");
-    }
-
-    /**
      * Return a BigInteger representation of the message.
      * 
      * @return BigInteger representation of the message.
@@ -178,7 +124,7 @@ public class Plaintext {
 
         Plaintext plaintext = (Plaintext) o;
 
-        return Arrays.equals(this.stripPadding().msg, plaintext.stripPadding().msg);
+        return Arrays.equals(this.msg, plaintext.msg);
 
     }
 

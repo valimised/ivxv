@@ -1,0 +1,143 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2016-2025, Cybernetica AS
+# This file is distributed under the same license as the Elektroonilise
+# hääletamise infosüsteem package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-03 23:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: et\n"
+"Language-Team: et <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:1
+msgid "2 Valikute nimekiri (kandidaatide nimekiri)"
+msgstr "Valikute nimekiri (kandidaatide nimekiri)"
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:3
+msgid "Protseduur"
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:5
+msgid ""
+"VIS3 edastab EHS-le andmed registreeritud kandidaatide (valimistel) või "
+"vastusevariantide (rahvahääletusel) kohta."
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:7
+msgid "Andmed edastatakse inim-masin-protseduuriga:"
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:9
+msgid ""
+"VIS peakasutaja laeb JSON faili VIS3-st alla; Kasutaja peab valima "
+"aktiivsete valimissündmuste seast soovitud sündmuse, mille kohta infot "
+"alla laadida. Valimissündmus on aktiivne, kui tema staatus pole `closed` "
+"ega `deleted`."
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:10
+msgid ""
+"VIS peakasutaja allkirjastab faili digitaalselt väljaspool VIS-i ja annab"
+" selle EHS operaatorile;"
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:11
+msgid "EHS operaator laeb digiallkirjastatud faili EHS-i."
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:13
+msgid ""
+"Fail on JSON-formaadis (näidis lisatud tööülesandele). Faili ei "
+"allkirjastata."
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:15
+msgid "Edastatav fail"
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:17
+msgid ""
+"Aluseks on EHS senine liides VIS2-ga, mis on spetsifitseeritud dokumendis"
+" \"IVXV protokollide kirjeldus\" (v 1.5.0, IVXV-PR-1.5.0, 20.04.2019), "
+"[https://www.valimised.ee/sites/default/files/uploads/eh/IVXV-"
+"protokollid.pdf](https://www.valimised.ee/sites/default/files/uploads/eh"
+"/IVXV-protokollid.pdf), jaotises \"Valikute nimekiri\" (jaotis 3.4)."
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:19
+msgid ""
+"Valimissündmuse identifikaator peab vastama formaadile [Valimissündmuse "
+"identifikaator](../valimissündmuse_identifikaator.md)."
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:21
+msgid "Faili struktuur (JSON-skeem): [choices.schema](choices.schema)"
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:23
+msgid "Faili näited (JSON):"
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:25
+msgid "[choices_KOV.json](choices_KOV.json)"
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:26
+msgid "[choices_EP.json](choices_EP.json)"
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:27
+msgid "[choices_RK.json](choices_RK.json)"
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:29
+msgid "Taustainfo"
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:31
+msgid ""
+"Valikute nimekiri sisaldab andmeid kandidaatide (valimistel) või "
+"vastusevariantide (rahvahääletusel) kohta. Valimiste korral on lisaks "
+"kandidaadi andmetele nimekirjas ka tema erakonna või valimisliidu nimi, "
+"mille nimekirjas ta kandideerib."
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:34
+msgid ""
+"Valijale elektroonilise hääletamise käigus nähtavaid valimiste vahelisi "
+"süsteemseid erinevusi on kaks:"
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:36
+msgid ""
+"Rahvahääletusel ei valita erakondadesse kuuluvate kandidaatide vahel vaid"
+" vastatakse „JAH“/“EI“ rahvahääletuse küsimusele;"
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:38
+msgid ""
+"Riigikogu, KOV ja Euroopa Parlamendi valimistel antakse hääl ühele "
+"kandidaadile, kes võib, aga ei pruugi kuuluda poliitilise ühenduse "
+"nimekirja."
+msgstr ""
+
+#: ../../VIS3-EHS/2_Valikute_nimekiri/SPEC.md:40
+msgid ""
+"Protokollistik kodeerib valija võimalikud valikud ringkonnas kuni "
+"11-kohalise arvväärtusena, mis valikute nimekirjas kodeeritakse koos "
+"ringkonna EHAK-koodiga. Valijale tohivad kättesaadavad olla ainult tema "
+"ringkonnakohased valikud. Valijarakendus peab seda omadust tagama ning "
+"hääletamistulemust arvutav rakendus kontrollima."
+msgstr ""
+

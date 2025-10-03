@@ -65,7 +65,7 @@ func initLogger() gin.HandlerFunc {
 		info := struct {
 			RemoteAddr    string `json:"RemoteAddr"`
 			RequestMethod string `json:"RequestMethod"`
-			RequestUri    string `json:"RequestUri"`
+			RequestUri    string `json:"RequestUri"` //nolint:revive,stylecheck
 		}{c.Request.RemoteAddr, c.Request.Method, c.Request.URL.RequestURI()}
 		log.Info(info)
 		c.Next()
@@ -73,7 +73,7 @@ func initLogger() gin.HandlerFunc {
 }
 
 func requireCode(c *gin.Context) (string, bool) {
-	electionId := c.Param("electionId")
+	electionId := c.Param("electionId") //nolint:revive,stylecheck
 	if electionId == "" {
 		c.JSON(http.StatusBadRequest, errors.FieldError{
 			Code:  errors.ErrBadRequest.Error(),
@@ -103,7 +103,7 @@ func requireSeqNo(c *gin.Context) (int, bool) {
 func respond(c *gin.Context, status int, value interface{}, err error) {
 	if err != nil {
 		var fieldErr errors.FieldError
-		json.Unmarshal([]byte(err.Error()), &fieldErr)
+		json.Unmarshal([]byte(err.Error()), &fieldErr) //nolint:errcheck
 		if fieldErr.Code == errors.ErrNotFound.Error() {
 			c.JSON(httpErr(errors.ErrNotFound), fieldErr)
 			return

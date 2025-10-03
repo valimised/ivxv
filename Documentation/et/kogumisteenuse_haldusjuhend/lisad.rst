@@ -165,7 +165,7 @@ SSH kasutajate autentimine ID-kaardi abil
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 SSH-teenusesse on võimalik autentida ID-kaardi avaliku võtmega abil, kasutades
-selleks PKCS#11 toega SSH-klienti kitty.exe (http://kitty.9bis.net/).
+selleks PKCS#11 toega SSH-klienti ``kitty.exe`` (http://kitty.9bis.net/).
 
 Turvakaalutustel tuleks keelata haldusliidese SSH-teenusesse parooliga
 autentimine. Parooliga autentimise keelamiseks tuleb seadistusfailis
@@ -178,11 +178,11 @@ väärtuseks ``no``::
 Volitatud kasutajate faili asukoht (:file:`/etc/ssh/kasutajad`) tuleb failis
 :file:`/etc/ssh/sshd_config` määrata parameetriga ``AuthorizedKeysFile``:
 
-   AuthorizedKeysFile /etc/ssh/kasutajad
+   ``AuthorizedKeysFile /etc/ssh/kasutajad``
 
 .. important::
 
-   Seadistusfailis /etc/ssh/sshd_config tehtud muutuse rakendamiseks tuleb
+   Seadistusfailis ``/etc/ssh/sshd_config`` tehtud muutuse rakendamiseks tuleb
    SSH teenus taaskäivitada::
 
       # service ssh restart
@@ -260,7 +260,7 @@ Failisüsteemis hoitavad andmed
    korraldusfailide ajalugu;
 
 *  :file:`/var/lib/ivxv/commands/<command-type>-<timestamp>.bdoc` --
-   digitaalselt allkirjastatud korraldus ASiC-E vormingus.
+   digitaalselt allkirjastatud korraldus ``ASiC-E`` vormingus.
 
 *  :file:`/var/lib/ivxv/commands/<command-type>-<timestamp>.json` --
    korralduse olekufail JSON-vormingus.
@@ -384,7 +384,7 @@ Andmevälja nimi ja kirjeldus:
 * ``service/<service-id>/tls-key`` -- Teenuse TLS-sertifikaadi võtmefaili
   kontrollsumma (SHA256);
 
-* ``service/<service-id>/tspreg-key`` -- Hääletamisteensue ajatempliteenuse
+* ``service/<service-id>/tspreg-key`` -- Hääletamisteenuse ajatempliteenuse
   signeerimisvõtme faili kontrollsumma (SHA256);
 
 Kasutatud tähised:
@@ -421,7 +421,7 @@ Klastri seisundi monitoorimine Zabbixiga
 Etcd klaster tagab süsteemi toimimise ka olukorras, kus mõni klastriliige kaotab
 töövõime (krahh, võrguühenduse kadumine jms.). Siiski on oluline selliseid
 sündmuseid monitoorida ning nende algpõhjus tuvastada. Etcd krahhimise
-tuvastamiseks tuleb talletusteenuste logidest (``ivxv-YYYY-MM-DD.log``) monitoorida
+tuvastamiseks tuleb talletusteenuste logidest (``ivxv-YYYY-MM-DD-HH.log``) monitoorida
 ``ivxv.ee/service/storage.EtcdTerminatedError`` kirjet.
 
 Täiendavalt saab etcd käsureakliendiga küsida klastri liikmete olekut. Kuna

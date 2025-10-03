@@ -171,20 +171,21 @@ func newC(tag string, usage string, withStorage bool, args ...string) (c *C) {
 	if c.Ctx, err = log.NewContext(context.Background(), tag); err != nil {
 		os.Exit(c.Error(exit.Unavailable, nil, "failed to configure logger:", err))
 	}
-	log.Log(c.Ctx, Started{Args: os.Args})
+	log.Log(c.Ctx, Started{Args: os.Args, Description: _COMMAND_START})
 
 	c.Ctx, c.cancel = context.WithCancel(c.Ctx)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		s := <-ch
-		log.Log(c.Ctx, Cancelled{Signal: s})
+		log.Log(c.Ctx, Cancelled{Signal: s, Description: _COMMAND_OS})
 		c.cancel()
 	}()
 
 	var code int
 	if c.Conf, code, err = conf.New(c.Ctx, *trustp, *elecp, *techp); err != nil {
-		os.Exit(c.Error(code, ConfigurationError{Err: err},
+		os.Exit(c.Error(code, ConfigurationError{Err: err,
+			Description: _COMMAND_CFG},
 			"failed to load configuration:", err))
 	}
 
@@ -198,7 +199,8 @@ func newC(tag string, usage string, withStorage bool, args ...string) (c *C) {
 	if c.Conf.Technical != nil {
 		c.Network, c.Service = c.Conf.Technical.Service(*instancep)
 		if c.Service == nil {
-			os.Exit(c.Error(exit.Config, UnknownInstanceIDError{ID: *instancep},
+			os.Exit(c.Error(exit.Config, UnknownInstanceIDError{ID: *instancep,
+				Description: _COMMAND_INSTANCE},
 				"no such service ID:", *instancep))
 		}
 	}
@@ -214,7 +216,8 @@ func newC(tag string, usage string, withStorage bool, args ...string) (c *C) {
 				Servers:   servers,
 			}); err != nil {
 
-			os.Exit(c.Error(exit.Config, StorageConfigurationError{Err: err},
+			os.Exit(c.Error(exit.Config, StorageConfigurationError{Err: err,
+				Description: _COMMAND_STORAGE},
 				"failed to configure storage client:", err))
 		}
 	}
@@ -237,7 +240,7 @@ func newC(tag string, usage string, withStorage bool, args ...string) (c *C) {
 //	}
 func (c *C) Cleanup(code int) int {
 	c.cancel()
-	log.Log(c.Ctx, Done{})
+	log.Log(c.Ctx, Done{Description: _COMMAND_STOP})
 	if err := log.Close(c.Ctx); err != nil {
 		ccode := c.Error(exit.Unavailable, nil, "failed to close logger:", err)
 		if code == exit.OK {

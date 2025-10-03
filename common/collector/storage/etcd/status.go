@@ -20,10 +20,11 @@ func (c *client) GetWithLease(ctx context.Context, key string) ([]byte, string, 
 	// just with restricted operations, mostly CRUD-only
 	kv, err := c.kv(ctx)
 	if err != nil {
-		return nil, emptyLeaseID, log.Alert(GetWithLeaseKVError{Err: err})
+		return nil, emptyLeaseID, log.Alert(GetWithLeaseKVError{Err: err,
+			Description: _ETCD_CLIENT_N_CONN})
 	}
 
-	log.Debug(ctx, GetWithLeaseRequest{Key: key})
+	log.Debug(ctx, GetWithLeaseRequest{Key: key, Description: _ETCD_GET_W_LEASE})
 
 	// If etcd doesn't respond, then don't hung longer than c.optime
 	ctx, cancel := context.WithTimeout(ctx, c.optime)
@@ -33,14 +34,16 @@ func (c *client) GetWithLease(ctx context.Context, key string) ([]byte, string, 
 	resp, err := kv.Get(ctx, key)
 	if err != nil {
 		return nil, emptyLeaseID, log.Alert(GetWithLeaseError{
-			Key: key,
-			Err: err,
+			Key:         key,
+			Err:         err,
+			Description: _ETCD_GET_W_LEASE_DB_FAIL,
 		})
 	}
 
 	// There is no such a key in etcd
 	if resp.Kvs == nil {
-		log.Debug(ctx, GetWithLeaseEmptyResponse{Key: key})
+		log.Debug(ctx, GetWithLeaseEmptyResponse{Key: key,
+			Description: _ETCD_GET_NONE})
 		return nil, emptyLeaseID, nil
 	}
 
@@ -50,10 +53,11 @@ func (c *client) GetWithLease(ctx context.Context, key string) ([]byte, string, 
 	leaseID := strconv.FormatInt(resp.Kvs[0].Lease, base10)
 
 	log.Debug(ctx, GetWithLeaseResponse{
-		Response: resp,
-		Key:      key,
-		Value:    resp.Kvs[0].Value,
-		LeaseID:  leaseID,
+		Response:    resp,
+		Key:         key,
+		Value:       resp.Kvs[0].Value,
+		LeaseID:     leaseID,
+		Description: _ETCD_GET_W_LEASE_COMMITTED,
 	})
 
 	return resp.Kvs[0].Value, leaseID, err
@@ -66,24 +70,27 @@ func (c *client) PutForceWithOpts(ctx context.Context, key string, value []byte,
 	putOptsWithTTL, ok := opts.(*storage.PutOpOptionWithTTL)
 	if !ok {
 		return log.Alert(PutForceWithOptsCastToPutOpOptionsWithTTLError{
-			Key: key,
-			Err: err,
+			Key:         key,
+			Err:         err,
+			Description: _ETCD_PUT_OPTS,
 		})
 	}
 
 	// Get etcd client key-value store
 	kv, err := c.kv(ctx)
 	if err != nil {
-		return log.Alert(PutForceWithOptsKVError{Err: err})
+		return log.Alert(PutForceWithOptsKVError{Err: err,
+			Description: _ETCD_GET_NONE})
 	}
 
 	// Ensure that LeaseID is not "", otherwise Go will panic at strconv.ParseInt
 	if putOptsWithTTL.LeaseID == "" {
 		log.Debug(ctx, PutForceWithOptsEmptyLeaseID{
-			Key:     key,
-			Value:   value,
-			LeaseID: putOptsWithTTL.LeaseID,
-			TTL:     putOptsWithTTL.TTL,
+			Key:         key,
+			Value:       value,
+			LeaseID:     putOptsWithTTL.LeaseID,
+			TTL:         putOptsWithTTL.TTL,
+			Description: _ETCD_PUT_LEASE,
 		})
 
 		putOptsWithTTL.LeaseID = "0"
@@ -93,17 +100,19 @@ func (c *client) PutForceWithOpts(ctx context.Context, key string, value []byte,
 	leaseID, err := strconv.ParseInt(putOptsWithTTL.LeaseID, 10, 64)
 	if err != nil {
 		return log.Alert(PutForceWithOptsConvertLeaseIDToInt64Error{
-			LeaseID: putOptsWithTTL.LeaseID,
+			LeaseID:     putOptsWithTTL.LeaseID,
+			Description: _ETCD_PUT_LEASE_INT,
 		})
 	}
 
 	// Ensure that TTL is not "", otherwise Go will panic at strconv.ParseInt
 	if putOptsWithTTL.TTL == "" {
 		log.Debug(ctx, PutForceWithOptsEmptyTTL{
-			Key:     key,
-			Value:   value,
-			LeaseID: putOptsWithTTL.LeaseID,
-			TTL:     putOptsWithTTL.TTL,
+			Key:         key,
+			Value:       value,
+			LeaseID:     putOptsWithTTL.LeaseID,
+			TTL:         putOptsWithTTL.TTL,
+			Description: _ETCD_PUT_LEASE_TTL,
 		})
 
 		putOptsWithTTL.TTL = "0"
@@ -113,15 +122,17 @@ func (c *client) PutForceWithOpts(ctx context.Context, key string, value []byte,
 	ttl, err := strconv.ParseInt(putOptsWithTTL.TTL, 10, 64)
 	if err != nil {
 		return log.Alert(PutForceWithOptsConvertTTLToInt64Error{
-			LeaseID: putOptsWithTTL.LeaseID,
+			LeaseID:     putOptsWithTTL.LeaseID,
+			Description: _ETCD_PUT_LEASE_TTL_INT,
 		})
 	}
 
 	log.Debug(ctx, PutForceWithOptsRequest{
-		Key:     key,
-		Value:   value,
-		LeaseID: putOptsWithTTL.LeaseID,
-		TTL:     ttl,
+		Key:         key,
+		Value:       value,
+		LeaseID:     putOptsWithTTL.LeaseID,
+		TTL:         ttl,
+		Description: _ETCD_PUT,
 	})
 
 	resp, err := c.putForceWithOpts(ctx, kv, storage.PutAllRequestWithTTL{
@@ -132,14 +143,16 @@ func (c *client) PutForceWithOpts(ctx context.Context, key string, value []byte,
 	})
 	if err != nil || !resp.Succeeded {
 		return log.Alert(PutForceWithOptsError{
-			Key: key,
-			Err: err,
+			Key:         key,
+			Err:         err,
+			Description: _ETCD_PUT_DB_FAIL,
 		})
 	}
 
 	log.Debug(ctx, PutForceWithOptsResponse{
-		Response: resp,
-		Success:  resp.Succeeded,
+		Response:    resp,
+		Success:     resp.Succeeded,
+		Description: _ETCD_PUT_REQ_COMMITTED,
 	})
 	return
 }
@@ -163,8 +176,9 @@ func (c *client) putForceWithOpts(ctx context.Context, kv clientv3.KV,
 		cancel1()
 		if err != nil {
 			return nil, GrantNewLeaseIDError{
-				Err: err,
-				Key: req.Key,
+				Err:         err,
+				Key:         req.Key,
+				Description: _ETCD_LEASE_GRANT,
 			}
 		}
 		leaseID = lease.ID
@@ -185,23 +199,26 @@ func (c *client) putForceWithOpts(ctx context.Context, kv clientv3.KV,
 func (c *client) Delete(ctx context.Context, key string) error {
 	kv, err := c.kv(ctx)
 	if err != nil {
-		return log.Alert(DeleteKVError{Err: err})
+		return log.Alert(DeleteKVError{Err: err,
+			Description: _ETCD_CLIENT_N_CONN})
 	}
 
-	log.Debug(ctx, DeleteRequest{Key: key})
+	log.Debug(ctx, DeleteRequest{Key: key, Description: _ETCD_DELETE})
 
 	// Delete a key
 	resp, err := c.delete(ctx, kv, key)
 	if err != nil || !resp.Succeeded {
 		return log.Alert(DeleteError{
-			Key: key,
-			Err: err,
+			Key:         key,
+			Err:         err,
+			Description: _ETCD_DELETE_DB_FAIL,
 		})
 	}
 
 	log.Debug(ctx, DeleteResponse{
-		Response: resp,
-		Success:  resp.Succeeded,
+		Response:    resp,
+		Success:     resp.Succeeded,
+		Description: _ETCD_DELETE_REQ_COMMITTED,
 	})
 	return nil
 }

@@ -30,7 +30,7 @@ action(
     template="ivxv-json"
 )
 
-# write IVXV request log to /var/log/ivxv/ivxv-request-YYYY-MM-DD.log
+# write IVXV request log to /var/log/ivxv/ivxv-request-YYYY-MM-DD-HH.log
 if ($programname startswith 'ivxv-') and ($syslogfacility-text == 'local1') then
 action(
     type="omfile"
@@ -38,7 +38,7 @@ action(
 )
 
 # write IVXV debug log and log of related
-# services (haproxy, etcd, rsyslog, sshd) to /var/log/ivxv/ivxv-debug-YYYY-MM-DD.log
+# services (haproxy, etcd, rsyslog, sshd) to /var/log/ivxv/ivxv-debug-YYYY-MM-DD-HH.log
 if ($programname startswith 'ivxv-') or ($programname startswith 'rsyslog') or
    ($programname == 'haproxy') or ($programname == 'sshd') or ($programname == 'etcd') then
 action(

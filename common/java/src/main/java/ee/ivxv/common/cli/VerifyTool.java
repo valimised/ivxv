@@ -4,8 +4,10 @@ import ee.ivxv.common.M;
 import ee.ivxv.common.cli.VerifyTool.VerifyArgs;
 import ee.ivxv.common.service.container.Container;
 import ee.ivxv.common.service.container.ContainerReader;
+import ee.ivxv.common.service.container.DataFile;
 import ee.ivxv.common.util.I18nConsole;
 import java.nio.file.Path;
+import java.util.List;
 
 public class VerifyTool implements Tool.Runner<VerifyArgs> {
 
@@ -35,7 +37,10 @@ public class VerifyTool implements Tool.Runner<VerifyArgs> {
                 s.getSigner().getSerialNumber(), s.getSigner().getName(), s.getSigningTime()));
 
         console.println(M.m_files);
-        c.getFiles().forEach(f -> console.println(M.m_file_row, f.getName()));
+        List<DataFile> contents = c.getFiles().stream().sorted(
+                (f1, f2) -> f1.getName().compareToIgnoreCase(f2.getName())
+                ).toList();
+        contents.forEach(f -> console.println(M.m_file_row, f.getName()));
     }
 
     public static class VerifyArgs extends Args {

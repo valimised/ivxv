@@ -46,12 +46,12 @@ func firstBoot(wd string) (bool, error) {
 		if os.IsNotExist(err) {
 			return true, nil
 		}
-		return false, OpenWALDirError{Err: err}
+		return false, OpenWALDirError{Err: err, Description: _STORAGE_WAL_OPEN}
 	}
 	defer f.Close()
 	files, err := f.Readdirnames(-1)
 	if err != nil {
-		return false, ReadWALDirError{Err: err}
+		return false, ReadWALDirError{Err: err, Description: _STORAGE_ETCD_OPEN}
 	}
 	return len(files) == 0, nil
 }
@@ -71,14 +71,14 @@ func hexID(id uint64) string {
 func members(ctx context.Context, client *clientv3.Client, optime time.Duration) (
 	[]member, error) {
 
-	log.Log(ctx, ListingMembers{})
+	log.Log(ctx, ListingMembers{Description: _STORAGE_ETCD_MEM})
 	ctx, cancel := context.WithTimeout(ctx, optime)
 	defer cancel()
 	list, err := client.MemberList(ctx)
 	if err != nil {
-		return nil, MemberListError{Err: err}
+		return nil, MemberListError{Err: err, Description: _STORAGE_ETCD_MEM_FAIL}
 	}
-	log.Log(ctx, MemberList{Members: list.Members})
+	log.Log(ctx, MemberList{Members: list.Members, Description: _STORAGE_ETCD_MEM_LIST})
 
 	members := make([]member, len(list.Members))
 	for i, pbm := range list.Members {
@@ -91,18 +91,20 @@ func members(ctx context.Context, client *clientv3.Client, optime time.Duration)
 		default:
 			// Multiple client URLs are not supported.
 			return nil, UnexpectedMemberClientURLCountError{
-				ID:   hexID(m.id),
-				Name: m.name,
-				URLs: pbm.ClientURLs,
+				ID:          hexID(m.id),
+				Name:        m.name,
+				URLs:        pbm.ClientURLs,
+				Description: _STORAGE_SAME_ID_CLIENT,
 			}
 		}
 
 		// Multiple peer URLs are not supported.
 		if len(pbm.PeerURLs) != 1 {
 			return nil, UnexpectedMemberPeerURLCountError{
-				ID:   hexID(m.id),
-				Name: m.name,
-				URLs: pbm.PeerURLs,
+				ID:          hexID(m.id),
+				Name:        m.name,
+				URLs:        pbm.PeerURLs,
+				Description: _STORAGE_SAME_ID,
 			}
 		}
 		m.peerURL = pbm.PeerURLs[0]
@@ -128,7 +130,8 @@ next:
 		// not respond. If the member has no client URL, then it has
 		// not been started yet and can be freely pruned.
 		if len(m.clientURL) > 0 {
-			log.Log(ctx, PingingClientURL{URL: m.clientURL})
+			log.Log(ctx, PingingClientURL{URL: m.clientURL,
+				Description: _STORAGE_PING_CLIENT})
 
 			// Since this member is no longer configured, its
 			// client URL is not among the existing client's
@@ -137,7 +140,8 @@ next:
 			conf.Endpoints = []string{m.clientURL}
 			pingc, err := clientv3.New(conf)
 			if err != nil {
-				log.Debug(ctx, PingClientError{Err: err})
+				log.Debug(ctx, PingClientError{Err: err,
+					Description: _STORAGE_PING_CLIENT_CFG})
 			} else {
 				defer pingc.Close()
 
@@ -145,25 +149,29 @@ next:
 				defer cancel()
 				status, err := pingc.Status(opctx, m.clientURL)
 				if err == nil {
-					log.Debug(ctx, PingStatus{Status: status})
+					log.Debug(ctx, PingStatus{Status: status,
+						Description: _STORAGE_PING_CLIENT_PRUNED})
 					return RemovedMemberStillAliveError{
-						ID:        hexID(m.id),
-						Name:      m.name,
-						ClientURL: m.clientURL,
+						ID:          hexID(m.id),
+						Name:        m.name,
+						ClientURL:   m.clientURL,
+						Description: _STORAGE_PING_CLIENT_PRUNED,
 					}
 				}
-				log.Debug(ctx, PingError{Err: err})
+				log.Debug(ctx, PingError{Err: err, Description: _STORAGE_PING_CLIENT_FAIL})
 			}
 		}
 
 		// Remove stopped and deconfigured member from cluster.
-		log.Log(ctx, PruningMember{ID: hexID(m.id), Name: m.name, URL: m.peerURL})
+		log.Log(ctx, PruningMember{ID: hexID(m.id), Name: m.name, URL: m.peerURL,
+			Description: _STORAGE_PRUNE_NODE})
 		opctx, cancel := context.WithTimeout(ctx, optime)
 		defer cancel()
 		if _, err := client.MemberRemove(opctx, m.id); err != nil {
-			return RemoveMemberError{Err: err}
+			return RemoveMemberError{Err: err,
+				Description: _STORAGE_PRUNE_NODE_FAIL}
 		}
-		log.Log(ctx, PrunedMember{ID: hexID(m.id)})
+		log.Log(ctx, PrunedMember{ID: hexID(m.id), Description: _STORAGE_PRUNE_NODE_OK})
 	}
 	return nil
 }
@@ -183,8 +191,9 @@ func addMember(ctx context.Context, client *clientv3.Client, optime time.Duratio
 					m.clientURL != protocol(service.Address) {
 
 				return PeerURLAlreadyInUseError{
-					ID:   hexID(m.id),
-					Name: m.name,
+					ID:          hexID(m.id),
+					Name:        m.name,
+					Description: _STORAGE_NODE_URI_USED,
 				}
 			}
 			return nil
@@ -192,14 +201,16 @@ func addMember(ctx context.Context, client *clientv3.Client, optime time.Duratio
 	}
 
 	// Add new member to cluster.
-	log.Log(ctx, AddingMember{Name: service.ID, URL: peerURL})
+	log.Log(ctx, AddingMember{Name: service.ID, URL: peerURL,
+		Description: _STORAGE_ADD_NODE})
 	ctx, cancel := context.WithTimeout(ctx, optime)
 	defer cancel()
 	added, err := client.MemberAdd(ctx, []string{peerURL})
 	if err != nil {
-		return AddMemberError{Err: err}
+		return AddMemberError{Err: err, Description: _STORAGE_ADD_NODE_FAIL}
 	}
-	log.Log(ctx, AddedMember{ID: hexID(added.Member.ID)})
+	log.Log(ctx, AddedMember{ID: hexID(added.Member.ID),
+		Description: _STORAGE_ADD_NODE_OK})
 	return nil
 }
 
@@ -223,36 +234,41 @@ func updateMembers(ctx context.Context, conf clientv3.Config, optime time.Durati
 	}
 
 	// Initialize an etcd client to use.
-	log.Log(ctx, UpdatingClusterMembership{Endpoints: conf.Endpoints})
+	log.Log(ctx, UpdatingClusterMembership{Endpoints: conf.Endpoints,
+		Description: _STORAGE_UPDATE_CLUSTER})
 	client, err := clientv3.New(conf)
 	if err != nil {
-		return EtcdClientError{Err: err}
+		return EtcdClientError{Err: err,
+			Description: _STORAGE_PING_CLIENT_CFG}
 	}
 	defer func() {
 		if err := client.Close(); err != nil {
 			// Only log close error, do not return.
-			log.Error(ctx, EtcdClientCloseError{Err: err})
+			log.Error(ctx, EtcdClientCloseError{Err: err,
+				Description: _STORAGE_ETCD_CONN_CLOSE})
 		}
 	}()
 
 	// Get the current list of members configured in the cluster.
 	members, err := members(ctx, client, optime)
 	if err != nil {
-		return UpdateListMembersError{Err: err}
+		return UpdateListMembersError{Err: err,
+			Description: _STORAGE_ETCD_CLUSTER_UPDATE}
 	}
 
 	// Prune members which are no longer configured: must be done before
 	// adding to put the cluster in a healthy state for membership changes.
 	if err := pruneMembers(ctx, client, optime, conf, members, configured); err != nil {
-		return UpdatePruneMembersError{Err: err}
+		return UpdatePruneMembersError{Err: err,
+			Description: _STORAGE_ETCD_CLUSTER_PRUNE}
 	}
 
 	if add != nil {
 		// Add this instance to the member list if not already there.
 		if err := addMember(ctx, client, optime, members, add); err != nil {
-			return UpdateAddMemberError{Err: err}
+			return UpdateAddMemberError{Err: err, Description: _STORAGE_ETCD_CLUSTER_ADD}
 		}
 	}
-	log.Log(ctx, ClusterUpToDate{})
+	log.Log(ctx, ClusterUpToDate{Description: _STORAGE_ETCD_CLUSTER_OK})
 	return nil
 }

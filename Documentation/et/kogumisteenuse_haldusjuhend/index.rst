@@ -21,4 +21,5 @@ IVXV kogumisteenuse haldusjuhend
    haldustoimingud
    krahhitaaste
    seadistused
+   protseduurid
    lisad

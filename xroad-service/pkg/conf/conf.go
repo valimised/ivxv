@@ -24,7 +24,7 @@ type Server struct {
 	Address      string
 	TLS          TLS
 	BatchMaxSize int
-	OpenApiPath  string
+	OpenApiPath  string //nolint:revive,stylecheck
 	Xroad        XRoad
 }
 

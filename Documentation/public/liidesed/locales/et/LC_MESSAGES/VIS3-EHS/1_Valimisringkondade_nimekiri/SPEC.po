@@ -1,0 +1,223 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2016-2025, Cybernetica AS
+# This file is distributed under the same license as the Elektroonilise
+# hääletamise infosüsteem package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-03 23:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: et\n"
+"Language-Team: et <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:1
+msgid "1 Valimisringkondade nimekiri"
+msgstr "Valimisringkondade nimekiri"
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:3
+msgid "Protseduur"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:5
+msgid "VIS3 edastab EHS-le teabe valimisringkondade kohta."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:7
+msgid "Andmed edastatakse inim-masin-protseduuriga:"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:9
+msgid "VIS peakasutaja laeb JSON faili VIS3-st alla;"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:11
+msgid ""
+"VIS peakasutaja allkirjastab faili digitaalselt väljaspool VIS-i ja annab"
+" selle EHS operaatorile;"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:13
+msgid "EHS operaator laeb digiallkirjastatud faili EHS-i."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:15
+msgid "Fail on JSON-formaadis. Faili ei allkirjastata."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:17
+msgid ""
+"Faili struktuur on kirjeldatud JSON schema-ga. Kirjeldus on "
+"kooskõlastatud EHS omanikuga."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:19
+msgid ""
+"EHS senine liides VIS2-ga on spetsifitseeritud dokumendis \"IVXV "
+"protokollide kirjeldus\" (v 1.5.0, IVXV-PR-1.5.0, 20.04.2019), "
+"[https://www.valimised.ee/sites/default/files/uploads/eh/IVXV-"
+"protokollid.pdf](https://www.valimised.ee/sites/default/files/uploads/eh"
+"/IVXV-protokollid.pdf), jaotises 3.2 \"Valimisjaoskondade ja -ringkondade"
+" nimekiri\"."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:21
+msgid ""
+"Valimistel, kus saavad osaleda alaliselt välisriigis elavad valijad "
+"kantakse nad valijate nimekirja tunnusega `FOREIGN`. Sellisel juhul peab "
+"valimisringkondade nimekiri sisaldama regiooni nende valijate jaoks ning "
+"iga ringkond peab sisaldama eraldi jaoskonda, kus nende häälte üle "
+"arvestust peetakse. Nii selle regiooni kui jaoskondade tunnuseks on "
+"fiktiivne EHAK: `0000`. Näitefailis "
+"[districts_RK.json](districts_RK.json) on näha nii regiooni korrektne "
+"lisamine kui ka välishääletajate jaoskonna korrektne lisamine igasse "
+"ringkonda."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:25
+msgid "Edastatav fail"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:27
+msgid ""
+"Valimissündmuse identifikaator peab vastama formaadile [Valimissündmuse "
+"identifikaator](../valimissündmuse_identifikaator.md)."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:29
+msgid "Faili struktuur (JSON-skeem): [districts.schema](districts.schema)"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:31
+msgid "Näited (JSON):"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:33
+msgid "[district_KOV.json](district_KOV.json)"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:34
+msgid "[districts_EP.json](districts_EP.json)"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:35
+msgid "[districts_RH.json](districts_RH.json)"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:36
+msgid "[districts_RK.json](districts_RK.json)"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:38
+msgid "Taustainfo"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:40
+msgid ""
+"Kandidaate on võimalik valimisele üles seada ainult konkreetses "
+"valimisringkonnas. Ringkondade järgi antakse valijatele hääletamise "
+"valikud:"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:42
+msgid "Iga valija kuulub talle määratud valimisringkonda;"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:43
+msgid ""
+"Kõigis ühe ringkonna jaoskondades saavad valijad teha valiku vaid selle "
+"ringkonna valikute vahel;"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:45
+msgid ""
+"Eesti riiklikel valimistel eristatakse kohalike omavalitsuste volikogude "
+"(KOV) valimisi, Riigikogu valimisi, Euroopa Parlamendi valimisi ning "
+"rahvahääletusi."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:47
+msgid ""
+"KOV valimised korraldatakse vastavalt seadusele „Kohaliku omavalitsuse "
+"volikogu valimise seadus“. Valimine toimub kohaliku omavalitsuse "
+"tasandil, igal omavalitsusel on oma hääletamistulemus. Valimisringkonnad "
+"moodustatakse omavalitsuse tasemel vastavalt seaduses kirjeldatud "
+"reeglitele."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:49
+msgid ""
+"Riigikogu valimised korraldatakse vastavalt seadusele „Riigikogu valimise"
+" seadus“. Valimine toimub riigi tasandil. Riik jaguneb 12 "
+"valimisringkonnaks. Hääletamistulemus tehakse kindlaks iga "
+"valimisringkonna kohta."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:51
+msgid ""
+"Europarlamendi valimised korraldatakse vastavalt seadusele „Euroopa "
+"Parlamendi valimise seadus“. Valimine toimub riigi tasandil, "
+"hääletamistulemus on kõigile kohalikele omavalitsustele ühine. Terve riik"
+" on üks valimisringkond."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:53
+msgid ""
+"Rahvahääletused korraldatakse vastavalt seadusele „Rahvahääletuse "
+"seadus“. Valimine toimub riigi tasandil, hääletamistulemus on kõigile "
+"kohalikele omavalitsustele ühine. Terve riik on üks valimisringkond."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:55
+msgid ""
+"Erinevad valimised ei erine elektroonilise hääletamise andmevormingute ja"
+" protseduuride poolest. Erinevad ringkondade jaotused hallatakse VIS3 "
+"poolt."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:57
+msgid ""
+"Kandidaate on võimalik valimisele üles seada ainult konkreetses "
+"valimisringkonnas. Valijad on jaotatud valimisringkondade vahel. Valija "
+"saab teha valiku ainult tema ringkonnas kandideerivate kandidaatide "
+"vahel."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:59
+msgid ""
+"Kuna kohaliku omavalitsuse volikogude valimisel toimub valimine Eesti "
+"omavalitsuste (vallad, linnad) tasemel, siis kasutatakse elektroonilise "
+"hääletamise protokollistikus valimisringkondade kirjeldamisel ning "
+"valijate ja valikute ringkonnakuuluvuse näitamisel Eesti haldus- ja "
+"asustusjaotuse klassifikaatorit EHAK"
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:61
+msgid ""
+"Näiteks: • Tallinna linna Pirita linnaosa EHAK kood on 0596; • Anija "
+"valla EHAK kood on 0141."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:65
+msgid ""
+"Riigi tasemel toimuvatel valimistel pannakse ringkonna EHAK koodiks "
+"kokkuleppeliselt 0."
+msgstr ""
+
+#: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:67
+msgid ""
+"Riigikogu ja europarlamendi valimistel ning rahvahääletusel moodustatakse"
+" nimekirjas igasse ringkonda fiktiivne üksus alaliselt välisriigis "
+"elavate valijate tarbeks. Selle üksuse number on 0 ning vastav EHAK kood "
+"on 0000."
+msgstr ""
+

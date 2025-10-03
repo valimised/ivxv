@@ -41,13 +41,13 @@ func wait(ctx context.Context, t time.Time, f func(context.Context) error) error
 // waitStart is like wait, but performs additional logging and converts
 // cancellation errors to nil. Meant for delayed start functions.
 func waitStart(ctx context.Context, start time.Time, f func(context.Context) error) error {
-	log.Log(ctx, WaitingForStart{Start: start})
+	log.Log(ctx, WaitingForStart{Start: start, Description: _SERVER_WAIT})
 	switch err := wait(ctx, start, f); err {
 	case context.Canceled, context.DeadlineExceeded:
 		// We know that waiting was canceled because we only get plain
 		// context errors from wait: all context cancellation errors
 		// from f are expected to be wrapped.
-		log.Log(ctx, WaitingCanceled{})
+		log.Log(ctx, WaitingCanceled{Description: _SERVER_WAIT_TIME})
 		return nil
 	default:
 		return err

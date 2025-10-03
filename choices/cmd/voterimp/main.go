@@ -76,7 +76,8 @@ func voterimpmain() (code int) {
 		version, err := c.Storage.GetVotersContainerVersions(c.Ctx)
 		if err != nil {
 			if errors.CausedBy(err, new(storage.NotExistError)) == nil {
-				return c.Error(exit.Unavailable, CheckVersionError{Err: err},
+				return c.Error(exit.Unavailable, CheckVersionError{Err: err,
+					Description: _VOTERS_LIST_VERSION_FROM_DB},
 					"failed to check imported container versions:", err)
 			}
 		} else {
@@ -86,7 +87,8 @@ func voterimpmain() (code int) {
 				vers = append(vers, json.RawMessage(ver))
 			}
 			if err := json.NewEncoder(os.Stdout).Encode(vers); err != nil {
-				return c.Error(exit.Unavailable, ConvertVersionError{Err: err},
+				return c.Error(exit.Unavailable, ConvertVersionError{Err: err,
+					Description: _VOTERS_LIST_VERSION_TO_JSON},
 					"failed to encode container versions:", err)
 			}
 		}
@@ -106,7 +108,8 @@ func voterimpmain() (code int) {
 				code = exit.NoInput
 			}
 		}
-		return c.Error(code, OpenContainerError{Container: path, Err: err},
+		return c.Error(code, OpenContainerError{Container: path, Err: err,
+			Description: _VOTERS_LIST_BDOC_OPEN},
 			"failed to open voter list container:", err)
 	}
 	defer cnt.Close()
@@ -114,30 +117,38 @@ func voterimpmain() (code int) {
 	// Ensure that a trusted container is signed and log the signatures.
 	signatures := cnt.Signatures()
 	if trusted && len(signatures) == 0 {
-		return c.Error(exit.DataErr, UnsignedContainerError{Container: path},
+		return c.Error(exit.DataErr, UnsignedContainerError{Container: path,
+			Description: _VOTERS_LIST_BDOC_NO_SIG},
 			"unsigned voter list container")
 	}
 	for _, s := range signatures {
-		log.Log(c.Ctx, ContainerSignature{Signer: s.Signer, SigningTime: s.SigningTime})
+		log.Log(c.Ctx, ContainerSignature{
+			Signer:      s.Signer,
+			SigningTime: s.SigningTime,
+			Description: _VOTERS_LIST_BDOC_SIG_INFO,
+		})
 	}
 
 	// Get the version string of the container.
 	cversion, err := containerVersion(cnt)
 	if err != nil {
-		return c.Error(exit.DataErr, ContainerVersionError{Container: path, Err: err},
+		return c.Error(exit.DataErr, ContainerVersionError{Container: path,
+			Err: err, Description: _VOTERS_LIST_BDOC_SIG_TO_JSON},
 			"failed to format container version string:", err)
 	}
 
 	// Get the contents of the container.
 	list, sig, err := containerData(cnt.Data())
 	if err != nil {
-		return c.Error(exit.DataErr, ContainerDataError{Err: err},
+		return c.Error(exit.DataErr, ContainerDataError{Err: err,
+			Description: _VOTERS_LIST_BDOC_INVALID_DATA},
 			"failed to find expected data from container:", err)
 	}
 
 	// Check the signature.
 	if err = verifyECDSA(c.Conf.Election.VoterList.Key, list, sig); err != nil {
-		return c.Error(exit.DataErr, VerifySignatureError{Err: err},
+		return c.Error(exit.DataErr, VerifySignatureError{Err: err,
+			Description: _VOTERS_LIST_UTF_AND_SIG_VERIFY},
 			"failed to verify voter list signature:", err)
 	}
 
@@ -145,24 +156,28 @@ func voterimpmain() (code int) {
 	oldver, err := c.Storage.GetVotersListVersion(c.Ctx)
 	switch {
 	case err == nil:
-		log.Log(c.Ctx, CurrentVoterListVersion{Version: oldver})
+		log.Log(c.Ctx, CurrentVoterListVersion{Version: oldver,
+			Description: _VOTERS_LIST_CURRENT_VERSION})
 	case errors.CausedBy(err, new(storage.NotExistError)) != nil:
 		oldver = "" // Do not rely on storage returning zero value on error.
 	default:
-		return c.Error(exit.Unavailable, CheckListVersionError{Err: err},
+		return c.Error(exit.Unavailable, CheckListVersionError{Err: err,
+			Description: _VOTERS_LIST_VERSION_FROM_DB},
 			"failed to check current list version:", err)
 	}
 
 	// Parse the voter list and preprocess into a map of changes.
 	voters, newver, err := preprocess(c.Ctx, list, oldver, c.Conf.Election.Identifier, c.Storage)
 	if err != nil {
-		return c.Error(exit.DataErr, PreprocessVotersError{Err: err},
+		return c.Error(exit.DataErr, PreprocessVotersError{Err: err,
+			Description: _VOTERS_LIST_CREATE_MAP_OF_ALL_CHANGES},
 			"failed to preprocess voter list:", err)
 	}
 
 	// Store the new list.
 	if c.Until >= command.Execute {
-		log.Log(c.Ctx, ImportingVoters{Version: newver, Count: len(voters)})
+		log.Log(c.Ctx, ImportingVoters{Version: newver, Count: len(voters),
+			Description: _VOTERS_LIST_TO_DB_UPLOAD})
 		progress.Static(fmt.Sprintf("Importing %d voters:", len(voters)))
 		addprogress := progress.Percent(uint64(len(voters)), true)
 		progress.Redraw()
@@ -171,7 +186,8 @@ func voterimpmain() (code int) {
 		if err := c.Storage.PutVoters(c.Ctx, cversion, voters,
 			oldver, newver, addprogress); err != nil {
 
-			return c.Error(exit.Unavailable, PutVotersError{Err: err},
+			return c.Error(exit.Unavailable, PutVotersError{Err: err,
+				Description: _VOTERS_LIST_TO_DB_UPLOAD_FAIL},
 				"failed to import voter list:", err)
 		}
 	}
@@ -190,7 +206,8 @@ func containerData(data map[string][]byte) (list, signature []byte, err error) {
 	const sig = ".sig"
 
 	if len(data) != 2 {
-		return nil, nil, KeyCountError{Count: len(data)}
+		return nil, nil, KeyCountError{Count: len(data),
+			Description: _VOTERS_LIST_BDOC_HAS_MORE_THAN_2_FILES}
 	}
 	var utfKey, sigKey string
 	for key, content := range data {
@@ -202,11 +219,14 @@ func containerData(data map[string][]byte) (list, signature []byte, err error) {
 		}
 	}
 	if len(utfKey) == 0 {
-		return nil, nil, MissingUTFKeyError{}
+		return nil, nil, MissingUTFKeyError{
+			Description: _VOTERS_LIST_NO_UTF_FILE,
+		}
 	}
 	signature, ok := data[sigKey]
 	if !ok {
-		return nil, nil, MissingSigKeyError{Expected: sigKey}
+		return nil, nil, MissingSigKeyError{Expected: sigKey,
+			Description: _VOTERS_LIST_NO_SIG_FILE}
 	}
 
 	return list, signature, nil
@@ -217,24 +237,27 @@ func containerData(data map[string][]byte) (list, signature []byte, err error) {
 func verifyECDSA(pub string, data, sig []byte) error {
 	der, err := cryptoutil.PEMDecode(pub, "PUBLIC KEY")
 	if err != nil {
-		return ECDSAPEMDecodeError{Err: err}
+		return ECDSAPEMDecodeError{Err: err, Description: _VOTERS_LIST_PUB_KEY_INVALID_PEM}
 	}
 	parsed, err := x509.ParsePKIXPublicKey(der)
 	if err != nil {
-		return ECDSAParsePKIXError{Err: err}
+		return ECDSAParsePKIXError{Err: err,
+			Description: _VOTERS_LIST_PUB_KEY_INVALID_PKIX}
 	}
 	key, ok := parsed.(*ecdsa.PublicKey)
 	if !ok {
-		return ECDSAPublicKeyNotECDSAError{Type: fmt.Sprintf("%T", parsed)}
+		return ECDSAPublicKeyNotECDSAError{Type: fmt.Sprintf("%T", parsed),
+			Description: _VOTERS_LIST_PUB_KEY_INVALID_ECDSA}
 	}
 
 	hashed := sha256.Sum256(data) // Hardcoded regardless of key parameters.
 	r, s, err := cryptoutil.ParseECDSAASN1Signature(sig)
 	if err != nil {
-		return ECDSAParseSignatureError{Err: err}
+		return ECDSAParseSignatureError{Err: err,
+			Description: _VOTERS_LIST_ASN1_SIG_ASN1_UNMARSHAL}
 	}
 	if !ecdsa.Verify(key, hashed[:], r, s) {
-		return ECDSASignatureVerificationError{}
+		return ECDSASignatureVerificationError{Description: _VOTERS_LIST_SIG_VERIFY_FAIL}
 	}
 	return nil
 }
@@ -267,7 +290,8 @@ func preprocess(ctx context.Context, list []byte, version, election string, s *s
 
 	// Loop over all list entries, calling lf for each. Report progress of
 	// this process.
-	log.Log(ctx, PreprocessingVoterList{Version: newver})
+	log.Log(ctx, PreprocessingVoterList{Version: newver,
+		Description: _VOTERS_LIST_READ})
 	progress.Static("Preprocessing voter list:")
 	addcount := progress.Count(0, false) // Do not redraw every time.
 	const countstep = 10000              // Redraw after each countstep.
@@ -284,7 +308,8 @@ loop:
 		// Check if preprocessing was cancelled.
 		select {
 		case <-ctx.Done():
-			return nil, "", PreprocessVoterListCanceled{Err: ctx.Err()}
+			return nil, "", PreprocessVoterListCanceled{
+				Err: ctx.Err(), Description: _VOTERS_LIST_READ_CTX_CANCEL}
 		default:
 		}
 
@@ -296,11 +321,13 @@ loop:
 		case err == io.EOF:
 			break loop
 		case errors.CausedBy(err, new(FieldCountError)) != nil:
-			report(ctx, VoterEntryFormatError{Line: line, Err: err})
+			report(ctx, VoterEntryFormatError{Line: line, Err: err,
+				Description: _VOTERS_LIST_UTF_INVALID_COLUMNS_COUNT})
 			errcount++
 			continue loop
 		default:
-			report(ctx, ReadVoterEntryError{Line: line, Err: err})
+			report(ctx, ReadVoterEntryError{Line: line, Err: err,
+				Description: _VOTERS_LIST_UTF_UNKNOWN_COLUMN})
 			errcount++
 			break loop
 		}
@@ -312,7 +339,8 @@ loop:
 			withErrors[voter] = struct{}{}
 		}
 		for _, err = range errs {
-			report(ctx, PreprocessVoterEntryError{Line: line, Err: err})
+			report(ctx, PreprocessVoterEntryError{Line: line, Err: err,
+				Description: _VOTERS_LIST_READING_ERRORS})
 			errcount++
 		}
 	}
@@ -321,7 +349,8 @@ loop:
 		stepadd(ctx, addcount, 0, 0)
 	}
 	if errcount > 0 {
-		return nil, "", PreprocessVoterListError{ErrorCount: errcount}
+		return nil, "", PreprocessVoterListError{
+			ErrorCount: errcount, Description: _VOTERS_LIST_READING_ERRORS_COUNT}
 	}
 	return voters, newver, nil
 }
@@ -330,46 +359,56 @@ func header(b *bytes.Buffer, election, oldver string) (newver string, lf linefun
 	// First line is the format version number, which must be 2.
 	fver, err := readString(b, delim)
 	if err != nil {
-		return "", nil, ReadFileVersionError{Err: err}
+		return "", nil, ReadFileVersionError{Err: err,
+			Description: _VOTERS_LIST_UTF_FORMAT_VERSION}
 	}
 	if fver != "2" {
-		return "", nil, FileVersionError{Version: fver}
+		return "", nil, FileVersionError{Version: fver,
+			Description: _VOTERS_LIST_READ_UTF_FORMAT_VERSION}
 	}
 
 	// Second is the election identifier. Must match the one in the election
 	// configuration.
 	elid, err := readString(b, delim)
 	if err != nil {
-		return "", nil, ReadElectionIDError{Err: err}
+		return "", nil, ReadElectionIDError{Err: err,
+			Description: _VOTERS_LIST_READ_UTF_ELECTION_ID}
 	}
 	if elid != election {
-		return "", nil, ElectionIDMismatchError{Conf: election, List: elid}
+		return "", nil, ElectionIDMismatchError{Conf: election,
+			List: elid, Description: _VOTERS_LIST_UTF_ELECTION_ID}
 	}
 
 	// Third is the list version number.
 	newver, err = readString(b, delim)
 	if err != nil {
-		return "", nil, ReadListVersionError{Err: err}
+		return "", nil, ReadListVersionError{Err: err,
+			Description: _VOTERS_LIST_READ_UTF_VOTERS_LIST_VERSION}
 	}
 	newver64, err := strconv.ParseUint(newver, 10, 64)
 	if err != nil {
-		return "", nil, ParseListVersionError{Err: err}
+		return "", nil, ParseListVersionError{Err: err,
+			Description: _VOTERS_LIST_UTF_VOTERS_LIST_VERSION}
 	}
 	if newver64 == 0 {
 		if len(oldver) > 0 {
-			return "", nil, VoterListExistsError{Version: oldver}
+			return "", nil, VoterListExistsError{Version: oldver,
+				Description: _VOTERS_LIST_UTF_VOTERS_LIST_VERSION_0}
 		}
 		lf = initial
 	} else {
 		var oldver64 uint64
 		if len(oldver) == 0 {
-			return "", nil, NoExistingVoterListError{}
+			return "", nil, NoExistingVoterListError{
+				Description: _VOTERS_LIST_INITIAL_NOT_UPLOADED_YET}
 		} else if oldver64, err = strconv.ParseUint(oldver, 10, 64); err != nil {
-			return "", nil, ParseCurrentListVersionError{Err: err}
+			return "", nil, ParseCurrentListVersionError{Err: err,
+				Description: _VOTERS_LIST_UTF_VOTERS_LIST_VERSION}
 		} else if oldver64 >= newver64 {
 			return "", nil, UnexpectedListVersionError{
-				Current: oldver64,
-				List:    newver64,
+				Current:     oldver64,
+				List:        newver64,
+				Description: _VOTERS_LIST_UPLOAD_OLD_VERSION,
 			}
 		}
 		lf = changes
@@ -379,17 +418,21 @@ func header(b *bytes.Buffer, election, oldver string) (newver string, lf linefun
 	// collector, but make sure that the format is valid.
 	fromstr, err := readString(b, sep)
 	if err != nil {
-		return "", nil, ReadPeriodFromError{Err: err}
+		return "", nil, ReadPeriodFromError{Err: err,
+			Description: _VOTERS_LIST_READ_ELECTION_FROM_PERIOD}
 	}
 	if _, err = time.Parse(time.RFC3339, fromstr); err != nil {
-		return "", nil, ParsePeriodFromError{Err: err}
+		return "", nil, ParsePeriodFromError{Err: err,
+			Description: _VOTERS_LIST_ELECTION_FROM_PERIOD}
 	}
 	tostr, err := readString(b, delim)
 	if err != nil {
-		return "", nil, ReadPeriodToError{Err: err}
+		return "", nil, ReadPeriodToError{Err: err,
+			Description: _VOTERS_LIST_READ_ELECTION_TO_PERIOD}
 	}
 	if _, err = time.Parse(time.RFC3339, tostr); err != nil {
-		return "", nil, ParsePeriodToError{Err: err}
+		return "", nil, ParsePeriodToError{Err: err,
+			Description: _VOTERS_LIST_ELECTION_TO_PERIOD}
 	}
 
 	return newver, lf, nil
@@ -405,22 +448,28 @@ func initial(_ context.Context, voter, action, adminCode, district string,
 	var skip bool
 
 	if len(voter) == 0 {
-		errs = append(errs, InitialEmptyVoterError{})
+		errs = append(errs, InitialEmptyVoterError{Description: _VOTERS_LIST_UTF_VOTER_ID_EMPTY})
 		skip = true
 	}
 	if action != "lisamine" {
-		errs = append(errs, InitialNonAddActionError{Action: action})
+		errs = append(errs, InitialNonAddActionError{Action: action,
+			Description: _VOTERS_LIST_UTF_INITIAL_ACTION})
 		skip = true
 	}
 	if len(adminCode) == 0 {
-		errs = append(errs, InitialEmptyAdminUnitCodeError{})
+		errs = append(errs, InitialEmptyAdminUnitCodeError{
+			Description: _VOTERS_LIST_UTF_ADMIN_CODE_EMPTY,
+		})
 	}
 	if len(district) == 0 {
-		errs = append(errs, InitialEmptyDistrictNumberError{})
+		errs = append(errs, InitialEmptyDistrictNumberError{
+			Description: _VOTERS_LIST_UTF_DISTRICT_EMPTY,
+		})
 	}
 	if !skip {
 		if _, ok := voters[voter]; ok {
-			errs = append(errs, InitialAddDuplicateVoterError{Voter: voter})
+			errs = append(errs, InitialAddDuplicateVoterError{Voter: voter,
+				Description: _VOTERS_LIST_UTF_ADD_SAME_VOTER})
 		}
 		// It is OK to add invalid entries (skip was not set for
 		// adminCode or district errors) since then we will error
@@ -435,10 +484,13 @@ func changes(ctx context.Context, voter, action, adminCode, district string,
 	errs []error) {
 
 	if len(voter) == 0 {
-		errs = append(errs, ChangesEmptyVoterError{})
+		errs = append(errs, ChangesEmptyVoterError{
+			Description: _VOTERS_LIST_UTF_VOTER_ID_EMPTY,
+		})
 		previousErrors = true
 	} else if previousErrors {
-		errs = append(errs, ChangesVoterWithPreviousErrorsError{Voter: voter})
+		errs = append(errs, ChangesVoterWithPreviousErrorsError{Voter: voter,
+			Description: _VOTERS_LIST_MODIFY_WITH_PREVIOUS_ERRORS})
 	}
 
 	// Only perform consistency checks if there are no previous errors.
@@ -458,7 +510,8 @@ func changes(ctx context.Context, voter, action, adminCode, district string,
 				voterExists = true
 			case errors.CausedBy(err, new(storage.NotExistError)) != nil:
 			default:
-				errs = append(errs, GetOldVoterError{Voter: voter, Err: err})
+				errs = append(errs, GetOldVoterError{Voter: voter, Err: err,
+					Description: _VOTERS_LIST_GET_VOTER_FROM_DB})
 				previousErrors = true
 			}
 		}
@@ -467,16 +520,21 @@ func changes(ctx context.Context, voter, action, adminCode, district string,
 	switch action {
 	case "lisamine":
 		if len(adminCode) == 0 {
-			errs = append(errs, ChangesEmptyAdminUnitCodeError{})
+			errs = append(errs, ChangesEmptyAdminUnitCodeError{
+				Description: _VOTERS_LIST_UTF_ADMIN_CODE_EMPTY,
+			})
 			previousErrors = true
 		}
 		if len(district) == 0 {
-			errs = append(errs, ChangesEmptyDistrictNumberError{})
+			errs = append(errs, ChangesEmptyDistrictNumberError{
+				Description: _VOTERS_LIST_UTF_DISTRICT_EMPTY,
+			})
 			previousErrors = true
 		}
 		if !previousErrors {
 			if voterExists {
-				errs = append(errs, ChangesAddDuplicateVoterError{Voter: voter})
+				errs = append(errs, ChangesAddDuplicateVoterError{Voter: voter,
+					Description: _VOTERS_LIST_UTF_ADD_SAME_VOTER})
 			}
 			voters[voter] = storage.EncodeAdminDistrict(adminCode, district)
 		}
@@ -485,15 +543,18 @@ func changes(ctx context.Context, voter, action, adminCode, district string,
 		if !previousErrors {
 			switch {
 			case !voterExists:
-				errs = append(errs, ChangesRemoveNotExistingVoterError{Voter: voter})
+				errs = append(errs, ChangesRemoveNotExistingVoterError{
+					Voter: voter, Description: _VOTERS_LIST_NON_EXISTING_VOTER})
 			case voterProcessed:
-				errs = append(errs, ChangesRemoveAddedVoterError{Voter: voter})
+				errs = append(errs, ChangesRemoveAddedVoterError{Voter: voter,
+					Description: _VOTERS_LIST_DELETE_JUST_ADDED_VOTER})
 			}
 			voters[voter] = nil // nil to distinguish from unchanged voters.
 		}
 
 	default:
-		errs = append(errs, ChangesUnsupportedActionError{Action: action})
+		errs = append(errs, ChangesUnsupportedActionError{Action: action,
+			Description: _VOTERS_LIST_UNKNOWN_ACTION})
 	}
 	return
 }
@@ -502,7 +563,8 @@ func changes(ctx context.Context, voter, action, adminCode, district string,
 // step is zero, logs and redraws progress.
 func stepadd(ctx context.Context, add status.Add, count, step uint64) {
 	if new1 := add(count); step == 0 || new1%step == 0 {
-		log.Log(ctx, PreprocessProgress{Count: new1})
+		log.Log(ctx, PreprocessProgress{Count: new1,
+			Description: _VOTERS_LIST_READ_FILE_PROGRESS})
 		progress.Redraw()
 	}
 }
@@ -512,7 +574,7 @@ func next(b *bytes.Buffer) (action, voter, adminCode, district string, err error
 	line, err := readString(b, delim)
 	if err != nil {
 		if err != io.EOF || len(line) > 0 {
-			err = ReadNextError{Line: line, Err: err}
+			err = ReadNextError{Line: line, Err: err, Description: _VOTERS_LIST_READ_LINE_ERROR}
 		}
 		return
 	}
@@ -537,7 +599,7 @@ func next(b *bytes.Buffer) (action, voter, adminCode, district string, err error
 	case 5:
 		return fields[0], fields[1], fields[3], fields[4], nil
 	default:
-		err = FieldCountError{Fields: len(fields)}
+		err = FieldCountError{Fields: len(fields), Description: _VOTERS_LIST_UTF_COLUMNS_COUNT}
 		return
 	}
 }

@@ -1,14 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2016-2024, Cybernetica AS
+# Copyright (C) 2016-2025, Cybernetica AS
 # This file is distributed under the same license as the Elektroonilise
 # hääletamise infosüsteem package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.9.10\n"
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-13 21:03+0000\n"
+"POT-Creation-Date: 2025-09-03 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -563,10 +563,11 @@ msgstr "/session/<session-id>"
 
 #: ../../etcd.rst:262
 msgid ""
-"RPC meetod, mis kutsus antud funktsiooni välja + x1F + kasutaja "
+"RPC meetod, mis kutsus antud funktsiooni välja + ``x1F`` + kasutaja "
 "autentimismeetod"
-msgstr "RPC method called + x1F + authentication method"
+msgstr "RPC method called + ``x1F`` + authentication method"
 
 #: ../../etcd.rst:262
-msgid "/session/0149468d2866 6fced7d73b32cc16225d"
-msgstr "/session/0149468d2866 6fced7d73b32cc16225d"
+msgid "``/session/0149468d2866`` ``6fced7d73b32cc16225d``"
+msgstr "``/session/0149468d2866`` ``6fced7d73b32cc16225d``"
+

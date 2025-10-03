@@ -22,5 +22,5 @@ Kasutaja volituste laadimise vorm
 ---------------------------------
 
 Kasutaja volituste laadimiseks kogumisteenusesse on lehe allosas laadimisvorm.
-Laadida on lubatud ainult volitatud kasutajate poolt digitaaltelt signeeritud
+Laadida on lubatud ainult volitatud kasutajate poolt digitaalselt signeeritud
 volitusi.

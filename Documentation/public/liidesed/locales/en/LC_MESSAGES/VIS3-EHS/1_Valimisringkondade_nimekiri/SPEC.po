@@ -23,7 +23,7 @@ msgstr ""
 
 #: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:1
 msgid "1 Valimisringkondade nimekiri"
-msgstr "1 List of constituencies"
+msgstr "List of constituencies"
 
 #: ../../VIS3-EHS/1_Valimisringkondade_nimekiri/SPEC.md:3
 msgid "Protseduur"

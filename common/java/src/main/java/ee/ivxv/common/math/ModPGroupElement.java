@@ -130,6 +130,13 @@ public class ModPGroupElement extends GroupElement {
         return null;
     }
 
+    /**
+     * @return P - this
+     */
+    public GroupElement negate() {
+        return new ModPGroupElement(this.group, this.group.getFieldOrder().subtract(this.value));
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == null || this.getClass() != other.getClass()) {

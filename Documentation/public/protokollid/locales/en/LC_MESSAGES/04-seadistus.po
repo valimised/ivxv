@@ -1,12 +1,12 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2016-2024, Cybernetica AS
+# Copyright (C) 2016-2025, Cybernetica AS
 # This file is distributed under the same license as the Elektroonilise
 # hääletamise infosüsteem package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.8.2\n"
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-02-29 10:34+0200\n"
 "PO-Revision-Date: 2024-02-29 17:21+0200\n"
@@ -33,8 +33,8 @@ msgid ""
 msgstr ""
 "The election is defined by the election organiser. In national elections in "
 "Estonia, all eligible voters are divided into one or more constituencies / "
-"electoral districts. Voters can only vote for candidates in the "
-"constituency to which they belong."
+"electoral districts. Voters can only vote for candidates in the constituency"
+" to which they belong."
 
 #: ../../04-seadistus.rst:12
 msgid "Valimise defineerimiseks tuleb määratleda vähemalt"
@@ -69,5 +69,5 @@ msgid ""
 "<https://github.com/e-gov/VIS3-EHS/>`_."
 msgstr ""
 "Election input data is compiled in the Election Information System (VIS), "
-"the format specifications are specified in the 'Common Specification for "
-"VIS and EHS <https://github.com/e-gov/VIS3-EHS/>`_."
+"the format specifications are specified in the 'Common Specification for VIS"
+" and EHS <https://github.com/e-gov/VIS3-EHS/>`_."

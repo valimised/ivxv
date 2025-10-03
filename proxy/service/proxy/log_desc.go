@@ -1,0 +1,26 @@
+package main
+
+const (
+	_PROXY_PARSE_TEMPLATE_READ     = "Failed to read HAProxy template file"
+	_PROXY_PARSE_TEMPLATE_EXEC     = "Failed to generate HAProxy configuration file"
+	_PROXY_PARSE_TEMPLATE_VERIFY   = "Failed to verify correctness of a HAProxy configuration file"
+	_PROXY_HAPROXY_PIDFILE         = "Failed to read HAProxy PID file"
+	_PROXY_HAPROXY_PIDFILE_INVALID = "PID of a HAProxy is not a base-10 integer"
+	_PROXY_HAPROXY_CHILD           = "Unable to locate HAProxy child processes"
+	_PROXY_HAPROXY_NO_CHILD        = "No HAProxy child processes found"
+	_PROXY_HAPROXY_CHILD_STOP      = "Failed to stop HAProxy child processes"
+	_PROXY_HAPROXY_SIGUSR1         = "Failed to send SIGUSR1 to systemd"
+	_PROXY_HAPROXY_STOP            = "Waiting for HAProxy to stop gracefully"
+	_PROXY_HAPROXY_STOPPED         = "HAProxy has stopped gracefully"
+	_PROXY_PROC_DIR                = "Unable to access /proc/ directory"
+	_PROXY_PROC                    = "Unable to open HAProxy process files from /proc/"
+	_PROXY_NO_PID                  = "No HAProxy PID file found"
+	_PROXY_HAPROXY_WRITE           = "Failed to write HAProxy configuration file to filesystem"
+	_PROXY_HAPROXY_UPDATE          = "HAProxy will be reloaded now"
+	_PROXY_HAPROXY_RESTART         = "Failed to restart HAProxy"
+	_PROXY_HAPROXY_RESTARTED       = "HAProxy has been restarted successfully"
+	_PROXY_HAPROXY_PID             = "HAProxy PID info"
+	_PROXY_HAPROXY_RELOAD          = "Failed to reload HAProxy"
+	_PROXY_HAPROXY_CONTROL         = "Failed to configure proxy service"
+	_PROXY_HAPROXY_SERVE           = "Failed to serve proxy service"
+)

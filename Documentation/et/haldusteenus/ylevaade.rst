@@ -38,7 +38,7 @@ Ligipääse haldusliidesele
 -------------------------
 
 Kogumisteenuse haldusliides on kasutatav veebisirviku abil. Haldusliidesele
-ligipääsuks vajaliku URL-i annab kasutajatele IVXV süsteemihaldur.
+ligipääsuks vajaliku ``URL-i`` annab kasutajatele IVXV süsteemihaldur.
 
 Haldusliidesele pääsevad ligi ainult volitatud kasutajad, kes on ennast
 autentinud ID-kaardiga. Kasutajale pakutavate funktsioonide hulk sõltub

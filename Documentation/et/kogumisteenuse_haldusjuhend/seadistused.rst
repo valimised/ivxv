@@ -20,7 +20,7 @@ kirjeldatakse kogumisteenuse tehnilises seadistuses.
    väline teenus ja seda võib olla ainult üks isend.
 
 Kogumisteenusele tehniliste seadistuse rakendamisel paigaldab haldusteenus
-logikogumisteenuse(d) enne teise teenuseid, et teenuste poolt toodetav logi
+logikogumisteenuse enne teise teenuseid, et teenuste poolt toodetav logi
 saaks võimalikult varakult ka logikogumisteenusesse kogutud.
 
 .. note::
@@ -37,7 +37,7 @@ tehnilistele seadistustele.
 #. Iga teenus logib kohalikku *syslog*-teenusesse;
 
 #. Kõigi teenusmasinate *syslog*-teenused on seadistatud kogumisteenuse logi
-   salvestama kohalikku failisüsteemi (:file:`/var/log/ivxv/ivxv-YYYY-MM-DD.log`);
+   salvestama kohalikku failisüsteemi (:file:`/var/log/ivxv/ivxv-YYYY-MM-DD-HH.log`);
 
 #. Kõigi teenusmasinate (peale logikogumisteenuse) *syslog*-teenused on
    seadistatud edastama üle võrgu:
@@ -57,15 +57,15 @@ Logikogumisteenuse seadistusfail tuleb teenuse tarkvarapakist
 #. Logikogumisteenus võtab logikirjeid vastu RELP-protokolli kaudu;
 
 #. Kogumisteenuse logikirjeid kirjutatakse JSON-vormingus faili
-   :file:`/var/log/ivxv/ivxv-YYYY-MM-DD.log` (välja arvatud päringu- ja
+   :file:`/var/log/ivxv/ivxv-YYYY-MM-DD-HH.log` (välja arvatud päringu- ja
    silumislogi);
 
 #. Kogumisteenuse päringulogi kirjutatakse rsyslogi standardvormingus faili
-   :file:`/var/log/ivxv/ivxv-request-YYYY-MM-DD.log`;
+   :file:`/var/log/ivxv/ivxv-request-YYYY-MM-DD-HH.log`;
 
 #. Kogumisteenuse silumislogi ja teiste oluliste teenuste (haproxy, etcd,
    rsyslog, sshd) logi kirjutatakse rsyslogi standardvormingus faili
-   :file:`/var/log/ivxv/ivxv-debug-YYYY-MM-DD.log`.
+   :file:`/var/log/ivxv/ivxv-debug-YYYY-MM-DD-HH.log`.
 
 
 Talletamisteenuse seadistused

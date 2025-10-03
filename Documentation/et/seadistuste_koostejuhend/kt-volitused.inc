@@ -55,10 +55,10 @@ Kogumisteenuses on järgnevad rollid:
    :header-rows: 1
 
    *  -
-      - admin
-      - election- conf- manager
-      - viewer
-      - none
+      - ``admin``
+      - ``election-`` ``conf-`` ``manager``
+      - ``viewer``
+      - ``none``
 
    *  - Üldseisundi ja statistika vaatamine
       - ✓

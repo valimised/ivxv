@@ -112,7 +112,7 @@ public class ThreadedVerifier extends Verifier {
         }
         progress.finish();
         progress = console.enter(ShuffleStep.VERIFY_RERAND, 2 * N
-                + get_proof().get_PoSReply().get_kF().getElements().length + 3 + 2 * nothreads);
+                + get_proof().get_PoSReply().get_kF().length + 3 + 2 * nothreads);
         GroupElement F;
         try {
             F = compute_F_threaded(progress, e);
@@ -315,7 +315,7 @@ public class ThreadedVerifier extends Verifier {
     }
 
     private boolean verify_F(Progress progress, BigInteger v, GroupElement F, GroupElement F_prim,
-            GroupElement pk, BigInteger[] k_E, ProductGroupElement k_F, GroupElement[] w_prim,
+            GroupElement pk, BigInteger[] k_E, BigInteger[] k_F, GroupElement[] w_prim,
             int nothreads, ExecutorService executor)
             throws MathException, InterruptedException, ExecutionException {
         // the number of computations differ in threaded and non-threaded case. In threaded case we
@@ -328,9 +328,9 @@ public class ThreadedVerifier extends Verifier {
             futures.add(ft);
         }
         log.debug("Started verify F workers");
-        BigInteger[] factors = new BigInteger[k_F.getElements().length];
+        BigInteger[] factors = new BigInteger[k_F.length];
         for (int i = 0; i < factors.length; i++) {
-            factors[i] = ((ModPGroupElement) k_F.getElements()[i]).getValue().negate();
+            factors[i] = k_F[i].negate();
             progress.increase(1);
         }
         GroupElement left = F.scale(v).op(F_prim);

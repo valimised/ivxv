@@ -34,7 +34,7 @@ Sellisel juhul defineeritakse laia krüptogrammile vastava avaliku võtmena
 Korrektse dekrüpteerimise tõendi kontroll
 =========================================
 
-Olgu antud krüptogramm :math:`c = (c_0, c_1)`, mis deküpteeritakse väärtuseks
+Olgu antud krüptogramm :math:`c = (c_0, c_1)`, mis dekrüpteeritakse väärtuseks
 :math:`d` antud avaliku võtmega :math:`pk` üle parameetrite :math:`(p,g)` ja
 dekrüpteerimistõendiga :math:`(a,b,s)`.
 
@@ -44,7 +44,7 @@ mitte-interaktiivne kontrollija väljakutse. Selle jaoks kodeeritakse
 kasutatakse deterministliku juhuarvugeneraatori initsialiseerimiseks ja selle
 väljundist loetakse rühma järgu pikkune täisarv :math:`k`.
 
-Korrektse dekrüpteerimsie tõendi kontrolliks tuleb kontrollida, et :math:`c_0^s
+Dekrüpteerimistõendi kontrolliks tuleb veenduda, et :math:`c_0^s
 = a * (c_1/d)^k` ja :math:`g^s = b * y^k`.
 
 Korrektse teisendamise kontroll

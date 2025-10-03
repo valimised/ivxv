@@ -15,7 +15,8 @@ func (t *fromEmpty) Payload() (string, error) {
 	// Serialize t
 	b, err := json.Marshal(t)
 	if err != nil {
-		return "", JSONMarshalError{Err: err}
+		return "", JSONMarshalError{Err: err,
+			Description: _BEARER_PAYLOAD}
 	}
 
 	// Base64 encode marshalled bearer token.

@@ -61,14 +61,11 @@ mitmetel valimistel.
 
 :groupgen.paramtype: ElGamal'i krüptosüsteemi töö aluseks oleva rühma
                      tüüp. Toetatud väärtused:
-
-                     #. mod - jäägiklassiring Zp
-                     #. ec  - elliptkõverad
+                     #. ``mod`` - jäägiklassiring ``Zp``
 
 :groupgen.length: ElGamal'i krüptosüsteemi töö aluseks olevat rühma iseloomustav
                   turvaparameeter. Jäägiklassiringide korral on sobiv väärtus
-                  3072. Elliptkõveraid kasutades on toetatud kõver P-384, mille
-                  kasutamiseks tuleb sisestada väärtus 384.
+                  3072.
 
 :groupgen.init_template: Asukoht, kuhu kirjutatakse rühma parameetrid. Väljund
                          sobib kasutamiseks võtme genereerimise seadistuse
@@ -77,6 +74,8 @@ mitmetel valimistel.
 :groupgen.random_source: Juhuarvugeneraatori sisendiks kasutatavate allikate
                          loetelu. Vaata ka :numref:`random-gen`.
 
+Elliptkõveraid kasutades on toetatud kõver P-384, mille parameetrite
+genereerimine ei ole vajalik.
 
 Kasutades juhuslike parameetrite leidmiseks juhuarvugeneraatorit, mille
 algväärtus on üheselt defineeritav ning avalikustatud, võivad kolmandad
@@ -102,7 +101,7 @@ Häälte salastamise võtme genereerimine
 --------------------------------------
 
 Häälte salastamise võtme genereerimiseks kasutatakse võtmerakenduse tööriista
-*init*. Võti genereeritakse seadistustes näidatud läviskeemiga MofN, mis
+*init*. Võti genereeritakse seadistustes näidatud läviskeemiga ``MofN``, mis
 tähendab, et N võtmehaldurist peavad häälte dekrüpteerimisel osalema vähemalt M
 haldurit, vastasel juhul ei ole dekrüpteerimine võimalik.
 
@@ -114,10 +113,10 @@ haldurit, vastasel juhul ei ole dekrüpteerimine võimalik.
        Võtmerakenduse tööriista *init* väljundkataloog. Sellesse kataloogi
        tekivad
 
-       #. PEM vormingus allkirjavõtme sertifikaat (sign.pem)
-       #. PEM vormingus krüpteerimisvõtme sertifikaat (enc.pem)
-       #. PEM vormingus krüpteerimisvõti (pub.pem)
-       #. DER vormingus krüpteerimisvõti (pub.der)
+       #. PEM vormingus allkirjavõtme sertifikaat (``sign.pem``)
+       #. PEM vormingus krüpteerimisvõtme sertifikaat (``enc.pem``)
+       #. PEM vormingus krüpteerimisvõti (``pub.pem``)
+       #. DER vormingus krüpteerimisvõti (``pub.der``)
 
 :init.skiptest: Võtmeosakute kontrolltestide vahelejätmine.
 
@@ -127,7 +126,13 @@ haldurit, vastasel juhul ei ole dekrüpteerimine võimalik.
 ----
 
 :init.paramtype: ElGamal krüptosüsteemi aluseks oleva rühma parameetrid, mis
-                 ühtlasi määravad võtme turvataseme.
+                 ühtlasi määravad võtme turvataseme. Korraga saab olla
+                 kasutusel vaid ühe rühma spetsifikatsioon - kas
+                 jäägiklassiring või elliptkõver
+
+:init.paramtype.ec: Elliptkõverat määravad parameetrid.
+
+:init.paramtype.ec.name: Kasutatava kõvera nimi, hetkel P-384.
 
 :init.paramtype.mod: Jäägiklassiringi määravad parameetrid kümnendesituses.
                      Parameetrid võib luua võtmerakenduse tööriista *groupgen*
@@ -227,7 +232,7 @@ E-häälte dekrüpteerimine
 
 Elektrooniliste häälte dekrüpteerimiseks kasutatakse võtmerakenduse tööriista
 *decrypt*. Dekrüpteerimise õnnestumiseks peab osalema läviskeemi poolt määratud
-kvoorumi jagu võtmehaldureid. Kui rakendati skeemi 5of9, siis osaleb
+kvoorumi jagu võtmehaldureid. Kui rakendati skeemi ``5of9``, siis osaleb
 dekrüpteerimisel täpselt 5 võtmehaldurit. Vähema arvu haldurite korral ei ole
 dekrüpteerimine võimalik.
 
@@ -304,7 +309,7 @@ dekrüpteerimine võimalik.
       #. Dekrüpteeritud valimiskasti signatuur
       #. Loend kehtetutest sedelitest
       #. Kehtivate sedelite lugemistõend
-      #. Kehtetude sedelite lugemistõend (valikuline)
+      #. Kehtetute sedelite lugemistõend (valikuline)
 
 Dekrüpteeritud valimiskast tundlikke andmeid ei sisalda.
 
@@ -313,7 +318,6 @@ Dekrüpteeritud valimiskast tundlikke andmeid ei sisalda.
 .. literalinclude:: config-examples/key.decrypt.yaml
    :language: yaml
    :linenos:
-
 
 Pärast dekrüpteerimist on võimalik kontrollida väljastatud elektroonilise
 hääletamise tulemuse signatuuri korrektsust. Selleks tuleb teha järgnevad

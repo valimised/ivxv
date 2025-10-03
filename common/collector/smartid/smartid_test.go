@@ -18,7 +18,6 @@ import (
 const (
 	testIdentifier = "30303039914"
 	// G101: Potential hardcoded credentials
-	//nolint: gosec
 	testDocumentNo = "PNOEE-30303039914-MOCK-Q"
 )
 
@@ -68,14 +67,14 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestAuthentication(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Short mode on, skipping test against test-SmartID-REST service")
+func authenticate(t *testing.T) (string, error) {
+	challengeRnd, _, err := testClient.Challenge()
+	if err != nil {
+		t.Fatal("failed to obtain challenge:", err)
 	}
-	t.Parallel()
 
 	ctx := log.TestContext(context.Background())
-	code, challengeRnd, _, err := testClient.Authenticate(ctx, testIdentifier)
+	code, err := testClient.Authenticate(ctx, testIdentifier, challengeRnd)
 	if err != nil {
 		t.Fatal("failed to start authentication session:", err)
 	}
@@ -83,10 +82,11 @@ func TestAuthentication(t *testing.T) {
 	var cert *x509.Certificate
 	var algo string
 	var signature []byte
+	var documentNo string
 	for len(signature) == 0 {
 		time.Sleep(1 * time.Second)
 		fmt.Println("polling authentication") // Use fmt instead of t.Log to get running output.
-		if cert, algo, signature, err = testClient.GetAuthenticateStatus(ctx, code); err != nil {
+		if documentNo, cert, algo, signature, err = testClient.GetAuthenticateStatus(ctx, code); err != nil {
 			t.Fatal("failed to check authentication status:", err)
 		}
 	}
@@ -97,6 +97,19 @@ func TestAuthentication(t *testing.T) {
 	if err = VerifyAuthenticationSignature(cert, algo, challengeRnd, signature); err != nil {
 		t.Error("failed to verify authentication challenge signature:", err)
 	}
+
+	return documentNo, nil
+}
+
+func TestAuthentication(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Short mode on, skipping test against test-SmartID-REST service")
+	}
+	t.Parallel()
+
+	if _, err := authenticate(t); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestCertificate(t *testing.T) {
@@ -105,8 +118,13 @@ func TestCertificate(t *testing.T) {
 	}
 	t.Parallel()
 
+	documentNo, err := authenticate(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	ctx := log.TestContext(context.Background())
-	code, err := testClient.GetCertificateChoice(ctx, testIdentifier)
+	code, err := testClient.GetCertificateChoice(ctx, documentNo)
 	if err != nil {
 		t.Fatal("failed to get certificate choice:", err)
 	}
@@ -131,9 +149,13 @@ func TestSigning(t *testing.T) {
 	}
 	t.Parallel()
 
-	ctx := log.TestContext(context.Background())
+	documentNo, err := authenticate(t)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	code, err := testClient.GetCertificateChoice(ctx, testIdentifier)
+	ctx := log.TestContext(context.Background())
+	code, err := testClient.GetCertificateChoice(ctx, documentNo)
 	if err != nil {
 		t.Fatal("failed to get certificate choice:", err)
 	}

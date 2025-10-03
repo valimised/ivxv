@@ -18,7 +18,8 @@ func (c *Client) MobileAuthenticate(ctx context.Context, idCode, phone string) (
 	// of the signed data.
 	challengeRnd = make([]byte, c.authHashFunction.Size())
 	if _, err = rand.Read(challengeRnd); err != nil {
-		err = GenerateAuthenticationChallengeError{Err: err}
+		err = GenerateAuthenticationChallengeError{Err: err,
+			Description: _MID_RAND}
 		return
 	}
 	d := c.authHashFunction.New()
@@ -29,7 +30,7 @@ func (c *Client) MobileAuthenticate(ctx context.Context, idCode, phone string) (
 
 	sesscode, err = c.startSession(ctx, sessAuth, idCode, phone, challenge, hashType)
 	if err != nil {
-		err = MobileAuthenticateError{Err: err}
+		err = MobileAuthenticateError{Err: err, Description: _MID_SESS}
 		return
 	}
 
@@ -47,7 +48,8 @@ func (c *Client) GetMobileAuthenticateStatus(ctx context.Context, sesscode strin
 	var certDER []byte
 	algorithm, signature, certDER, err = c.getSessionStatus(ctx, sessAuth, sesscode)
 	if err != nil {
-		err = GetMobileAuthenticateStatusError{Err: err}
+		err = GetMobileAuthenticateStatusError{Err: err,
+			Description: _MID_SESS_STAT}
 		return
 	}
 
@@ -67,6 +69,7 @@ func (c *Client) parseAndVerify(ctx context.Context, certDER []byte) (
 		err = ParseAuthenticationCertificateError{
 			Certificate: certDER,
 			Err:         err,
+			Description: _MID_CERT,
 		}
 		return
 	}
@@ -83,6 +86,7 @@ func (c *Client) parseAndVerify(ctx context.Context, certDER []byte) (
 		certerr.Err = AuthenticationCertificateVerificationError{
 			Certificate: cert,
 			Err:         err,
+			Description: _MID_CERT_VERIFY,
 		}
 		err = certerr
 		return
@@ -96,15 +100,17 @@ func (c *Client) parseAndVerify(ctx context.Context, certDER []byte) (
 	status, err := c.ocsp.Check(ctx, cert, issuer, nil)
 	if err != nil {
 		err = CheckAuthenticationCertOCSPResponsError{
-			Response: status,
-			Err:      err,
+			Response:    status,
+			Err:         err,
+			Description: _MID_OCSP,
 		}
 		return
 	}
 	if !status.Good {
 		var certerr CertificateError
 		certerr.Err = AuthenticationCertificateRevokedError{
-			Reason: status.RevocationReason,
+			Reason:      status.RevocationReason,
+			Description: _MID_OCSP_N_GOOD,
 		}
 		err = certerr
 		return
@@ -121,7 +127,8 @@ func VerifyAuthenticationSignature(cert *x509.Certificate, algorithm string,
 	sigalg, ok := signatureAlgs[algorithm]
 	if !ok {
 		return SigAlgorithmNotSupportedError{
-			Algorithm: algorithm,
+			Algorithm:   algorithm,
+			Description: _MID_ALG,
 		}
 	}
 
@@ -130,14 +137,16 @@ func VerifyAuthenticationSignature(cert *x509.Certificate, algorithm string,
 	case x509.ECDSAWithSHA256, x509.ECDSAWithSHA384, x509.ECDSAWithSHA512:
 		if signature, err = cryptoutil.ReEncodeECDSASignature(signature); err != nil {
 			return ReEncodeAuthenticationSignatureError{
-				Signature: signature,
-				Err:       err,
+				Signature:   signature,
+				Err:         err,
+				Description: _MID_XML2ASN1,
 			}
 		}
 	}
 
 	if err = cert.CheckSignature(sigalg, signed, signature); err != nil {
-		return VerifyAuthenticationSignatureError{Err: err}
+		return VerifyAuthenticationSignatureError{Err: err,
+			Description: _MID_SIG}
 	}
 	return nil
 }

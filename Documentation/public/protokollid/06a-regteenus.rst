@@ -163,8 +163,8 @@ tekkida fiktiivseid KINNITUSI, mida Kogumisteenus tegelikult nõudnud pole.
 
 Kogumisteenus talletab kõiki Registreerimisteenuse vastuseid. Kuna need on
 allkirjastatud, siis on täiendav info oluline vaid siis kui Kogumisteenus
-väidab, et mingit KORRALDUST ei ole antud, kuigi Registreerimisteenus on (v_id,
-Hash(VOTE)) esitanud. Sellisel juhul saab Registreerimisteenus esitada terve
+väidab, et mingit KORRALDUST ei ole antud, kuigi Registreerimisteenus on ``(v_id,
+Hash(VOTE))`` esitanud. Sellisel juhul saab Registreerimisteenus esitada terve
 Kogumisteenuse KORRALDUSE (või vähemalt selle allkirjastatud komponendi)
 
 Registreerimisteenus
@@ -199,8 +199,8 @@ Ajatemplipäring::
     certReq               BOOLEAN                  DEFAULT FALSE,
     extensions            [0] IMPLICIT Extensions  OPTIONAL  }
 
-Ajatembeldatavad andmed esitatakse teenusele messageImprint koosseisus räsina.
-TimeStampReq ei sisalda endas päringu esitaja allkirja.
+Ajatembeldatavad andmed esitatakse teenusele ``messageImprint`` koosseisus räsina.
+``TimeStampReq`` ei sisalda endas päringu esitaja allkirja.
 
 ATO vastus ajatemplipäringule::
 
@@ -231,15 +231,15 @@ ATO vastus ajatemplipäringule::
     extensions            [1] IMPLICIT Extensions  OPTIONAL }
 
 
-TimeStampResp on ATO poolt digitaalselt allkirjastatud konteiner, mis sisaldab
-endas päringu koosseisus saadud messageImprint'i ning nonssi.
+``TimeStampResp`` on ATO poolt digitaalselt allkirjastatud konteiner, mis sisaldab
+endas päringu koosseisus saadud välja ``messageImprint`` ning nonssi.
 
 Registreerimisteenuse huvides on, et Kogumisteenuse päring oleks signeeritud.
 Kuna RFC 3161 ei toeta allkirjastatud päringuid on alternatiiviks kasutada mõnda
 laiendust, mis võimaldab Kogumisteenuse signatuuri edastamist. See laiendus
 tuleks teenuse poolt ajatempli koosseisus ka tagasi saata. Kuna RFC 3161 ei
 sõnasta laienduste tagasipeegeldamise nõuet ühemõtteliselt on reaalne võimalus
-kaustada protokolli laiendamiseks ajatemplipäringu nonssi. Nonss on ASN.1
+kasutada protokolli laiendamiseks ajatemplipäringu nonssi. Nonss on ASN.1
 INTEGER andmetüüp kuhu saab kodeerida suvalise struktuuriga andmeid, mis teeb
 võimalikuks järgmise skeemi:
 
@@ -256,7 +256,7 @@ Hääletamise ajal:
 #. Valija saadab hääle talletamiseks.
 
 #. Kogumisteenus räsib hääle, allkirjastab räsi ning võtab räsile ajatempli,
-   kasutades ajatemplipäringu TimeStampReq nonssina oma allkirja sellel räsil.
+   kasutades ajatemplipäringu TimeStampReq nonsina oma allkirja sellel räsil.
 
 #. ATO töötleb ajatemplipäringut kooskõlas RFC 3161 nõuetega ning väljastab
    allkirjastatud ajatempli.
@@ -266,7 +266,7 @@ Hääletamise ajal:
 
    a) ajatempel on ATO poolt allkirjastatud,
    b) ajatempel sisaldab nonssi,
-   c) ajatemple sisaldab tema hääle räsi,
+   c) ajatempel sisaldab tema hääle räsi,
    d) nonss on Kogumisteenuse poolt allkirjastatud valija hääle räsi.
 
 Peale hääletamist:
@@ -305,7 +305,7 @@ Peale hääletamist:
 #. Kogumisteenus ei saa juba esitatud KORRALDUSTE kohta väita, et ta neid ei
    esitanud
 
-Nonssi vorming::
+Nonsi vorming::
 
   Signature ::= SEQUENCE {
     signingAlgorithm AlgorithmIdentifier,
@@ -324,8 +324,9 @@ Sõnumiks on TimeStampReq.messageImprint DER-kodeering::
     hashedMessage OCTET STRING
   }
 
-RSA kasutamisel allkirjastamiseks. Signature.signingAlgorithm.algorithm sõltub
-sõnumi hashAlgorithmist::
+RSA kasutamisel allkirjastamiseks. välja
+``Signature.signingAlgorithm.algorithm`` väärtus sõltub sõnumi
+``hashAlgorithm`` välja väärtusest::
 
   pkcs-1 OBJECT IDENTIFIER ::= { iso(1) member-body(2) US(840) rsadsi(113549) pkcs(1) 1 }
 
@@ -335,9 +336,9 @@ sõnumi hashAlgorithmist::
   sha384WithRSAEncryption  OBJECT IDENTIFIER  ::=  { pkcs-1 12 }
   sha512WithRSAEncryption  OBJECT IDENTIFIER  ::=  { pkcs-1 13 }
 
-Signature.signingAlgorithm.parameters puudub või on NULL.
+Väli ``Signature.signingAlgorithm.parameters`` puudub või on NULL.
 
-Signature.signature on OCTET STRING, mis sisaldab RSA signatuuri sõnumil.
+Väli ``Signature.signature`` on OCTET STRING, mis sisaldab RSA signatuuri sõnumil.
 
 ATO väljavõte
 -------------

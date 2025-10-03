@@ -8,6 +8,13 @@ import java.math.BigInteger;
  */
 public abstract class Group {
     /**
+     *
+     * Get name of a group.
+     * @return name of a group
+     */
+    public abstract String getName();
+
+    /**
      * Get a group element from serialized representation.
      * 
      * @param data
@@ -55,7 +62,15 @@ public abstract class Group {
     public abstract Plaintext pad(Plaintext msg);
 
     /**
-     * Check that an arbitrary group element can be decoded as this group element.
+     * Unpad the message.
+     *
+     * @param msg
+     * @return
+     */
+    public abstract Plaintext unpad(Plaintext msg);
+
+    /**
+     * Check that group element can be decoded into a plaintext.
      * 
      * @see Decodable
      * 
@@ -73,12 +88,12 @@ public abstract class Group {
     public abstract Plaintext decode(GroupElement msg);
 
     /**
-     * Check that the element is group element.
+     * Check that the element is a valid group element.
      * 
      * @param el
      * @return
      */
-    public abstract boolean isGroupElement(GroupElement el);
+    public abstract Decodable isGroupElement(GroupElement el);
 
     /**
      * Serialize the group representation.

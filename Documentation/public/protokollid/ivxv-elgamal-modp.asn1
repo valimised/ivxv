@@ -1,0 +1,31 @@
+id-ivxv-modp-elgamal OBJECT IDENTIFIER ::= { iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) cryptlib(3029) mechanism(2) 1 }
+
+IVXVModPElGamalParameters ::= SEQUENCE {
+    modP        INTEGER,
+    gen         INTEGER,
+    electionId  GeneralString
+}
+
+IVXVModPElGamalPublicKey ::= SEQUENCE {
+    pubY  INTEGER
+}
+
+IVXVModPElGamalCiphertext ::= SEQUENCE {
+    uBlind           INTEGER,
+    vBlindedMessage  INTEGER
+}
+
+IVXVModPElGamalDecryptionProof ::= SEQUENCE {
+    aMsgCommitment  INTEGER,
+    bKeyCommitment  INTEGER,
+    sResponse       INTEGER
+}
+
+IVXVModPElGamalDecryptionChallenge ::= SEQUENCE {
+    niProofDomain     GeneralString,
+    publicKey         SubjectPublicKeyInfo,
+    ciphertextInfo    IVXVElGamalCiphertextInfo,
+    encodedPlaintext  INTEGER,
+    aMsgCommitment    INTEGER,
+    bKeyCommitment    INTEGER
+}

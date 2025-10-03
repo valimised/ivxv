@@ -56,7 +56,7 @@ func newCertID(cert *x509.Certificate) (id *certID, err error) {
 	// Since certIDHash is SHA-1 then skip calculating the IssuerKeyHash
 	// and simply use AuthorityKeyId.
 	if len(cert.AuthorityKeyId) == 0 {
-		return nil, AuthKeyIDMissingError{}
+		return nil, AuthKeyIDMissingError{Description: _OCSP_AUTHKID}
 	}
 
 	nameHash := certIDHash(cert.RawIssuer)

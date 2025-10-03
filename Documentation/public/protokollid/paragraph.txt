@@ -1,0 +1,53 @@
+3. Kehtestada elektroonilise hääle vorm järgmiselt (skeem lisatud).
+
+  3.1. Valijarakenduses elektrooniliselt allkirjastatud elektrooniline
+    hääl on digitaalselt allkirjastatud fail, mille nimi on teksti
+    kujul e-hääletamise aeg (ajatempel). Faili sees asub punktis 3.2
+    nimetatud salastatud (krüpteeritud) elektrooniline hääl ja valija
+    elektrooniline allkiri. Elektroonilise allkirja sertifikaatide
+    kehtivuskinnitus ja ajatempel saadakse usaldusteenuse pakkujalt
+    kogujasse eraldi ning valijarakenduse faili ennast ei muudeta,
+    vaid kehtivuskinnitus ja ajatempel hoiustatakse valijarakenduses
+    loodud allkirjastatud failist lahus.
+
+  3.2. Elektrooniline hääl on krüpteeritud Riigikogu valimiste seaduse
+    §483 lõike 3 alusel hääletamiseks loodud elektrooniliste häälte
+    salastamise võtmega andmefail. Faili nimi algab valimiste või
+    rahvahääletuse identifikaatoriga ja lõpeb küsimuse
+    identifikaatoriga. Faili laiend on .ballot. Faili sees on
+    krüpteeritud kujul punktides 3.4, 3.5, 3.6 või 3.7 nimetatud
+    andmeelemendid vastavalt sellele, kas tegemist on Euroopa
+    Parlamendi, Riigikogu või kohaliku omavalitsuse volikogu valimiste
+    või rahvahääletusega.
+
+  3.3. Avatud (dekrüpteeritud) elektrooniline hääl on elektrooniliste
+    häälte avamise arvuti (võtmeprotseduurideks mõeldud arvuti) mälus
+    olev andmehulk, mis koosneb kahest andmeelemendist ja neid
+    eraldavatest märgenditest.
+
+  3.4. Euroopa Parlamendi valimiste andmeelementide ja märgendite
+    järjekord on:
+
+    3.4.1. sõne 0000 ja märgend ASCII kuueteistkümnendkood 2E;
+
+    3.4.2. kandidaadi registreerimisnumber.
+
+  3.5. Riigikogu valimiste andmeelementide ja märgendite järjekord on:
+
+    3.5.1. sõne 0000 ja märgend ASCII kuueteistkümnendkood 2E;
+
+    3.5.2. kandidaadi registreerimisnumber.
+
+  3.6. Kohaliku omavalitsuse volikogu valimiste andmeelementide ja
+    märgendite järjekord on:
+
+    3.6.1. kohaliku omavalitsuse üksuse EHAK kood ja märgend ASCII
+      kuueteistkümnendkood 2E;
+
+    3.6.2. kandidaadi registreerimisnumber.
+
+  3.7. Rahvahääletuse andmeelementide ja märgendite järjekord on:
+
+    3.7.1. sõne 0000 ja märgend ASCII kuueteistkümnendkood 2E;
+
+    3.7.2. vastuse kood.

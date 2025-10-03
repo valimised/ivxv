@@ -74,7 +74,7 @@ public class DataParser {
      */
     public static ECGroupElement parseECGroupGenerator(ByteTree groupRoot)
             throws ShuffleException, IllegalArgumentException {
-        if (groupRoot.isLeaf()) {
+        if (!groupRoot.isLeaf()) {
             throw new ShuffleException("Invalid Elliptic Curve Group description");
         }
         Leaf ecgroupname = (Leaf) groupRoot;
@@ -249,18 +249,17 @@ public class DataParser {
     }
 
     /**
-     * Get the ByteTree node as an ECGroupElement
-     * <p>
-     * Currently not supported.
-     * 
-     * @param group
-     * @param bt
-     * @return
-     * @throws UnsupportedOperationException Always.
+     * Get the ByteTree node as an ECGroupElement.
+     *
+     * @param group Group where the element belongs
+     * @param bt Node node
+     * @return {@link ee.ivxv.common.math.ECGroupElement} instance
      */
-    public static ECGroupElement getAsElement(ECGroup group, ByteTree bt)
-            throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("ECGroup element get not supported currently");
+    public static ECGroupElement getAsElement(ECGroup group, ByteTree bt) {
+        Node point = (Node) bt;
+        Leaf x = (Leaf) point.getNodes()[0];
+        Leaf y = (Leaf) point.getNodes()[1];
+        return new ECGroupElement(group, x.getBigInteger(), y.getBigInteger());
     }
 
     /**
@@ -426,6 +425,42 @@ public class DataParser {
             res[i] = ((Leaf) intnodes[i]).getBigInteger();
         }
         return res;
+    }
+
+    /**
+     * Get the indexed ByteTree node as a group scalar.
+     * <p>
+     * Indexed version of {@link #getAsScalar(Group, ByteTree, int)}.
+     * <p>
+     *
+     * @see #getAsScalar(Group, ByteTree, int)
+     *
+     * @param group Group where the scalar belongs.
+     * @param bt Scalar node representation in Verificatum ByteTree format.
+     * @param index Index of the node to use.
+     * @return An array of {@link BigInteger} instances.
+     * @throws IllegalArgumentException When parsing fails.
+     */
+    public static BigInteger[] getAsScalar(Group group, ByteTree bt, int index)
+            throws IllegalArgumentException {
+        if (bt.isLeaf()) {
+            throw new IllegalArgumentException("Expecting node");
+        }
+
+        if (group instanceof ProductGroup) {
+            Node node = (Node) ((Node) bt).getNodes()[index];
+            Group[] groups = ((ProductGroup) group).getGroups();
+            BigInteger[] scalars = new BigInteger[groups.length];
+
+            for (int i = 0; i < groups.length; i++) {
+                Leaf leaf = (Leaf) node.getNodes()[i];
+                scalars[i] = leaf.getBigInteger();
+            }
+
+            return scalars;
+        } else {
+            throw new IllegalArgumentException("Invalid group");
+        }
     }
 
     /**

@@ -31,12 +31,14 @@ func init() {
 func configure(n yaml.Node) (container.OpenFunc, error) {
 	var c Conf
 	if err := yaml.Apply(n, &c); err != nil {
-		return nil, ConfigurationYAMLError{Err: err}
+		return nil, ConfigurationYAMLError{Err: err,
+			Description: _CONTAINER_BDOC_CFG}
 	}
 
 	o, err := New(&c)
 	if err != nil {
-		return nil, ConfigurationError{Err: err}
+		return nil, ConfigurationError{Err: err,
+			Description: _CONTAINER_BDOC_NEW}
 	}
 
 	// Wrap o.Open in a short function to cast the returned value from
@@ -49,9 +51,11 @@ func configure(n yaml.Node) (container.OpenFunc, error) {
 func unverifiedOpen(encoded io.Reader) (container.Container, error) {
 	// The bootstrap container and files in it should fit inside 10 MiB.
 	const limit = 10 * 1024 * 1024
-	files, err := openASiCE(encoded, limit, limit, false)
+	const fileCount = 50
+	files, err := openASiCE(encoded, fileCount, limit, limit, false)
 	if err != nil {
-		return nil, UnverifiedOpenError{Err: err}
+		return nil, UnverifiedOpenError{Err: err,
+			Description: _CONTAINER_BDOC_OPEN}
 	}
 	return &BDOC{files: files}, nil
 }
@@ -69,6 +73,9 @@ const (
 // only contains serialized values such that it can easily be unmarshaled from
 // a file.
 type Conf struct {
+	// FileCount is the maximum allowed files amount in the container.
+	FileCount int64
+
 	// BDOCSize is the maximum accepted size of BDOC containers read from
 	// streams into memory. Note that this limit does not apply to sources
 	// which already support random access.
@@ -102,57 +109,71 @@ type Conf struct {
 
 // Opener is a configured BDOC container opener.
 type Opener struct {
-	bdocSize int64
-	fileSize int64
-	rpool    *x509.CertPool
-	ipool    *x509.CertPool
-	ocsp     *ocsp.Client
-	tsp      *tsp.Client
-	profile  Profile
-	tsdelay  time.Duration
+	fileCount int64
+	bdocSize  int64
+	fileSize  int64
+	rpool     *x509.CertPool
+	ipool     *x509.CertPool
+	ocsp      *ocsp.Client
+	tsp       *tsp.Client
+	profile   Profile
+	tsdelay   time.Duration
 }
 
 // New returns a new BDOC container opener.
 func New(c *Conf) (*Opener, error) {
 	o := &Opener{
-		bdocSize: c.BDOCSize,
-		fileSize: c.FileSize,
-		profile:  c.Profile,
+		fileCount: c.FileCount,
+		bdocSize:  c.BDOCSize,
+		fileSize:  c.FileSize,
+		profile:   c.Profile,
+	}
+
+	if o.fileCount <= 0 {
+		return nil, InvalidBDOCFileCountError{Size: o.fileCount,
+			Description: _CONTAINER_BDOC_FILE_COUNT}
 	}
 
 	if o.bdocSize <= 0 {
-		return nil, InvalidBDOCSizeError{Size: o.bdocSize}
+		return nil, InvalidBDOCSizeError{Size: o.bdocSize,
+			Description: _CONTAINER_BDOC_SIZE}
 	}
 
 	if o.fileSize <= 0 {
-		return nil, InvalidFileSizeError{Size: o.fileSize}
+		return nil, InvalidFileSizeError{Size: o.fileSize,
+			Description: _CONTAINER_BDOC_DATA_SIZE}
 	}
 
 	if len(c.Roots) == 0 {
-		return nil, UnconfiguredRootsError{}
+		return nil, UnconfiguredRootsError{Description: _CONTAINER_BDOC_CA}
 	}
 	var err error
 	if o.rpool, err = cryptoutil.PEMCertificatePool(c.Roots...); err != nil {
-		return nil, RootsParseError{Err: err}
+		return nil, RootsParseError{Err: err,
+			Description: _CONTAINER_BDOC_CA_PARSE}
 	}
 	if o.ipool, err = cryptoutil.PEMCertificatePool(c.Intermediates...); err != nil {
-		return nil, IntermediatesParseError{Err: err}
+		return nil, IntermediatesParseError{Err: err,
+			Description: _CONTAINER_BDOC_ICA_PARSE}
 	}
 
 	switch c.Profile {
 	case TS:
 		// Create TSP client for checking timestamps.
 		if o.tsp, err = tsp.New(&c.TSP); err != nil {
-			return nil, TSPClientError{Err: err}
+			return nil, TSPClientError{Err: err,
+				Description: _CONTAINER_BDOC_TSA}
 		}
 		o.tsdelay = time.Duration(c.TSDelayTime) * time.Second
 		// Create OCSP client for checking revocation status.
 		if o.ocsp, err = ocsp.New(&c.OCSP); err != nil {
-			return nil, OCSPClientError{Err: err}
+			return nil, OCSPClientError{Err: err,
+				Description: _CONTAINER_BDOC_OCSP}
 		}
 	case BES: // No additional setup.
 	default:
-		return nil, UnsupportedProfileError{Profile: c.Profile}
+		return nil, UnsupportedProfileError{Profile: c.Profile,
+			Description: _CONTAINER_BDOC_PROFILE}
 	}
 	return o, nil
 }
@@ -168,9 +189,10 @@ type BDOC struct {
 // Open opens and verifies a BDOC signature container.
 func (o *Opener) Open(encoded io.Reader) (bdoc *BDOC, err error) {
 	// Open the container and get all the files from it.
-	files, err := openASiCE(encoded, o.bdocSize, o.fileSize, true)
+	files, err := openASiCE(encoded, o.fileCount, o.bdocSize, o.fileSize, true)
 	if err != nil {
-		return nil, OpenBDOCContainerError{Err: err}
+		return nil, OpenBDOCContainerError{Err: err,
+			Description: _CONTAINER_BDOC_OPEN}
 	}
 
 	bdoc = &BDOC{
@@ -194,7 +216,8 @@ func (o *Opener) Open(encoded io.Reader) (bdoc *BDOC, err error) {
 			QualifyingProperties.SignedProperties.
 			SignedSignatureProperties.SigningTime.Value)
 		if err != nil {
-			return time.Time{}, SigningTimeParseError{Err: err}
+			return time.Time{}, SigningTimeParseError{Err: err,
+				Description: _CONTAINER_BDOC_XADES_SIG_TIME}
 		}
 		return
 	}
@@ -209,7 +232,8 @@ func (o *Opener) Open(encoded io.Reader) (bdoc *BDOC, err error) {
 		// Parse the XAdES signatures.
 		var x xadesSignatures
 		if err = parseXML(file.data.Bytes(), &x); err != nil {
-			return nil, SignatureXMLError{Name: file.name, Err: err}
+			return nil, SignatureXMLError{Name: file.name, Err: err,
+				Description: _CONTAINER_BDOC_XADES_SIG}
 		}
 		s := &x.Signature // We allow only one signature per file.
 		signatures = append(signatures, s)
@@ -228,6 +252,7 @@ func (o *Opener) Open(encoded io.Reader) (bdoc *BDOC, err error) {
 				FileName:    file.name,
 				SignatureID: s.ID,
 				Err:         err,
+				Description: _CONTAINER_BDOC_CERT_SIG,
 			}
 		}
 
@@ -250,6 +275,7 @@ func (o *Opener) Open(encoded io.Reader) (bdoc *BDOC, err error) {
 				Certificate: signer.Raw, // Log entire cert for diagnostics.
 				SigningTime: signingTime,
 				Err:         err,
+				Description: _CONTAINER_BDOC_CERT_SIG_VERIFY,
 			}
 		}
 
@@ -264,7 +290,8 @@ func (o *Opener) Open(encoded io.Reader) (bdoc *BDOC, err error) {
 		// Decode and store the ivxv.ee/q11n/ocsp.SignatureValuer value.
 		bdoc.ocspValues[s.ID], err = b64d(s.SignatureValue.Value)
 		if err != nil {
-			return nil, SignatureValueDecodeError{Err: err}
+			return nil, SignatureValueDecodeError{Err: err,
+				Description: _CONTAINER_BDOC_SIG_B64}
 		}
 
 		// Canonicalize and store the ivxv.ee/q11n/tsp.TimestampDataer data.
@@ -281,7 +308,8 @@ func (o *Opener) Open(encoded io.Reader) (bdoc *BDOC, err error) {
 		}
 
 		if err = o.check(s, &bdoc.signatures[i], bdoc.files, signingTime); err != nil {
-			return nil, CheckSignatureError{Signature: s.ID, Err: err}
+			return nil, CheckSignatureError{Signature: s.ID, Err: err,
+				Description: _CONTAINER_BDOC_CERT_OCSP}
 		}
 	}
 	return bdoc, nil
@@ -319,7 +347,8 @@ func (b *BDOC) Close() error {
 func (b *BDOC) SignatureValue(id string) ([]byte, error) {
 	value, ok := b.ocspValues[id]
 	if !ok {
-		return nil, SignatureValueNoSuchIDError{ID: id}
+		return nil, SignatureValueNoSuchIDError{ID: id,
+			Description: _CONTAINER_BDOC_OCSP_ID}
 	}
 	return value, nil
 }
@@ -329,7 +358,8 @@ func (b *BDOC) SignatureValue(id string) ([]byte, error) {
 func (b *BDOC) TimestampData(id string) ([]byte, error) {
 	data, ok := b.tspData[id]
 	if !ok {
-		return nil, TimestampDataNoSuchIDError{ID: id}
+		return nil, TimestampDataNoSuchIDError{ID: id,
+			Description: _CONTAINER_BDOC_TSA_ID}
 	}
 	return data.Bytes(), nil
 }
@@ -353,6 +383,7 @@ func (o *Opener) check(
 		return QualifyingPropertiesTargetError{
 			SignatureID: s.ID,
 			Target:      qprop.Target,
+			Description: _CONTAINER_BDOC_Q,
 		}
 	}
 
@@ -377,6 +408,7 @@ func (o *Opener) check(
 			return TimestampAndOCSPTimeMismatchError{
 				TimestampGenTime: c.SigningTime,
 				OCSPProducedAt:   producedAt,
+				Description:      _CONTAINER_BDOC_TS,
 			}
 		}
 	}
@@ -396,12 +428,15 @@ func checkSignatureValue(s *signature, c *x509.Certificate) (signature []byte, e
 	signing := s.SignedInfo.SignatureMethod.Algorithm
 	x509sa, ok := signAlgorithms[signing]
 	if !ok {
-		return nil, UnsupportedSigningAlgorithmError{Algorithm: signing}
+		return nil, UnsupportedSigningAlgorithmError{Algorithm: signing,
+			Description: _CONTAINER_BDOC_SIG_ALG}
 	}
 
 	c14n := s.SignedInfo.CanonicalizationMethod.Algorithm
 	if c14n != xmlc14n11 {
-		return nil, UnsupportedSignedInfoCanonicalizationAlgorithmError{Algorithm: c14n}
+		return nil, UnsupportedSignedInfoCanonicalizationAlgorithmError{
+			Algorithm:   c14n,
+			Description: _CONTAINER_BDOC_SIG_CALG}
 	}
 
 	siginfo := buffer()
@@ -409,7 +444,8 @@ func checkSignatureValue(s *signature, c *x509.Certificate) (signature []byte, e
 	writeXML(&s.SignedInfo, siginfo)
 
 	if signature, err = b64d(s.SignatureValue.Value); err != nil {
-		return nil, DecodeSignatureValueError{Err: err}
+		return nil, DecodeSignatureValueError{Err: err,
+			Description: _CONTAINER_BDOC_SIG_B64}
 	}
 
 	// We need to re-encode ECDSA signatures for the Go standard library.
@@ -418,14 +454,16 @@ func checkSignatureValue(s *signature, c *x509.Certificate) (signature []byte, e
 	case x509.ECDSAWithSHA256, x509.ECDSAWithSHA384, x509.ECDSAWithSHA512:
 		if recode, err = cryptoutil.ReEncodeECDSASignature(signature); err != nil {
 			return nil, ReEncodeECDSASignatureError{
-				Signature: signature,
-				Err:       err,
+				Signature:   signature,
+				Err:         err,
+				Description: _CONTAINER_BDOC_XML2ASN1,
 			}
 		}
 	}
 
 	if err = c.CheckSignature(x509sa, siginfo.Bytes(), recode); err != nil {
-		return nil, SignatureVerificationError{Err: err}
+		return nil, SignatureVerificationError{Err: err,
+			Description: _CONTAINER_BDOC_SIG_VERIFY}
 	}
 	return signature, nil
 }
@@ -440,7 +478,8 @@ func checkReferences(s *signature, files map[string]*asiceFile) error {
 	}
 
 	if ref.Type != "http://uri.etsi.org/01903#SignedProperties" {
-		return InvalidSignedPropertiesReferenceTypeError{Type: ref.Type}
+		return InvalidSignedPropertiesReferenceTypeError{Type: ref.Type,
+			Description: _CONTAINER_BDOC_REF}
 	}
 
 	// We use a fixed canonicalization algorithm, so Transforms should
@@ -448,7 +487,8 @@ func checkReferences(s *signature, files map[string]*asiceFile) error {
 	for _, tr := range ref.Transforms.Transform {
 		if tr.Algorithm != xmlc14n11 {
 			return UnsupportedSignedPropertiesTransformError{
-				Algorithm: tr.Algorithm,
+				Algorithm:   tr.Algorithm,
+				Description: _CONTAINER_BDOC_SIG_PROP_CALG,
 			}
 		}
 	}
@@ -457,7 +497,8 @@ func checkReferences(s *signature, files map[string]*asiceFile) error {
 	defer release(sigprop)
 	writeXML(&s.Object.QualifyingProperties.SignedProperties, sigprop)
 	if err = checkXMLDigest(ref.DigestMethod, sigprop.Bytes(), ref.DigestValue); err != nil {
-		return SignedPropertiesReferenceDigestError{Err: err}
+		return SignedPropertiesReferenceDigestError{Err: err,
+			Description: _CONTAINER_BDOC_SIG_PROP_DIG}
 	}
 
 	// Check the data file references.
@@ -470,14 +511,17 @@ func checkReferences(s *signature, files map[string]*asiceFile) error {
 		}
 
 		if len(ref.Type) > 0 {
-			return UnsupportedReferenceTypeError{URI: file.name, Type: ref.Type}
+			return UnsupportedReferenceTypeError{URI: file.name, Type: ref.Type,
+				Description: _CONTAINER_BDOC_REF}
 		}
 		if len(ref.Transforms.Transform) > 0 {
-			return FileReferenceWithTransformsError{URI: file.name}
+			return FileReferenceWithTransformsError{URI: file.name,
+				Description: _CONTAINER_BDOC_FILE_REF}
 		}
 
 		if err = checkXMLDigest(ref.DigestMethod, file.data.Bytes(), ref.DigestValue); err != nil {
-			return FileReferenceDigestError{URI: file.name, Err: err}
+			return FileReferenceDigestError{URI: file.name, Err: err,
+				Description: _CONTAINER_BDOC_FILE_DIG}
 		}
 
 		// Since we already have the reference for file here, also
@@ -492,6 +536,7 @@ func checkReferences(s *signature, files map[string]*asiceFile) error {
 				URI:              file.name,
 				Manifest:         file.mimetype,
 				DataObjectFormat: dof.MimeType.Value,
+				Description:      _CONTAINER_BDOC_DO,
 			}
 		}
 	}
@@ -499,12 +544,14 @@ func checkReferences(s *signature, files map[string]*asiceFile) error {
 	// Check for extra References. We know that there cannot be any less,
 	// because we had a reference for each unique file name.
 	if count, expected := len(s.SignedInfo.Reference), len(files)+1; count > expected {
-		return ExtraReferencesError{Count: count, Expected: expected}
+		return ExtraReferencesError{Count: count, Expected: expected,
+			Description: _CONTAINER_BDOC_N_REF}
 	}
 
 	// Check for extra DataObjectFormats.
 	if count, expected := len(dofs), len(files); count > expected {
-		return ExtraDataObjectFormatsError{Count: count, Expected: expected}
+		return ExtraDataObjectFormatsError{Count: count, Expected: expected,
+			Description: _CONTAINER_BDOC_DO_EX}
 	}
 	return nil
 }
@@ -514,15 +561,17 @@ func findReference(refs []reference, uri string) (reference, error) {
 		ruri, err := url.QueryUnescape(ref.URI)
 		if err != nil {
 			return ref, ReferenceURIUnescapeError{
-				URI: ref.URI,
-				Err: err,
+				URI:         ref.URI,
+				Err:         err,
+				Description: _CONTAINER_BDOC_REF_URI,
 			}
 		}
 		if ruri == uri {
 			return ref, nil
 		}
 	}
-	return reference{}, NoReferenceWithURIError{URI: uri}
+	return reference{}, NoReferenceWithURIError{URI: uri,
+		Description: _CONTAINER_BDOC_REF_N_URI}
 }
 
 func findDataObjectFormat(dofs []dataObjectFormat, ref string) (dataObjectFormat, error) {
@@ -531,7 +580,8 @@ func findDataObjectFormat(dofs []dataObjectFormat, ref string) (dataObjectFormat
 			return dof, nil
 		}
 	}
-	return dataObjectFormat{}, NoDataObjectFormatWithReferenceError{Reference: ref}
+	return dataObjectFormat{}, NoDataObjectFormatWithReferenceError{
+		Reference: ref, Description: _CONTAINER_BDOC_REF_NO}
 }
 
 func checkSignedProperties(p *signedProperties, c *x509.Certificate) error {
@@ -553,7 +603,9 @@ func checkSignedProperties(p *signedProperties, c *x509.Certificate) error {
 		return UnexpectedSignaturePolicyIdentifierError{
 			// Use TrimSpace to remove all \n, \r, \s chars
 			// in case XML is not canonicalized
-			Identifier: strings.TrimSpace(spi.SignaturePolicyID.SigPolicyID.Identifier.Value)}
+			Identifier:  strings.TrimSpace(spi.SignaturePolicyID.SigPolicyID.Identifier.Value),
+			Description: _CONTAINER_BDOC_SIG_POLICY,
+		}
 	}
 	return nil
 }
@@ -563,7 +615,8 @@ func checkSigningCertificate(s *signingCertificate, c *x509.Certificate) error {
 	method := s.Cert.CertDigest.DigestMethod
 	digest := s.Cert.CertDigest.DigestValue
 	if err := checkXMLDigest(method, c.Raw, digest); err != nil {
-		return SigningCertificateDigestError{Err: err}
+		return SigningCertificateDigestError{Err: err,
+			Description: _CONTAINER_BDOC_SIG_PARSE}
 	}
 
 	// Check IssuerSerial to ensure that the correct certificate is indicated.
@@ -572,14 +625,16 @@ func checkSigningCertificate(s *signingCertificate, c *x509.Certificate) error {
 		return SigningCertificateSerialError{
 			KeyInfo:            c.SerialNumber,
 			SigningCertificate: serial,
+			Description:        _CONTAINER_BDOC_SIG_SER,
 		}
 	}
 
 	issuer, err := cryptoutil.DecodeRDNSequence(s.Cert.IssuerSerial.X509IssuerName.Value)
 	if err != nil {
 		return SigningCertificateIssuerParseError{
-			Issuer: s.Cert.IssuerSerial.X509IssuerName.Value,
-			Err:    err,
+			Issuer:      s.Cert.IssuerSerial.X509IssuerName.Value,
+			Err:         err,
+			Description: _CONTAINER_BDOC_CERT_ISS,
 		}
 	}
 
@@ -588,6 +643,7 @@ func checkSigningCertificate(s *signingCertificate, c *x509.Certificate) error {
 		return SigningCertificateIssuerError{
 			KeyInfo:            c.Issuer,
 			SigningCertificate: s.Cert.IssuerSerial.X509IssuerName.Value,
+			Description:        _CONTAINER_BDOC_CERT_ISS_VERIFY,
 		}
 	}
 	return nil
@@ -599,20 +655,25 @@ func checkOCSP(values *ocspValues, c, issuer *x509.Certificate,
 
 	value := values.EncapsulatedOCSPValue.Value
 	if len(value) == 0 {
-		return producedAt, nil, OCSPResponseMissingError{}
+		return producedAt, nil, OCSPResponseMissingError{
+			Description: _CONTAINER_BDOC_CERT_N_OCSP,
+		}
 	}
 
 	response, err := b64d(value)
 	if err != nil {
-		return producedAt, nil, OCSPResponseDecodeError{Value: value, Err: err}
+		return producedAt, nil, OCSPResponseDecodeError{
+			Value: value, Err: err, Description: _CONTAINER_BDOC_CERT_OCSP_B64}
 	}
 
 	status, err := ocsp.CheckFullResponse(response, c, issuer, nil, sigTime)
 	if err != nil {
-		return producedAt, nil, OCSPResponceVerificationError{Err: err}
+		return producedAt, nil, OCSPResponceVerificationError{Err: err,
+			Description: _CONTAINER_BDOC_CERT_OCSP_VERIFY}
 	}
 	if !status.Good {
-		return producedAt, nil, OCSPStatusNotGoodError{Response: *status}
+		return producedAt, nil, OCSPStatusNotGoodError{Response: *status,
+			Description: _CONTAINER_BDOC_CERT_OCSP_BAD}
 	}
 	return status.ProducedAt, status.Nonce, nil
 }
@@ -623,18 +684,22 @@ func checkTimestamp(timestamp *xadesTimeStamp, sigval *signatureValue, tsp *tsp.
 	c14n := timestamp.CanonicalizationMethod
 	if c14n.XMLElement.isPresent() && c14n.Algorithm != xmlc14n11 {
 		return genTime, UnsupportedTimestampCanonicalizationAlgorithmError{
-			Algorithm: c14n.Algorithm,
+			Algorithm:   c14n.Algorithm,
+			Description: _CONTAINER_BDOC_CERT_TSA_CALG,
 		}
 	}
 
 	value := timestamp.EncapsulatedTimeStamp.Value
 	if len(value) == 0 {
-		return genTime, TimestampMissingError{}
+		return genTime, TimestampMissingError{
+			Description: _CONTAINER_BDOC_CERT_N_TSA,
+		}
 	}
 
 	response, err := b64d(value)
 	if err != nil {
-		return genTime, TimestampDecodeError{Value: value, Err: err}
+		return genTime, TimestampDecodeError{Value: value, Err: err,
+			Description: _CONTAINER_BDOC_CERT_TSA_B64}
 	}
 
 	data := buffer()
@@ -642,7 +707,8 @@ func checkTimestamp(timestamp *xadesTimeStamp, sigval *signatureValue, tsp *tsp.
 	writeXML(sigval, data)
 
 	if genTime, err = tsp.Check(response, data.Bytes(), nil); err != nil {
-		return genTime, TimestampVerificationError{Err: err}
+		return genTime, TimestampVerificationError{Err: err,
+			Description: _CONTAINER_BDOC_CERT_VALIDATE}
 	}
 	return genTime, nil
 }
@@ -656,19 +722,22 @@ var hashXMLMap = map[string]crypto.Hash{
 func checkXMLDigest(method digestMethod, data []byte, digest digestValue) error {
 	h, ok := hashXMLMap[method.Algorithm]
 	if !ok {
-		return UnsupportedDigestAlgorithm{Algorithm: method.Algorithm}
+		return UnsupportedDigestAlgorithm{Algorithm: method.Algorithm,
+			Description: _CONTAINER_DIG_ALG}
 	}
 
 	decoded, err := b64d(digest.Value)
 	if err != nil {
-		return DigestValueDecodeError{Err: err}
+		return DigestValueDecodeError{Err: err,
+			Description: _CONTAINER_DIG_ALG_B64}
 	}
 
 	hash := h.New()
 	hash.Write(data)
 	calculated := hash.Sum(nil)
 	if !bytes.Equal(decoded, calculated) {
-		return DigestMismatchError{Expected: decoded, Calculated: calculated}
+		return DigestMismatchError{Expected: decoded, Calculated: calculated,
+			Description: _CONTAINER_DIG_ALG_VERIFY}
 	}
 	return nil
 }
@@ -678,7 +747,8 @@ func (o *Opener) verifyCertificate(c *x509.Certificate, time time.Time) (
 
 	if c.KeyUsage&x509.KeyUsageContentCommitment == 0 {
 		return nil, NotANonRepudiationCertificateError{
-			KeyUsage: c.KeyUsage,
+			KeyUsage:    c.KeyUsage,
+			Description: _CONTAINER_KEY_USAGE_CONTENT_COMMIT,
 		}
 	}
 

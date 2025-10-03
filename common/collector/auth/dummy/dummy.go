@@ -1,3 +1,4 @@
+//go:development
 /*
 Package dummy implement a dummy authentication verifier user for testing.
 

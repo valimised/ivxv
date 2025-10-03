@@ -36,7 +36,8 @@ func newStatus(v *version.V) (*status, error) {
 	// Precompute the version JSON.
 	jsonver, err := json.Marshal(v)
 	if err != nil {
-		return nil, PrecomputeVersionJSONError{Err: err}
+		return nil, PrecomputeVersionJSONError{Err: err,
+			Description: _SERVER_SYSD_VER}
 	}
 
 	return &status{
@@ -74,7 +75,7 @@ func (s *status) set(status string, extra ...string) (err error) {
 	message := bytes.NewBufferString("STATUS=")
 	s.msg.Status = status
 	if err = json.NewEncoder(message).Encode(s.msg); err != nil {
-		return JSONEncodeStatusError{Err: err}
+		return JSONEncodeStatusError{Err: err, Description: _SERVER_SYSD_NOTIFY}
 	}
 	for _, line := range extra {
 		message.WriteByte('\n')
@@ -83,19 +84,19 @@ func (s *status) set(status string, extra ...string) (err error) {
 
 	conn, err := net.DialTimeout("unixgram", s.socket, time.Second)
 	if err != nil {
-		return DialNotifySocketError{Socket: s.socket, Err: err}
+		return DialNotifySocketError{Socket: s.socket, Err: err, Description: _SERVER_UNIXGRAM}
 	}
 	defer func() {
 		if cerr := conn.Close(); cerr != nil && err == nil {
-			err = CloseNotifyConnectionError{Err: err}
+			err = CloseNotifyConnectionError{Err: err, Description: _SERVER_UNIXGRAM_CLOSE}
 		}
 	}()
 
 	if err = conn.SetDeadline(time.Now().Add(time.Second)); err != nil {
-		return SetDeadlineNotifyConnectionError{Err: err}
+		return SetDeadlineNotifyConnectionError{Err: err, Description: _SERVER_UNIXGRAM_TIME}
 	}
 	if _, err = message.WriteTo(conn); err != nil {
-		return WriteNotifyConnectionError{Err: err}
+		return WriteNotifyConnectionError{Err: err, Description: _SERVER_SYSD_NOTIFY_FAIL}
 	}
 	return nil
 }

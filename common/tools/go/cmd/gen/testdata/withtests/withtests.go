@@ -2,4 +2,4 @@
 // test file.
 package withtests
 
-var x = Main{Field: 0}
+var x = Main{Field: 0, Description: "Main"}

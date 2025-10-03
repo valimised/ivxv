@@ -49,7 +49,8 @@ func parse(data io.Reader, container map[string][]byte, path string) (root Node,
 	// because then we would hide trailing data errors with lexical anaysis
 	// cancelled errors.
 	if len(next.content) > 0 {
-		p.error(next.line, next.column, TrailingDataError{Trailing: next.content})
+		p.error(next.line, next.column, TrailingDataError{Trailing: next.content,
+			Description: _YAML_TRAILING})
 	}
 	err = <-errc
 	return
@@ -67,7 +68,7 @@ func (p *parser) node(depth int) (node Node, next lexeme) {
 	case "-":
 		return p.sequence(next, false)
 	case ":":
-		p.error(next.line, next.column, NodeEmptyMappingKeyError{})
+		p.error(next.line, next.column, NodeEmptyMappingKeyError{Description: _YAML_NO_KEY_MAPPING})
 		return // Never reached.
 	case "|":
 		// As a special case, a root level literal indicator increases
@@ -114,7 +115,8 @@ func (p *parser) sequence(l lexeme, mappingDepth bool) (s Sequence, next lexeme)
 			return
 		case next.column != depth, next.content != "-":
 			p.error(next.line, next.column,
-				SequenceIndicatorError{Lexeme: next.content})
+				SequenceIndicatorError{Lexeme: next.content,
+					Description: _YAML_SEQ_EXPECT})
 		}
 	}
 }
@@ -190,13 +192,13 @@ func (p *parser) reference(depth int, l lexeme) (node Node, next lexeme) {
 	refnode, next := p.scalarOrMapping(depth, lexeme{})
 	ref := strings.TrimSpace(refnode.(Scalar).String())
 	if ref == "" {
-		p.error(l.line, l.column, MissingReferenceError{})
+		p.error(l.line, l.column, MissingReferenceError{Description: _YAML_SCALAR_EMPTY})
 	}
 
 	// Get the referenced value.
 	data, ok := p.cont[ref]
 	if !ok {
-		p.error(l.line, l.column, InvalidContainerError{Ref: ref})
+		p.error(l.line, l.column, InvalidContainerError{Ref: ref, Description: _YAML_BDOC_TO_YAML})
 	}
 
 	// If the ref ends in ".yaml", then parse data as YAML.
@@ -204,7 +206,7 @@ func (p *parser) reference(depth int, l lexeme) (node Node, next lexeme) {
 		node, err := parse(bytes.NewReader(data), p.cont, p.path())
 		if err != nil {
 			p.error(l.line, l.column,
-				ParseReferencedYAMLError{Reference: ref, Err: err})
+				ParseReferencedYAMLError{Reference: ref, Err: err, Description: _YAML_BDOC_YAML_PARSE})
 		}
 		return node, next
 	}
@@ -249,7 +251,7 @@ func (p *parser) scalarOrMapping(depth int, l lexeme) (node Node, next lexeme) {
 		// If the first lexeme was not a mapping key, than any
 		// following ones cannot be either.
 		if next.content == ":" {
-			p.error(next.line, next.column, UnexpectedMappingError{})
+			p.error(next.line, next.column, UnexpectedMappingError{Description: _YAML_NO_KEY_MAPPING})
 		}
 
 		p.buf.WriteByte(' ')
@@ -275,7 +277,7 @@ func (p *parser) mapping(key lexeme) (m Mapping, next lexeme) {
 		for k := range m.pairs {
 			if strings.EqualFold(k, key.content) {
 				p.error(key.line, key.column,
-					NonUniqueKeyError{Key: key.content})
+					NonUniqueKeyError{Key: key.content, Description: _YAML_KEY_UNIQ})
 			}
 		}
 
@@ -310,9 +312,9 @@ func (p *parser) mapping(key lexeme) (m Mapping, next lexeme) {
 			return
 		case next.column != depth:
 			p.error(next.line, next.column,
-				MappingKeyDepthError{Lexeme: next.content})
+				MappingKeyDepthError{Lexeme: next.content, Description: _YAML_MAPPING_DEPTH})
 		case next.content == ":":
-			p.error(next.line, next.column, EmptyMappingKeyError{})
+			p.error(next.line, next.column, EmptyMappingKeyError{Description: _YAML_NO_KEY_MAPPING})
 		}
 		key = next // The lexeme returned by p.node is the next key.
 
@@ -322,13 +324,13 @@ func (p *parser) mapping(key lexeme) (m Mapping, next lexeme) {
 		next, ok = <-p.c
 		switch {
 		case !ok:
-			p.error(key.line, key.column, EOFMissingMappingIndicatorError{})
+			p.error(key.line, key.column, EOFMissingMappingIndicatorError{Description: _YAML_MAPPING_EOF})
 		case next.content != ":":
 			p.error(next.line, next.column,
-				MappingIndicatorError{Lexeme: next.content})
+				MappingIndicatorError{Lexeme: next.content, Description: _YAML_KEY_MAPPING})
 		case next.line != key.line:
 			p.error(next.line, next.column,
-				MappingIndicatorLineError{Want: key.line})
+				MappingIndicatorLineError{Want: key.line, Description: _YAML_KEY_LINE})
 		}
 	}
 }
@@ -336,7 +338,7 @@ func (p *parser) mapping(key lexeme) (m Mapping, next lexeme) {
 // error stops the syntactic analysis with the provided error, line, and column
 // number.
 func (p *parser) error(line, column int, err error) {
-	stop(SyntacticAnalysisError{Line: line, Column: column, Err: err})
+	stop(SyntacticAnalysisError{Line: line, Column: column, Err: err, Description: _YAML_SYN_WRAP})
 }
 
 // push pushes an element to the path of the parser.

@@ -64,7 +64,9 @@ func xroadmain() int {
 		ClientCAs:    certPool,
 		MinVersion:   tls.VersionTLS12,
 	}
-	srv := http.Server{
+
+	// TODO: G112: Potential Slowloris Attack because ReadHeaderTimeout is not configured in the http.Server
+	srv := http.Server{ //nolint:gosec
 		Addr:      conf.Server.Address,
 		Handler:   handler,
 		TLSConfig: tlsConf,

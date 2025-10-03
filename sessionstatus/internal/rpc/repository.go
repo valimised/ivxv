@@ -30,7 +30,8 @@ func (c *client) Read(ctx context.Context, data interface{}) (interface{}, error
 	// Any data that is passed here, must cast to *SessionStatusReadReq
 	req, err := castAnyToSessionStatusReadReq(data)
 	if err != nil {
-		return nil, CastAnyToSessionStatusReadReqError{Err: err}
+		return nil, CastAnyToSessionStatusReadReqError{Err: err,
+			Description: _SESSIONSTATUS_CAST_ANY_TO_SESSSTATUSREADREQ}
 	}
 
 	key := toSessionStorageKey(req.Header.SessionID)
@@ -41,8 +42,9 @@ func (c *client) Read(ctx context.Context, data interface{}) (interface{}, error
 	val, lease, err := c.repository.GetWithLease(ctx, key)
 	if err != nil {
 		return nil, GetWithLeaseError{
-			Key: key,
-			Err: err,
+			Key:         key,
+			Err:         err,
+			Description: _SESSIONSTATUS_READ,
 		}
 	}
 
@@ -58,8 +60,9 @@ func (c *client) Read(ctx context.Context, data interface{}) (interface{}, error
 	array, err := parseSessionStatus(val)
 	if err != nil {
 		return nil, ParseSessionStatusError{
-			Value: val,
-			Err:   err,
+			Value:       val,
+			Err:         err,
+			Description: _SESSIONSTATUS_RESP,
 		}
 	}
 
@@ -75,7 +78,8 @@ func (c *client) Update(ctx context.Context, data interface{}) error {
 	// Any data that is passed here, must cast to *SessionStatusUpdateReq
 	req, err := castAnyToSessionStatusUpdateReq(data)
 	if err != nil {
-		return CastAnyToSessionStatusUpdateReqError{Err: err}
+		return CastAnyToSessionStatusUpdateReqError{Err: err,
+			Description: _SESSIONSTATUS_CAST_ANY_TO_SESSSTATUSUPDATEDREQ}
 	}
 
 	// Value should be stored in a database as
@@ -93,9 +97,10 @@ func (c *client) Update(ctx context.Context, data interface{}) error {
 	err = c.repository.PutForceWithOpts(ctx, key, val, ttl)
 	if err != nil {
 		return PutForceWithOptsError{
-			Key:   key,
-			Value: val,
-			Err:   err,
+			Key:         key,
+			Value:       val,
+			Err:         err,
+			Description: _SESSIONSTATUS_PUT,
 		}
 	}
 
@@ -106,7 +111,8 @@ func (c *client) Delete(ctx context.Context, data interface{}) error {
 	// Any data that is passed here, must cast to *SessionStatusDeleteReq
 	req, err := castAnyToSessionStatusDeleteReq(data)
 	if err != nil {
-		return CastAnyToSessionStatusDeleteReqError{Err: err}
+		return CastAnyToSessionStatusDeleteReqError{Err: err,
+			Description: _SESSIONSTATUS_CAST_ANY_TO_SESSSTATUSDELETEDREQ}
 	}
 
 	key := toSessionStorageKey(req.Header.SessionID)
@@ -115,8 +121,9 @@ func (c *client) Delete(ctx context.Context, data interface{}) error {
 	err = c.repository.Delete(ctx, key)
 	if err != nil {
 		return DeleteError{
-			Key: key,
-			Err: err,
+			Key:         key,
+			Err:         err,
+			Description: _SESSIONSTATUS_DEL,
 		}
 	}
 

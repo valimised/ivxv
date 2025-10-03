@@ -2,6 +2,7 @@
 
 container:
   bdoc:
+    filecount: 50
     bdocsize: 104857600  # 100 MiB
     filesize: 104857600  # 100 MiB
     roots:

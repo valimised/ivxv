@@ -85,6 +85,24 @@ type Election struct {
 		CA string // PEM-encoded authentication certificate.
 	}
 
+	// Ballot configuration contains everything a service may need to check
+	// ballot correctness without decrypting it.
+	//
+	// One can have only EncPkeyGroup set and then EncPkey becomes optional.
+	// The same way we can have only EncPkey set while EncPkeyGroup left empty.
+	// However, if both are set then EncPkey takes precedence.
+	Ballot struct {
+		// EncPkeyGroup is an abstract group that encryption public
+		// key belongs to, and which is used for voter ballot encryption in a
+		// voting application.
+		//
+		// Check for all available groups in Documentation.
+		EncPkeyGroup string
+
+		// x509 voter ballot encryption public key
+		EncPkey string
+	}
+
 	// Composited configuration structures defined in other packages.
 	Auth          auth.Conf
 	Identity      identity.Type
@@ -231,18 +249,21 @@ func TLS(sensitive string) (cert, key string) {
 // technical configuration is skipped, respectively. Trust must not be empty,
 // because it is needed for verifying other configurations.
 func New(ctx context.Context, trust, election, technical string) (c *C, code int, err error) {
-	log.Log(ctx, Parsing{Trust: trust, Election: election, Technical: technical})
+	log.Log(ctx, Parsing{Trust: trust, Election: election, Technical: technical,
+		Description: _CONF_START})
 
 	c = new(C)
 	if code, err = c.trust(ctx, trust); err != nil {
-		return nil, code, ParseTrustError{Path: trust, Err: err}
+		return nil, code, ParseTrustError{Path: trust, Err: err,
+			Description: _CONF_TRUST}
 	}
 	if len(election) > 0 {
 		c.Election = new(Election)
 		if c.Version.Election, code, err = c.parse(
 			ctx, election, "election.yaml", &c.Election); err != nil {
 
-			return nil, code, ParseElectionError{Path: election, Err: err}
+			return nil, code, ParseElectionError{Path: election, Err: err,
+				Description: _CONF_ELECTION}
 		}
 	}
 	if len(technical) > 0 {
@@ -250,7 +271,8 @@ func New(ctx context.Context, trust, election, technical string) (c *C, code int
 		if c.Version.Technical, code, err = c.parse(
 			ctx, technical, "technical.yaml", &c.Technical); err != nil {
 
-			return nil, code, ParseTechnicalError{Path: technical, Err: err}
+			return nil, code, ParseTechnicalError{Path: technical, Err: err,
+				Description: _CONF_TECH}
 		}
 		log.SetDebug(ctx, c.Technical.Debug)
 	}
@@ -261,19 +283,22 @@ func (c *C) trust(ctx context.Context, path string) (code int, err error) {
 	// First open trust without verifying signatures.
 	fp, err := os.Open(path)
 	if err != nil {
-		return exit.NoInput, OpenTrustFileError{Err: err}
+		return exit.NoInput, OpenTrustFileError{Err: err,
+			Description: _CONF_TRUST_READ}
 	}
 	defer fp.Close()
 
 	// Check the extension after we have ensured that the file even exists.
 	t := container.Type(strings.TrimPrefix(filepath.Ext(path), "."))
 	if len(t) == 0 {
-		return exit.DataErr, TrustMissingExtensionError{}
+		return exit.DataErr, TrustMissingExtensionError{
+			Description: _CONF_TRUST_BDOC_EXT}
 	}
 
 	cnt, err := container.UnverifiedOpen(t, fp)
 	if err != nil {
-		return exit.DataErr, OpenTrustError{Err: err}
+		return exit.DataErr, OpenTrustError{Err: err,
+			Description: _CONF_TRUST_OPEN}
 	}
 	defer cnt.Close()
 
@@ -281,29 +306,35 @@ func (c *C) trust(ctx context.Context, path string) (code int, err error) {
 		Container container.Conf
 	}
 	if err = unmarshal("trust.yaml", cnt.Data(), &conf); err != nil {
-		return exit.DataErr, UnmarshalTrustError{Err: err}
+		return exit.DataErr, UnmarshalTrustError{Err: err,
+			Description: _CONF_TRUST_CONF}
 	}
 
 	// Then configure the configuration container parser and verify the
 	// trust container.
 	if c.Container, err = container.Configure(conf.Container); err != nil {
-		return exit.DataErr, ConfigureContainerOpenerError{Err: err}
+		return exit.DataErr, ConfigureContainerOpenerError{Err: err,
+			Description: _CONF_BDOC_OPENER}
 	}
 	if _, err = fp.Seek(0, io.SeekStart); err != nil {
-		return exit.IOErr, RewindTrustError{Err: err}
+		return exit.IOErr, RewindTrustError{Err: err,
+			Description: _CONF_REWIND}
 	}
 
 	cnt, err = c.Container.Open(t, fp)
 	if err != nil {
-		return exit.DataErr, VerifyTrustError{Err: err}
+		return exit.DataErr, VerifyTrustError{Err: err,
+			Description: _CONF_BDOC_VERIFY}
 	}
 	defer cnt.Close()
 	c.Version.Trust = version.Signatures(cnt.Signatures())
 	if len(c.Version.Trust) == 0 {
-		return exit.DataErr, UnsignedTrustError{}
+		return exit.DataErr, UnsignedTrustError{
+			Description: _CONF_TRUST_NO_SIG}
 	}
 	for _, s := range c.Version.Trust {
-		log.Log(ctx, TrustSignature{Signer: s.Signer, SigningTime: s.SigningTime})
+		log.Log(ctx, TrustSignature{Signer: s.Signer, SigningTime: s.SigningTime,
+			Description: _CONF_TRUST_BDOC_SIG_INFO})
 	}
 	return
 }
@@ -319,24 +350,28 @@ func (c *C) parse(ctx context.Context, path, key string, v interface{}) (
 				code = exit.NoInput
 			}
 		}
-		return nil, code, ConfigurationContainerError{Err: err}
+		return nil, code, ConfigurationContainerError{Err: err,
+			Description: _CONF_BDOC_READ}
 	}
 	defer cnt.Close()
 
 	signatures = version.Signatures(cnt.Signatures())
 	if len(signatures) == 0 {
-		return nil, exit.DataErr, UnsignedConfigurationError{}
+		return nil, exit.DataErr, UnsignedConfigurationError{
+			Description: _CONF_BDOC_NO_SIG}
 	}
 	for _, s := range signatures {
 		log.Log(ctx, ConfigurationSignature{
 			Path:        path,
 			Signer:      s.Signer,
 			SigningTime: s.SigningTime,
+			Description: _CONF_BDOC_SIG_INFO,
 		})
 	}
 
 	if err = unmarshal(key, cnt.Data(), v); err != nil {
-		return nil, exit.DataErr, UnmarshalConfigurationError{Err: err}
+		return nil, exit.DataErr, UnmarshalConfigurationError{Err: err,
+			Description: _CONF_BDOC_DATA}
 	}
 	return
 }
@@ -347,10 +382,11 @@ func unmarshal(key string, data map[string][]byte, v interface{}) (err error) {
 	for name, content := range data {
 		if name == key || strings.HasSuffix(name, "."+key) {
 			if err = yaml.Unmarshal(bytes.NewReader(content), data, v); err != nil {
-				return UnmarhsalConfError{Err: err}
+				return UnmarhsalConfError{Err: err,
+					Description: _CONF_YAML_READ}
 			}
 			return nil
 		}
 	}
-	return MissingContainerKeyError{Key: key}
+	return MissingContainerKeyError{Key: key, Description: _CONF_YAML_NO_DATA}
 }

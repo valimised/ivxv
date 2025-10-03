@@ -29,7 +29,7 @@ public class ElGamalDecryptionProof {
     private static final byte[] NI_PROOF_DOMAIN = new Field("DECRYPTION").encode();
     public final ElGamalPublicKey publickey;
     public ElGamalCiphertext ciphertext;
-    public Plaintext decrypted;
+    public GroupElement decrypted;
     // this is the a in the whitepaper
     public GroupElement msgCommitment;
     // this is the b in the whitepaper
@@ -50,7 +50,7 @@ public class ElGamalDecryptionProof {
      * @param keyCommitment
      * @param response
      */
-    ElGamalDecryptionProof(ElGamalCiphertext ciphertext, Plaintext decrypted,
+    ElGamalDecryptionProof(ElGamalCiphertext ciphertext, GroupElement decrypted,
             ElGamalPublicKey publickey, GroupElement msgCommitment, GroupElement keyCommitment,
             BigInteger response) {
         this.ciphertext = ciphertext;
@@ -74,7 +74,7 @@ public class ElGamalDecryptionProof {
      * @param response
      * @throws IllegalArgumentException
      */
-    ElGamalDecryptionProof(ElGamalCiphertext ciphertext, Plaintext decrypted,
+    ElGamalDecryptionProof(ElGamalCiphertext ciphertext, GroupElement decrypted,
             ElGamalPublicKey publickey, GroupElement[] commitments, BigInteger response)
             throws IllegalArgumentException {
         this(ciphertext, decrypted, publickey);
@@ -98,7 +98,7 @@ public class ElGamalDecryptionProof {
      * @param publickey
      * @param packed
      */
-    public ElGamalDecryptionProof(ElGamalCiphertext ciphertext, Plaintext decrypted,
+    public ElGamalDecryptionProof(ElGamalCiphertext ciphertext, GroupElement decrypted,
             ElGamalPublicKey publickey, byte[] packed) {
         this(ciphertext, decrypted, publickey);
         Sequence seq = new Sequence();
@@ -130,7 +130,7 @@ public class ElGamalDecryptionProof {
      * @param decrypted
      * @param publickey
      */
-    public ElGamalDecryptionProof(ElGamalCiphertext ciphertext, Plaintext decrypted,
+    public ElGamalDecryptionProof(ElGamalCiphertext ciphertext, GroupElement decrypted,
             ElGamalPublicKey publickey) {
         this.ciphertext = ciphertext;
         this.decrypted = decrypted;
@@ -160,7 +160,7 @@ public class ElGamalDecryptionProof {
      *
      * @return
      */
-    public Plaintext getDecrypted() {
+    public GroupElement getDecrypted() {
         return this.decrypted;
     }
 
@@ -169,7 +169,7 @@ public class ElGamalDecryptionProof {
      *
      * @param decrypted
      */
-    public void setDecrypted(Plaintext decrypted) {
+    public void setDecrypted(GroupElement decrypted) {
         this.decrypted = decrypted;
     }
 
@@ -230,11 +230,9 @@ public class ElGamalDecryptionProof {
      */
     public boolean verifySecretKeyProof(BigInteger challenge) throws MathException {
         // verify that c1^s = a * (c2/d)^k
-        ElGamalParameters params = publickey.getParameters();
-        GroupElement d = params.getGroup().encode(decrypted);
         GroupElement left = ciphertext.getBlind().scale(response);
         GroupElement right =
-                d.inverse().op(ciphertext.getBlindedMessage()).scale(challenge).op(msgCommitment);
+                decrypted.inverse().op(ciphertext.getBlindedMessage()).scale(challenge).op(msgCommitment);
         return left.equals(right);
     }
 

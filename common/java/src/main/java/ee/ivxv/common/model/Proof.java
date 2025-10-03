@@ -64,7 +64,7 @@ public class Proof {
      */
     public void addProof(ElGamalDecryptionProof proof) {
         proofs.add(new ProofJson(proof.ciphertext.getBytes(),
-                proof.decrypted.getMessage(), proof.getBytes()));
+                proof.decrypted.getBytes(), proof.getBytes()));
     }
 
     /**

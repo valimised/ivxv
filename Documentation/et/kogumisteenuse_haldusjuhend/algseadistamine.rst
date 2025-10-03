@@ -165,7 +165,7 @@ Igas teenusmasinas:
    teistele hostidele kättesaamatuks aadressiks.
 
    Järgnev näide kirjeldab võimalikku olukorda failis :file:`/etc/hosts`, kus
-   opsüsteemi paigalduse järel on hostinimi ``ivxv123`` määratud kahele
+   operatsioonisüsteemi paigalduse järel on hostinimi ``ivxv123`` määratud kahele
    liidesele. Sellise seadistuse puhul võib tekkida olukord, kus aadressile
    ``ivxv123`` ühendusi vastu võtma seadistatud teenus hakkab kuulama kohalikul
    liidesel ``127.0.0.1`` ja pole avaliku liidese ``192.168.10.1`` kaudu
@@ -217,7 +217,7 @@ seire teenuse poolt kättesaadavad ja nende seisundis pole tuvastatud probleeme.
 Võrgupääsude loomine
 --------------------
 
-Kogumistenuse paigaldamiseks ja seadistamiseks on vajalik seadustustele
+Kogumisteenuse paigaldamiseks ja seadistamiseks on vajalik seadustustele
 vastavate võrgupääsude olemasolu.
 
 
@@ -280,7 +280,7 @@ Teenuste omavaheline suhtlus
 #. Smart-ID tugiteenusest välisesse Smart-ID teenusesse
    (protokoll HTTP(S), port vastavalt tehnilisele seadistusele);
 
-#. Teistest mikroteeenustest Session status tugiteenusesse
+#. Teistest mikroteenustest Session status tugiteenusesse
    (protokoll RPC, port vastavalt tehnilisele seadistusele);
 
 #. Hääletamisteenusest välisesse kvalifitseerimisteenusesse

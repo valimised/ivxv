@@ -5,11 +5,9 @@ for Smart-ID signing using the Smart-ID REST API.
 package main
 
 import (
-	"context"
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"os"
-	"sync"
 	"time"
 
 	"ivxv.ee/common/collector/auth"
@@ -62,12 +60,6 @@ func smartidToServerError(err error) error {
 	return nil
 }
 
-// session is an outstanding Smart-ID authentication session.
-type session struct {
-	created      time.Time
-	challengeRnd []byte
-}
-
 // RPC is the handler for Smart-ID service calls.
 type RPC struct {
 	status   client.Verifier
@@ -76,28 +68,83 @@ type RPC struct {
 	ticket   *ticket.T
 	identify identity.Identifier
 
-	// sessions maps session codes to outstanding authentication sessions.
-	// Not used for signing sessions because we have no state for those.
-	sessions    map[string]session
-	sessionLock sync.Mutex
+	sessionTimeout time.Duration
 }
 
-// startCleaner starts a separate goroutine which removes sessions older than 5
-// minutes from r.sessions every minute.
-func (r *RPC) startCleaner(ctx context.Context) {
-	go func() {
-		for range time.Tick(1 * time.Minute) {
-			r.sessionLock.Lock()
-			earliest := time.Now().Add(-5 * time.Minute)
-			for code, sess := range r.sessions {
-				if sess.created.Before(earliest) {
-					log.Debug(ctx, SessionTimeout{SessionCode: code})
-					delete(r.sessions, code)
-				}
-			}
-			r.sessionLock.Unlock()
-		}
-	}()
+type ChallengeArgs struct {
+	server.Header
+}
+
+type ChallengeResponse struct {
+	server.Header
+	Challenge    []byte
+	XSmartIDAuth []byte
+}
+
+type challengeCookie struct {
+	Challenge []byte
+	SessionID string
+	ExpiresAt time.Time
+}
+
+// Challenge is the remote procedure call performed by clients to generate a Smart-ID verification code.
+func (r *RPC) Challenge(args ChallengeArgs, resp *ChallengeResponse) (err error) {
+	log.Log(args.Ctx, ChallengeReq{Description: _SMARTID_CHALREQ})
+
+	if !time.Now().Before(r.authEnd) {
+		log.Log(args.Ctx, ChallengeVotingEnded{Description: _SMARTID_EXPIRED})
+		return server.ErrVotingEnd
+	}
+
+	// Build up VerifyReq for session status service
+	verifyReq := status.NewVerifyReqBuilder().
+		WithServiceMethod(internal.Challenge).
+		WithRequest(args.Header).
+		Build()
+
+	// SessionID security check
+	ok, err := r.status.Verify(&verifyReq)
+	if err != nil {
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(args.Ctx, ChallengeVerifySessionIDError{Err: err, Description: _SMARTID_SESSION_ID})
+		return server.ErrBadRequest
+	}
+	if !ok {
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(args.Ctx, ChallengeUpdateSessionIDError{Description: _SMARTID_SESSION_ID_EXPIRED})
+		return server.ErrBadRequest
+	}
+
+	challenge, challengeDigest, err := r.smartid.Challenge()
+	if err != nil {
+		log.Error(args.Ctx, ChallengeError{Err: err, Description: _SMARTID_CHAL})
+		return server.ErrInternal
+	}
+
+	b, err := asn1.Marshal(challengeCookie{
+		Challenge: challenge,
+		SessionID: args.SessionID,
+		ExpiresAt: time.Now().Add(r.sessionTimeout).UTC(),
+	})
+	if err != nil {
+		log.Error(args.Ctx, ChallengeCookieMarshalError{Err: err, Description: _SMARTID_CHAL_COOKIE_MARSHAL})
+		return server.ErrInternal
+	}
+
+	cookie, err := r.ticket.CreateData(b)
+	if err != nil {
+		log.Error(args.Ctx, ChallengeCookieError{Err: err, Description: _SMARTID_CHAL_COOKIE})
+		return server.ErrInternal
+	}
+
+	resp.Challenge = challengeDigest
+	resp.XSmartIDAuth = cookie
+
+	log.Log(args.Ctx, ChallengeResp{
+		Challenge:   resp.Challenge,
+		Description: _SMARTID_CHALRESP,
+	})
+	return nil
 }
 
 // AuthArgs are the arguments provided to a call of RPC.Authenticate.
@@ -110,19 +157,19 @@ type AuthArgs struct {
 type AuthResponse struct {
 	server.Header
 	SessionCode string
-	Challenge   []byte
 }
 
 // Authenticate is the remote procedure call performed by clients to start a
 // Smart-ID authentication session.
 func (r *RPC) Authenticate(args AuthArgs, resp *AuthResponse) (err error) {
-	log.Log(args.Ctx, AuthenticateReq{Identifier: args.Identifier})
+	log.Log(args.Ctx, AuthenticateReq{Identifier: args.Identifier, Description: _SMARTID_AUTHREQ})
 
 	// The server filter for voting end will only enable once we stop
 	// serving signing requests, so we must manually check if we should
-	// still serve authentication requests.
+	// still serve authentication requests and refuse those requests when
+	// not served anymore
 	if !time.Now().Before(r.authEnd) { // not before == equal or after
-		log.Log(args.Ctx, AuthenticateVotingEnded{})
+		log.Log(args.Ctx, AuthenticateVotingEnded{Description: _SMARTID_EXPIRED})
 		return server.ErrVotingEnd
 	}
 
@@ -135,37 +182,56 @@ func (r *RPC) Authenticate(args AuthArgs, resp *AuthResponse) (err error) {
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(args.Ctx, AuthenticateVerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(args.Ctx, AuthenticateVerifySessionIDError{Err: err, Description: _SMARTID_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(args.Ctx, AuthenticateUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(args.Ctx, AuthenticateUpdateSessionIDError{Description: _SMARTID_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
-	sess := session{created: time.Now()}
-	resp.SessionCode, sess.challengeRnd, resp.Challenge, err =
-		r.smartid.Authenticate(args.Ctx, args.Identifier)
+	data, err := r.ticket.TokenData(args.XSmartIDAuth)
+	if err != nil {
+		log.Error(args.Ctx, AuthenticateExtractCookieError{Err: err, Description: _SMARTID_COOKIE_EXTRACT})
+		return server.ErrInternal
+	}
+	var cookie challengeCookie
+	rest, err := asn1.Unmarshal(data, &cookie)
+	if err != nil || len(rest) != 0 {
+		log.Error(args.Ctx, AuthenticateUnmarshalCookieError{Err: err, Description: _SMARTID_COOKIE_UNMARSHAL})
+		return server.ErrBadRequest
+	}
+	if cookie.SessionID != args.SessionID {
+		log.Error(args.Ctx, AuthenticateCookieSessionIDError{
+			CookieSessionID: cookie.SessionID,
+			HeaderSessionID: args.SessionID,
+			Description:     _SMARTID_COOKIE_SESSIONID})
+		return server.ErrBadRequest
+	}
+	if time.Now().UTC().After(cookie.ExpiresAt) {
+		log.Debug(args.Ctx, SessionTimeout{SessionID: args.SessionID,
+			Description: _SMARTID_EXPIRED_AUTH_SESSION})
+		return server.ErrBadRequest
+	}
+
+	resp.SessionCode, err = r.smartid.Authenticate(args.Ctx, args.Identifier, cookie.Challenge)
 	if err != nil {
 		if clierr := smartidToServerError(err); clierr != nil {
-			log.Error(args.Ctx, AuthenticateSmartIDError{Err: err})
+			// Log known smartid service error about failed authentication
+			log.Error(args.Ctx, AuthenticateSmartIDError{Err: err, Description: _SMARTID_AUTH_RESP})
 			return clierr
 		}
-		log.Error(args.Ctx, AuthenticateError{Err: log.Alert(err)})
+		// Log unknown smartid service error about failed authentication
+		log.Error(args.Ctx, AuthenticateError{Err: log.Alert(err), Description: _SMARTID_NO_RESP})
 		return server.ErrInternal
 	}
 
-	r.sessionLock.Lock()
-	defer r.sessionLock.Unlock()
-	if _, ok := r.sessions[resp.SessionCode]; ok {
-		log.Error(args.Ctx, DuplicateSessionCodeError{Code: resp.SessionCode})
-		return server.ErrInternal
-	}
-	r.sessions[resp.SessionCode] = sess
-
+	// Authentication has been successfully initiated
 	log.Log(args.Ctx, AuthenticateResp{
 		SessionCode: resp.SessionCode,
-		Challenge:   resp.Challenge,
+		Description: _SMARTID_AUTHRESP,
 	})
 	return nil
 }
@@ -184,18 +250,20 @@ type AuthStatusResponse struct {
 	Surname      string
 	PersonalCode string
 	AuthToken    []byte
+	DataToken    []byte
 }
 
 // AuthenticateStatus is the remote procedure call performed by clients to
 // check the status of a Smart-ID authentication session.
 func (r *RPC) AuthenticateStatus(args AuthStatusArgs, resp *AuthStatusResponse) error {
-	log.Log(args.Ctx, AuthenticateStatusReq{SessionCode: args.SessionCode})
+	log.Log(args.Ctx, AuthenticateStatusReq{SessionCode: args.SessionCode, Description: _SMARTID_AUTHSTATUSREQ})
 
 	// The server filter for voting end will only enable once we stop
 	// serving signing requests, so we must manually check if we should
-	// still serve authentication requests.
+	// still serve authentication requests and refuse those requests when
+	// not served anymore
 	if !time.Now().Before(r.authEnd) { // not before == equal or after
-		log.Log(args.Ctx, AuthenticateStatusVotingEnded{})
+		log.Log(args.Ctx, AuthenticateStatusVotingEnded{Description: _SMARTID_EXPIRED})
 		return server.ErrVotingEnd
 	}
 
@@ -208,53 +276,72 @@ func (r *RPC) AuthenticateStatus(args AuthStatusArgs, resp *AuthStatusResponse) 
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(args.Ctx, AuthenticateStatusVerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(args.Ctx, AuthenticateStatusVerifySessionIDError{Err: err, Description: _SMARTID_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(args.Ctx, AuthenticateStatusUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(args.Ctx, AuthenticateStatusUpdateSessionIDError{Description: _SMARTID_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
-	r.sessionLock.Lock()
-	sess, ok := r.sessions[args.SessionCode]
-	r.sessionLock.Unlock()
-	if !ok {
-		log.Error(args.Ctx, UnknownSessionCodeError{})
-		return server.ErrBadRequest
-	}
-
-	cert, algorithm, signature, err := r.smartid.GetAuthenticateStatus(args.Ctx, args.SessionCode)
+	data, err := r.ticket.TokenData(args.XSmartIDAuth)
 	if err != nil {
-		r.sessionLock.Lock()
-		delete(r.sessions, args.SessionCode)
-		r.sessionLock.Unlock()
+		log.Error(args.Ctx, AuthenticateStatusExtractCookieError{
+			Err: err, Description: _SMARTID_COOKIE_EXTRACT})
+		return server.ErrInternal
+	}
+	var cookie challengeCookie
+	rest, err := asn1.Unmarshal(data, &cookie)
+	if err != nil || len(rest) != 0 {
+		log.Error(args.Ctx, AuthenticateStatusUnmarshalCookieError{
+			Err: err, Description: _SMARTID_COOKIE_UNMARSHAL})
+		return server.ErrBadRequest
+	}
+	if cookie.SessionID != args.SessionID {
+		log.Error(args.Ctx, AuthenticateStatusCookieSessionIDError{
+			CookieSessionID: cookie.SessionID,
+			HeaderSessionID: args.SessionID,
+			Description:     _SMARTID_COOKIE_SESSIONID})
+		return server.ErrBadRequest
+	}
+	if time.Now().UTC().After(cookie.ExpiresAt) {
+		var sessTimeout SessionTimeout
+		sessTimeout.SessionID = args.SessionID
+		log.Debug(args.Ctx, sessTimeout)
+		return server.ErrBadRequest
+	}
 
+	documentno, cert, algorithm, signature, err := r.smartid.GetAuthenticateStatus(args.Ctx, args.SessionCode)
+	if err != nil {
 		if clierr := smartidToServerError(err); clierr != nil {
-			log.Error(args.Ctx, AuthenticateStatusSmartIDError{Err: err})
+			// Log known smartid service error about failed authentication
+			log.Error(args.Ctx, AuthenticateStatusSmartIDError{Err: err, Description: _SMARTID_AUTH_RESP})
 			return clierr
 		}
-		log.Error(args.Ctx, AuthenticateStatusError{Err: log.Alert(err)})
+		// Log unknown smartid service error about failed authentication
+		log.Error(args.Ctx, AuthenticateStatusError{Err: log.Alert(err), Description: _SMARTID_NO_RESP})
 		return server.ErrInternal
 	}
 
 	resp.Status = StatusPoll
 	if len(signature) > 0 {
-		log.Log(args.Ctx, AuthenticationSignature{Signature: signature})
+		// Signed authentication response received
+		log.Log(args.Ctx, AuthenticationSignature{Signature: signature, Description: _SMARTID_SIG_RESP})
 		if cert == nil {
-			log.Error(args.Ctx, AuthenticationCertificateMissingError{Err: err})
+			// Certificate missing from the signed response
+			log.Error(args.Ctx, AuthenticationCertificateMissingError{Err: err,
+				Description: _SMARTID_NO_CERT_RESP})
 			return server.ErrSmartIDGeneral
 		}
-		log.Log(args.Ctx, AuthenticationCertificate{Certificate: cert})
-
-		r.sessionLock.Lock()
-		delete(r.sessions, args.SessionCode)
-		r.sessionLock.Unlock()
+		// Log detected certificate
+		log.Log(args.Ctx, AuthenticationCertificate{Certificate: cert, Description: _SMARTID_CERT_RESP})
 
 		if err = smartid.VerifyAuthenticationSignature(
-			cert, algorithm, sess.challengeRnd, signature); err != nil {
-
-			log.Error(args.Ctx, AuthenticationSignatureError{Err: err})
+			cert, algorithm, cookie.Challenge, signature); err != nil {
+			// Error in verifying the signed response
+			log.Error(args.Ctx, AuthenticationSignatureError{Err: err, Description: _SMARTID_VERIFY_SIG})
 			return server.ErrSmartIDGeneral
 		}
 
@@ -262,22 +349,35 @@ func (r *RPC) AuthenticateStatus(args AuthStatusArgs, resp *AuthStatusResponse) 
 		resp.GivenName = findName(&cert.Subject, asn1.ObjectIdentifier{2, 5, 4, 42})
 		resp.Surname = findName(&cert.Subject, asn1.ObjectIdentifier{2, 5, 4, 4})
 		if resp.PersonalCode, err = r.identify(&cert.Subject); err != nil {
-			log.Error(args.Ctx, AuthenticationSubjectIdentityError{Err: err})
+			// Backend could not extract voter's personal code from certificate's Subject field
+			log.Error(args.Ctx, AuthenticationSubjectIdentityError{Err: err,
+				Description: _SMARTID_VOTER_ID})
 			return server.ErrInternal
 		}
 
 		if resp.AuthToken, err = r.ticket.Create(cert.Subject); err != nil {
-			log.Error(args.Ctx, AuthenticationTicketError{Err: err})
+			// Error in authentication ticket creation
+			log.Error(args.Ctx, AuthenticationTicketError{Err: err,
+				Description: _SMARTID_AUTH_TOKEN_CREATE})
+			return server.ErrInternal
+		}
+
+		if resp.DataToken, err = r.ticket.CreateData([]byte(documentno)); err != nil {
+			// Error in creating the ticket
+			log.Error(args.Ctx, DataTicketError{Err: err, Description: _SMARTID_DATA_TOKEN_CREATE})
 			return server.ErrInternal
 		}
 	}
 
+	// Successful AuthenticateStatusResp, AuthToken is treated as sensitive
 	log.Log(args.Ctx, AuthenticateStatusResp{
 		Status:       resp.Status,
 		GivenName:    resp.GivenName,
 		Surname:      resp.Surname,
 		PersonalCode: resp.PersonalCode,
 		AuthToken:    log.Sensitive(resp.AuthToken),
+		DataToken:    log.Sensitive(resp.DataToken),
+		Description:  _SMARTID_AUTHSTATUSRESP,
 	})
 	return nil
 }
@@ -307,13 +407,13 @@ type CertificateChoiceResponse struct {
 // GetCertificateChoice is the remote procedure call performed by clients to get the
 // Smart-ID signing certificate choice session that will be used to sign the vote.
 func (r *RPC) GetCertificateChoice(args CertificateChoiceArgs, resp *CertificateChoiceResponse) error {
-	log.Log(args.Ctx, GetCertificateChoiceReq{})
+	log.Log(args.Ctx, GetCertificateChoiceReq{Description: _SMARTID_GETCERTREQ})
 
 	// Get the voter serial number. If empty, then the request is not
 	// authenticated.
-	identity := server.VoterIdentity(args.Ctx)
-	if len(identity) == 0 {
-		log.Error(args.Ctx, UnauthenticatedGetCertificateError{})
+	personalCode := server.VoterIdentity(args.Ctx)
+	if len(personalCode) == 0 {
+		log.Error(args.Ctx, UnauthenticatedGetCertificateError{Description: _SMARTID_VOTER_NO_AUTH})
 		return server.ErrUnauthenticated
 	}
 
@@ -326,25 +426,41 @@ func (r *RPC) GetCertificateChoice(args CertificateChoiceArgs, resp *Certificate
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(args.Ctx, GetCertificateVerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(args.Ctx, GetCertificateVerifySessionIDError{Err: err, Description: _SMARTID_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(args.Ctx, GetCertificateUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(args.Ctx, GetCertificateUpdateSessionIDError{Description: _SMARTID_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
-	s, err := r.smartid.GetCertificateChoice(args.Ctx, identity)
+	documentno := server.VoterNumber(args.Ctx)
+	if len(documentno) == 0 {
+		var missingDocumentNo MissingDataSignError
+		missingDocumentNo.Description = _SMARTID_VOTER_NO_PHONENR
+		// Could not detect documentno from the token
+		log.Error(args.Ctx, missingDocumentNo)
+		return server.ErrUnauthenticated
+	}
+
+	s, err := r.smartid.GetCertificateChoice(args.Ctx, documentno)
 	if err != nil {
 		if clierr := smartidToServerError(err); clierr != nil {
-			log.Error(args.Ctx, GetCertificateChoiceSmartIDError{Err: err})
+			// Log known smartid service error about failed authentication
+			log.Error(args.Ctx, GetCertificateChoiceSmartIDError{Err: err, Description: _SMARTID_AUTH_RESP})
 			return clierr
 		}
-		log.Error(args.Ctx, GetCertificateChoiceError{Err: log.Alert(err)})
+		// Log unknown smartid service error about failed authentication
+		log.Error(args.Ctx, GetCertificateChoiceError{Err: log.Alert(err), Description: _SMARTID_NO_RESP})
 		return server.ErrInternal
 	}
+
+	// GetCertificateChoice successfully initiated
 	log.Log(args.Ctx, GetCertificateChoiceResp{
-		Session: resp.SessionCode,
+		Session:     resp.SessionCode,
+		Description: _SMARTID_GETCERTRESP,
 	})
 	resp.SessionCode = s
 	return nil
@@ -361,14 +477,14 @@ type CertificateChoiceStatusResponse struct {
 	server.Header
 	Certificate []byte
 	Status      string
-	DataToken   []byte
 }
 
 // GetCertificateChoiceStatus is the remote procedure call performed by clients to get the
 // Smart-ID signing certificate that will be used to sign the vote.
 func (r *RPC) GetCertificateChoiceStatus(args CertificateChoiceStatusArgs,
 	resp *CertificateChoiceStatusResponse) error {
-	log.Log(args.Ctx, GetCertificateChoiceStatusReq{Session: args.SessionCode})
+	log.Log(args.Ctx, GetCertificateChoiceStatusReq{Session: args.SessionCode,
+		Description: _SMARTID_GETCERTSTATUSREQ})
 
 	// Build up VerifyReq for session status service
 	verifyReq := status.NewVerifyReqBuilder().
@@ -379,38 +495,44 @@ func (r *RPC) GetCertificateChoiceStatus(args CertificateChoiceStatusArgs,
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(args.Ctx, GetCertificateStatusVerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(args.Ctx, GetCertificateStatusVerifySessionIDError{Err: err,
+			Description: _SMARTID_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(args.Ctx, GetCertificateStatusUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(args.Ctx, GetCertificateStatusUpdateSessionIDError{Description: _SMARTID_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
-	documentno, c, err := r.smartid.GetCertificateChoiceStatus(args.Ctx, args.SessionCode)
+	_, c, err := r.smartid.GetCertificateChoiceStatus(args.Ctx, args.SessionCode)
 	if err != nil {
 		if clierr := smartidToServerError(err); clierr != nil {
-			log.Error(args.Ctx, GetCertificateChoiceStatusSmartIDError{Err: err})
+			// Log known smartid service error about failed authentication
+			log.Error(args.Ctx, GetCertificateChoiceStatusSmartIDError{Err: err,
+				Description: _SMARTID_AUTH_RESP})
 			return clierr
 		}
-		log.Error(args.Ctx, GetCertificateChoiceStatusError{Err: log.Alert(err)})
+		// Log unknown smartid service error about failed authentication
+		log.Error(args.Ctx, GetCertificateChoiceStatusError{Err: log.Alert(err),
+			Description: _SMARTID_NO_RESP})
 		return server.ErrInternal
 	}
-	log.Log(args.Ctx, SigningCertificate{Certificate: c})
-	if resp.DataToken, err = r.ticket.CreateData([]byte(documentno)); err != nil {
-		log.Error(args.Ctx, DataTicketError{Err: err})
-		return server.ErrInternal
-	}
+	// Signing certificate successfully retrieved
+	log.Log(args.Ctx, SigningCertificate{Certificate: c, Description: _SMARTID_CERT})
+
 	resp.Status = StatusPoll
 	if c != nil {
 		resp.Status = StatusOK
 		resp.Certificate = c.Raw
 	}
 
+	// Log successful GetCertificateResp
 	log.Log(args.Ctx, GetCertificateResp{
 		Certificate: resp.Certificate,
-		DataToken:   log.Sensitive(resp.DataToken),
 		Status:      resp.Status,
+		Description: _SMARTID_GETCERTSTATUSRESP,
 	})
 	return nil
 }
@@ -431,13 +553,14 @@ type SignResponse struct {
 // Sign is the remote procedure call performed by clients to start a Smart-ID
 // signing session.
 func (r *RPC) Sign(args SignArgs, resp *SignResponse) (err error) {
-	log.Log(args.Ctx, SignReq{HashType: args.HashType, Hash: args.Hash})
+	log.Log(args.Ctx, SignReq{HashType: args.HashType, Hash: args.Hash,
+		Description: _SMARTID_SIGNREQ})
 
 	// Get the voter serial number. If empty, then the request is not
 	// authenticated.
 	identity := server.VoterIdentity(args.Ctx)
 	if len(identity) == 0 {
-		log.Error(args.Ctx, UnauthenticatedSignError{})
+		log.Error(args.Ctx, UnauthenticatedSignError{Description: _SMARTID_VOTER_NO_AUTH})
 		return server.ErrUnauthenticated
 	}
 
@@ -450,32 +573,40 @@ func (r *RPC) Sign(args SignArgs, resp *SignResponse) (err error) {
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(args.Ctx, SignVerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(args.Ctx, SignVerifySessionIDError{Err: err, Description: _SMARTID_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(args.Ctx, SignUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(args.Ctx, SignUpdateSessionIDError{Description: _SMARTID_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
 	documentno := server.VoterNumber(args.Ctx)
 	if len(documentno) == 0 {
-		log.Error(args.Ctx, MissingDataSignError{})
+		// Could not detect documentno from the token
+		log.Error(args.Ctx, MissingDataSignError{Description: _SMARTID_VOTER_NO_PHONENR})
 		return server.ErrUnauthenticated
 	}
 	resp.SessionCode, err = r.smartid.SignHash(
 		args.Ctx, documentno, args.Hash, args.HashType)
 	if err != nil {
 		if clierr := smartidToServerError(err); clierr != nil {
-			log.Error(args.Ctx, SignSmartIDError{Err: err})
+			// Log known smartid service error about failed authentication
+			log.Error(args.Ctx, SignSmartIDError{Err: err, Description: _SMARTID_AUTH_RESP})
 			return clierr
 		}
-		log.Error(args.Ctx, SignError{Err: log.Alert(err)})
+		// Log unknown smartid service error about failed authentication
+		log.Error(args.Ctx, SignError{Err: log.Alert(err), Description: _SMARTID_NO_RESP})
 		return server.ErrInternal
 	}
 
+	// Signing successfully initiated
+
 	log.Log(args.Ctx, SignResp{
 		SessionCode: resp.SessionCode,
+		Description: _SMARTID_SIGNRESP,
 	})
 	return
 }
@@ -498,7 +629,8 @@ type SignStatusResponse struct {
 // SignStatus is the remote procedure call performed by clients to check the
 // status of a Smart-ID signing session.
 func (r *RPC) SignStatus(args SignStatusArgs, resp *SignStatusResponse) (err error) {
-	log.Log(args.Ctx, SignStatusReq{SessionCode: args.SessionCode})
+	log.Log(args.Ctx, SignStatusReq{SessionCode: args.SessionCode,
+		Description: _SMARTID_SIGNSTATUSREQ})
 
 	// Build up VerifyReq for session status service
 	verifyReq := status.NewVerifyReqBuilder().
@@ -509,21 +641,26 @@ func (r *RPC) SignStatus(args SignStatusArgs, resp *SignStatusResponse) (err err
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(args.Ctx, SignStatusVerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(args.Ctx, SignStatusVerifySessionIDError{Err: err,
+			Description: _SMARTID_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(args.Ctx, SignStatusUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(args.Ctx, SignStatusUpdateSessionIDError{Description: _SMARTID_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
 	resp.Algorithm, resp.Signature, err = r.smartid.GetSignHashStatus(args.Ctx, args.SessionCode)
 	if err != nil {
 		if clierr := smartidToServerError(err); clierr != nil {
-			log.Error(args.Ctx, SignStatusSmartIDError{Err: err})
+			// Log known smartid service error about failed authentication
+			log.Error(args.Ctx, SignStatusSmartIDError{Err: err, Description: _SMARTID_AUTH_RESP})
 			return clierr
 		}
-		log.Error(args.Ctx, SignStatusError{Err: log.Alert(err)})
+		// Log unknown smartid service error about failed authentication
+		log.Error(args.Ctx, SignStatusError{Err: log.Alert(err), Description: _SMARTID_NO_RESP})
 		return server.ErrInternal
 	}
 
@@ -532,9 +669,12 @@ func (r *RPC) SignStatus(args SignStatusArgs, resp *SignStatusResponse) (err err
 		resp.Status = StatusOK
 	}
 
+	// Signed response successfully retrieved
+
 	log.Log(args.Ctx, SignStatusResp{
-		Status:    resp.Status,
-		Signature: resp.Signature,
+		Status:      resp.Status,
+		Signature:   resp.Signature,
+		Description: _SMARTID_SIGNSTATUSRESP,
 	})
 	return
 }
@@ -558,33 +698,34 @@ func smartidmain() (code int) {
 	}
 
 	// Create new RPC instance and start the session cleaner.
-	rpc := &RPC{sessions: make(map[string]session), status: statusClient}
-	rpc.startCleaner(c.Ctx)
+	rpc := &RPC{sessionTimeout: time.Minute * 5, status: statusClient}
 
 	var start, stop time.Time
 	var authConf server.AuthConf
 	var err error
 
 	if c.Conf.Election != nil {
-		// Check election configuration time values.
+		// Check election configuration time values - service start
 		if start, err = c.Conf.Election.ServiceStartTime(); err != nil {
-			return c.Error(exit.Config, StartTimeError{Err: err},
+			return c.Error(exit.Config, StartTimeError{Err: err, Description: _SMARTID_START},
 				"bad service start time:", err)
 		}
 
+		// Check election configuration time values - election stop
 		if rpc.authEnd, err = c.Conf.Election.ElectionStopTime(); err != nil {
-			return c.Error(exit.Config, ElectionStopTimeError{Err: err},
+			return c.Error(exit.Config, ElectionStopTimeError{Err: err, Description: _SMARTID_AUTH_STOP},
 				"bad election stop time:", err)
 		}
 
+		// Check election configuration time values - service stop
 		if stop, err = c.Conf.Election.ServiceStopTime(); err != nil {
-			return c.Error(exit.Config, ServiceStopTimeError{Err: err},
+			return c.Error(exit.Config, ServiceStopTimeError{Err: err, Description: _SMARTID_STOP},
 				"bad service stop time:", err)
 		}
 
 		// Configure the Smart-ID REST API client.
 		if rpc.smartid, err = smartid.New(&c.Conf.Election.SmartID); err != nil {
-			return c.Error(exit.Config, SmartIDConfError{Err: err},
+			return c.Error(exit.Config, SmartIDConfError{Err: err, Description: _SMARTID_CLIENT_CONF},
 				"failed to configure SmartID-REST API client:", err)
 		}
 
@@ -592,11 +733,11 @@ func smartidmain() (code int) {
 		// tickets.
 		ticketConf, ok := c.Conf.Election.Auth[auth.Ticket]
 		if !ok {
-			return c.Error(exit.Config, TicketAuthError{},
+			return c.Error(exit.Config, TicketAuthError{Description: _SMARTID_TICKET_AUTH},
 				"ticket authentication is mandatory for smartid")
 		}
 		if rpc.ticket, err = ticket.NewFromSystem(); err != nil {
-			return c.Error(exit.Config, TicketConfError{Err: err},
+			return c.Error(exit.Config, TicketConfError{Err: err, Description: _SMARTID_TICKET},
 				"failed to configure ticket manager:", err)
 		}
 
@@ -605,7 +746,7 @@ func smartidmain() (code int) {
 		if authConf, err = server.NewAuthConf(auth.Conf{auth.Ticket: ticketConf},
 			c.Conf.Election.Identity, nil); err != nil {
 
-			return c.Error(exit.Config, ServerAuthConfError{Err: err},
+			return c.Error(exit.Config, ServerAuthConfError{Err: err, Description: _SMARTID_AUTH},
 				"failed to configure client authentication:", err)
 		}
 
@@ -626,7 +767,7 @@ func smartidmain() (code int) {
 			Filter:   &c.Conf.Technical.Filter,
 			Version:  &c.Conf.Version,
 		}, rpc); err != nil {
-			return c.Error(exit.Config, ServerConfError{Err: err},
+			return c.Error(exit.Config, ServerConfError{Err: err, Description: _SMARTID_SERVER},
 				"failed to configure server:", err)
 		}
 	}
@@ -634,7 +775,7 @@ func smartidmain() (code int) {
 	// Start listening for incoming connections during the voting period.
 	if c.Until >= command.Execute {
 		if err = s.WithAuth(authConf).ServeAt(c.Ctx, start); err != nil {
-			return c.Error(exit.Unavailable, ServeError{Err: err},
+			return c.Error(exit.Unavailable, ServeError{Err: err, Description: _SMARTID_SERVER_SERVE},
 				"failed to serve smartid service:", err)
 		}
 	}

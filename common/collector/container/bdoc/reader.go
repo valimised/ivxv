@@ -43,7 +43,7 @@ func toReaderAt(r io.Reader, limit int64) (ratc *readAtCloser, size int64, err e
 		ratc.buffer = buffer()
 		if size, err = ratc.buffer.ReadFrom(safereader.New(r, limit)); err != nil {
 			ratc.close()
-			err = ReaderAtReadBufferError{Err: err}
+			err = ReaderAtReadBufferError{Err: err, Description: _CONTAINER_READER}
 			return
 		}
 		ratc.ReaderAt = bytes.NewReader(ratc.buffer.Bytes())
@@ -62,15 +62,18 @@ func toReaderAt(r io.Reader, limit int64) (ratc *readAtCloser, size int64, err e
 		// Seek to end to get length and return to current location.
 		var current int64
 		if current, err = s.Seek(0, io.SeekCurrent); err != nil {
-			err = ReaderAtSeekCurrentError{Err: err}
+			err = ReaderAtSeekCurrentError{Err: err,
+				Description: _CONTAINER_READER_REWIND}
 			return
 		}
 		if size, err = s.Seek(0, io.SeekEnd); err != nil {
-			err = ReaderAtSeekEndError{Err: err}
+			err = ReaderAtSeekEndError{Err: err,
+				Description: _CONTAINER_READER_REWIND_END}
 			return
 		}
 		if _, err = s.Seek(current, io.SeekStart); err != nil {
-			err = ReaderAtSeekStartError{Err: err}
+			err = ReaderAtSeekStartError{Err: err,
+				Description: _CONTAINER_READER_REWIND_START}
 			return
 		}
 	default:
@@ -80,13 +83,13 @@ func toReaderAt(r io.Reader, limit int64) (ratc *readAtCloser, size int64, err e
 		buf := buffer()
 		defer release(buf)
 		if size, err = buf.ReadFrom(safereader.New(r, limit)); err != nil {
-			err = ReaderAtReadSizeError{Err: err}
+			err = ReaderAtReadSizeError{Err: err, Description: _CONTAINER_READER_BUF}
 			return
 		}
 	}
 
 	if size > limit {
-		err = ReaderAtSizeError{Size: size, Limit: limit}
+		err = ReaderAtSizeError{Size: size, Limit: limit, Description: _CONTAINER_READER_BUF_LIM}
 	}
 	return
 }

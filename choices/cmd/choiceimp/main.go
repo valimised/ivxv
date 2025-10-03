@@ -57,7 +57,8 @@ func choiceimpmain() (code int) {
 		version1, err := c.Storage.GetChoicesVersion(c.Ctx)
 		if err != nil {
 			if errors.CausedBy(err, new(storage.NotExistError)) == nil {
-				return c.Error(exit.Unavailable, CheckVersionError{Err: err},
+				return c.Error(exit.Unavailable, CheckVersionError{Err: err,
+					Description: _CHOICES_VERSION_FROM_DB},
 					"failed to check imported list version:", err)
 			}
 		} else {
@@ -79,7 +80,8 @@ func choiceimpmain() (code int) {
 				code = exit.NoInput
 			}
 		}
-		return c.Error(code, OpenContainerError{Container: path, Err: err},
+		return c.Error(code, OpenContainerError{Container: path, Err: err,
+			Description: _CHOICES_LIST_BDOC_OPEN},
 			"failed to open choice list container:", err)
 	}
 	defer cnt.Close()
@@ -87,32 +89,38 @@ func choiceimpmain() (code int) {
 	// Ensure that the container is signed and log the signatures.
 	signatures := cnt.Signatures()
 	if len(signatures) == 0 {
-		return c.Error(exit.DataErr, UnsignedContainerError{Container: path},
+		return c.Error(exit.DataErr, UnsignedContainerError{Container: path,
+			Description: _CHOICES_LIST_BDOC_NO_SIG},
 			"unsigned choice list container")
 	}
 	for _, s := range signatures {
-		log.Log(c.Ctx, ContainerSignature{Signer: s.Signer, SigningTime: s.SigningTime})
+		log.Log(c.Ctx, ContainerSignature{Signer: s.Signer, SigningTime: s.SigningTime,
+			Description: _CHOICES_LIST_BDOC_SIG_INFO})
 	}
 
 	// Get the version string of the container.
 	version1, err := version.Container(cnt)
 	if err != nil {
-		return c.Error(exit.DataErr, ContainerVersionError{Container: path, Err: err},
+		return c.Error(exit.DataErr, ContainerVersionError{Container: path, Err: err,
+			Description: _CHOICES_LIST_BDOC_SIG_TO_JSON},
 			"failed to format container version string:", err)
 	}
 
 	// Check that the container only has a single file.
 	data := cnt.Data()
 	if len(data) != 1 {
-		return c.Error(exit.DataErr, DataCountError{Count: len(data)},
+		return c.Error(exit.DataErr, DataCountError{Count: len(data),
+			Description: _CHOICES_LIST_BDOC_HAS_MANY_FILES},
 			"choice list container has", len(data), "files, expected 1")
 	}
 
 	// Process the choice list. We do not know the key, so do a single cycle loop.
 	for key, list := range data {
-		log.Log(c.Ctx, ProcessingList{List: key})
+		log.Log(c.Ctx, ProcessingList{List: key,
+			Description: _CHOICES_LIST_READ})
 		if err := choiceimp(c.Ctx, c.Until, c.Conf, c.Storage, version1, list); err != nil {
-			return c.Error(exit.Unavailable, ImportChoicesError{Err: err},
+			return c.Error(exit.Unavailable, ImportChoicesError{Err: err,
+				Description: _CHOICES_LIST_TO_DB_UPLOAD},
 				"failed to import choice list", key+":", err)
 		}
 	}
@@ -131,12 +139,13 @@ func choiceimp(ctx context.Context, until int, c *conf.C, s *storage.Client,
 
 	var l choicelist
 	if err := json.Unmarshal(list, &l); err != nil {
-		return JSONUnmarshalError{Err: err}
+		return JSONUnmarshalError{Err: err, Description: _CHOICES_LIST_INVALID_JSON}
 	}
 
 	// Ensure that the election identifier matches the configured one.
 	if l.Election != c.Election.Identifier {
-		return ElectionIDMismatchError{Conf: c.Election.Identifier, List: l.Election}
+		return ElectionIDMismatchError{Conf: c.Election.Identifier, List: l.Election,
+			Description: _CHOICES_LIST_ID_MISMATCH}
 	}
 
 	if until >= command.Execute {
@@ -146,14 +155,14 @@ func choiceimp(ctx context.Context, until int, c *conf.C, s *storage.Client,
 			choices[id] = list
 		}
 
-		log.Log(ctx, ImportingChoices{Count: len(choices)})
+		log.Log(ctx, ImportingChoices{Count: len(choices), Description: _CHOICES_LIST_PREPARE_UPLOAD_TO_DB})
 		progress.Static(fmt.Sprintf("Importing %d choices:", len(choices)))
 		addprogress := progress.Percent(uint64(len(choices)), true)
 		progress.Redraw()
 		defer progress.Keep()
 
 		if err := s.PutChoices(ctx, version, choices, addprogress); err != nil {
-			return PutChoicesError{Err: err}
+			return PutChoicesError{Err: err, Description: _CHOICES_LIST_UPLOAD_TO_DB_FAIL}
 		}
 	}
 	return nil

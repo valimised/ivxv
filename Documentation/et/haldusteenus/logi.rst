@@ -12,9 +12,9 @@ Logis on järgmised väljad:
 
 #. ``Teenus`` - teenuse identifikaator;
 
-#. ``Tase`` - logisüdmuse tase (``INFO`` või ``ERROR``);
+#. ``Tase`` - logisündmuse tase (``INFO`` või ``ERROR``);
 
-#. ``Sündmus`` - sündmuse liigi idnetifikaator;
+#. ``Sündmus`` - sündmuse liigi identifikaator;
 
 #. ``Kirjeldus`` - sündmuse tekstiline kirjeldus.
 

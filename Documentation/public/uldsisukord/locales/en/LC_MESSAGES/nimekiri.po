@@ -1,0 +1,220 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2016-2025, Cybernetica AS
+# This file is distributed under the same license as the Elektroonilise
+# hääletamise infosüsteem package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-25 13:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../nimekiri.rst:4
+msgid "Dokumendid"
+msgstr "Documents"
+
+#: ../../nimekiri.rst:7
+msgid "Ülddokumendid"
+msgstr "General documents"
+
+#: ../../nimekiri.rst:14 ../../nimekiri.rst:32 ../../nimekiri.rst:65
+#: ../../nimekiri.rst:98
+msgid "Nimi"
+msgstr "Name"
+
+#: ../../nimekiri.rst:15 ../../nimekiri.rst:33 ../../nimekiri.rst:66
+#: ../../nimekiri.rst:99
+msgid "ID"
+msgstr "ID"
+
+#: ../../nimekiri.rst:16 ../../nimekiri.rst:34 ../../nimekiri.rst:67
+#: ../../nimekiri.rst:100
+msgid "Versioon"
+msgstr "Version"
+
+#: ../../nimekiri.rst:17 ../../nimekiri.rst:35 ../../nimekiri.rst:68
+#: ../../nimekiri.rst:101
+msgid "Kuupäev"
+msgstr "Date"
+
+#: ../../nimekiri.rst:19
+msgid "IVXV dokumentatsiooni üldsisukord"
+msgstr ""
+
+#: ../../nimekiri.rst:20
+msgid "IVXV-YS-1.10"
+msgstr ""
+
+#: ../../nimekiri.rst:21 ../../nimekiri.rst:44 ../../nimekiri.rst:49
+#: ../../nimekiri.rst:72 ../../nimekiri.rst:77 ../../nimekiri.rst:82
+#: ../../nimekiri.rst:87 ../../nimekiri.rst:105 ../../nimekiri.rst:110
+#: ../../nimekiri.rst:115 ../../nimekiri.rst:125 ../../nimekiri.rst:130
+#: ../../nimekiri.rst:135
+msgid "1.10"
+msgstr ""
+
+#: ../../nimekiri.rst:22 ../../nimekiri.rst:45 ../../nimekiri.rst:50
+#: ../../nimekiri.rst:73 ../../nimekiri.rst:78 ../../nimekiri.rst:83
+#: ../../nimekiri.rst:88 ../../nimekiri.rst:106 ../../nimekiri.rst:111
+#: ../../nimekiri.rst:116 ../../nimekiri.rst:126 ../../nimekiri.rst:131
+#: ../../nimekiri.rst:136
+msgid "25.09.2025"
+msgstr ""
+
+#: ../../nimekiri.rst:25
+msgid "Spetsifikatsioonid"
+msgstr "Specifications"
+
+#: ../../nimekiri.rst:37
+msgid "IVXV kasutusmallid"
+msgstr ""
+
+#: ../../nimekiri.rst:38
+msgid "IVXV-KM-1.8.1"
+msgstr ""
+
+#: ../../nimekiri.rst:39
+msgid "1.8.1"
+msgstr ""
+
+#: ../../nimekiri.rst:40
+msgid "16.12.2022"
+msgstr ""
+
+#: ../../nimekiri.rst:42
+msgid "IVXV protokollide kirjeldus"
+msgstr ""
+
+#: ../../nimekiri.rst:43
+msgid "IVXV-PR-1.10"
+msgstr ""
+
+#: ../../nimekiri.rst:47
+msgid "IVXV arhitektuur"
+msgstr ""
+
+#: ../../nimekiri.rst:48
+msgid "IVXV-AR-1.10"
+msgstr ""
+
+#: ../../nimekiri.rst:52
+msgid "IVXV võtmerakendus"
+msgstr ""
+
+#: ../../nimekiri.rst:53
+msgid "IVXV-SVR-1.8.0"
+msgstr ""
+
+#: ../../nimekiri.rst:54 ../../nimekiri.rst:120
+msgid "1.8.0"
+msgstr ""
+
+#: ../../nimekiri.rst:55 ../../nimekiri.rst:121
+msgid "01.12.2022"
+msgstr ""
+
+#: ../../nimekiri.rst:58
+msgid "Ingliskeelsed dokumendid"
+msgstr "Documents in english"
+
+#: ../../nimekiri.rst:70
+msgid "IVXV protocols"
+msgstr ""
+
+#: ../../nimekiri.rst:71
+msgid "IVXV-PR-EN-1.10"
+msgstr ""
+
+#: ../../nimekiri.rst:75
+msgid "IVXV architecture"
+msgstr ""
+
+#: ../../nimekiri.rst:76
+msgid "IVXV-AR-EN-1.10"
+msgstr ""
+
+#: ../../nimekiri.rst:80
+msgid "VIS3-EHS interfaces"
+msgstr ""
+
+#: ../../nimekiri.rst:81
+msgid "IVXV-VIS-EHS-EN-1.10"
+msgstr ""
+
+#: ../../nimekiri.rst:85
+msgid "IVXV Backend Log Messages"
+msgstr ""
+
+#: ../../nimekiri.rst:86
+msgid "IVXV-LOGS-EN-1.10"
+msgstr ""
+
+#: ../../nimekiri.rst:91
+msgid "Juhendid"
+msgstr "User guides"
+
+#: ../../nimekiri.rst:103
+msgid "IVXV seadistuste koostamise juhend"
+msgstr ""
+
+#: ../../nimekiri.rst:104
+msgid "IVXV-JSK-1.10"
+msgstr ""
+
+#: ../../nimekiri.rst:108
+msgid "IVXV kogumisteenuse haldusjuhend"
+msgstr ""
+
+#: ../../nimekiri.rst:109
+msgid "IVXV-JSH-1.10"
+msgstr ""
+
+#: ../../nimekiri.rst:113
+msgid "IVXV haldusteenuse kasutusjuhend"
+msgstr ""
+
+#: ../../nimekiri.rst:114
+msgid "IVXV-JHT-1.10"
+msgstr ""
+
+#: ../../nimekiri.rst:118
+msgid "IVXV API"
+msgstr ""
+
+#: ../../nimekiri.rst:119
+msgid "IVXV-API-1.8.0"
+msgstr ""
+
+#: ../../nimekiri.rst:123
+msgid "IVXV audiitori juhend"
+msgstr ""
+
+#: ../../nimekiri.rst:124
+msgid "IVXV-JAJ-1.10"
+msgstr ""
+
+#: ../../nimekiri.rst:128
+msgid "IVXV valijarakendus"
+msgstr ""
+
+#: ../../nimekiri.rst:129
+msgid "IVXV-JVR-1.10"
+msgstr ""
+
+#: ../../nimekiri.rst:133
+msgid "IVXV valijarakenduse pakendamine"
+msgstr ""
+
+#: ../../nimekiri.rst:134
+msgid "IVXV-JVP-1.10"
+msgstr ""

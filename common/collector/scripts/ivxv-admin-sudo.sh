@@ -111,9 +111,13 @@ init_host() {
     ivxv-log \
     ivxv-mid \
     ivxv-proxy \
+    ivxv-sessionstatus \
+    ivxv-smartid \
     ivxv-storage \
     ivxv-verification \
-    ivxv-voting
+    ivxv-votesorder \
+    ivxv-voting \
+    ivxv-webeid
   echo "# Removing IVXV config files"
   rm --force --verbose \
     /etc/ivxv/choices.bdoc \

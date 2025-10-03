@@ -1,3 +1,41 @@
+ivxv (1.10.3) jammy; urgency=medium
+
+  * Documentation release - review, translation, spelling
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Fri, 05 Sep 2025 12:13:28 +0000
+
+ivxv (1.10.2) jammy; urgency=medium
+
+  * Change log rotation frequency to hourly basis
+  * Update javascript dependencies
+  * Add support for voters as young as 14 years
+  * Update Smart-ID flows to support smoother user experience
+  * Improve testing and releasing tools
+  * Update ZIP handling to strict format validations
+  * Update voterlist download strategy from VIS to avoid bottlenecks
+  * Resolve memory-leak in the administrative interface
+  * Various minor bugfixes
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Sun, 24 Aug 2025 09:48:28 +0000
+
+ivxv (1.10.1) jammy; urgency=medium
+
+  * Hotfix to SmartID service to accomodate for the changed cert profile
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Thu, 03 Apr 2025 18:18:13 +0000
+
+ivxv (1.10.0) jammy; urgency=medium
+
+  * Add backend log documentation
+  * Update OCSP URL handling
+  * Add support for ECC
+  * Update disaster recovery documentation
+  * Update protocol documentation
+  * Add invalid ciphertext detection to collection service
+  * Update dependencies
+
+ -- IVXV Developer <info@ivotingcentre.ee>  Tue, 17 Dec 2024 07:20:16 +0000
+
 ivxv (1.9.10) jammy; urgency=medium
 
   * Hotfix to admin web, don't export detailstats to VIS when downloading

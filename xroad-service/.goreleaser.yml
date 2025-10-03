@@ -1,5 +1,5 @@
+version: 2
 project_name: xroad-service
-
 builds:
   - id: xroad-service
     main: ./cmd
@@ -12,8 +12,6 @@ builds:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
 checksum:
   name_template: 'checksums.txt'
-scoop:
-  skip_upload: true
 nfpms:
   - description: |-
       X-road service is helper service between X-road and EHS systems.

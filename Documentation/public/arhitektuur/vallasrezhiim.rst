@@ -178,7 +178,7 @@ Võtmerakenduse väljund häälte lugemisel on:
 Töötlemisrakendus
 -----------------
 
-Töötlemisrakendusega verifitseeritakse, tühistatakse ning anonüümistatakse
+Töötlemisrakendusega verifitseeritakse, tühistatakse ning anonüümitakse
 hääletamisperioodil kogutud hääli vastavalt Üldkirjelduse jaotisele 7.6.
 
 Töötlemisrakenduse sisendid on:
@@ -208,7 +208,7 @@ Töötlemisrakenduse väljundid on:
 - anonüümitud hääled.
 
 Lisaks varem defineeritud liidestele ja sõltuvustele kasutab töötlemisrakendus
-kolmanda osapoole teeki PDF-ide väljastamise funktsionaalsuse teostamiseks.
+kolmanda osapoole teeki PDF'ide väljastamise funktsionaalsuse teostamiseks.
 
 .. figure:: model/img/processing.png
 
@@ -221,7 +221,7 @@ Elektrooniliste häälte täielik töötlemine on tegevus, mille käigus
 töötlemisrakendus võrdleb Kogumisteenuse poolt talletatud häälte hulka
 registreerimisteenuse poolt talletatud häälte hulgaga, kontrollib talletatud
 häälte vastavust valimiste konfiguratsioonile, tuvastab loendamisele minevad
-hääled ning anonüümistab need Võtmerakendusele üle andmiseks.
+hääled ning anonüümib need Võtmerakendusele üle andmiseks.
 
 #. rakenduse seadistuste laadimine;
 
@@ -274,7 +274,7 @@ Auditirakenduse sisendid on;
 
 - miksitud hääled;
 
-- Verificatum miksimistõend;
+- Verificatumi miksimistõend;
 
 - hääletamistulemus.
 

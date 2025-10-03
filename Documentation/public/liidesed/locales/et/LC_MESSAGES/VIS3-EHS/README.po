@@ -1,0 +1,275 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2016-2025, Cybernetica AS
+# This file is distributed under the same license as the Elektroonilise
+# hääletamise infosüsteem package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-03 23:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: et\n"
+"Language-Team: et <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../VIS3-EHS/README.md:1
+msgid "VIS3-EHS liideste spetsifikatsioonid"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:3
+msgid ""
+"Eesti riiklikel valimistel toimub e-hääletamine Valimiste infosüsteemi "
+"(VIS3) ja e-hääletamise süsteemi (EHS) koostöös. EHS roll on "
+"elektroonilise hääletamise läbiviimine lähtudes valimise definitsioonist,"
+" mis koostatakse valimise korraldaja poolt VIS3 abil. E-hääletamise ajal "
+"vahetavad EHS ja VIS3 informatsiooni - võivad muutuda valijate nimekirjad"
+" ning liigub info e-häälte laekumise kohta."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:5
+msgid ""
+"Dokument esitab VIS3 ja e-hääletamise süsteemi EHS vaheliste liideste "
+"spetsifikatsioonid."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:7
+msgid ""
+"Spetsifikatsioonid on avalikud. Spetsifikatsioonid ei käsitle VIS3 ega "
+"EHS konfidentsiaalset siseehitust ega liideste konfidentsiaalseid "
+"elemente."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:10
+msgid "Ülevaade"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:12
+msgid "![VIS3 ja EHS liidesed (ülevaade)](img/vis-ehs.png)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:12
+msgid "VIS3 ja EHS liidesed (ülevaade)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:14
+msgid "Joonis 1. VIS3 ja EHS liidesed (ülevaade)."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:16
+msgid "Märkus: Joonise originaal vt VIS3 dok-s RIAs, fail \"EHS\"."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:18
+msgid "Vasakul on VIS3, mooduli täpsusega:"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:20
+msgid "KAN - Kandidaadimoodul"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:21
+msgid "NIM - Nimekirjamoodul"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:22
+msgid "TUL - Valimistulemuse moodul"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:23
+msgid "VAL - Valimissündmuse moodul"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:24
+msgid "VTA - Valimistulemuse avalikustamise moodul."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:26
+msgid ""
+"Andmed liiguvad noole suunas. HTTPS masinliidestes on teenust pakkuvad "
+"otspunktid VIS3 poolel. X-tee liideses on teenusepakkujaks EHS. Inim-"
+"masinliides tähendab seda, et ühe süsteemi operaator laeb faili "
+"süsteemist alla ja edastab teise süsteemi operaatorile, kes laeb faili "
+"teise süsteemi üles."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:29
+msgid "Liidesed on täpsemalt kirjeldatud allpool."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:31
+msgid "Spetsifikatsioonid"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:33
+msgid "[1 Valimisringkondade nimekiri](1_Valimisringkondade_nimekiri/SPEC.md)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:35
+msgid "[2 Valikute nimekiri (kandidaatide nimekiri)](2_Valikute_nimekiri/SPEC.md)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:37
+msgid "[3 Valijate nimekiri EHS-le](3_Valijate_nimekiri/SPEC.md)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:39
+msgid "[4 E-hääletanute nimekiri](4_e_haaletanute_nimekiri/SPEC.md)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:41
+msgid "[5 Tühistus- ja ennistusnimekiri](5_Tyhistusnimekiri/SPEC.md)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:43
+msgid "[6 E-hääletamise tulemus](6_e_haaletamise_tulemus/SPEC.md)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:45
+msgid ""
+"[7 E-hääletamisest osavõtu "
+"üldstatistika](7_e_haaletamise_yldstatistika/SPEC.md)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:47
+msgid ""
+"[8 E-hääletamisest osavõtu "
+"detailstatistika](8_e_haaletamise_detailstatistika/SPEC.md)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:49
+msgid "[9 E-hääletamiste nimekiri](9_e_haaletamiste_nimekiri/SPEC.md)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:51
+msgid ""
+"Spetsifikatsioonides kasutatav valimissündmuse identifikaator peab "
+"vastama formaadile [Valimissündmuse "
+"identifikaator](valimissündmuse_identifikaator.md)."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:53
+msgid "Usalduse loomine masinliidestes"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:55
+msgid "Masinliidesed kaitstakse HTTPS-ga ja TLS mõlemapoolse autentimisega."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:57
+msgid ""
+"Lisaks piiratakse VIS3 seadistusega EHS pääs ainult EHS-le määratud "
+"otspunktidele (3b ja 7)."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:59
+msgid "Veakäsitlus masinliidestes"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:61
+msgid ""
+"VIS3 peab andma HTTP standardi kohase vastuskoodi ja veateate, kui EHS "
+"saadetud päring on ebakorrektne või VIS3 ei suuda päringut teenendada."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:63
+msgid ""
+"EHS peab arvestama VIS3 tõrke võimalusega. Standardne reaktsioon tõrkele "
+"on päringu uuestisaatmine."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:65
+msgid "Veakäsitlus faili inimese poolt edastamise liidestes"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:67
+msgid ""
+"VIS3 peab kontrollima üleslaetud faili süntaksit ja kus võimalik, kas "
+"semantikat. Ebakorrektse faili kohta tuleb anda operaatorile teada. "
+"Ebakorrektse faili andmeid ei kanta VIS3 andmebaasi."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:69
+msgid ""
+"Korrektse, kuid eksitusena üleslaetud faili andmeid saab VIS3 "
+"andmebaasist kustutada ja õige fail uuesti üles laadida."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:71
+msgid "Muudatused võrreldes VIS2-EHS-ga"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:73
+msgid "VIS3-EHS liideses on võrreldes VIS2-ga muudetud ja ajakohastatud:"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:75
+msgid ""
+"osapoolte vahetumisest (valijate nimekirja hakkab EHS-le saame mitte RR"
+"/SMIT-ist, vaid RIA VIS3-st)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:76
+msgid "valimisõiguse muutumisest (jaoskondade tähenduse muutumine)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:77
+msgid "valijate nimekirja ja selle uuenduste edastamisest üle liidese."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:79
+msgid ""
+"VIS2 ja EHS omavahelisi liideseid spetsifitseerib \"IVXV protokollide "
+"kirjeldus\" (v 1.5.0, 20.04.2019), "
+"[https://www.valimised.ee/sites/default/files/uploads/eh/IVXV-"
+"protokollid.pdf](https://www.valimised.ee/sites/default/files/uploads/eh"
+"/IVXV-protokollid.pdf). \"Elektroonilise hääletamise protokollistik "
+"defineerib elektroonilise hääletamise süsteemi komponentide vahelise "
+"sõnumivahetuse, kasutatavad andmestruktuurid, algoritmid ning liidesed "
+"väliste süsteemidega.\" Spetsifitseeritud on:"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:81
+msgid "liides \"Valimisringkondade nimekiri\" (jaotis 3.2)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:82
+msgid "liides \"Valikute nimekiri\" (jaotis 3.4)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:83
+msgid "liides \"Valijate nimekiri\" (jaotis 3.3)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:84
+msgid "liides \"Tühistus- ja ennistusnimekiri\" (jaotis 9.1)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:85
+msgid "liides \"E-hääletanute nimekiri\" (jaotis 9.2)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:86
+msgid "liides \"E-hääletamise tulemus\" (jaotis 9.3)"
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:88
+msgid ""
+"Käesolevad spetsifikatsioonid tuginevad ülalnimetatud "
+"spetsifikatsioonidele. Täpsemalt vt konkreetsete spetsifikatsioonide "
+"juures."
+msgstr ""
+
+#: ../../VIS3-EHS/README.md:90
+msgid ""
+"EHS lähtekood on kättesaadav: [https://github.com/vvk-"
+"ehk/ivxv](https://github.com/vvk-ehk/ivxv)."
+msgstr ""
+

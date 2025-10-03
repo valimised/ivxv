@@ -8,6 +8,7 @@ import shutil
 import subprocess
 
 from ...cli_utils.service_utils import (
+    create_voter_list_download_crontab,
     remove_ivxv_admin_crontab,
     generate_detail_stats_crontab,
     generate_voting_facts_crontab,
@@ -123,6 +124,7 @@ def main():
 
     # generate detail stats crontab
     elif cmd_type == 'election':
+        create_voter_list_download_crontab(cfg_data)
         generate_detail_stats_crontab(cfg_data)
         install_detail_stats_crontab()
         generate_voting_facts_crontab(cfg_data)

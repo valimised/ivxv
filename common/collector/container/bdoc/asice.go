@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"ivxv.ee/common/collector/safereader"
+	zip2 "ivxv.ee/common/collector/zip"
 )
 
 // metainf is the name of the folder containing meta information.
@@ -46,25 +47,27 @@ func (f *asiceFile) close() {
 // container contents are requested.
 //
 // All returned asiceFiles should be closed after use.
-func openASiCE(r io.Reader, zipLimit, fileLimit int64, readSigs bool) (
+func openASiCE(r io.Reader, fileCount, zipLimit, fileLimit int64, readSigs bool) (
 	files map[string]*asiceFile, err error) {
 
 	// Convert the stream to io.ReaderAt needed for zip.NewReader.
 	rat, size, err := toReaderAt(r, zipLimit)
 	if err != nil {
-		return nil, ToReaderAtError{Err: err}
+		return nil, ToReaderAtError{Err: err, Description: _CONTAINER_READER_TO_READER_AT}
 	}
 	defer rat.close()
 
 	// Fail fast: Check the ASiC-E magic number before reading the ZIP.
 	if err = asiceMagic(rat); err != nil {
-		return nil, NotASiCEError{Err: err}
+		return nil, NotASiCEError{Err: err,
+			Description: _CONTAINER_ASICE_MAGIC}
 	}
 
 	// Read the ZIP directory and parse file headers.
 	rzip, err := zip.NewReader(rat, size)
 	if err != nil {
-		return nil, ZIPReaderError{Err: err}
+		return nil, ZIPReaderError{Err: err,
+			Description: _CONTAER_ZIP_READER}
 	}
 
 	// Check the files and decompress data.
@@ -88,7 +91,8 @@ func openASiCE(r io.Reader, zipLimit, fileLimit int64, readSigs bool) (
 
 		// Check that we have not seen this file yet.
 		if _, ok := seen[file.Name]; ok {
-			return nil, DuplicateFileNameError{FileName: file.Name}
+			return nil, DuplicateFileNameError{FileName: file.Name,
+				Description: _CONTAINER_DUP}
 		}
 		seen[file.Name] = struct{}{}
 
@@ -98,7 +102,9 @@ func openASiCE(r io.Reader, zipLimit, fileLimit int64, readSigs bool) (
 		// directory header matches.
 		if i == 0 {
 			if err = asiceMagicCentral(file); err != nil {
-				return nil, ASiCEMagicCentralError{Err: err}
+				return nil, ASiCEMagicCentralError{Err: err,
+					Description: _CONTAINER_ASICE_CENTRAL_MAGIC,
+				}
 			}
 			continue
 		}
@@ -110,7 +116,8 @@ func openASiCE(r io.Reader, zipLimit, fileLimit int64, readSigs bool) (
 			// manifest.xml is not returned, so decompress here and
 			// defer the recover.
 			if manifest, err = decompress(file, fileLimit); err != nil {
-				return nil, DecompressManifestError{Err: err}
+				return nil, DecompressManifestError{Err: err,
+					Description: _CONTAINER_ZIP_MANIFEST}
 			}
 			defer manifest.close()
 			continue
@@ -121,43 +128,75 @@ func openASiCE(r io.Reader, zipLimit, fileLimit int64, readSigs bool) (
 			}
 		// No more META-INF/ files allowed below this case.
 		case strings.HasPrefix(file.Name, metainf):
-			return nil, UnknownMetaInfoFile{FileName: file.Name}
+			return nil, UnknownMetaInfoFile{FileName: file.Name,
+				Description: _CONTAINER_META}
 
 		case strings.Count(file.Name, "/") > 0:
-			return nil, FileInSubfolderError{FileName: file.Name}
+			return nil, FileInSubfolderError{FileName: file.Name,
+				Description: _CONTAINER_DIRS}
 		}
 
 		var asice *asiceFile
 		if asice, err = decompress(file, fileLimit); err != nil {
 			return nil, DecompressFileError{
-				FileName: file.Name,
-				Err:      err,
+				FileName:    file.Name,
+				Err:         err,
+				Description: _CONTAINER_UNZIP_FILE,
 			}
 		}
 		files[file.Name] = asice
+	}
+
+	// Locate .ZIP end of central directory
+	offset, err := zip2.EndOfCentralDirectory(rat, zip2.DecompressOptions{
+		FilesLimit:    int(fileCount),
+		FileSizeLimit: int(fileLimit),
+		ZipSizeLimit:  size,
+	})
+	if err != nil {
+		return nil, EndOfCentralDirectoryError{
+			Err:         err,
+			Description: _CONTAINER_EOCD,
+		}
+	}
+
+	// If at least a single byte can be read after end of central directory, then there are appended bytes present
+	atLeastOneByte := [1]byte{}
+	if _, err = rat.ReadAt(atLeastOneByte[:], offset); err != io.EOF {
+		return nil, MalformedZIPError{
+			Err:         err,
+			Description: _CONTAINER_MALFORMED_ZIP,
+		}
 	}
 
 	// The manifest, at least one signature, and at least one data file
 	// must be present. If they are, then we can be certain that "mimetype"
 	// is too, because we require it to be the first file.
 	if manifest == nil {
-		return nil, MissingManifestError{}
+		return nil, MissingManifestError{
+			Description: _CONTAINER_BDOC_MANI,
+		}
 	}
 	if signatures == 0 {
-		return nil, NoSignaturesError{}
+		return nil, NoSignaturesError{
+			Description: _CONTAINER_BDOC_DATA,
+		}
 	}
 	datafiles := len(files)
 	if readSigs {
 		datafiles -= signatures
 	}
 	if datafiles == 0 {
-		return nil, NoDataFilesError{}
+		return nil, NoDataFilesError{
+			Description: _CONTAINER_BDOC_DATA,
+		}
 	}
 
 	// Check that the manifest has references for all non-signature files,
 	// and only those files, and retrieve their MIME types from it.
 	if err = readManifest(manifest.data.Bytes(), files); err != nil {
-		return nil, ManifestError{Err: err}
+		return nil, ManifestError{Err: err,
+			Description: _CONTAINER_BDOC_MANI_READ}
 	}
 	return files, nil
 }
@@ -176,33 +215,37 @@ const (
 func asiceMagic(rat io.ReaderAt) error {
 	buf := make([]byte, 30+len(magic)+len(mimetype))
 	if n, err := rat.ReadAt(buf, 0); err != nil {
-		return ReadMagicFileHeaderError{Header: buf[:n], Err: err}
+		return ReadMagicFileHeaderError{Header: buf[:n], Err: err,
+			Description: _CONTAINER_ASICE_MAGIC}
 	}
 	le := binary.LittleEndian
 
 	if marker := string(buf[:4]); marker != "PK\x03\x04" {
-		return NoZIPMagicError{Marker: marker}
+		return NoZIPMagicError{Marker: marker,
+			Description: _CONTAINER_ZIP_MAGIC}
 	}
 
 	if length := le.Uint16(buf[26:28]); int(length) != len(magic) {
-		return MagicLengthError{Length: length}
+		return MagicLengthError{Length: length, Description: _CONTAINER_ZIP_MAGIC_LEN}
 	}
 	if filename := string(buf[30 : 30+len(magic)]); filename != magic {
-		return NotASiCMagicError{FileName: filename}
+		return NotASiCMagicError{FileName: filename, Description: _CONTAINER_ASICE_MAGIC_FORMAT}
 	}
 
 	if method := le.Uint16(buf[8:10]); method != zip.Store {
-		return CompressedMIMETypeError{Method: method}
+		return CompressedMIMETypeError{Method: method,
+			Description: _CONTAINER_ZIP_MIME}
 	}
 	if length := le.Uint16(buf[28:30]); length != 0 {
-		return ExtraFieldError{Length: length}
+		return ExtraFieldError{Length: length,
+			Description: _CONTAINER_ZIP_EXTRA}
 	}
 
 	if length := le.Uint32(buf[18:22]); int(length) != len(mimetype) {
-		return MIMETypeLengthError{Length: length}
+		return MIMETypeLengthError{Length: length, Description: _CONTAINER_ZIP_MIME_LEN}
 	}
 	if mime := string(buf[30+len(magic):]); mime != mimetype {
-		return NotASiCEMIMETypeError{MIMEType: mime}
+		return NotASiCEMIMETypeError{MIMEType: mime, Description: _CONTAINER_ASICE_MIME}
 	}
 	return nil
 }
@@ -212,7 +255,7 @@ func asiceMagic(rat io.ReaderAt) error {
 func asiceMagicCentral(file *zip.File) error {
 	// Check the file name.
 	if file.Name != magic {
-		return MIMETypeCentralNameError{Name: file.Name}
+		return MIMETypeCentralNameError{Name: file.Name, Description: CONTAINER_MIME}
 	}
 
 	// Check if the central directory is referring to the file at the start
@@ -220,22 +263,26 @@ func asiceMagicCentral(file *zip.File) error {
 	// 30 + file name length is the same, since we have no extra data.
 	offset, err := file.DataOffset()
 	if err != nil {
-		return GetMIMETypeOffsetError{Err: err}
+		return GetMIMETypeOffsetError{Err: err, Description: _CONTAINER_MIME_OFF}
 	}
 	if offset != int64(30+len(magic)) {
-		return MIMETypeCentralOffsetError{Offset: offset}
+		return MIMETypeCentralOffsetError{Offset: offset,
+			Description: _CONTAINER_MIME_C_OFF}
 	}
 
 	// Check directory header compression, data size, and extra length --
 	// file name length was already checked by comparing the file name.
 	if file.Method != zip.Store {
-		return MIMETypeCentralMethodError{Method: file.Method}
+		return MIMETypeCentralMethodError{Method: file.Method,
+			Description: _CONTAINER_HEADER_COMPRESS}
 	}
 	if file.CompressedSize64 != uint64(len(mimetype)) {
-		return MIMETypeCentralSizeError{Size: file.CompressedSize64}
+		return MIMETypeCentralSizeError{Size: file.CompressedSize64,
+			Description: _CONTAINER_MIME_CONTENT}
 	}
 	if len(file.Extra) != 0 {
-		return MIMETypeCentralExtraError{Extra: file.Extra}
+		return MIMETypeCentralExtraError{Extra: file.Extra,
+			Description: _CONTAINER_MIME_CONTENT_EXT}
 	}
 	return nil
 }
@@ -245,7 +292,7 @@ func asiceMagicCentral(file *zip.File) error {
 func decompress(file *zip.File, limit int64) (*asiceFile, error) {
 	fd, err := file.Open()
 	if err != nil {
-		return nil, OpenZIPFileError{Err: err}
+		return nil, OpenZIPFileError{Err: err, Description: _CONTAINER_ZIP_OPEN}
 	}
 	defer fd.Close()
 
@@ -253,14 +300,15 @@ func decompress(file *zip.File, limit int64) (*asiceFile, error) {
 	size, err := asice.data.ReadFrom(safereader.New(fd, limit))
 	if err != nil {
 		asice.close()
-		return nil, ReadZIPFileError{Err: err}
+		return nil, ReadZIPFileError{Err: err, Description: _CONTAINER_ZIP_READ}
 	}
 
-	if file.UncompressedSize64 != uint64(size) {
+	if file.UncompressedSize64 != uint64(size) { //nolint:gosec
 		asice.close()
 		return nil, UncompressedZIPFileSizeError{
-			Declared: file.UncompressedSize64,
-			Actual:   size,
+			Declared:    file.UncompressedSize64,
+			Actual:      size,
+			Description: _CONTAINER_ZIP_DIFF,
 		}
 	}
 	return asice, nil
@@ -293,14 +341,16 @@ type fileEntry struct {
 func readManifest(data []byte, files map[string]*asiceFile) error {
 	var m manifest
 	if err := parseXML(data, &m); err != nil {
-		return ManifestXMLError{Data: data, Err: err}
+		return ManifestXMLError{Data: data, Err: err,
+			Description: _CONTAINER_ZIP_XML}
 	}
 
 	seen := make(map[string]struct{})
 	for _, entry := range m.FileEntries {
 		// Check that we have not seen this entry yet.
 		if _, ok := seen[entry.FullPath]; ok {
-			return DuplicateManifestEntryError{Path: entry.FullPath}
+			return DuplicateManifestEntryError{Path: entry.FullPath,
+				Description: _CONTAINER_ZIP_XML_MANY}
 		}
 		seen[entry.FullPath] = struct{}{}
 
@@ -308,24 +358,28 @@ func readManifest(data []byte, files map[string]*asiceFile) error {
 		// not mandatory.
 		if entry.FullPath == "/" {
 			if entry.MediaType != mimetype {
-				return ManifestRootMIMETypeError{MIMEType: entry.MediaType}
+				return ManifestRootMIMETypeError{MIMEType: entry.MediaType,
+					Description: _CONTAINER_MIME_ROOT}
 			}
 			continue
 		}
 
 		file, ok := files[entry.FullPath]
 		if !ok {
-			return ExtraManifestEntryError{Path: entry.FullPath}
+			return ExtraManifestEntryError{Path: entry.FullPath,
+				Description: _CONTAINER_FILE_FROM_MANI}
 		}
 		if file.signature() {
-			return SignatureInManifestError{Path: entry.FullPath}
+			return SignatureInManifestError{Path: entry.FullPath,
+				Description: _CONTAINER_SIG_FROM_MANI}
 		}
 		file.mimetype = entry.MediaType
 	}
 
 	for _, file := range files {
 		if !file.signature() && len(file.mimetype) == 0 {
-			return MissingManifestEntryError{Path: file.name}
+			return MissingManifestEntryError{Path: file.name,
+				Description: _CONTAINER_SIG_FILE_MANI}
 		}
 	}
 	return nil

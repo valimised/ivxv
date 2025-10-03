@@ -16,35 +16,35 @@ import (
 
 var (
 	// InputError wraps errors which are caused by bad input to mid functions.
-	_ = InputError{Err: nil}
+	_ = InputError{Err: nil, Description: _MID_IN}
 
 	// NotMIDUserError is the error returned if the submitted phone number
 	// does not belong to a Mobile-ID user.
-	_ = NotMIDUserError{}
+	_ = NotMIDUserError{Description: _MID_USER}
 
 	// SIMError is the error returned if there is a problem with user's
 	// phone SIM card and the user should contact the service provider.
-	_ = SIMError{Result: ""}
+	_ = SIMError{Result: "", Description: _MID_SIM}
 
 	// AbsentError is the error returned if the voter's phone is absent
 	// (switched off or out of coverage).
-	_ = AbsentError{}
+	_ = AbsentError{Description: _MID_ABS}
 
 	// CanceledError is the error returned if the voter canceled the
 	// operation.
-	_ = CanceledError{}
+	_ = CanceledError{Description: _MID_CANCEL}
 
 	// ExpiredError is the error returned if the session expired
 	// before the voter entered their PIN.
-	_ = ExpiredError{}
+	_ = ExpiredError{Description: _MID_EXP}
 
 	// CertificateError wraps errors which are caused by errors with the
 	// voter's certificate (revoked, suspended, not activated, etc).
-	_ = CertificateError{Err: nil}
+	_ = CertificateError{Err: nil, Description: _MID_CERT_ERR}
 
 	// StatusError wraps errors which are caused by an unexpected session
 	// status: this is a catch-all for other types of Mobile-ID problems.
-	_ = StatusError{Err: nil}
+	_ = StatusError{Err: nil, Description: _MID_STAT_ERR}
 
 	// allowedAuthHashFunctions is list of hash functions allowed for
 	// authentication. Since the hash function is determined by it's hash
@@ -99,18 +99,20 @@ type Client struct {
 // New returns a new MID REST API client with the provided configuration.
 func New(conf *Conf) (c *Client, err error) {
 	if len(conf.Roots) == 0 {
-		return nil, UnconfiguredRootsError{}
+		return nil, UnconfiguredRootsError{Description: _MID_CA}
 	}
 
 	c = &Client{conf: *conf} // Save a copy of conf so it cannot be changed.
 	if c.rpool, err = cryptoutil.PEMCertificatePool(c.conf.Roots...); err != nil {
-		return nil, RootsParsingError{Err: err}
+		return nil, RootsParsingError{Err: err,
+			Description: _MID_CA_PARSE}
 	}
 	if c.ipool, err = cryptoutil.PEMCertificatePool(c.conf.Intermediates...); err != nil {
-		return nil, IntermediatesParsingError{Err: err}
+		return nil, IntermediatesParsingError{Err: err,
+			Description: _MID_ICA_PARSE}
 	}
 	if c.ocsp, err = ocsp.New(&c.conf.OCSP); err != nil {
-		return nil, OCSPClientError{Err: err}
+		return nil, OCSPClientError{Err: err, Description: _MID_OCSP_CFG}
 	}
 	if c.authHashFunction, err = findAuthHashFunction(c.conf.AuthChallengeSize); err != nil {
 		return nil, err
@@ -136,5 +138,6 @@ func findAuthHashFunction(size int64) (crypto.Hash, error) {
 		}
 		sizes = append(sizes, hf.Size())
 	}
-	return 0, AuthChallengeSizeError{Size: size, AllowedSizes: sizes}
+	return 0, AuthChallengeSizeError{Size: size, AllowedSizes: sizes,
+		Description: _MID_HASH}
 }

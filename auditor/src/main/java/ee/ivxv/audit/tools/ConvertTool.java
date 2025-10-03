@@ -293,7 +293,7 @@ public class ConvertTool implements Tool.Runner<ConvertArgs> {
         GroupElement[] els = pge.getElements();
         GroupElement msgenc = ((ProductGroupElement) els[1]).getElements()[index];
         Plaintext padded = pk.getParameters().getGroup().decode(msgenc);
-        Plaintext pt = padded.stripPadding();
+        Plaintext pt = pk.getParameters().getGroup().unpad(padded);
         String msg = pt.getUTF8DecodedMessage();
         return msg;
     }

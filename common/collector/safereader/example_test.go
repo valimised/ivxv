@@ -38,5 +38,5 @@ func Example() {
 
 	// Output:
 	// 3735928559
-	// error parsing nine bytes: ivxv.ee/common/collector/safereader.LimitExceededError{Limit:8}
+	// error parsing nine bytes: ivxv.ee/common/collector/safereader.LimitExceededError{Limit:8, }
 }

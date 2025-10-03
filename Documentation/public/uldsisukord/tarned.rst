@@ -3,6 +3,376 @@
 Tarned
 ======
 
+Muudatused tarne 1.10.4 koosseisus, erinevused võrreldes tarnega 1.10.3
+--------------------------------------------------------------------------------
+
+Kogumisteenus
+~~~~~~~~~~~~~
+
+Üldised muutused
+
+* Valijate nimekirjade muudatuste allalaadimise täpsustused
+
+Registreerimisteenus
+~~~~~~~~~~~~~~~~~~~~
+
+* Muudatused puuduvad
+
+Kontrollrakendused
+~~~~~~~~~~~~~~~~~~
+
+Android
+
+* Muudatused puuduvad
+
+iOS
+
+* Muudatused puuduvad
+
+Miksnet
+~~~~~~~
+
+* Muudatused puuduvad
+
+Töötleja rakendused
+~~~~~~~~~~~~~~~~~~~
+
+Üldised
+
+* Muudatused puuduvad
+
+Võtmerakendus
+
+* Muudatused puuduvad
+
+Töötlemisrakendus
+
+* Muudatused puuduvad
+
+Auditirakendus
+
+* Muudatused puuduvad
+
+Valijarakendused ja seadistusrakendus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Muudatused puuduvad
+
+Dokumentatsioon
+~~~~~~~~~~~~~~~
+
+* Numeratsiooni läbivaatus
+* Võtmerakenduse seadistuste täpsustamine
+* Smart-ID protokolli näidete täpsustamine
+
+Logimonitor
+~~~~~~~~~~~
+
+* Muudatused puuduvad
+
+
+Muudatused tarne 1.10.3 koosseisus, erinevused võrreldes tarnega 1.10.2
+--------------------------------------------------------------------------------
+
+Kogumisteenus
+~~~~~~~~~~~~~
+
+Üldised muutused
+
+* Muudatused puuduvad
+
+Registreerimisteenus
+~~~~~~~~~~~~~~~~~~~~
+
+* Muudatused puuduvad
+
+Kontrollrakendused
+~~~~~~~~~~~~~~~~~~
+
+Android
+
+* Muudatused puuduvad
+
+iOS
+
+* Muudatused puuduvad
+
+Miksnet
+~~~~~~~
+
+* Muudatused puuduvad
+
+Töötleja rakendused
+~~~~~~~~~~~~~~~~~~~
+
+Üldised
+
+* Muudatused puuduvad
+
+Võtmerakendus
+
+* Muudatused puuduvad
+
+Töötlemisrakendus
+
+* Muudatused puuduvad
+
+Auditirakendus
+
+* Muudatused puuduvad
+
+Valijarakendused ja seadistusrakendus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Muudatused puuduvad
+
+Dokumentatsioon
+~~~~~~~~~~~~~~~
+
+* Tõlgete läbivaatus
+* Õigekirja läbivaatus
+* Tarne 1.10.2 sisu dokumenteerimine
+
+Logimonitor
+~~~~~~~~~~~
+
+* Muudatused puuduvad
+
+
+Muudatused tarne 1.10.2 koosseisus, erinevused võrreldes tarnega 1.10.1
+--------------------------------------------------------------------------------
+
+Kogumisteenus
+~~~~~~~~~~~~~
+
+Üldised muutused
+
+* ZIP/BDOC failide käsitluse parendamine
+* Sõltuvuste uuendamine, JavaScript
+* eID vahendite testimine
+* Mälulekete parandamine
+* Smart-ID voogude uuendamine vastavalt protokollile
+* Nimekirjade laadimise intervalli ja strateegia täpsustamine
+* Arendus- ja testkeskkonna parendused
+* Pisiparandused
+
+Registreerimisteenus
+~~~~~~~~~~~~~~~~~~~~
+
+* Muudatused puuduvad
+
+Kontrollrakendused
+~~~~~~~~~~~~~~~~~~
+
+Android
+
+* Rakenduse kolimine Riigikogu Kantselei poodi
+* TargetSDK uuendamine
+* Erinevad veaparandused kasutajaliideses
+* Täiendav obfuskeerimine
+* Veateadete täiendamine
+
+iOS
+
+* Rakenduse kolimine Riigikogu Kantselei poodi
+* Erinevad veaparandused kasutajaliideses
+* Täpsustused rakenduse varundamisele
+* Rakenduse elutsükli olekumasina täpsustused
+* Veateadete täiendamine
+
+Miksnet
+~~~~~~~
+
+* Muudatused puuduvad
+
+Töötleja rakendused
+~~~~~~~~~~~~~~~~~~~
+
+Üldised
+
+* ZIP/BDOC failide käsitluse parendamine
+
+Võtmerakendus
+
+* Pisiparandused
+
+Töötlemisrakendus
+
+* Pisiparandused
+
+Auditirakendus
+
+* Pisiparandused
+
+Valijarakendused ja seadistusrakendus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Sõltuvuste uuendamine, OpenSSL, PCRE
+* Kasutajaliidese teegi FLTK uuendamine
+* Smart-ID voo uuendamine
+* Testimine uusima ID-kaardiga
+* Kompileerimiskeskkonna täpsustused
+
+Dokumentatsioon
+~~~~~~~~~~~~~~~
+
+* Tõlgete läbivaatus
+* Õigekirja läbivaatus
+* Tarne 1.10.2 sisu dokumenteerimine
+
+Logimonitor
+~~~~~~~~~~~
+
+* Sõltuvuste uuendamine, Python, JavaScript
+* Veebiliidese täiendused
+* Päringuvahendaja ``pgbouncer`` kasutuselevõtt
+* Veebiserveri konfiguratsiooni läbivaatus turvatesti tulemustest lähtudes
+
+
+Muudatused tarne 1.10.1 koosseisus, erinevused võrreldes tarnega 1.10.0
+--------------------------------------------------------------------------------
+
+Kogumisteenus
+~~~~~~~~~~~~~
+
+Üldised muutused
+
+* Uuenenud SmartID serdiprofiili toetamine
+
+Registreerimisteenus
+~~~~~~~~~~~~~~~~~~~~
+
+* Muudatused puuduvad
+
+Kontrollrakendused
+~~~~~~~~~~~~~~~~~~
+
+Android
+
+* Täpsustused hääle verifitseerimisel, äärejuhtumite läbivaatus
+
+iOS
+
+* Täpsustused hääle verifitseerimisel, äärejuhtumite läbivaatus
+
+Miksnet
+~~~~~~~
+
+* Muudatused puuduvad
+
+Töötleja rakendused
+~~~~~~~~~~~~~~~~~~~
+
+Üldised
+
+* Muudatused puuduvad
+
+Võtmerakendus
+
+* Muudatused puuduvad
+
+Töötlemisrakendus
+
+* Muudatused puuduvad
+
+Auditirakendus
+
+* Muudatused puuduvad
+
+Valijarakendused ja seadistusrakendus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Muudatused puuduvad
+
+Dokumentatsioon
+~~~~~~~~~~~~~~~
+
+* Muudatused puuduvad
+
+Logimonitor
+~~~~~~~~~~~
+
+* Pisiparandused vastavalt muutuste logile
+
+
+Muudatused tarne 1.10.0 koosseisus, erinevused võrreldes tarnega 1.9.10
+--------------------------------------------------------------------------------
+
+Kogumisteenus
+~~~~~~~~~~~~~
+
+Üldised muutused
+
+* Funktsionaalsus kehtetute sedelite eemaldamiseks kogumisteenuses
+* MODP ja elliptkõverate krüptograafia
+* Erinevad pisiparandused vastavalt muutuste logile
+
+Registreerimisteenus
+~~~~~~~~~~~~~~~~~~~~
+
+* Muudatused puuduvad
+
+Kontrollrakendused
+~~~~~~~~~~~~~~~~~~
+
+Android
+
+* Elliptkõverate krüptograafia
+* Ligipääsetavuse parandamine
+* Täpsustused hääle verifitseerimisel, äärejuhtumite läbivaatus
+
+iOS
+
+* Elliptkõverate krüptograafia
+* Ligipääsetavuse parandamine
+* Täpsustused hääle verifitseerimisel, äärejuhtumite läbivaatus
+
+Miksnet
+~~~~~~~
+
+* Elliptkõverate krüptograafia
+
+Töötleja rakendused
+~~~~~~~~~~~~~~~~~~~
+
+Üldised
+
+* Elliptkõverate krüptograafia
+* Täpsustused urni verifitseerimisel, äärejuhtumite läbivaatus
+
+Võtmerakendus
+
+* Elliptkõverate krüptograafia
+* Täpsustused urni verifitseerimisel, äärejuhtumite läbivaatus
+
+Töötlemisrakendus
+
+* Elliptkõverate krüptograafia
+* Täpsustused urni verifitseerimisel, äärejuhtumite läbivaatus
+
+Auditirakendus
+
+* Elliptkõverate krüptograafia
+* Täpsustused urni verifitseerimisel, äärejuhtumite läbivaatus
+
+Valijarakendused ja seadistusrakendus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Elliptkõverate krüptograafia
+* Proksikasutuse refaktoreerimine
+
+Dokumentatsioon
+~~~~~~~~~~~~~~~
+
+* Protokollidokumendi täiendamine
+* Logide dokumendi loomine
+
+Logimonitor
+~~~~~~~~~~~
+
+* Pisiparandused vastavalt muutuste logile
+
+
 Muudatused tarne 1.9.10 koosseisus, erinevused võrreldes tarnega 1.9.4
 --------------------------------------------------------------------------------
 
@@ -11,7 +381,7 @@ Kogumisteenus
 
 Üldised muutused
 
-* Erinevad pisiparandused vastvalt muutuste logile
+* Erinevad pisiparandused vastavalt muutuste logile
 
 Registreerimisteenus
 ~~~~~~~~~~~~~~~~~~~~
@@ -31,8 +401,8 @@ iOS
 * Ligipääsetavuse parendamine
 * Täpsustused hääle verifitseerimisel, äärejuhtumite läbivaatus
 
-Mixnet
-~~~~~~
+Miksnet
+~~~~~~~
 
 * Muudatused puuduvad
 
@@ -91,10 +461,10 @@ Kogumisteenus
 * EHS statistikaliidese töökindluse tõstmine
 * Valimiste järkjärguline lõpp
 * Seansiidentifikaatori muutmine kohustuslikuks
-* ASiC vormingutäpsustus
+* ASiCe vormingutäpsustus
 * VIS tugi detailstatistikale
 * SmartID toe täpsustused
-* Erinevad pisiparandused vastvalt muutuste logile
+* Erinevad pisiparandused vastavalt muutuste logile
 
 Registreerimisteenus
 ~~~~~~~~~~~~~~~~~~~~
@@ -115,8 +485,8 @@ iOS
 * TLS 1.3
 * Valikute nimekirja kontroll
 
-Mixnet
-~~~~~~
+Miksnet
+~~~~~~~
 
 * Muudatused puuduvad
 
@@ -140,6 +510,7 @@ Töötlemisrakendus
 Auditirakendus
 
 * Kehtetute sedelite korrektse dekrüpteerimise kontrollimine
+* Sedelite kontrolli täpsustused
 
 Valijarakendused ja seadistusrakendus
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -197,8 +568,8 @@ iOS
 
 * Muudatusi ei ole
 
-Mixnet
-~~~~~~
+Miksnet
+~~~~~~~
 
 * Muudatusi ei ole
 
@@ -270,8 +641,8 @@ iOS
 * Täpsustatud krüptogrammi kontroll
 * Seadistatav SNI
 
-Mixnet
-~~~~~~
+Miksnet
+~~~~~~~
 
 * Muudatusi ei ole
 
@@ -344,8 +715,8 @@ iOS
 
 * Muudatusi ei ole
 
-Mixnet
-~~~~~~
+Miksnet
+~~~~~~~
 
 * Muudatused seoses entroopia allika valikulise tühjendamisega
 
@@ -422,8 +793,8 @@ iOS
 * Muudatused seoses iOS versioonile 12 liikumisega
 * Aegunud rakenduse tuvastamine
 
-Mixnet
-~~~~~~
+Miksnet
+~~~~~~~
 
 * Muudatused seoses Ubuntu 20.04 toetamisega
 
@@ -501,8 +872,8 @@ iOS
 
 * Muudatusi ei ole
 
-Mixnet
-~~~~~~
+Miksnet
+~~~~~~~
 
 * Java versiooni 11 kasutuselevõtt
 * Verificatumi versiooniuuendus
@@ -579,8 +950,8 @@ iOS
 
 * Muudatusi ei ole
 
-Mixnet
-~~~~~~
+Miksnet
+~~~~~~~
 
 * Muudatused seoses 300K hääle miksimisega
 
@@ -659,8 +1030,8 @@ iOS
 
 * Muudatusi ei ole
 
-Mixnet
-~~~~~~
+Miksnet
+~~~~~~~
 
 * Muudatusi ei ole
 
@@ -744,8 +1115,8 @@ iOS
 
 * Muudatusi ei ole
 
-Mixnet
-~~~~~~
+Miksnet
+~~~~~~~
 
 * Muudatusi ei ole
 
@@ -836,8 +1207,8 @@ iOS
 * iPhone 10 X muudatused
 * XCode 10 ja iOS 12 SDK kasutamine
 
-Mixnet
-~~~~~~
+Miksnet
+~~~~~~~
 
 * Verificatumi AGPL versiooni kasutuselevõtmine
 
@@ -874,7 +1245,7 @@ Dokumentatsioon
 ~~~~~~~~~~~~~~~
 
 * Dokumentatsiooni uuendamine muudatuste kajastamiseks
-* Ingliskeelse arhitekuuridokumendi ja protokollistiku lisamine
+* Ingliskeelse arhitektuuridokumendi ja protokollistiku lisamine
 
 Logimonitor
 ~~~~~~~~~~~
@@ -900,7 +1271,7 @@ Haldusteenus
 * Lisatud tööriist varundatud valimiskastide konsolideerimiseks.
 * Lisatud tööriist nimekirjade kooskõlalisuse kontrolliks.
 * Lisatud võimekus seadistusfailidele valimisspetsiifiliste prefiksite lisamiseks.
-* Täiendatud haldusliidese kasutajaliidest abinfoga.
+* Täiendatud haldusliidese kasutajaliidest abiinfoga.
 * Eemaldatud aegunud konfiguratsiooniparameeter “stats.*”
 * Parandatud sisendfailide vormingu kontrolli ja laadimist.
 
@@ -908,7 +1279,7 @@ IVXV mikroteenused
 
 * Uuendatud etcd versioon.
 * Lisatud võimekus etcd ajalõppude seadistamiseks keskkonnamuutujate kaudu.
-* Lisatud võimekus klastri modiftseerimiseks krahhitaaste eesmärgil.
+* Lisatud võimekus klastri modifitseerimiseks krahhitaaste eesmärgil.
 * Parandatud klastri käitumist liidrivahetuse korral, pooleliolevate talletamiste kordamine.
 * TLS šifrid muudetud seadistatavaks.
 * Parandatud BDOC profiili identifitseeriva konfiguratsioonivälja nimi.
@@ -935,8 +1306,8 @@ iOS
 
 * Muudatusi ei ole.
 
-Mixnet
-~~~~~~
+Miksnet
+~~~~~~~
 * Muudatusi ei ole.
 
 Töötleja rakendused
@@ -961,7 +1332,7 @@ Valijarakendused ja seadistusrakendus
 * Seadistatud Mobiil-ID nõudma vajadusel isikukoodi ja telefoninumbrit.
 * Täiendatud veakoode.
 * Kohandatud seadistusrakendus muudatustega vastavusse.
-* Kohandatud BDOC XML templated
+* Kohandatud BDOC XML mallid
 
 Dokumentatsioon
 ~~~~~~~~~~~~~~~

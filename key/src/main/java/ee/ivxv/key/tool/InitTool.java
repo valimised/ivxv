@@ -2,6 +2,7 @@ package ee.ivxv.key.tool;
 
 import ee.ivxv.common.cli.Arg;
 import ee.ivxv.common.cli.Args;
+import ee.ivxv.common.cli.ContextFactory;
 import ee.ivxv.common.cli.Tool;
 import ee.ivxv.common.crypto.SignatureUtil;
 import ee.ivxv.common.crypto.elgamal.ElGamalParameters;
@@ -224,7 +225,7 @@ public class InitTool implements Tool.Runner<InitArgs> {
 
             ModPGroup group = new ModPGroup(p, true);
             ModPGroupElement groupG = new ModPGroupElement(group, g);
-            if (group.isDecodable(groupG) != Decodable.VALID) {
+            if (group.isGroupElement(groupG) != Decodable.VALID) {
                 throw new IllegalArgumentException("Invalid generator");
             }
             params = new ElGamalParameters(group, groupG, electionId);
@@ -273,10 +274,9 @@ public class InitTool implements Tool.Runner<InitArgs> {
         Arg<BigInteger> groupG = Arg.aBigInt(Msg.i_g);
         Arg<Args> mod = new Arg.Tree(Msg.arg_mod, groupP, groupG).setOptional();
 
-        Arg<String> curveName = Arg.aChoice(Msg.i_name, ECGroup.P384);
-        Arg<Args> ec = new Arg.Tree(Msg.arg_ec, curveName).setOptional();
-
-        Arg.Tree paramType = new Arg.Tree(Msg.arg_paramtype, mod, ec).setExclusive();
+        Arg<String> curveName = null;
+        Arg<Args> ec = null;
+        Arg.Tree paramType = null;
 
         // GEN protocols
 
@@ -299,8 +299,19 @@ public class InitTool implements Tool.Runner<InitArgs> {
             args.add(signSN);
             args.add(encCN);
             args.add(encSN);
+            if (ContextFactory.get().isTestMode()) {
+                curveName = Arg.aChoice(Msg.i_name, ECGroup.P384, ECGroup.P224);
+                ec = new Arg.Tree(Msg.arg_ec, curveName).setOptional();
+                paramType = new Arg.Tree(Msg.arg_paramtype, mod, ec).setExclusive();
+            }
+            else {
+                curveName = Arg.aChoice(Msg.i_name, ECGroup.P384);
+                ec = new Arg.Tree(Msg.arg_ec, curveName).setOptional();
+                paramType = new Arg.Tree(Msg.arg_paramtype, mod, ec).setExclusive();
+            }
             args.add(paramType);
             args.add(genProtocol);
+
         }
     }
 }

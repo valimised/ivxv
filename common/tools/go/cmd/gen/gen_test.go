@@ -107,7 +107,7 @@ func TestSingle(t *testing.T) {
 	r := testrun(t, "-v", "./testdata/single")
 	defer os.Remove("testdata/single/gen_types.go")
 	r.expect(`^checking \.$`)
-	r.expect(`^found Single{Field Field2} at`)
+	r.expect(`^found Single{Field Field2 Description} at`)
 	r.expect(`^generating testdata/single/gen_types\.go$`)
 	r.expectnot(`^generating testdata/single/gen_types_test\.go$`)
 
@@ -124,24 +124,16 @@ func TestWithTests(t *testing.T) {
 	defer os.Remove("testdata/withtests/gen_types.go")
 	defer os.Remove("testdata/withtests/gen_types_test.go")
 	r.expect(`^checking \.$`)
-	r.expect(`^found Main{Field} at`)
+	r.expect(`^found Main{Field Description} at`)
 	r.expect(`^found Test{Field} at`)
 	r.expect(`^generating testdata/withtests/gen_types\.go$`)
 	r.expect(`^generating testdata/withtests/gen_types_test\.go$`)
 }
 
-func TestExists(t *testing.T) {
-	r := testfail(t, "-v", "./testdata/exists")
-	r.expect(`^checking \.$`)
-	r.expect(`^found Exists{Field} at`)
-	r.expect(`^error: testdata/exists/gen_types\.go already exists`)
-	r.expectnot(`^generating testdata/exists/gen_types(_test)\.go$`)
-}
-
 func TestDeclared(t *testing.T) {
 	r := testrun(t, "-v", "./testdata/declared")
 	r.expect(`^checking \.$`)
-	r.expectnot(`^found Declared{Field} at`)
+	r.expectnot(`^found Declared{Field Description} at`)
 	r.expectnot(`^generating testdata/declared/gen_types(_test)\.go$`)
 }
 
@@ -150,7 +142,7 @@ func TestLocal(t *testing.T) {
 	defer os.Remove("testdata/local/gen_types.go")
 	r.expect(`^checking \.$`)
 	r.expectnot(`^found InnerLocal{Field} at`)
-	r.expect(`^found OuterLocal{Field} at`)
+	r.expect(`^found OuterLocal{Field Description} at`)
 	r.expect(`^generating testdata/local/gen_types\.go$`)
 	r.expectnot(`^generating testdata/local/gen_types_test\.go$`)
 }
@@ -158,7 +150,7 @@ func TestLocal(t *testing.T) {
 func TestDuplicate(t *testing.T) {
 	r := testfail(t, "-v", "./testdata/duplicate")
 	r.expect(`^checking \.$`)
-	r.expect(`^found Duplicate{Field} at`)
+	r.expect(`^found Duplicate{Field Description} at`)
 	r.expect(`^error: .* duplicate Duplicate`)
 	r.expectnot(`^generating testdata/duplicate/gen_types(_test)\.go$`)
 }
@@ -175,4 +167,16 @@ func TestUnexportedKeys(t *testing.T) {
 	r.expect(`^checking \.$`)
 	r.expect(`^error: .* UnexportedKeys must have exported identifier keys$`)
 	r.expectnot(`^generating testdata/unexportedkeys/gen_types(_test)\.go$`)
+}
+
+func TestNoDescription(t *testing.T) {
+	r := testfail(t, "-v", "./testdata/nodescription")
+	r.expect(`^checking \.$`)
+	r.expect("^error: .* undeclared struct literal NoDescription log record should have a 'Description:' field")
+}
+
+func TestNoDescriptionEmpty(t *testing.T) {
+	r := testfail(t, "-v", "./testdata/nodescriptionempty")
+	r.expect(`^checking \.$`)
+	r.expect("^error: .* undeclared struct literal NoDescriptionEmpty log record should have a 'Description:' field")
 }

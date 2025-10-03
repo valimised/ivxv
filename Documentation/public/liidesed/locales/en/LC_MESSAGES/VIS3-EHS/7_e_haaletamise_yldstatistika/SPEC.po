@@ -23,7 +23,7 @@ msgstr ""
 
 #: ../../VIS3-EHS/7_e_haaletamise_yldstatistika/SPEC.md:1
 msgid "7 E-hääletamisest osavõtu üldstatistika"
-msgstr "7 General statistics on participation in e-voting"
+msgstr "General statistics on participation in e-voting"
 
 #: ../../VIS3-EHS/7_e_haaletamise_yldstatistika/SPEC.md:3
 msgid ""

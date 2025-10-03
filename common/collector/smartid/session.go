@@ -69,10 +69,10 @@ func (c *Client) startSession(ctx context.Context, t sessType, identifier string
 	switch {
 
 	case len(hash) == 0:
-		input.Err = StartSessionNoHashError{}
+		input.Err = StartSessionNoHashError{Description: _SID_N_HASH}
 		err = input
 	case len(hashType) == 0:
-		input.Err = StartSessionNoHashTypeError{}
+		input.Err = StartSessionNoHashTypeError{Description: _SID_N_HASH_T}
 		err = input
 	}
 	if err != nil {
@@ -97,7 +97,7 @@ func (c *Client) startSession(ctx context.Context, t sessType, identifier string
 		CertificateLevel:         certLevel,
 		AllowedInteractionsOrder: interactionsOrder,
 	}, &resp); err != nil {
-		err = StartSessionError{Err: err}
+		err = StartSessionError{Err: err, Description: _SID_RESP_ERR}
 		return
 	}
 	sesscode = resp.SessionID
@@ -139,7 +139,8 @@ func (c *Client) getSessionStatus(ctx context.Context, sesscode string) (
 	var resp sessionStatusResponse
 	url := fmt.Sprintf("%ssession/%s?timeoutMs=%d", c.url, sesscode, c.conf.StatusTimeoutMS)
 	if err = httpGet(ctx, url, &resp); err != nil {
-		return "", "", nil, nil, GetSessionStatusError{Err: err}
+		return "", "", nil, nil, GetSessionStatusError{Err: err,
+			Description: _SID_SESS_STAT}
 	}
 
 	switch resp.State {
@@ -148,7 +149,7 @@ func (c *Client) getSessionStatus(ctx context.Context, sesscode string) (
 	case "COMPLETE":
 	default:
 		var status StatusError
-		status.Err = UnexpectedSessionStateError{State: resp.State}
+		status.Err = UnexpectedSessionStateError{State: resp.State, Description: _SID_SESS_STATE}
 		return "", "", nil, nil, status
 	}
 	switch resp.Result.EndResult {
@@ -186,7 +187,7 @@ func (c *Client) getSessionStatus(ctx context.Context, sesscode string) (
 		return "", "", nil, nil, canceled
 	default:
 		var status StatusError
-		status.Err = UnexpectedSessionResultError{Result: resp.Result}
+		status.Err = UnexpectedSessionResultError{Result: resp.Result, Description: _SID_SESS_RES}
 		return "", "", nil, nil, status
 	}
 }

@@ -2,8 +2,8 @@
 
 .. _kt-technical:
 
-Kogumisteenuse tehnilise seadistususe koostamine
-------------------------------------------------
+Kogumisteenuse tehnilise seadistuse koostamine
+----------------------------------------------
 
 Tehniline seadistus määrab kogumisteenuse tehnilised parameetrid. Sama tehnilist
 seadistust peaks olema võimalik kasutada erinevate valimiste seadistustega [#]_.
@@ -67,7 +67,7 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 
 :filter.codec:
         Kohustuslik väli.
-        Alamblokk, mis sisaldab ühenduste kodekfiltri seadistusi.
+        Alamblokk, mis sisaldab ühenduste koodekfiltri seadistusi.
 
 :filter.codec.rwtimeout:
         Kohustuslik väli.
@@ -211,7 +211,7 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
         Alamblokk, mis sisaldab loetelu mikroteenuste kauglogimise serveritest.
         Siin blokis kirjeldatakse:
 
-        * Logiseire teenus. Alati loetelus esimene. Logiseirele saadetakse IVXV
+        * Logiseire teenus. Alati loetelus esimene. Teenusele saadetakse IVXV
           logi alates tasemest INFO;
 
         * Vajadusel ka täiendavad välised logikogujad, kuhu saadetakse täielik
@@ -263,6 +263,33 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 
         Maksimaalne aeg sekundites ühe talletusoperatsiooni teostamiseks.
 
+:storage.conf.size:
+        Valikuline väli.
+        Kasutatakse ainult juhul kui ``storage.protocol`` on ``etcd``.
+
+        Andmebaasi suurus baitides.
+
+:storage.conf.electiontimeout:
+        Valikuline väli.
+        Kasutatakse ainult juhul kui ``storage.protocol`` on ``etcd``.
+
+        Aeg millisekundites, mida kasutatakse liidri kättesaadavuse
+        kontrollimiseks.
+
+:storage.conf.heartbeattimeout:
+        Valikuline väli.
+        Kasutatakse ainult juhul kui ``storage.protocol`` on ``etcd``.
+
+        Aeg millisekundites, mida kasutatakse andmebaasi hosti
+        kättesaadavuse kontrollimiseks.
+
+:storage.conf.snapshotcount:
+        Valikuline väli.
+        Kasutatakse ainult juhul kui ``storage.protocol`` on ``etcd``.
+
+        Andmebaasi talletamispäringute arv, mille täitumise korral
+        andmebaasi seis varundatakse.
+
 :storage.conf.bootstrap:
         Kohustuslik väli.
         Kasutatakse ainult juhul kui ``storage.protocol`` on ``etcd``.
@@ -286,7 +313,7 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 :backup:
         Varunduse parameetrid.
 
-        Loetelu varundmise kellaaegadest vormingus HH:MM.
+        Loetelu varundamise kellaaegadest vormingus HH:MM.
 
 :file:`example.technical.yaml`:
 

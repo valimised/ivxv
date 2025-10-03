@@ -107,6 +107,11 @@ clean: $(CLEANDIRS)
 .PHONY: clean-java
 clean-java: $(JAVADIRS:%=clean-%)
 
+.PHONY: release-doc
+release-doc: go
+	$(MAKE) -C Documentation/common/schema validate
+	$(MAKE) -C Documentation release
+
 .PHONY: clean-go
 clean-go: $(GODIRS:%=clean-%)
 

@@ -44,12 +44,14 @@ func storageordermain() (code int) {
 	}()
 
 	if *file == "" {
-		return c.Error(exit.Usage, CmdAddVoteOrderArgError{}, "missing file argument")
+		return c.Error(exit.Usage, CmdAddVoteOrderArgError{
+			Description: _STORAGEORDER_FILE}, "missing file argument")
 	}
 
 	f, err := os.Open(*file)
 	if err != nil {
-		return c.Error(exit.Usage, CmdAddVoteOrderFileOpenError{Err: err}, "failed to open file")
+		return c.Error(exit.Usage, CmdAddVoteOrderFileOpenError{Err: err,
+			Description: _STORAGEORDER_FILE_OPEN}, "failed to open file")
 	}
 
 	defer f.Close()
@@ -61,13 +63,16 @@ func storageordermain() (code int) {
 			break
 		}
 		if err != nil {
-			return c.Error(exit.Usage, CmdAddVoteOrderLineReadError{Err: err}, "failed to read file")
+			return c.Error(exit.Usage, CmdAddVoteOrderLineReadError{Err: err,
+				Description: _STORAGEORDER_READ_CSV}, "failed to read file")
 		}
 		if len(rec) != 4 {
-			return c.Error(exit.Usage, CmdAddVoteOrderLineError{}, "wrong number of fields in line")
+			return c.Error(exit.Usage, CmdAddVoteOrderLineError{
+				Description: _STORAGEORDER_CSV}, "wrong number of fields in line")
 		}
 		if err := c.Storage.AddVoteOrder(c.Ctx, rec[0], rec[1], rec[3], rec[2]); err != nil {
-			return c.Error(exit.Unavailable, CmdAddVoteOrderError{Err: err},
+			return c.Error(exit.Unavailable, CmdAddVoteOrderError{Err: err,
+				Description: _STORAGEORDER_ORDER},
 				"failed to add vote to order table:", err)
 		}
 	}

@@ -145,7 +145,8 @@ func encodeATV(buf *bytes.Buffer, atv pkix.AttributeTypeAndValue) error {
 		buf.WriteByte('#')
 		der, err := asn1.Marshal(atv.Value)
 		if err != nil {
-			return EncodeAttributeValueError{Type: at, Err: err}
+			return EncodeAttributeValueError{Type: at, Err: err,
+				Description: _CUTIL_ATTR_ASN1}
 		}
 		buf.WriteString(hex.EncodeToString(der))
 		return nil
@@ -164,12 +165,15 @@ func DecodeRDNSequence(encoded string) (pkix.RDNSequence, error) {
 		if len(dn) > 0 {
 			if !strings.HasPrefix(encoded, ",") {
 				return nil, MissingRDNSeparatorError{
-					Encoded: encoded,
+					Encoded:     encoded,
+					Description: _CUTIL_RDN_PREFIX,
 				}
 			}
 			encoded = encoded[1:]
 			if len(encoded) == 0 {
-				return nil, EmptyRDNError{}
+				return nil, EmptyRDNError{
+					Description: _CUTIL_RDN_NO,
+				}
 			}
 		}
 
@@ -181,7 +185,9 @@ func DecodeRDNSequence(encoded string) (pkix.RDNSequence, error) {
 				}
 				encoded = encoded[1:]
 				if len(encoded) == 0 {
-					return nil, EmptyAttributeError{}
+					return nil, EmptyAttributeError{
+						Description: _CUTIL_RDN_ATTR_NO,
+					}
 				}
 			}
 
@@ -205,7 +211,8 @@ func decodeATV(encoded string) (atv pkix.AttributeTypeAndValue, rest string, err
 	// Find the = that succeeds the type.
 	eq := strings.IndexByte(encoded, '=')
 	if eq < 0 {
-		return atv, "", DecodeATVMissingEqualsError{Encoded: encoded}
+		return atv, "", DecodeATVMissingEqualsError{Encoded: encoded,
+			Description: _CUTIL_RDN_EQ}
 	}
 
 	// Get the type OID. Short names are case-insensitive
@@ -217,12 +224,14 @@ func decodeATV(encoded string) (atv pkix.AttributeTypeAndValue, rest string, err
 			var n int
 			n, err = strconv.Atoi(s)
 			if err != nil {
-				return atv, "", UnknownAttributeTypeError{Type: atype}
+				return atv, "", UnknownAttributeTypeError{Type: atype,
+					Description: _CUTIL_ATTR_UNKNOWN}
 			}
 			atv.Type = append(atv.Type, n)
 		}
 		if len(atv.Type) < 2 {
-			return atv, "", AttributeTypeOIDTooShortError{OID: atv.Type}
+			return atv, "", AttributeTypeOIDTooShortError{OID: atv.Type,
+				Description: _CUTIL_ATTR_SHORT}
 		}
 	}
 
@@ -252,13 +261,16 @@ func decodeHexString(encoded string, value *interface{}) (rest string, err error
 
 	// Decode the hexadecimal string.
 	if len(encoded) == 0 {
-		return "", EmptyAttributeValueHexStringError{}
+		return "", EmptyAttributeValueHexStringError{
+			Description: _CUTIL_ATTR_HEX,
+		}
 	}
 	der, err := hex.DecodeString(encoded)
 	if err != nil {
 		return "", AttributeValueHexStringError{
-			Value: encoded,
-			Err:   err,
+			Value:       encoded,
+			Err:         err,
+			Description: _CUTIL_ATTR_HEX_DEC,
 		}
 	}
 
@@ -266,14 +278,16 @@ func decodeHexString(encoded string, value *interface{}) (rest string, err error
 	trailing, err := asn1.Unmarshal(der, value)
 	if err != nil {
 		return "", InvalidAttributeValueDERError{
-			Value: der,
-			Err:   err,
+			Value:       der,
+			Err:         err,
+			Description: _CUTIL_ATTR_UASN1,
 		}
 	}
 	if len(trailing) > 0 {
 		return "", AttributeValueDERTrailingDataError{
-			Value:    der,
-			Trailing: trailing,
+			Value:       der,
+			Trailing:    trailing,
+			Description: _CUTIL_ATTR_UASN1,
 		}
 	}
 	return
@@ -287,13 +301,17 @@ loop:
 		r, size := utf8.DecodeRuneInString(encoded[i:])
 		switch r {
 		case utf8.RuneError:
-			return "", "", AttributeValueInvalidUTF8Error{Encoded: encoded[i:]}
+			return "", "", AttributeValueInvalidUTF8Error{
+				Encoded:     encoded[i:],
+				Description: _CUTIL_ATTR_UTF8,
+			}
 
 		case '\\': // Escaped byte.
 			// Check for special escaped char first.
 			if len(encoded[i+size:]) == 0 {
 				return "", "", AttributeValueUnescapedTrailingSlashError{
-					Encoded: encoded,
+					Encoded:     encoded,
+					Description: _CUTIL_ATTR_SLASH,
 				}
 			}
 			if special := encoded[i+size]; strings.IndexByte(` "#+,;<=>\`, special) >= 0 {
@@ -305,14 +323,16 @@ loop:
 			// Otherwise it must be a hex pair.
 			if len(encoded[i+size:]) < 2 {
 				return "", "", AttributeValueBadEscapedCharError{
-					Escaped: string(encoded[i+size]),
+					Escaped:     string(encoded[i+size]),
+					Description: _CUTIL_ATTR_1_CHAR,
 				}
 			}
 			b, err := hex.DecodeString(encoded[i+size : i+size+2])
 			if err != nil {
 				return "", "", AttributeValueHexPairError{
-					Pair: encoded[i+size : i+size+2],
-					Err:  err,
+					Pair:        encoded[i+size : i+size+2],
+					Err:         err,
+					Description: _CUTIL_ATTR_HEX_PAIR,
 				}
 			}
 			buf.WriteByte(b[0])
@@ -323,20 +343,23 @@ loop:
 
 		case 0, '"', ';', '<', '>': // Not allowed.
 			return "", "", AttributeValueUnescapedSpecialError{
-				Special: string(r),
+				Special:     string(r),
+				Description: _CUTIL_ATTR_UNKNOWN_CHAR,
 			}
 
 		case ' ': // Not allowed in leading nor trailing character.
 			if i == 0 {
 				return "", "", AttributeValueUnescapedLeadingSpaceError{
-					Encoded: encoded,
+					Encoded:     encoded,
+					Description: _CUTIL_ATTR_CHAR_EMPTY,
 				}
 			}
 			if tail := encoded[i+size:]; len(tail) == 0 ||
 				tail[0] == ',' || tail[0] == '+' {
 
 				return "", "", AttributeValueUnescapedTrailingSpaceError{
-					Encoded: encoded,
+					Encoded:     encoded,
+					Description: _CUTIL_ATTR_SPACE,
 				}
 			}
 			fallthrough

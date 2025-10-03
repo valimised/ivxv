@@ -27,15 +27,15 @@ const (
 var (
 	// MalformedTokenError wraps errors which are cause by malformed
 	// authentication tokens.
-	_ = MalformedTokenError{Err: nil}
+	_ = MalformedTokenError{Err: nil, Description: _AUTH_MALFORMED}
 
 	// CertificateError wraps errors which are caused by invalid
 	// authentication certificates.
-	_ = CertificateError{Err: nil}
+	_ = CertificateError{Err: nil, Description: _AUTH_CERT}
 
 	// UnauthorizedError wraps errors where authentication succeeded, but
 	// the client is not authorized to use any services.
-	_ = UnauthorizedError{Err: nil}
+	_ = UnauthorizedError{Err: nil, Description: _AUTH_AUTHORIZED}
 )
 
 // Verifier is a client authentication token verifier. An authentication token
@@ -112,13 +112,15 @@ func Configure(c Conf) (a Auther, err error) {
 		// ..check if it is linked...
 		n, ok := registry[t]
 		if !ok {
-			return nil, UnlinkedTypeError{Type: t}
+			return nil, UnlinkedTypeError{Type: t,
+				Description: _AUTH_UNKNOWN}
 		}
 
 		// ..and if creating a verifier succeeds.
 		v, err := n(y)
 		if err != nil {
-			return nil, ConfigureTypeError{Type: t, Err: err}
+			return nil, ConfigureTypeError{Type: t, Err: err,
+				Description: _AUTH_CFG}
 		}
 		a[t] = v
 	}
@@ -136,7 +138,8 @@ func (a Auther) Verify(ctx context.Context, t Type, token []byte) (
 
 	v, ok := a[t]
 	if !ok {
-		return nil, nil, UnconfiguredTypeError{Type: t}
+		return nil, nil, UnconfiguredTypeError{Type: t,
+			Description: _AUTH_UNKNOWN}
 	}
 	if name, err = v.Verify(ctx, token); err != nil {
 		return nil, nil, err
@@ -152,7 +155,8 @@ func (a Auther) Verify(ctx context.Context, t Type, token []byte) (
 func (a Auther) Data(t Type, token []byte) (data []byte, err error) {
 	v, ok := a[t]
 	if !ok {
-		return nil, UnconfiguredDataTypeError{Type: t}
+		return nil, UnconfiguredDataTypeError{Type: t,
+			Description: _AUTH_UNKNOWN}
 	}
 	if vid, ok := v.(TokenData); ok {
 		if data, err = vid.TokenData(token); err != nil {

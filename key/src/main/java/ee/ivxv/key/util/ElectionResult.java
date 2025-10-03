@@ -1,5 +1,8 @@
 package ee.ivxv.key.util;
 
+import ee.ivxv.common.crypto.Plaintext;
+import ee.ivxv.common.math.Group;
+import ee.ivxv.common.math.GroupElement;
 import ee.ivxv.common.model.CandidateList;
 import ee.ivxv.common.model.DistrictList;
 import ee.ivxv.common.model.Proof;
@@ -244,43 +247,52 @@ public class ElectionResult {
         }
 
         private String getCandidateNumber(Vote vote) {
-            String canidateNumber = Tally.INVALID_VOTE_ID;
+            String candidateCode = Tally.INVALID_VOTE_ID;
             try {
-                String message = vote.getProof().getDecrypted().stripPadding().getUTF8DecodedMessage();
-                canidateNumber = message.split(Util.UNIT_SEPARATOR)[0];
+                GroupElement decrypted = vote.getProof().getDecrypted();
+                Group group = decrypted.getGroup();
+                Plaintext decoded = group.decode(decrypted);
+                candidateCode = group.unpad(decoded).getUTF8DecodedMessage();
             } catch (IllegalArgumentException ignored) {
             }
-            return canidateNumber;
+            return candidateCode;
         }
 
         private boolean isValidChoice(Vote vote) {
-            String voteStr;
+            String candidateCode;
             try {
-                voteStr = vote.getProof().getDecrypted().stripPadding().getUTF8DecodedMessage();
+                GroupElement decrypted = vote.getProof().getDecrypted();
+                Group group = decrypted.getGroup();
+                Plaintext decoded = group.decode(decrypted);
+                candidateCode = group.unpad(decoded).getUTF8DecodedMessage();
             } catch (IllegalArgumentException ignored) {
                 return false;
             }
-            String[] voteParts = voteStr.split(Util.UNIT_SEPARATOR, 3);
-            if (voteParts.length != 3) {
-                return false;
-            }
+
+            // Get choices list
             Map<String, Map<String, Map<String, String>>> ds = candidates.getCandidates();
+            // Ensure that vote district exists in a choices list
             if (!ds.containsKey(vote.getDistrict())) {
                 return false;
             }
+
+            // Get choices for a specific district (district that vote belongs to)
             Map<String, Map<String, String>> ps = ds.get(vote.getDistrict());
-            if (!ps.containsKey(voteParts[1])) {
+            // Ensure that there are choices per that district
+            if (ps.isEmpty()) {
                 return false;
             }
-            Map<String, String> ids = ps.get(voteParts[1]);
-            if (!ids.containsKey(voteParts[0])) {
-                return false;
+
+            // Loop over all choices per that district
+            for (Map<String, String> parties : ps.values()) {
+                // Is there a candidate code that matches candidateCode
+                if (parties.containsKey(candidateCode)) {
+                    return true;
+                }
             }
-            String name = ids.get(voteParts[0]);
-            if (!name.equals(voteParts[2])) {
-                return false;
-            }
-            return true;
+
+            // Choice is not valid
+            return false;
         }
 
         private void addVoteToTally(Vote vote, String choice) {

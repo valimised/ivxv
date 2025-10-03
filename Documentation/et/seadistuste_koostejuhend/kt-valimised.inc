@@ -153,12 +153,45 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 
         Valimiste Infosüsteemi TLS-sertifikaadi usaldusahel.
 
+:vis.min:
+
+        Valimiste Infosüsteemi valijate nimekirja hankimise sagedus
+        minutites (vaikeväärtus on 15).
+
 :xroad:
         Alamblokk, mis sisaldab X-teega ühenduva teenuse seadistust.
 
 :xroad.ca:
 
         X-teega teenuse TLS-sertifikaadi usaldusahel.
+
+----
+
+:ballot:
+        Alamblokk, mis sisaldab sedeli verifitseerimise seadistust.
+
+:ballot.encpkeygroup:
+
+	Kohustuslik väli.
+        Abstraktne rühm, millele kuulub Võtmerakenduses genereeritud avalik võti
+        häälte krüpteerimiseks.
+
+        Võimalikud väärtused ``RFC3526ModPGroup2048`` (võtme pikkus on 2048 bitti ehk
+        256 baiti), ``RFC3526ModPGroup3072``, ``RFC3526ModPGroup4096``,
+        ``RFC3526ModPGroup8192``, ``NIST-P256``, ``NIST-P384``, ``NIST-P521`` ja
+        ``Edwards25519``. NB! Palun veendu, et valitud rühm loetelust oli ka
+        kasutusel avaliku võtme genereerimisel Võtmerakenduses (vt Võtmerakenduse
+        konfiguratsiooni faili).
+
+	Antud rühma kasutatakse krüpteeritud häälte korrektsuse verifitseerimiseks.
+
+        Antud väli on ignoreeritud kui `encpkey` on määratud.
+
+:ballot.encpkey:
+
+        Avalik võti häälte krüpteerimiseks valijarakenduses.
+
+        Võtme rühma kasutatakse krüpteeritud häälte korrektsuse verifitseerimiseks.
 
 ----
 
@@ -175,7 +208,7 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
         kus ``mid``/``smartid``/``webeid`` teenus tuvastab valija ning väljastab talle
         pileti, millega teistele teenustele ennast tuvastada.
 
-        See alamblokk on tühi, aga tema olemasolek või puudumine määrab, kas
+        See alamblokk on tühi, aga tema olemasolu või puudumine määrab, kas
         piletipõhine valija tuvastus on lubatud või ei.
 
 :auth.tls:
@@ -203,8 +236,9 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 
 :auth.tls.ocsp.url:
 
-        Kohustuslik väli.
         Valija TLS-klientsertifikaatide kehtivuskinnitusteenuse aadress.
+        Kui pole seadistatud, siis kasutatakse kehtivuskinnitusteenuse
+        aadressi otse TLS-klientsertifikaadist.
 
 :auth.tls.ocsp.responders:
 
@@ -278,6 +312,14 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 :vote.bdoc:
 
         Alamblokk, mis sisaldab häälte BDOC-allkirjade kontrollimise seadistust.
+
+:vote.bdoc.filecount:
+
+        Kohustuslik väli. Maksimaalne lubatud failide arv ZIP konteineris, ning
+        kuna tegu on BDOC konteineriga, siis sellele väärtusele tuleb alati liita 3,
+        sest BDOC konteineris on lisaks sisufailidele veel ``signatures0.xml``,
+        ``manifest.xml`` ja ``mimetype`` failid. Antud parameetri väärtuseks sobib 4
+        (hääl + 3 lisafaili).
 
 :vote.bdoc.bdocsize:
 
@@ -390,8 +432,9 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 
 :mid.ocsp.url:
 
-        Kohustuslik väli.
         Valija Mobiil-ID sertifikaatide kehtivuskinnitusteenuse aadress.
+        Kui pole seadistatud, siis kasutatakse kehtivuskinnitusteenuse
+        aadressi otse Mobiil-ID klientsertifikaadist.
 
 :mid.ocsp.responders:
 
@@ -477,8 +520,9 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 
 :smartid.ocsp.url:
 
-        Kohustuslik väli.
         Valija Smart-ID sertifikaatide kehtivuskinnitusteenuse aadress.
+        Kui pole seadistatud, siis kasutatakse kehtivuskinnitusteenuse
+        aadressi otse Smart-ID klientsertifikaadist.
 
 :smartid.ocsp.responders:
 
@@ -515,14 +559,15 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
 
 :qualification.*.conf.url:
 
-        Kohustuslik väli.
+        Valikuline väli ainult ``ocsp`` puhul, sest kui pole seadistatud,
+        kasutatakse kehtivuskinnitusteenuse aadressi otse klientsertifikaadist.
         Aadress, kuhu kvalifitseeriv päring tehakse.
 
 :qualification.*.conf.responders:
 
         Kasutatakse ainult juhul kui ``qualification.*.protocol`` on ``ocsp``.
 
-        OCSP reponderi sertifikaadid. Kui nende hulgast responderi sertifikaati
+        OCSP responderi sertifikaadid. Kui nende hulgast responderi sertifikaati
         ei leita, siis otsitakse vastuses olevate sertifikaatide hulgast
         selline, mis on antud välja sama väljastaja poolt, mis kontrollitav
         sertifikaat, ning on lubatud OCSP vastuste signeerimiseks. AIA
@@ -534,7 +579,7 @@ Failinime võimalik eesliide peab alati lõppema punktiga.
         Kasutatakse ainult juhul kui ``qualification.*.protocol`` on ``tsp``
         või ``tspreg``.
 
-        Ajatempliteenuseteenuse vastuse allkirjastamise sertifikaadid.
+        Ajatempliteenuse vastuse allkirjastamise sertifikaadid.
 
 :qualification.*.conf.delaytime:
 

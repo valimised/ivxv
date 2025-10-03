@@ -287,9 +287,7 @@ public class ShuffleProof {
     public static class PoSReply {
         private BigInteger kA, kC, kD;
         private BigInteger[] kB, kE;
-        // strictly taken - kF is not from the group but is an array (of array) of bigints. take
-        // into account when using in computation
-        private ProductGroupElement kF;
+        private BigInteger[] kF;
 
         /**
          * Parse proof of shuffle reply from bytetree.
@@ -305,7 +303,7 @@ public class ShuffleProof {
             kC = DataParser.getAsInteger(root, 2);
             kD = DataParser.getAsInteger(root, 3);
             kE = DataParser.getAsIntegerArray(root, 4);
-            kF = (ProductGroupElement) DataParser.getAsElement(prodgroup, root, 5);
+            kF = DataParser.getAsScalar(prodgroup, root, 5);
         }
 
         /**
@@ -339,7 +337,7 @@ public class ShuffleProof {
             return kE;
         }
 
-        public ProductGroupElement get_kF() {
+        public BigInteger[] get_kF() {
             return kF;
         }
     }

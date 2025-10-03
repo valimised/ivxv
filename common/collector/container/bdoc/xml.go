@@ -61,12 +61,14 @@ func (p *parser) token() (xml.Token, error) {
 		if err == io.EOF {
 			if len(p.open) > 0 {
 				err = UnexpectedParseEOFError{
-					Unclosed: p.open[len(p.open)-1],
+					Unclosed:    p.open[len(p.open)-1],
+					Description: _CONTAINER_XML_EOF,
 				}
 			}
 			return nil, err
 		}
-		return nil, RawTokenError{Err: err}
+		return nil, RawTokenError{Err: err,
+			Description: _CONTAINER_XML_TOKEN_PARSE}
 	}
 	switch tt := t.(type) {
 	case xml.StartElement:
@@ -86,14 +88,16 @@ func (p *parser) token() (xml.Token, error) {
 			}
 			if findAttr(ts.attr, a.Name) != nil {
 				return t, DuplicateAttributeError{
-					Element:   ts.name,
-					Attribute: a.Name,
+					Element:     ts.name,
+					Attribute:   a.Name,
+					Description: _CONTAINER_XML_ATTR_DUP,
 				}
 			}
 			if a.Value == "" { // Allowed by XML, but not us.
 				return t, EmptyAttributeError{
-					Element:   ts.name,
-					Attribute: a.Name,
+					Element:     ts.name,
+					Attribute:   a.Name,
+					Description: _CONTAINER_XML_ATTR_EMPTY,
 				}
 			}
 			ts.attr = append(ts.attr, a)
@@ -146,7 +150,8 @@ func (p *parser) translate(space *string, attr bool) error {
 		*space = url
 		return nil
 	}
-	return UndeclaredNamespacePrefixError{Namespace: *space}
+	return UndeclaredNamespacePrefixError{Namespace: *space,
+		Description: _CONTAINER_XML_NS}
 }
 
 func findAttr(attrs []attr, name xml.Name) *attr {
@@ -171,11 +176,13 @@ func (p *parser) push(start *xml.StartElement) error {
 			switch a.Name.Local {
 			case "":
 				return EmptyNamespacePrefixError{
-					Element: start.Name,
+					Element:     start.Name,
+					Description: _CONTAINER_XML_NS_EMPTY,
 				}
 			case xmlns:
 				return RedeclareXMLNSPrefixError{
-					Element: start.Name,
+					Element:     start.Name,
+					Description: _CONTAINER_XML_NS_INNER,
 				}
 			}
 			ns = a.Name.Local
@@ -185,14 +192,16 @@ func (p *parser) push(start *xml.StartElement) error {
 				a.Name.Local == digidocManifestExtraLocal):
 			if a.Value == "" {
 				return UndeclaringNamespaceError{
-					Element:   start.Name,
-					Namespace: ns,
+					Element:     start.Name,
+					Namespace:   ns,
+					Description: _CONTAINER_XML_NS_UNDEC,
 				}
 			}
 			p.ns.set(ns, a.Value)
 		case a.Name.Space == "" && strings.Contains(a.Name.Local, ":"):
 			return NamespaceOrPrefixContainSemicolonError{
-				Element: start.Name,
+				Element:     start.Name,
+				Description: _CONTAINER_XML_NS_COLON,
 			}
 		}
 	}
@@ -201,12 +210,14 @@ func (p *parser) push(start *xml.StartElement) error {
 
 func (p *parser) pop(name xml.Name) error {
 	if len(p.open) == 0 {
-		return UnexpectedEndElementError{Name: name}
+		return UnexpectedEndElementError{Name: name,
+			Description: _CONTAINER_XML_END}
 	}
 	open := p.open[len(p.open)-1]
 	p.open = p.open[:len(p.open)-1]
 	if open != name {
-		return MismatchingTagsError{Start: open, End: name}
+		return MismatchingTagsError{Start: open, End: name,
+			Description: _CONTAINER_XML_TAGS}
 	}
 	p.ns.pop()
 	return nil
@@ -361,7 +372,8 @@ func (p *parser) parse(v reflect.Value, optional bool) (match bool, err error) {
 
 	token, err := p.readToken()
 	if err != nil {
-		return false, ParseXMLStartTokenError{Element: name, Err: err}
+		return false, ParseXMLStartTokenError{Element: name, Err: err,
+			Description: _CONTAINER_XML_START_TOKEN}
 	}
 	start, ok := token.(startElement)
 	if !ok {
@@ -369,7 +381,9 @@ func (p *parser) parse(v reflect.Value, optional bool) (match bool, err error) {
 			p.unreadToken(token, err)
 			return false, nil
 		}
-		return false, ParseXMLNotStartElementError{Element: name, Type: fmt.Sprintf("%T", token)}
+		return false, ParseXMLNotStartElementError{Element: name,
+			Type:        fmt.Sprintf("%T", token),
+			Description: _CONTAINER_XML_START_TOKEN_FAIL}
 	}
 
 	if start.name != name {
@@ -377,7 +391,9 @@ func (p *parser) parse(v reflect.Value, optional bool) (match bool, err error) {
 			p.unreadToken(token, err)
 			return false, nil
 		}
-		return false, ParseXMLUnexpectedElementError{Element: name, Name: start.name}
+		return false, ParseXMLUnexpectedElementError{Element: name,
+			Name:        start.name,
+			Description: _CONTAINER_XML_TOKEN}
 	}
 	if c14nroot { // Copy current namespace bindings.
 		header.ns = p.ns.flatten()
@@ -396,18 +412,21 @@ func (p *parser) parse(v reflect.Value, optional bool) (match bool, err error) {
 	// Start and end element matching already done by token(). Just
 	// consume the end element, ensuring there are no extra tokens.
 	if token, err = p.readToken(); err != nil {
-		return true, ParseXMLEndTokenError{Element: name, Err: err}
+		return true, ParseXMLEndTokenError{Element: name, Err: err,
+			Description: _CONTAINER_XML_END_TOKEN}
 	}
 	if _, ok := token.(xml.EndElement); !ok {
 		if more, ok := token.(startElement); ok {
 			return true, ParseXMLElementTrailingElementError{
-				Element:  name,
-				Trailing: more.name,
+				Element:     name,
+				Trailing:    more.name,
+				Description: _CONTAINER_XML_TOKEN_TRAIL_EL,
 			}
 		}
 		return true, ParseXMLElementTrailingTokenError{
-			Element: name,
-			Type:    fmt.Sprintf("%T", token),
+			Element:     name,
+			Type:        fmt.Sprintf("%T", token),
+			Description: _CONTAINER_XML_TOKEN_TRAIL,
 		}
 	}
 	return true, nil
@@ -427,14 +446,17 @@ func (p *parser) parseAttributes(v reflect.Value, s startElement) (n int, err er
 			if optional {
 				continue
 			}
-			return 0, ParseXMLMissingAttributeError{Element: s.name, Attribute: name}
+			return 0, ParseXMLMissingAttributeError{Element: s.name,
+				Attribute:   name,
+				Description: _CONTAINER_XML_TOKEN_ATTR}
 		}
 		if unique {
 			if _, ok := p.unique[found.Value]; ok {
 				return 0, ParseXMLNonUniqueAttributeError{
-					Element:   s.name,
-					Attribute: name,
-					Value:     found.Value,
+					Element:     s.name,
+					Attribute:   name,
+					Value:       found.Value,
+					Description: _CONTAINER_XML_TOKEN_ATTR_UNIQ,
 				}
 			}
 			p.unique[found.Value] = struct{}{}
@@ -447,8 +469,9 @@ func (p *parser) parseAttributes(v reflect.Value, s startElement) (n int, err er
 		}
 		if findAttr(vattr, attr.Name) == nil {
 			return 0, ParseXMLExtraAttributeError{
-				Element:   s.name,
-				Attribute: attr.Name,
+				Element:     s.name,
+				Attribute:   attr.Name,
+				Description: _CONTAINER_XML_TOKEN_ATTR_EX,
 			}
 		}
 	}
@@ -467,8 +490,9 @@ func (p *parser) parseSubelements(v reflect.Value, header *c14n, attrn int) erro
 				cdata, err := p.readCharacterData()
 				if err != nil {
 					return ParseXMLCharacterDataTokenError{
-						Element: header.start.name,
-						Err:     err,
+						Element:     header.start.name,
+						Err:         err,
+						Description: _CONTAINER_XML_TOKEN_CHAR_DATA,
 					}
 				}
 				field.SetString(cdata)
@@ -488,8 +512,9 @@ func (p *parser) parseSubelements(v reflect.Value, header *c14n, attrn int) erro
 			match, err := p.parse(field, optional)
 			if err != nil {
 				return ParseXMLSubStructError{
-					Element: header.start.name,
-					Err:     err,
+					Element:     header.start.name,
+					Err:         err,
+					Description: _CONTAINER_XML_EL_STRUCT,
 				}
 			}
 			if match {
@@ -504,9 +529,10 @@ func (p *parser) parseSubelements(v reflect.Value, header *c14n, attrn int) erro
 			var err error
 			if match, err = p.parse(elem, optional); err != nil {
 				return ParseXMLSubSliceError{
-					Element: header.start.name,
-					Index:   field.Len(),
-					Err:     err,
+					Element:     header.start.name,
+					Index:       field.Len(),
+					Err:         err,
+					Description: _CONTAINER_XML_EL_SLICE,
 				}
 			}
 			if match {
@@ -666,9 +692,11 @@ func parseXML(data []byte, v interface{}) error {
 	case err == io.EOF:
 		return nil
 	case err == nil:
-		return ParseXMLTrailingTokenError{Type: fmt.Sprintf("%T", token)}
+		return ParseXMLTrailingTokenError{Type: fmt.Sprintf("%T", token),
+			Description: _CONTAINER_XML_TOKEN_TRAIL}
 	default:
-		return ParseXMLTrailingError{Err: err}
+		return ParseXMLTrailingError{Err: err,
+			Description: _CONTAINER_XML_TOKEN_PARSE}
 	}
 }
 

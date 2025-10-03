@@ -30,7 +30,7 @@ func openContainer(opener container.Opener, path string) (
 
 	archive, err := zip.OpenReader(path)
 	if err != nil {
-		return nil, false, OpenZIPContainerError{Err: err}
+		return nil, false, OpenZIPContainerError{Err: err, Description: _VOTERS_LIST_OPEN_ZIP_CONTAINER}
 	}
 	defer archive.Close()
 
@@ -38,13 +38,15 @@ func openContainer(opener container.Opener, path string) (
 	for _, file := range archive.File {
 		rc, err := file.Open()
 		if err != nil {
-			return nil, false, OpenZIPFileError{File: file.Name, Err: err}
+			return nil, false, OpenZIPFileError{File: file.Name, Err: err,
+				Description: _VOTERS_LIST_OPEN_ZIPPED_FILE}
 		}
 		defer rc.Close()
 
 		bytes, err := io.ReadAll(rc)
 		if err != nil {
-			return nil, false, ReadZIPFileError{File: file.Name, Err: err}
+			return nil, false, ReadZIPFileError{File: file.Name, Err: err,
+				Description: _VOTERS_LIST_READ_ZIPPED_FILE}
 		}
 		data[file.Name] = bytes
 	}
@@ -88,7 +90,7 @@ func containerVersion(cnt container.Container) (string, error) {
 
 	matches := containerVersionRE.FindAllStringSubmatch(z.comment, -1)
 	if len(matches) == 0 {
-		return "", MissingZIPVersionError{}
+		return "", MissingZIPVersionError{Description: _VOTERS_LIST_UNABLE_TO_EXTRACT_ZIP_VERSION}
 	}
 	versions := make([]string, len(matches))
 	for i, match := range matches {

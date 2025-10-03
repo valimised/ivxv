@@ -24,7 +24,7 @@ type txnOp struct {
 
 // Begin a transaction with lazy initialization.
 func (c *client) Begin(ctx context.Context) (storage.TxnOp, error) {
-	log.Debug(ctx, BeginTxn{})
+	log.Debug(ctx, BeginTxn{Description: _ETCD_TXN_BEGIN})
 
 	return &txnOp{
 		readyc: make(chan bool, 1),
@@ -43,10 +43,10 @@ func (c *txnOp) Ready(ctx context.Context) error {
 	// errorc. This is possible since errorc is a buffered channel.
 	select {
 	case err := <-c.errorc:
-		log.Debug(ctx, ReadyReceivedOnErrorChannel{Err: err})
+		log.Debug(ctx, ReadyReceivedOnErrorChannel{Err: err, Description: _ETCD_TXN_FAIL})
 		return err
 	case <-ctx.Done():
-		return log.Alert(ReadyContextCancelled{})
+		return log.Alert(ReadyContextCancelled{Description: _ETCD_TXN_STOP})
 	}
 }
 
@@ -68,14 +68,14 @@ func (c *client) AutoCommit(ctx context.Context, op storage.TxnOp) {
 		select {
 		case <-unit.readyc:
 			unit.errorc <- c.Commit(ctx, op)
-			log.Debug(ctx, AutoCommitSentOnErrorc{})
+			log.Debug(ctx, AutoCommitSentOnErrorc{Description: _ETCD_TXN_STOP})
 		case <-ctx.Done():
 			// AutoCommit doesn't act on context deadline exceeded error,
 			// instead it just exits the function
-			log.Debug(ctx, AutoCommitContextCancelled{})
+			log.Debug(ctx, AutoCommitContextCancelled{Description: _ETCD_CTX_DONE})
 		}
 
-		log.Debug(ctx, AutoCommitClose{})
+		log.Debug(ctx, AutoCommitClose{Description: _ETCD_AUTOCOMMIT_UNSET})
 		// Close readyc and errorc channels
 	}()
 }
@@ -86,19 +86,21 @@ func (c *client) Commit(ctx context.Context, op storage.TxnOp) error {
 	// just with restricted operations, mostly CRUD-only
 	kv, err := c.kv(ctx)
 	if err != nil {
-		return log.Alert(BeginKVError{Err: err})
+		return log.Alert(BeginKVError{Err: err,
+			Description: _ETCD_CLIENT_N_CONN})
 	}
 
 	// Must cast to *txnOp
 	unit, ok := op.(*txnOp)
 	if !ok {
 		return log.Alert(CommitCastToTxnOpError{
-			Expected: expectedCastForTxnOp,
-			Got:      reflect.TypeOf(op),
+			Expected:    expectedCastForTxnOp,
+			Got:         reflect.TypeOf(op),
+			Description: _ETCD_CAST_REQ,
 		})
 	}
 
-	log.Debug(ctx, CommitRequest{})
+	log.Debug(ctx, CommitRequest{Description: _ETCD_TXN_START})
 
 	// Include all If, Then, Else OpOptions to the Transaction COMMIT operation.
 	// "All or nothing!" means that etcd either applies all changes or none of them
@@ -110,17 +112,20 @@ func (c *client) Commit(ctx context.Context, op storage.TxnOp) error {
 			Commit()
 	})
 	if err != nil {
-		return log.Alert(CommitError{Err: err})
+		return log.Alert(CommitError{Err: err,
+			Description: _ETCD_ROLLBACK})
 	}
 
 	log.Debug(ctx, CommitResponse{
-		Response: resp,
-		Success:  resp.Succeeded,
+		Response:    resp,
+		Success:     resp.Succeeded,
+		Description: _ETCD_COMMIT,
 	})
 
 	if !resp.Succeeded {
 		return storage.UnexpectedValueError{
-			Err: CommitResponseError{Response: resp, Success: resp.Succeeded}}
+			Err: CommitResponseError{Response: resp, Success: resp.Succeeded,
+				Description: _ETCD_CMP}}
 	}
 	return nil
 }
@@ -167,7 +172,7 @@ func (c *txnOp) PutForce(key string, value []byte) {
 // CAS adds key-value into a buffer to be further committed.
 // Note, that only if key's current value equals to old,
 // then new value is added to key.
-func (c *txnOp) CAS(key string, old, new []byte) {
+func (c *txnOp) CAS(key string, old, new []byte) { //nolint:revive
 	c.If(clientv3.Compare(clientv3.Value(key), "=", string(old)))
 	c.Then(clientv3.OpPut(key, string(new)))
 	c.Else(clientv3.OpGet(key))

@@ -49,19 +49,21 @@ func (r *RPC) Verify(dto interface{}) (bool, error) {
 	// dto should cast to *status.VerifyReq
 	verifyReq, err := status.CastAnyToVerifyReq(dto)
 	if err != nil {
-		return false, CastAnyToVerifyReqError{Err: err}
+		return false, CastAnyToVerifyReqError{Err: err, Description: _SESSIONSTATUS_CAST_ANY_TO_VERIFYREQ}
 	}
 
 	// verifyReq.Request should cast to server.Header
 	header, err := api.CastVerifyRequestToServerHeader(verifyReq)
 	if err != nil {
-		return false, CastVerifyRequestToServerHeaderError{Err: err}
+		return false, CastVerifyRequestToServerHeaderError{Err: err,
+			Description: _SESSIONSTATUS_CAST_VERIFYREQ_TO_SERVERHEADER}
 	}
 
 	// Send request to session status server and verify response
 	ok, err := r.verifyAndDeleteSessionStatus(verifyReq.ServiceMethod, *header)
 	if err != nil {
-		return false, VerifyAndDeleteSessionStatusError{Err: err}
+		return false, VerifyAndDeleteSessionStatusError{Err: err,
+			Description: _SESSIONSTATUS_SEND_UPDATE_REQ_AND_VERIFY_IT}
 	}
 
 	return ok, nil
@@ -87,7 +89,7 @@ func (r *RPC) verifyAndDeleteSessionStatus(serviceMethod string, h server.Header
 	// RPC call to .WithServiceMethod(...)
 	respReadRaw, err := r.client.TLSDial(&reqReadRPC)
 	if err != nil {
-		return false, SessionReadReqTLSDialError{Err: err}
+		return false, SessionReadReqTLSDialError{Err: err, Description: _SESSIONSTATUS_TLS_DIAL}
 	}
 
 	// Process raw RPC response, doesn't care about the embedded status type
@@ -105,7 +107,7 @@ func (r *RPC) verifyAndDeleteSessionStatus(serviceMethod string, h server.Header
 	var ttl string
 	ok, err = verifyStatusReadResp(&respRead, voteHandler)
 	if !ok || err != nil {
-		return ok, VerifyStatusReadRespError{Err: err}
+		return ok, VerifyStatusReadRespError{Err: err, Description: _SESSIONSTATUS_RESP_VERIFY}
 	}
 
 	ttl = strconv.FormatInt(r.verifyTTL, 10)
@@ -129,7 +131,7 @@ func (r *RPC) verifyAndDeleteSessionStatus(serviceMethod string, h server.Header
 	// RPC call to .WithServiceMethod(...)
 	respUpdateRaw, err := r.client.TLSDial(&reqUpdateRPC)
 	if err != nil {
-		return false, SessionUpdateReqTLSDialError{Err: err}
+		return false, SessionUpdateReqTLSDialError{Err: err, Description: _SESSIONSTATUS_TLS_DIAL}
 	}
 
 	// Process raw RPC response, doesn't care about the embedded status type
@@ -146,8 +148,9 @@ func (r *RPC) verifyAndDeleteSessionStatus(serviceMethod string, h server.Header
 	ok = respUpdate.Ok
 	if !ok {
 		return false, SessionStatusUpdateError{
-			Caller: reqUpdate.Caller,
-			Auth:   respRead.Auth,
+			Caller:      reqUpdate.Caller,
+			Auth:        respRead.Auth,
+			Description: _SESSIONSTATUS_UPDATE_FAIL,
 		}
 	}
 
@@ -182,9 +185,10 @@ func voteHandler(r *api.StatusReadResp) (bool, error) {
 	// All conditions must satisfy simultaneously!
 	if !(idCardAuth) && !(midAuth) && !(sidAuth) && !(widAuth) {
 		return false, VoteInvalidCallerOrAuthForSessionID{
-			Method: Vote,
-			Caller: r.Caller,
-			Auth:   r.Auth,
+			Method:      Vote,
+			Caller:      r.Caller,
+			Auth:        r.Auth,
+			Description: _SESSIONSTATUS_MALFORMED_SESSION_ID,
 		}
 	}
 	return true, nil

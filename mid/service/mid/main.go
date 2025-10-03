@@ -93,7 +93,9 @@ func (r *RPC) startCleaner(ctx context.Context) {
 			earliest := time.Now().Add(-5 * time.Minute)
 			for code, sess := range r.sessions {
 				if sess.created.Before(earliest) {
-					log.Debug(ctx, SessionTimeout{SessionCode: code})
+					// Session removed due to expiry
+					log.Debug(ctx, SessionTimeout{SessionCode: code,
+						Description: _MID_EXPIRED_AUTH_SESSION})
 					delete(r.sessions, code)
 				}
 			}
@@ -120,13 +122,14 @@ type AuthResponse struct {
 // Authenticate is the remote procedure call performed by clients to start a
 // Mobile-ID authentication session.
 func (r *RPC) Authenticate(args AuthArgs, resp *AuthResponse) (err error) {
-	log.Log(args.Ctx, AuthenticateReq{PhoneNo: args.PhoneNo})
+	log.Log(args.Ctx, AuthenticateReq{PhoneNo: args.PhoneNo, Description: _MID_AUTHREQ})
 
 	// The server filter for voting end will only enable once we stop
 	// serving signing requests, so we must manually check if we should
-	// still serve authentication requests.
+	// still serve authentication requests and refuse those requests when
+	// not served anymore
 	if !time.Now().Before(r.authEnd) { // not before == equal or after
-		log.Log(args.Ctx, AuthenticateVotingEnded{})
+		log.Log(args.Ctx, AuthenticateVotingEnded{Description: _MID_EXPIRED})
 		return server.ErrVotingEnd
 	}
 
@@ -139,11 +142,13 @@ func (r *RPC) Authenticate(args AuthArgs, resp *AuthResponse) (err error) {
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(args.Ctx, AuthenticateVerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(args.Ctx, AuthenticateVerifySessionIDError{Err: err, Description: _MID_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(args.Ctx, AuthenticateUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(args.Ctx, AuthenticateUpdateSessionIDError{Description: _MID_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
@@ -152,27 +157,35 @@ func (r *RPC) Authenticate(args AuthArgs, resp *AuthResponse) (err error) {
 		r.mid.MobileAuthenticate(args.Ctx, args.IDCode, args.PhoneNo)
 	if err != nil {
 		if clierr := midToServerError(err); clierr != nil {
-			log.Error(args.Ctx, AuthenticateMIDError{Err: err})
+			// Log known mID service error about failed authentication
+			log.Error(args.Ctx, AuthenticateMIDError{Err: err, Description: _MID_AUTH_RESP})
 			return clierr
 		}
-		log.Error(args.Ctx, AuthenticateError{Err: log.Alert(err)})
+		// Log unknown mID service error about failed authentication
+		log.Error(args.Ctx, AuthenticateError{Err: log.Alert(err), Description: _MID_NO_RESP})
 		return server.ErrInternal
 	}
 	if resp.DataToken, err = r.ticket.CreateData([]byte(args.PhoneNo)); err != nil {
-		log.Error(args.Ctx, DataTicketError{Err: err})
+		// Error creating data token
+		log.Error(args.Ctx, DataTicketError{Err: err, Description: _MID_DATA_TOKEN_CREATE})
 		return server.ErrInternal
 	}
 	r.sessionLock.Lock()
 	defer r.sessionLock.Unlock()
 	if _, ok := r.sessions[resp.SessionCode]; ok {
-		log.Error(args.Ctx, DuplicateSessionCodeError{Code: resp.SessionCode})
+		// Mobile-ID service has issued a session code that has already been issued.
+		// This is bug of Mobile-ID service if this ever happens
+		log.Error(args.Ctx, DuplicateSessionCodeError{Code: resp.SessionCode,
+			Description: _MID_SAME_AUTH_SESSION})
 		return server.ErrInternal
 	}
 	r.sessions[resp.SessionCode] = sess
 
+	// Authentication process successfully initiated
 	log.Log(args.Ctx, AuthenticateResp{
 		SessionCode: resp.SessionCode,
 		Challenge:   resp.Challenge,
+		Description: _MID_AUTHRESP,
 	})
 	return nil
 }
@@ -196,13 +209,14 @@ type AuthStatusResponse struct {
 // AuthenticateStatus is the remote procedure call performed by clients to
 // check the status of a Mobile-ID authentication session.
 func (r *RPC) AuthenticateStatus(args AuthStatusArgs, resp *AuthStatusResponse) error {
-	log.Log(args.Ctx, AuthenticateStatusReq{SessionCode: args.SessionCode})
+	log.Log(args.Ctx, AuthenticateStatusReq{SessionCode: args.SessionCode, Description: _MID_AUTHSTATUSREQ})
 
 	// The server filter for voting end will only enable once we stop
 	// serving signing requests, so we must manually check if we should
-	// still serve authentication requests.
+	// still serve authentication requests and refuse those requests when
+	// not served anymore
 	if !time.Now().Before(r.authEnd) { // not before == equal or after
-		log.Log(args.Ctx, AuthenticateStatusVotingEnded{})
+		log.Log(args.Ctx, AuthenticateStatusVotingEnded{Description: _MID_EXPIRED})
 		return server.ErrVotingEnd
 	}
 
@@ -215,11 +229,13 @@ func (r *RPC) AuthenticateStatus(args AuthStatusArgs, resp *AuthStatusResponse) 
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(args.Ctx, AuthenticateStatusVerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(args.Ctx, AuthenticateStatusVerifySessionIDError{Err: err, Description: _MID_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(args.Ctx, AuthenticateStatusUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(args.Ctx, AuthenticateStatusUpdateSessionIDError{Description: _MID_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
@@ -227,7 +243,9 @@ func (r *RPC) AuthenticateStatus(args AuthStatusArgs, resp *AuthStatusResponse) 
 	sess, ok := r.sessions[args.SessionCode]
 	r.sessionLock.Unlock()
 	if !ok {
-		log.Error(args.Ctx, UnknownSessionCodeError{})
+		// Client has presented "RPC.AuthenticateStatus.SessionCode" argument that
+		// hasn't been authenticated in RPC.Authenticate
+		log.Error(args.Ctx, UnknownSessionCodeError{Description: _MID_UNKNOWN_AUTH_SESSION})
 		return server.ErrBadRequest
 	}
 
@@ -238,30 +256,36 @@ func (r *RPC) AuthenticateStatus(args AuthStatusArgs, resp *AuthStatusResponse) 
 		r.sessionLock.Unlock()
 
 		if clierr := midToServerError(err); clierr != nil {
-			log.Error(args.Ctx, AuthenticateStatusMIDError{Err: err})
+			// Log known mID service error about failed authentication
+			log.Error(args.Ctx, AuthenticateStatusMIDError{Err: err, Description: _MID_AUTH_RESP})
 			return clierr
 		}
-		log.Error(args.Ctx, AuthenticateStatusError{Err: log.Alert(err)})
+		// Log unknown mID service error about failed authentication
+		log.Error(args.Ctx, AuthenticateStatusError{Err: log.Alert(err), Description: _MID_NO_RESP})
 		return server.ErrInternal
 	}
 
 	resp.Status = StatusPoll
 	if len(signature) > 0 {
-		log.Log(args.Ctx, AuthenticationSignature{Signature: signature})
+		// AuthenticationStatus has provided a signed result
+		log.Log(args.Ctx, AuthenticationSignature{Signature: signature, Description: _MID_SIG_RESP})
 		if cert == nil {
-			log.Error(args.Ctx, AuthenticationCertificateMissingError{Err: err})
+			// Signature missing from the authentication reply with signature
+			log.Error(args.Ctx, AuthenticationCertificateMissingError{Err: err,
+				Description: _MID_NO_CERT_RESP})
 			return server.ErrMIDGeneral
 		}
-		log.Log(args.Ctx, AuthenticationCertificate{Certificate: cert})
+		// Certificate received from the signed response
+		log.Log(args.Ctx, AuthenticationCertificate{Certificate: cert, Description: _MID_CERT_RESP})
 
 		r.sessionLock.Lock()
 		delete(r.sessions, args.SessionCode)
 		r.sessionLock.Unlock()
 
+		// Verify signature of authentication reply, refuse to proceed, if fails
 		if err = mid.VerifyAuthenticationSignature(
 			cert, algorithm, sess.challengeRnd, signature); err != nil {
-
-			log.Error(args.Ctx, AuthenticationSignatureError{Err: err})
+			log.Error(args.Ctx, AuthenticationSignatureError{Err: err, Description: _MID_VERIFY_SIG})
 			return server.ErrMIDGeneral
 		}
 
@@ -269,22 +293,28 @@ func (r *RPC) AuthenticateStatus(args AuthStatusArgs, resp *AuthStatusResponse) 
 		resp.GivenName = findName(&cert.Subject, asn1.ObjectIdentifier{2, 5, 4, 42})
 		resp.Surname = findName(&cert.Subject, asn1.ObjectIdentifier{2, 5, 4, 4})
 		if resp.PersonalCode, err = r.identify(&cert.Subject); err != nil {
-			log.Error(args.Ctx, AuthenticationSubjectIdentityError{Err: err})
+			// Backend cannot extract voter's personal code from certificate's Subject field
+			log.Error(args.Ctx, AuthenticationSubjectIdentityError{Err: err,
+				Description: _MID_VOTER_ID})
 			return server.ErrInternal
 		}
 
 		if resp.AuthToken, err = r.ticket.Create(cert.Subject); err != nil {
-			log.Error(args.Ctx, AuthenticationTicketError{Err: err})
+			// Backend internal error, cannot create AES shared secret that is used as
+			// authenitcation cookie in ticket-based methods
+			log.Error(args.Ctx, AuthenticationTicketError{Err: err, Description: _MID_AUTH_TOKEN_CREATE})
 			return server.ErrInternal
 		}
 	}
 
+	// Successful authentication, log information, handle AuthToken as sensitive
 	log.Log(args.Ctx, AuthenticateStatusResp{
 		Status:       resp.Status,
 		GivenName:    resp.GivenName,
 		Surname:      resp.Surname,
 		PersonalCode: resp.PersonalCode,
 		AuthToken:    log.Sensitive(resp.AuthToken),
+		Description:  _MID_AUTHSTATUSRESP,
 	})
 	return nil
 }
@@ -314,18 +344,20 @@ type CertificateResponse struct {
 // GetCertificate is the remote procedure call performed by clients to get the
 // Mobile-ID signing certificate that will be used to sign the vote.
 func (r *RPC) GetCertificate(args CertificateArgs, resp *CertificateResponse) error {
-	log.Log(args.Ctx, GetCertificateReq{})
+	log.Log(args.Ctx, GetCertificateReq{Description: _MID_GETCERTREQ})
 
 	// Get the voter serial number. If empty, then the request is not
 	// authenticated.
 	identity := server.VoterIdentity(args.Ctx)
 	if len(identity) == 0 {
-		log.Error(args.Ctx, UnauthenticatedGetCertificateError{})
+		log.Error(args.Ctx, UnauthenticatedGetCertificateError{Description: _MID_VOTER_NO_AUTH})
 		return server.ErrUnauthenticated
 	}
+
+	// Get voter phone no from the ticket, not authenticated if does not exist
 	phoneno := server.VoterNumber(args.Ctx)
 	if len(phoneno) == 0 {
-		log.Error(args.Ctx, MissingDataGetCertificateError{})
+		log.Error(args.Ctx, MissingDataGetCertificateError{Description: _MID_VOTER_NO_PHONENR})
 		return server.ErrUnauthenticated
 	}
 
@@ -338,28 +370,38 @@ func (r *RPC) GetCertificate(args CertificateArgs, resp *CertificateResponse) er
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(args.Ctx, GetCertificateVerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(args.Ctx, GetCertificateVerifySessionIDError{Err: err, Description: _MID_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(args.Ctx, GetCertificateUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(args.Ctx, GetCertificateUpdateSessionIDError{Description: _MID_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
 	c, err := r.mid.GetMobileCertificate(args.Ctx, identity, phoneno)
 	if err != nil {
 		if clierr := midToServerError(err); clierr != nil {
-			log.Error(args.Ctx, GetCertificateMIDError{Err: err})
+			// Log known mID service error about failed authentication
+			log.Error(args.Ctx, GetCertificateMIDError{Err: err, Description: _MID_AUTH_RESP})
 			return clierr
 		}
-		log.Error(args.Ctx, GetCertificateError{Err: log.Alert(err)})
+		// Log unknown mID service error about failed authentication
+		log.Error(args.Ctx, GetCertificateError{Err: log.Alert(err), Description: _MID_NO_RESP})
 		return server.ErrInternal
 	}
-	log.Log(args.Ctx, SigningCertificate{Certificate: c})
+
+	// Log signing certificate.
+	// TODO: identical to GetCertificateResp, why both?
+	log.Log(args.Ctx, SigningCertificate{Certificate: c, Description: _MID_CERT})
 	resp.Certificate = c.Raw
 
+	// Log successful reply
+	// TODO: identical to SigningCertificate, why both?
 	log.Log(args.Ctx, GetCertificateResp{
 		Certificate: resp.Certificate,
+		Description: _MID_GETCERTRESP,
 	})
 	return nil
 }
@@ -380,19 +422,20 @@ type SignResponse struct {
 // Sign is the remote procedure call performed by clients to start a Mobile-ID
 // signing session.
 func (r *RPC) Sign(args SignArgs, resp *SignResponse) (err error) {
-	log.Log(args.Ctx, SignReq{Hash: args.Hash})
+	log.Log(args.Ctx, SignReq{Hash: args.Hash, Description: _MID_SIGNREQ})
 
 	// Get the voter serial number. If empty, then the request is not
 	// authenticated.
 	identity := server.VoterIdentity(args.Ctx)
 	if len(identity) == 0 {
-		log.Error(args.Ctx, UnauthenticatedSignError{})
+		log.Error(args.Ctx, UnauthenticatedSignError{Description: _MID_VOTER_NO_AUTH})
 		return server.ErrUnauthenticated
 	}
 
+	// Get voter phone no from the ticket, not authenticated if does not exist
 	phoneno := server.VoterNumber(args.Ctx)
 	if len(phoneno) == 0 {
-		log.Error(args.Ctx, MissingDataSignError{})
+		log.Error(args.Ctx, MissingDataSignError{Description: _MID_VOTER_NO_PHONENR})
 		return server.ErrUnauthenticated
 	}
 
@@ -405,11 +448,13 @@ func (r *RPC) Sign(args SignArgs, resp *SignResponse) (err error) {
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(args.Ctx, SignVerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(args.Ctx, SignVerifySessionIDError{Err: err, Description: _MID_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(args.Ctx, SignUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(args.Ctx, SignUpdateSessionIDError{Description: _MID_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
@@ -417,15 +462,19 @@ func (r *RPC) Sign(args SignArgs, resp *SignResponse) (err error) {
 		args.Ctx, identity, phoneno, args.Hash, args.HashType)
 	if err != nil {
 		if clierr := midToServerError(err); clierr != nil {
-			log.Error(args.Ctx, SignMIDError{Err: err})
+			// Log known mID service error about failed authentication
+			log.Error(args.Ctx, SignMIDError{Err: err, Description: _MID_AUTH_RESP})
 			return clierr
 		}
-		log.Error(args.Ctx, SignError{Err: log.Alert(err)})
+		// Log unknown mID service error about failed authentication
+		log.Error(args.Ctx, SignError{Err: log.Alert(err), Description: _MID_NO_RESP})
 		return server.ErrInternal
 	}
 
+	// Successfully initiated signing
 	log.Log(args.Ctx, SignResp{
 		SessionCode: resp.SessionCode,
+		Description: _MID_SIGNRESP,
 	})
 	return
 }
@@ -447,7 +496,7 @@ type SignStatusResponse struct {
 // SignStatus is the remote procedure call performed by clients to check the
 // status of a Mobile-ID signing session.
 func (r *RPC) SignStatus(args SignStatusArgs, resp *SignStatusResponse) (err error) {
-	log.Log(args.Ctx, SignStatusReq{SessionCode: args.SessionCode})
+	log.Log(args.Ctx, SignStatusReq{SessionCode: args.SessionCode, Description: _MID_SIGNSTATUSREQ})
 
 	// Build up VerifyReq for session status service
 	verifyReq := status.NewVerifyReqBuilder().
@@ -458,21 +507,25 @@ func (r *RPC) SignStatus(args SignStatusArgs, resp *SignStatusResponse) (err err
 	// SessionID security check
 	ok, err := r.status.Verify(&verifyReq)
 	if err != nil {
-		log.Error(args.Ctx, SignStatusVerifySessionIDError{Err: err})
+		// Error during SessionID check - database unreachable, service stalled, etc.
+		log.Error(args.Ctx, SignStatusVerifySessionIDError{Err: err, Description: _MID_SESSION_ID})
 		return server.ErrBadRequest
 	}
 	if !ok {
-		log.Error(args.Ctx, SignStatusUpdateSessionIDError{})
+		// SessionID is unknown / has expired, we shall not further process the request
+		log.Error(args.Ctx, SignStatusUpdateSessionIDError{Description: _MID_SESSION_ID_EXPIRED})
 		return server.ErrBadRequest
 	}
 
 	resp.Algorithm, resp.Signature, err = r.mid.GetMobileSignHashStatus(args.Ctx, args.SessionCode)
 	if err != nil {
 		if clierr := midToServerError(err); clierr != nil {
-			log.Error(args.Ctx, SignStatusMIDError{Err: err})
+			// Log known mID service error about failed authentication
+			log.Error(args.Ctx, SignStatusMIDError{Err: err, Description: _MID_AUTH_RESP})
 			return clierr
 		}
-		log.Error(args.Ctx, SignStatusError{Err: log.Alert(err)})
+		// Log unknown mID service error about failed authentication
+		log.Error(args.Ctx, SignStatusError{Err: log.Alert(err), Description: _MID_NO_RESP})
 		return server.ErrInternal
 	}
 
@@ -481,9 +534,11 @@ func (r *RPC) SignStatus(args SignStatusArgs, resp *SignStatusResponse) (err err
 		resp.Status = StatusOK
 	}
 
+	// Log sucessfully received signature
 	log.Log(args.Ctx, SignStatusResp{
-		Status:    resp.Status,
-		Signature: resp.Signature,
+		Status:      resp.Status,
+		Signature:   resp.Signature,
+		Description: _MID_SIGNSTATUSRESP,
 	})
 	return
 }
@@ -515,25 +570,27 @@ func midmain() (code int) {
 	var err error
 
 	if c.Conf.Election != nil {
-		// Check election configuration time values.
+		// Check election configuration time values - service start
 		if start, err = c.Conf.Election.ServiceStartTime(); err != nil {
-			return c.Error(exit.Config, StartTimeError{Err: err},
+			return c.Error(exit.Config, StartTimeError{Err: err, Description: _MID_START},
 				"bad service start time:", err)
 		}
 
+		// Check election configuration time values - election stop
 		if rpc.authEnd, err = c.Conf.Election.ElectionStopTime(); err != nil {
-			return c.Error(exit.Config, ElectionStopTimeError{Err: err},
+			return c.Error(exit.Config, ElectionStopTimeError{Err: err, Description: _MID_AUTH_STOP},
 				"bad election stop time:", err)
 		}
 
+		// Check election configuration time values - service stop
 		if stop, err = c.Conf.Election.ServiceStopTime(); err != nil {
-			return c.Error(exit.Config, ServiceStopTimeError{Err: err},
+			return c.Error(exit.Config, ServiceStopTimeError{Err: err, Description: _MID_STOP},
 				"bad service stop time:", err)
 		}
 
 		// Configure the MID-REST API client.
 		if rpc.mid, err = mid.New(&c.Conf.Election.MID); err != nil {
-			return c.Error(exit.Config, MIDConfError{Err: err},
+			return c.Error(exit.Config, MIDConfError{Err: err, Description: _MID_CLIENT_CONF},
 				"failed to configure MID-REST API client:", err)
 		}
 
@@ -541,11 +598,11 @@ func midmain() (code int) {
 		// tickets.
 		ticketConf, ok := c.Conf.Election.Auth[auth.Ticket]
 		if !ok {
-			return c.Error(exit.Config, TicketAuthError{},
+			return c.Error(exit.Config, TicketAuthError{Description: _MID_TICKET_AUTH},
 				"ticket authentication is mandatory for mid")
 		}
 		if rpc.ticket, err = ticket.NewFromSystem(); err != nil {
-			return c.Error(exit.Config, TicketConfError{Err: err},
+			return c.Error(exit.Config, TicketConfError{Err: err, Description: _MID_TICKET},
 				"failed to configure ticket manager:", err)
 		}
 
@@ -554,7 +611,7 @@ func midmain() (code int) {
 		if authConf, err = server.NewAuthConf(auth.Conf{auth.Ticket: ticketConf},
 			c.Conf.Election.Identity, nil); err != nil {
 
-			return c.Error(exit.Config, ServerAuthConfError{Err: err},
+			return c.Error(exit.Config, ServerAuthConfError{Err: err, Description: _MID_AUTH},
 				"failed to configure client authentication:", err)
 		}
 
@@ -575,7 +632,7 @@ func midmain() (code int) {
 			Filter:   &c.Conf.Technical.Filter,
 			Version:  &c.Conf.Version,
 		}, rpc); err != nil {
-			return c.Error(exit.Config, ServerConfError{Err: err},
+			return c.Error(exit.Config, ServerConfError{Err: err, Description: _MID_SERVER},
 				"failed to configure server:", err)
 		}
 	}
@@ -583,7 +640,7 @@ func midmain() (code int) {
 	// Start listening for incoming connections during the voting period.
 	if c.Until >= command.Execute {
 		if err = s.WithAuth(authConf).ServeAt(c.Ctx, start); err != nil {
-			return c.Error(exit.Unavailable, ServeError{Err: err},
+			return c.Error(exit.Unavailable, ServeError{Err: err, Description: _MID_SERVER_SERVE},
 				"failed to serve mid service:", err)
 		}
 	}

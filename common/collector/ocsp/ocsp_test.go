@@ -13,37 +13,93 @@ import (
 	"ivxv.ee/common/collector/log"
 )
 
-func TestExpirations(t *testing.T) {
-	url := "http://demo.sk.ee/ocsp"
-	responderPath := "TEST_of_SK_OCSP_RESPONDER_2020.pem"
-	responder, err := os.ReadFile(filepath.Join("testdata", responderPath))
+const (
+	demoSkEeOCSPResponderIssuer = "TEST_of_KLASS3-SK_2016.pem"
+	demoSkEeOCSPResponder       = "DEMO_of_KLASS3-SK_2016_SSL_OCSP_RESPONDER_2018.pem"
+	demoSkEeOcspURL             = "http://demo.sk.ee/ocsp"
+	// > 2022 year ID-cards' issuer
+	esteid2018 = "esteid2018.pem"
+	// <= 2022 year ID-cards'/Mobile-IDs' issuer
+	testOfEsteidsk2015 = "TEST_of_ESTEID-SK_2015.pem"
+	esteidsk2015       = "esteidsk2015.pem"
+	// Smart-IDs'/Mobile-IDs' issuer
+	eidsk2016 = "eidsk2016.pem"
+)
+
+func TestCheckOCSPOfIDCardWithParsingOCSPURLFromConf(t *testing.T) {
+	responderPath := demoSkEeOCSPResponder
+	responderBytes, err := os.ReadFile(filepath.Join("testdata", responderPath))
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
-	certPath := "good.pem"
+
 	client, err := New(&Conf{
-		URL:        url,
-		Responders: []string{string(responder)},
+		URL:        demoSkEeOcspURL,
+		Responders: []string{string(responderBytes)},
 		Retry:      2,
 		MaxSkew:    300,
 		MaxAge:     1,
 	})
 	if err != nil {
-		fmt.Println("Panic")
-		t.Errorf("Error %v\n", err)
+		t.Errorf("Create new OCSP config error: %v\n", err)
 	}
 
 	ctx := log.TestContext(context.Background())
+	certPath := "good.pem"
 	cert, err := testCert(certPath)
 	if err != nil {
-		t.Errorf("Error %v\n", err)
+		t.Errorf("Obtain %v\n", err)
 	}
 
+	// Since issuer is nil, then we assume that responders will
+	// verify the OCSP response
 	check, err := client.Check(ctx, cert, nil, nil)
 	if err != nil {
 		t.Errorf("Error %v\n", err)
 	}
-	fmt.Println("Status:", check.Good)
+
+	if !check.Good {
+		t.Errorf("Certificate status is not good: %v\n", check.CertStatus)
+	}
+}
+
+func TestCheckOCSPWithParsingOCSPURLFromCert(t *testing.T) {
+	testName := fmt.Sprintf("Issuer-%s-cert-%s", esteid2018, "ID-PNOEE-39605244244.pem")
+	t.Run(testName, func(t *testing.T) {
+		responderIssuerBytes, err := os.ReadFile(filepath.Join("testdata", esteid2018))
+		if err != nil {
+			t.Fatal(err)
+		}
+		responderIssuer, err := cryptoutil.PEMCertificate(string(responderIssuerBytes))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		client, err := New(&Conf{
+			// No URL defined forces to parse it from client cert
+			Retry:   2,
+			MaxSkew: 300,
+			MaxAge:  1,
+		})
+		if err != nil {
+			t.Errorf("Create new OCSP config error: %v\n", err)
+		}
+
+		ctx := log.TestContext(context.Background())
+		cert2, err := testCert("ID-PNOEE-39605244244.pem")
+		if err != nil {
+			t.Errorf("Obtain %v\n", err)
+		}
+
+		check, err := client.Check(ctx, cert2, responderIssuer, nil)
+		if err != nil {
+			t.Errorf("Error %v\n", err)
+		}
+
+		if !check.Good {
+			t.Errorf("Certificate status is not good: %v\n", check.CertStatus)
+		}
+	})
 }
 
 func TestCheck(t *testing.T) {
@@ -70,22 +126,11 @@ func TestCheck(t *testing.T) {
 		responders []string
 		certs      []cert
 	}{
-		{"http://demo.sk.ee/ocsp", []string{"TEST_of_SK_OCSP_RESPONDER_2020.pem"}, []cert{
+		{"http://demo.sk.ee/ocsp", []string{demoSkEeOCSPResponder}, []cert{
 			{"good.pem", "", good},
 			{"revoked.pem", "", revoked},
 			{"unknown.pem", "", unknown},
 		}},
-
-		// The following tests require actual certificates, which we do
-		// not want to include the repository. Provide the certificates
-		// and uncomment to run these tests.
-		//
-		// {"http://aia.sk.ee/esteid2015", nil, []cert{
-		// 	{"auth2011.pem", "ESTEID-SK_2011.pem", revoked},
-		// 	{"sign2011.pem", "ESTEID-SK_2011.pem", revoked},
-		// 	{"auth2015.pem", "ESTEID-SK_2015.pem", good},
-		// 	{"sign2015.pem", "ESTEID-SK_2015.pem", good},
-		// }},
 	}
 
 	// Define test functions for a single certificate and for a client
@@ -162,12 +207,13 @@ func TestCheck(t *testing.T) {
 
 func TestCheckResponse(t *testing.T) {
 	responder, err := os.ReadFile(
-		filepath.Join("testdata", "TEST_of_SK_OCSP_RESPONDER_2020.pem"))
+		filepath.Join("testdata", demoSkEeOCSPResponder))
 	if err != nil {
 		t.Fatal("failed to read responder certificate:", err)
 	}
 
-	client, err := New(&Conf{Responders: []string{string(responder)}})
+	client, err := New(&Conf{
+		Responders: []string{string(responder)}})
 	if err != nil {
 		t.Fatal("failed to create client:", err)
 	}

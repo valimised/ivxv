@@ -82,15 +82,15 @@ type Client struct {
 // New returns a new TSP client with the provided configuration.
 func New(conf *Conf) (c *Client, err error) {
 	if len(conf.Signers) == 0 {
-		return nil, UnconfiguredSignersError{}
+		return nil, UnconfiguredSignersError{Description: _TSP_SIGNERS}
 	}
 
 	c = &Client{
 		url:     conf.URL,
 		delay:   time.Duration(conf.DelayTime) * time.Second,
 		retry:   conf.Retry,
-		maxSkew: time.Duration(conf.MaxSkew) * time.Second,
-		maxAge:  time.Duration(conf.MaxAge) * time.Minute,
+		maxSkew: time.Duration(conf.MaxSkew) * time.Second, //nolint:gosec
+		maxAge:  time.Duration(conf.MaxAge) * time.Minute,  //nolint:gosec
 	}
 	if conf.MaxSkew <= 0 {
 		c.maxSkew = maxSkew
@@ -99,7 +99,7 @@ func New(conf *Conf) (c *Client, err error) {
 		c.maxAge = maxAge
 	}
 	if c.signers, err = cryptoutil.PEMCertificates(conf.Signers...); err != nil {
-		return nil, SignerParsingError{Err: err}
+		return nil, SignerParsingError{Err: err, Description: _TSP_SIGNERS_VERIFY}
 	}
 	return
 }
@@ -110,14 +110,14 @@ func New(conf *Conf) (c *Client, err error) {
 // DER-encoded timestamp token.
 func (c *Client) Create(ctx context.Context, data, nonce []byte) ([]byte, error) {
 	if len(c.url) == 0 {
-		return nil, UnconfiguredURLError{}
+		return nil, UnconfiguredURLError{Description: _TSP_NO_URI}
 	}
 
 	// If there is no nonce, generate one
 	if nonce == nil {
 		nonce = make([]byte, 20)
 		if _, err := rand.Read(nonce); err != nil {
-			return nil, GenerateNonceError{Err: err}
+			return nil, GenerateNonceError{Err: err, Description: _TSP_NONCE}
 		}
 	}
 
@@ -129,24 +129,25 @@ retry:
 		case err == nil:
 			break retry
 		case attempt < c.retry && shouldRetry(err):
-			log.Log(ctx, RetryingRequestSubmission{Attempt: attempt + 1, Err: err})
+			log.Log(ctx, RetryingRequestSubmission{Attempt: attempt + 1, Err: err,
+				Description: _TSP_PROV_CONN})
 			time.Sleep(1 * time.Second)
 		default:
-			return nil, RequestSubmissionError{Err: err}
+			return nil, RequestSubmissionError{Err: err, Description: _TSP_PROV_ERR}
 		}
 	}
 
 	info, err := checkTSTInfo(tst, data, nonce)
 	if err != nil {
-		return nil, TSTInfoCheckError{Err: err}
+		return nil, TSTInfoCheckError{Err: err, Description: _TSP_TST_INFO}
 	}
 
 	if err = c.checkGenTime(time.Now(), info.GenTime, info.Accuracy); err != nil {
-		return nil, GenTimeCheckError{Err: err}
+		return nil, GenTimeCheckError{Err: err, Description: _TSP_TST_TIME}
 	}
 
 	if err = c.checkSignedData(tst, info.GenTime); err != nil {
-		return nil, SignedDataCheckError{Err: err}
+		return nil, SignedDataCheckError{Err: err, Description: _TSP_TST_DATA}
 	}
 
 	return tst.Raw, nil
@@ -181,11 +182,11 @@ func (c *Client) Check(response, data, nonce []byte) (time.Time, error) {
 
 	info, err := checkTSTInfo(tsToken, data, nonce)
 	if err != nil {
-		return time.Time{}, CheckTSTInfoCheckError{Err: err}
+		return time.Time{}, CheckTSTInfoCheckError{Err: err, Description: _TSP_TST_INFO}
 	}
 
 	if err = c.checkSignedData(tsToken, info.GenTime); err != nil {
-		return time.Time{}, CheckSignedDataCheckError{Err: err}
+		return time.Time{}, CheckSignedDataCheckError{Err: err, Description: _TSP_TST_DATA}
 	}
 	return info.GenTime, nil
 }
@@ -233,14 +234,14 @@ func (c *Client) submitRequest(ctx context.Context, data, nonce []byte) (
 
 	reqBytes, err := asn1.Marshal(req)
 	if err != nil {
-		err = MarshallingRequestError{Err: err}
+		err = MarshallingRequestError{Err: err, Description: _TSP_REQ}
 		return
 	}
 
 	// Submit the request and read the response.
 	httpReq, err := http.NewRequest(http.MethodPost, c.url, bytes.NewBuffer(reqBytes))
 	if err != nil {
-		err = NewRequestError{Err: err}
+		err = NewRequestError{Err: err, Description: _TSP_REQ_FINAL}
 		return
 	}
 	httpReq = httpReq.WithContext(ctx)
@@ -248,23 +249,24 @@ func (c *Client) submitRequest(ctx context.Context, data, nonce []byte) (
 
 	reqDump, err := httputil.DumpRequestOut(httpReq, true)
 	if err != nil {
-		err = ReqDumpError{Err: err}
+		err = ReqDumpError{Err: err, Description: _TSP_REQ_FINAL}
 		return
 	}
-	log.Debug(ctx, RequestDump{Request: string(reqDump)})
+	log.Debug(ctx, RequestDump{Request: string(reqDump), Description: _TSP_REQ_FINAL_OK})
 
 	log.Log(ctx, SendingRequest{
-		URL:   c.url,
-		Hash:  req.MessageImprint.HashedMessage,
-		Nonce: n,
+		URL:         c.url,
+		Hash:        req.MessageImprint.HashedMessage,
+		Nonce:       n,
+		Description: _TSP_REQ_FINAL_OK,
 	})
 
 	httpResp, err := http.DefaultClient.Do(httpReq)
 	if err != nil {
-		err = log.Alert(SendRequestError{Err: err})
+		err = log.Alert(SendRequestError{Err: err, Description: _TSP_REQ_HTTP})
 		return
 	}
-	log.Log(ctx, ReceivedResponse{})
+	log.Log(ctx, ReceivedResponse{Description: _TSP_RESP_HTTP_OK})
 
 	defer func() {
 		if closeErr := httpResp.Body.Close(); closeErr != nil && err == nil {
@@ -274,18 +276,18 @@ func (c *Client) submitRequest(ctx context.Context, data, nonce []byte) (
 
 	respDump, err := httputil.DumpResponse(httpResp, false)
 	if err != nil {
-		err = RespDumpError{Err: err}
+		err = RespDumpError{Err: err, Description: _TSP_RESP_HTTP_PARSE}
 		return
 	}
-	log.Debug(ctx, ResponseDump{Dump: string(respDump)})
+	log.Debug(ctx, ResponseDump{Dump: string(respDump), Description: _TSP_RESP_HTTP_PARSE_OK})
 
 	if httpResp.StatusCode != http.StatusOK {
-		err = ResponseStatusNotOK{Status: httpResp.Status}
+		err = ResponseStatusNotOK{Status: httpResp.Status, Description: _TSP_RESP_HTTP_RESP_NOK}
 		return
 	}
 
 	if ctype := httpResp.Header.Get("Content-Type"); ctype != "application/timestamp-reply" {
-		err = UnexpectedResponseContentType{ContentType: ctype}
+		err = UnexpectedResponseContentType{ContentType: ctype, Description: _TSP_RESP_HTTP_HEADER}
 		return
 	}
 
@@ -293,26 +295,26 @@ func (c *Client) submitRequest(ctx context.Context, data, nonce []byte) (
 	// allocate a new byte slice using ioutil.ReadAll.
 	body, err := io.ReadAll(safereader.New(httpResp.Body, maxResponseSize))
 	if err != nil {
-		err = ResponseBodyReadError{Err: err}
+		err = ResponseBodyReadError{Err: err, Description: _TSP_RESP_READ}
 		return
 	}
-	log.Debug(ctx, BodyDump{Body: body})
+	log.Debug(ctx, BodyDump{Body: body, Description: _TSP_RESP_READ_OK})
 
 	// Parse the response and check TSP status.
 	var resp tsResponse
 	rest, err := asn1.Unmarshal(body, &resp)
 	if err != nil {
-		err = ResponseUnmarshalError{Err: err}
+		err = ResponseUnmarshalError{Err: err, Description: _TSP_RESP_READ_ASN1}
 		return
 	} else if len(rest) > 0 {
-		err = ResponseUnmarshalExcessBytes{Bytes: rest}
+		err = ResponseUnmarshalExcessBytes{Bytes: rest, Description: _TSP_RESP_READ_ASN1}
 		return
 	}
 
 	// https://tools.ietf.org/html/rfc3161#section-2.4.2
 	// Status 0 means granted. We do not allow status 1 meaning granted with modifications
 	if resp.Status.Status != 0 {
-		err = TSStatusError{Status: resp.Status.Status}
+		err = TSStatusError{Status: resp.Status.Status, Description: _TSP_STATUS}
 		return
 	}
 
@@ -323,10 +325,10 @@ func (c *Client) submitRequest(ctx context.Context, data, nonce []byte) (
 func unmarshalTSToken(data []byte, tsToken *timeStampToken) error {
 	rest, err := asn1.Unmarshal(data, tsToken)
 	if err != nil {
-		return TSTokenUnmarshalError{Err: err}
+		return TSTokenUnmarshalError{Err: err, Description: _TSP_TST_ASN1}
 	}
 	if len(rest) > 0 {
-		return TSTokenExcessBytesError{Bytes: rest}
+		return TSTokenExcessBytesError{Bytes: rest, Description: _TSP_TST_ASN1}
 	}
 	return nil
 }
@@ -334,15 +336,15 @@ func unmarshalTSToken(data []byte, tsToken *timeStampToken) error {
 func unmarshalTSTInfo(tst timeStampToken, info *tstInfo) error {
 	encap := tst.Content.EncapContentInfo
 	if !encap.EContentType.Equal(idCTTSTInfo) {
-		return UnexpectedEcontentType{Type: encap.EContentType}
+		return UnexpectedEcontentType{Type: encap.EContentType, Description: _TSP_TST_CONTENT_TYPE}
 	}
 
 	rest, err := asn1.Unmarshal(encap.EContent, info)
 	if err != nil {
-		return EContentUnmarshalError{Err: err}
+		return EContentUnmarshalError{Err: err, Description: _TSP_TST_CONTENT_ASN1}
 	}
 	if len(rest) > 0 {
-		return EContentUnmarshalExcessBytesError{Bytes: rest}
+		return EContentUnmarshalExcessBytesError{Bytes: rest, Description: _TSP_TST_CONTENT_ASN1}
 	}
 	return nil
 }
@@ -354,7 +356,7 @@ func checkTSTInfo(tst timeStampToken, data, nonce []byte) (info tstInfo, err err
 
 	// https://tools.ietf.org/html/rfc3161#page-8
 	if info.Version != 1 {
-		return info, UnexpectedTSTInfoVersion{Version: info.Version}
+		return info, UnexpectedTSTInfoVersion{Version: info.Version, Description: _TSP_TOKEN_VERSION}
 	}
 
 	// https://tools.ietf.org/html/rfc3161#page-8
@@ -367,7 +369,8 @@ func checkTSTInfo(tst timeStampToken, data, nonce []byte) (info tstInfo, err err
 	chash, ok := digestAlgs[info.MessageImprint.HashAlgorithm.Algorithm.String()]
 	if !ok {
 		return info, UnsupportedMessageImprintAlgorithm{
-			Algorithm: info.MessageImprint.HashAlgorithm,
+			Algorithm:   info.MessageImprint.HashAlgorithm,
+			Description: _TSP_ALG_SUP,
 		}
 	}
 	hash := chash.New()
@@ -376,9 +379,10 @@ func checkTSTInfo(tst timeStampToken, data, nonce []byte) (info tstInfo, err err
 
 	if !bytes.Equal(info.MessageImprint.HashedMessage, calculated) {
 		return info, MessageImprintMismatch{
-			Algorithm: info.MessageImprint.HashAlgorithm,
-			Token:     info.MessageImprint.HashedMessage,
-			Data:      calculated,
+			Algorithm:   info.MessageImprint.HashAlgorithm,
+			Token:       info.MessageImprint.HashedMessage,
+			Data:        calculated,
+			Description: _TSP_DIG_DIFF,
 		}
 	}
 
@@ -387,13 +391,14 @@ func checkTSTInfo(tst timeStampToken, data, nonce []byte) (info tstInfo, err err
 	// Also both nonces MUST have the same value.
 	if nonce != nil {
 		if info.Nonce == nil {
-			return info, ResponseNonceMissing{}
+			return info, ResponseNonceMissing{Description: _TSP_TST_NONCE}
 		}
 		n := new(big.Int).SetBytes(nonce)
 		if info.Nonce.Cmp(n) != 0 {
 			return info, ResponseNonceMismatch{
-				Expected: n,
-				Got:      info.Nonce,
+				Expected:    n,
+				Got:         info.Nonce,
+				Description: _TSP_TST_NONCE_NOK,
 			}
 		}
 	}
@@ -406,12 +411,12 @@ func (c *Client) checkGenTime(now, gen time.Time, acc accuracy) error {
 		time.Duration(acc.Micros)*time.Microsecond
 
 	if age := now.Sub(gen) + accuracy; age > c.maxAge {
-		return GenTimeTooOld{Age: age, GenTime: gen}
+		return GenTimeTooOld{Age: age, GenTime: gen, Description: _TSP_TIME_OFF}
 	}
 
 	skewed := now.Add(c.maxSkew - accuracy)
 	if gen.After(skewed) {
-		return GenTimeSetInFuture{Skewed: skewed, GenTime: gen}
+		return GenTimeSetInFuture{Skewed: skewed, GenTime: gen, Description: _TSP_TIME_FUTURE}
 	}
 	return nil
 }

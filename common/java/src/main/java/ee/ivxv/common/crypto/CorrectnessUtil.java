@@ -64,7 +64,7 @@ public class CorrectnessUtil {
         }
         for (GroupElement el : new GroupElement[] {ciphertext.getBlind(),
                 ciphertext.getBlindedMessage()}) {
-            switch (pk.getParameters().getGroup().isDecodable(el)) {
+            switch (pk.getParameters().getGroup().isGroupElement(el)) {
                 case VALID:
                     continue;
                 case INVALID_GROUP:

@@ -49,9 +49,16 @@ vis:
       NOq+xK3YM/CRFf/ujIuc1zx+dzkM9l72VJT2BQ6+LKeS5qzduJTG/8dJJFzgNB9p
       vo7reW+FURRS+CQI633D
       -----END CERTIFICATE-----
+  min: 15
 
 xroad:
   ca: !container xroadservice_ca.pem
+
+ballot:
+  # This group must be the one used for voter ballot encryption public key
+  # generation, check documentation for all available groups to use
+  encpkeygroup: RFC3526ModPGroup3072
+  encpkey: !container vote_enc_pkey.pem
 
 auth:
   ticket:
@@ -75,6 +82,7 @@ age:
 
 vote:
   bdoc:
+    filecount: 4
     bdocsize: 32768  # 32 KiB
     filesize: 32768  # 32 KiB
     roots:

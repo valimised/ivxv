@@ -54,7 +54,19 @@ var (
 // Conf contains the configurable options for the OCSP client. It only contains
 // serialized values such that it can easily be unmarshaled from a file.
 type Conf struct {
-	URL        string
+	// URL is OCSP url. This parameter is optional, but if set then all
+	// .bdoc votes' certificates are verified against that URL.
+	// If not set, then URL is parsed from a .bdoc vote's certificate.
+	URL string
+
+	// Responders is a list of all trusted OCSP responders. This is used
+	// when parsing OCSP response, the OCSP response's responder certificate
+	// is matched against this list, and if found, then confirms this
+	// OCSP response to be received from trusted authority.
+	//
+	// NB! Use this only for testing purposes with custom certificates.
+	// Leave this list empty on production, as responder certificates
+	// SHOULD BE verified against user certificate's issuer.
 	Responders []string
 
 	// Retry is the amount of times an OCSP request is retried in case of
@@ -82,8 +94,8 @@ func New(conf *Conf) (c *Client, err error) {
 	c = &Client{
 		url:     conf.URL,
 		retry:   conf.Retry,
-		maxSkew: time.Duration(conf.MaxSkew) * time.Millisecond,
-		maxAge:  time.Duration(conf.MaxAge) * time.Minute,
+		maxSkew: time.Duration(conf.MaxSkew) * time.Millisecond, //nolint:gosec
+		maxAge:  time.Duration(conf.MaxAge) * time.Minute,       //nolint:gosec
 	}
 	if conf.MaxSkew <= 0 {
 		c.maxSkew = maxSkew
@@ -92,7 +104,8 @@ func New(conf *Conf) (c *Client, err error) {
 		c.maxAge = maxAge
 	}
 	if c.responders, err = cryptoutil.PEMCertificates(conf.Responders...); err != nil {
-		return nil, ResponderParsingError{Err: err}
+		return nil, ResponderParsingError{Err: err,
+			Description: _OCSP_RESPONDER}
 	}
 	return
 }
@@ -119,15 +132,11 @@ type LiveCertStatus struct {
 // the request, otherwise no nonce is used.
 func (c *Client) Check(ctx context.Context, cert, issuer *x509.Certificate, nonce []byte) (
 	status *LiveCertStatus, err error) {
-
-	if len(c.url) == 0 {
-		return nil, UnconfiguredURLError{}
-	}
-
 	// Create request
 	reqCert, err := newCertID(cert)
 	if err != nil {
-		return nil, RequestCertIDCreateError{Err: err}
+		return nil, RequestCertIDCreateError{Err: err,
+			Description: _OCSP_REQ}
 	}
 
 	// Submit the request to url and read the response.
@@ -135,21 +144,24 @@ func (c *Client) Check(ctx context.Context, cert, issuer *x509.Certificate, nonc
 	var basic *basicOCSPResponse
 retry:
 	for attempt := uint64(0); ; attempt++ {
-		switch resp, basic, err = c.submitRequest(ctx, reqCert, nonce); {
+		switch resp, basic, err = c.submitRequest(ctx, cert, reqCert, nonce); {
 		case err == nil:
 			break retry
 		case attempt < c.retry && shouldRetry(err):
-			log.Log(ctx, RetryingSubmitRequest{Attempt: attempt + 1, Err: err})
+			log.Log(ctx, RetryingSubmitRequest{Attempt: attempt + 1, Err: err,
+				Description: _OCSP_CONN})
 			time.Sleep(1 * time.Second)
 		default:
-			return nil, SubmitRequestError{Err: err}
+			return nil, SubmitRequestError{Err: err,
+				Description: _OCSP_FAIL}
 		}
 	}
 
 	// Check response.
 	respNonce, err := c.checkResponse(basic, reqCert, issuer, nonce)
 	if err != nil {
-		return nil, CheckResponseError{Err: err}
+		return nil, CheckResponseError{Err: err,
+			Description: _OCSP_RESP}
 	}
 
 	// Return status.
@@ -202,7 +214,8 @@ func (c *Client) CheckFullResponse(response []byte, cert, issuer *x509.Certifica
 
 	resp, err := unpackResponse(response)
 	if err != nil {
-		return nil, UnpackResponseError{Err: err}
+		return nil, UnpackResponseError{Err: err,
+			Description: _OCSP_PARSE}
 	}
 
 	return c.CheckResponse(resp, cert, issuer, nonce, sigTime)
@@ -223,13 +236,15 @@ func (c *Client) CheckResponse(response []byte, cert, issuer *x509.Certificate,
 	// Generate the CertID.
 	reqCert, err := newCertID(cert)
 	if err != nil {
-		return nil, ResponseCertIDCreateError{Err: err}
+		return nil, ResponseCertIDCreateError{Err: err,
+			Description: _OCSP_REQ}
 	}
 
 	// Check response.
 	respNonce, err := c.checkStoredResponse(&basic, reqCert, issuer, nonce, sigTime)
 	if err != nil {
-		return nil, CheckStoredResponseError{Err: err}
+		return nil, CheckStoredResponseError{Err: err,
+			Description: _OCSP_RESP}
 	}
 
 	// Return status.
@@ -263,20 +278,22 @@ func ExtractProducedAtTimeFromRawOcspResponse(rawOcspResponse []byte) (time.Time
 	// Unpack raw ASN.1 DER-encoded ocspResponse
 	resp, err := unpackResponse(rawOcspResponse)
 	if err != nil {
-		return time.Time{}, UnpackRawOCSPResponseError{Err: err}
+		return time.Time{}, UnpackRawOCSPResponseError{Err: err,
+			Description: _OCSP_PARSE}
 	}
 
 	var basic basicOCSPResponse
 
 	// Parse DER-encoded OCSP resp to basicOCSPResponse
 	if err := unmarshalResponse(resp, &basic); err != nil {
-		return time.Time{}, UnmarshalOCSPResponseToBasicOCSPResponseError{Err: err}
+		return time.Time{}, UnmarshalOCSPResponseToBasicOCSPResponseError{
+			Err: err, Description: _OCSP_RAW2BS}
 	}
 
 	return basic.TBSResponseData.ProducedAt, nil
 }
 
-func (c *Client) submitRequest(ctx context.Context, reqCert *certID, nonce []byte) (
+func (c *Client) submitRequest(ctx context.Context, cert *x509.Certificate, reqCert *certID, nonce []byte) (
 	response []byte, basic *basicOCSPResponse, err error) {
 
 	r := ocspRequest{
@@ -292,15 +309,29 @@ func (c *Client) submitRequest(ctx context.Context, reqCert *certID, nonce []byt
 	}
 	req, err := asn1.Marshal(r)
 	if err != nil {
-		err = RequestMarshalError{Err: err}
+		err = RequestMarshalError{Err: err, Description: _OCSP_ASN1}
 		return
 	}
 
 	var client http.Client
 
+	// Try to fetch OCSP URL from conf, as it is takes precedence
+	if c.url != "" { //nolint:gocritic,revive
+		// Do nothing and use OCSP URL from conf
+	} else if len(cert.OCSPServer) != 0 {
+		// If OCSP URL not set in conf, use one from cert.
+		// First found OCSP URL is assumed to be the correct one
+		c.url = cert.OCSPServer[0]
+	} else {
+		// By this time, OCSP URL should be known
+		return nil, nil, UnconfiguredURLError{
+			Description: _OCSP_URI,
+		}
+	}
+
 	httpReq, err := http.NewRequest(http.MethodPost, c.url, bytes.NewBuffer(req))
 	if err != nil {
-		err = NewRequestError{Err: err}
+		err = NewRequestError{Err: err, Description: _OCSP_REQ_PREP}
 		return
 	}
 	httpReq = httpReq.WithContext(ctx)
@@ -308,44 +339,50 @@ func (c *Client) submitRequest(ctx context.Context, reqCert *certID, nonce []byt
 
 	reqDump, err := httputil.DumpRequestOut(httpReq, true)
 	if err != nil {
-		err = ReqDumpError{Err: err}
+		err = ReqDumpError{Err: err, Description: _OCSP_REQ_HTTP}
 		return
 	}
-	log.Debug(ctx, RequestDebugDump{Request: string(reqDump)})
+	log.Debug(ctx, RequestDebugDump{Request: string(reqDump),
+		Description: _OCSP_REQ_INFO})
 
 	log.Log(ctx, SendingRequest{
 		URL:            c.url,
 		Serial:         reqCert.SerialNumber,
 		IssuerNameHash: reqCert.IssuerNameHash,
+		Description:    _OCSP_REQ_SEND,
 	})
 
 	httpResp, err := client.Do(httpReq)
 	if err != nil {
-		err = log.Alert(SendRequestError{Err: err})
+		err = log.Alert(SendRequestError{Err: err, Description: _OCSP_REQ_FAIL})
 		return
 	}
 	defer func() {
 		if cerr := httpResp.Body.Close(); cerr != nil && err == nil {
-			err = ResponseBodyCloseError{Err: cerr}
+			err = ResponseBodyCloseError{Err: cerr,
+				Description: _OCSP_REQ_CLOSE}
 		}
 	}()
 
-	log.Log(ctx, ReceivedResponse{})
+	log.Log(ctx, ReceivedResponse{Description: _OCSP_REQ_RESP})
 
 	respDump, err := httputil.DumpResponse(httpResp, false)
 	if err != nil {
-		err = RespDumpError{Err: err}
+		err = RespDumpError{Err: err, Description: _OCSP_RESP_DUMP}
 		return
 	}
-	log.Debug(ctx, ResponseDebugDump{Response: string(respDump)})
+	log.Debug(ctx, ResponseDebugDump{Response: string(respDump),
+		Description: _OCSP_RESP_OK})
 
 	if httpResp.StatusCode != http.StatusOK {
-		err = UnexpectedResponseStatusError{Status: httpResp.Status}
+		err = UnexpectedResponseStatusError{Status: httpResp.Status,
+			Description: _OCSP_RESP_STAT}
 		return
 	}
 
 	if ctype := httpResp.Header.Get("Content-Type"); ctype != "application/ocsp-response" {
-		err = UnexpectedContentTypeError{ContentType: ctype}
+		err = UnexpectedContentTypeError{ContentType: ctype,
+			Description: _OCSP_RESP_HTTP_HEADER}
 		return
 	}
 
@@ -353,15 +390,15 @@ func (c *Client) submitRequest(ctx context.Context, reqCert *certID, nonce []byt
 	// byte slice using ioutil.ReadAll.
 	response, err = io.ReadAll(safereader.New(httpResp.Body, maxResponseSize))
 	if err != nil {
-		err = ResponseBodyReadError{Err: err}
+		err = ResponseBodyReadError{Err: err, Description: _OCSP_RESP_READ}
 		return
 	}
-	log.Debug(ctx, BodyDump{Body: response})
+	log.Debug(ctx, BodyDump{Body: response, Description: _OCSP_RESP_READ_OK})
 
 	// Unpack basicOCSPResponse
 	resp, err := unpackResponse(response)
 	if err != nil {
-		err = ResponseUnpackError{Err: err}
+		err = ResponseUnpackError{Err: err, Description: _OCSP_RESP_BASIC}
 		return
 	}
 
@@ -375,9 +412,11 @@ func unpackResponse(der []byte) (response []byte, err error) {
 	var resp ocspResponse
 	rest, err := asn1.Unmarshal(der, &resp)
 	if err != nil {
-		return nil, ResponseUnmarshalError{Err: err}
+		return nil, ResponseUnmarshalError{Err: err,
+			Description: _OCSP_RESP_ASN1}
 	} else if len(rest) > 0 {
-		return nil, ResponseUnmarshalExcessBytesError{Bytes: rest}
+		return nil, ResponseUnmarshalExcessBytesError{Bytes: rest,
+			Description: _OCSP_RESP_ASN1}
 	}
 
 	if resp.ResponseStatus != ocspResponseStatusSuccessful {
@@ -385,12 +424,14 @@ func unpackResponse(der []byte) (response []byte, err error) {
 		if !ok {
 			status = fmt.Sprint(resp.ResponseStatus)
 		}
-		return nil, UnexpectedOCSPResponseStatusError{Status: status}
+		return nil, UnexpectedOCSPResponseStatusError{Status: status,
+			Description: _OCSP_RESP_STAT}
 	}
 
 	if !resp.ResponseBytes.ResponseType.Equal(idPKIXOCSPBasic) {
 		return nil, UnexpectedResponseTypeError{
 			ResponseType: resp.ResponseBytes.ResponseType,
+			Description:  _OCSP_RESP_TYPE,
 		}
 	}
 
@@ -400,9 +441,12 @@ func unpackResponse(der []byte) (response []byte, err error) {
 func unmarshalResponse(der []byte, basic *basicOCSPResponse) (err error) {
 	rest, err := asn1.Unmarshal(der, basic)
 	if err != nil {
-		return BasicOCSPResponseUnmarshalError{Err: err}
+		return BasicOCSPResponseUnmarshalError{Err: err,
+			Description: _OCSP_RESP_B_ASN1}
+
 	} else if len(rest) > 0 {
-		return BasicOCSPResponseUnmarshalExcessBytesError{Bytes: rest}
+		return BasicOCSPResponseUnmarshalExcessBytesError{Bytes: rest,
+			Description: _OCSP_RESP_B_ASN1}
 	}
 	return
 }
@@ -415,7 +459,8 @@ func (c *Client) checkResponse(resp *basicOCSPResponse,
 
 	// Perform common checks.
 	if respNonce, err = c.checkResponseCommon(resp, cert, issuer, nonce, defaultTime); err != nil {
-		return nil, CheckResponseCommonError{Err: err}
+		return nil, CheckResponseCommonError{Err: err,
+			Description: _OCSP_COMMON_CHECKS}
 	}
 
 	// Check thisUpdate skew and age.
@@ -424,23 +469,26 @@ func (c *Client) checkResponse(resp *basicOCSPResponse,
 	skewed := current.Add(c.maxSkew)
 	if thisUpdate.After(skewed) {
 		return nil, ThisUpdateSetInFutureError{
-			ThisUpdate: thisUpdate,
-			MaxSkewed:  skewed,
+			ThisUpdate:  thisUpdate,
+			MaxSkewed:   skewed,
+			Description: _OCSP_OFF,
 		}
 	}
 	if age := current.Sub(thisUpdate); age > c.maxAge {
 		return nil, ThisUpdateExceedsMaxAgeError{
-			Current:    current,
-			ThisUpdate: thisUpdate,
+			Current:     current,
+			ThisUpdate:  thisUpdate,
+			Description: _OCSP_EXPIRED,
 		}
 	}
 
 	// Make sure producedAt is between thisUpdate and now + skew.
 	if pat := resp.TBSResponseData.ProducedAt; pat.Before(thisUpdate) || pat.After(skewed) {
 		return nil, ProducedAtWrongTimeError{
-			ProducedAt: pat,
-			ThisUpdate: thisUpdate,
-			Skewed:     skewed,
+			ProducedAt:  pat,
+			ThisUpdate:  thisUpdate,
+			Skewed:      skewed,
+			Description: _OCSP_BETWEEN,
 		}
 	}
 	return
@@ -454,7 +502,8 @@ func (c *Client) checkStoredResponse(resp *basicOCSPResponse,
 
 	// Perform common checks.
 	if respNonce, err = c.checkResponseCommon(resp, cert, issuer, nonce, sigTime); err != nil {
-		return nil, CheckStoredResponseCommonError{Err: err}
+		return nil, CheckStoredResponseCommonError{Err: err,
+			Description: _OCSP_STORED}
 	}
 
 	// Check time between thisUpdate and producedAt.
@@ -462,14 +511,16 @@ func (c *Client) checkStoredResponse(resp *basicOCSPResponse,
 	pat := resp.TBSResponseData.ProducedAt
 	if pat.Before(thisUpdate) {
 		return nil, ProducedAtBeforeThisUpdateError{
-			ProducedAt: pat,
-			ThisUpdate: thisUpdate,
+			ProducedAt:  pat,
+			ThisUpdate:  thisUpdate,
+			Description: _OCSP_PAT,
 		}
 	}
 	if age := pat.Sub(thisUpdate); age > c.maxAge {
 		return nil, StoredThisUpdateExceedsMaxAgeError{
-			ProducedAt: pat,
-			ThisUpdate: thisUpdate,
+			ProducedAt:  pat,
+			ThisUpdate:  thisUpdate,
+			Description: _OCSP_SUB,
 		}
 	}
 	return
@@ -483,13 +534,15 @@ func (c *Client) checkResponseCommon(resp *basicOCSPResponse,
 
 	// Compare certificate requested and in the response.
 	if n := len(resp.TBSResponseData.Responses); n != 1 {
-		return nil, UnexpectedTBSResponseCountError{Count: n}
+		return nil, UnexpectedTBSResponseCountError{Count: n,
+			Description: _OCSP_UNIQ}
 	}
 	single := resp.TBSResponseData.Responses[0]
 	if !cert.equal(&single.CertID) {
 		return nil, CertIDMismatchError{
-			Stored:  single.CertID,
-			Control: cert,
+			Stored:      single.CertID,
+			Control:     cert,
+			Description: _OCSP_CERT,
 		}
 	}
 
@@ -503,25 +556,29 @@ func (c *Client) checkResponseCommon(resp *basicOCSPResponse,
 	// If nonce is not nil, then compare to respNonce.
 	if nonce != nil && !bytes.Equal(nonce, respNonce) {
 		return nil, ResponseNonceMismatchError{
-			Request:  nonce,
-			Response: respNonce,
+			Request:     nonce,
+			Response:    respNonce,
+			Description: _OCSP_NONCE,
 		}
 	}
 
 	// Find responder certificate and check signature on the response.
 	responder, err := c.responder(resp, issuer, sigTime)
 	if err != nil {
-		return nil, ResponderCertificateError{Err: err}
+		return nil, ResponderCertificateError{Err: err,
+			Description: _OCSP_RESPONDER_GET}
 	}
 
 	alg, ok := sigMap[resp.SignatureAlgorithm.Algorithm.String()]
 	if !ok {
 		return nil, SignatureAlgorithmNotSupportedError{
-			Algorithm: resp.SignatureAlgorithm.Algorithm,
+			Algorithm:   resp.SignatureAlgorithm.Algorithm,
+			Description: _OCSP_ALG_UNKNOWN,
 		}
 	}
 	if err = responder.CheckSignature(alg, resp.TBSResponseData.Raw, resp.Signature.RightAlign()); err != nil {
-		return nil, CheckSignatureError{Err: err}
+		return nil, CheckSignatureError{Err: err,
+			Description: _OCSP_SIG_VERIFY}
 	}
 
 	return
@@ -541,44 +598,55 @@ func (c *Client) responder(resp *basicOCSPResponse, issuer *x509.Certificate,
 			return responder, nil
 		}
 	}
-	// Otherwise check if its certificate is in the response, is issued by
-	// the same issuer, and is allowed for OCSP signing.
-	if issuer != nil {
-		opts := x509.VerifyOptions{
-			Roots:     cryptoutil.CertificatePool(issuer),
-			KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageOCSPSigning},
-		}
 
-		// 0001-01-01 00:00:00 +0000 UTC (time.Time default value)
-		var defaultTime time.Time
-		if sigTime != defaultTime {
-			opts.CurrentTime = sigTime
-		}
-
-		for _, der := range resp.Certs {
-			responder, err := x509.ParseCertificate(der.FullBytes)
-			if err != nil {
-				return nil, ParseResponseCertificateError{
-					DER: der.FullBytes,
-					Err: err,
-				}
-			}
-
-			responder.Subject.ExtraNames = responder.Subject.Names
-			if !cryptoutil.RDNSequenceEqual(responder.Subject.ToRDNSequence(), name) {
-				continue
-			}
-
-			if _, err = responder.Verify(opts); err != nil {
-				return nil, VerifyResponderCertificateError{
-					Subject: responder.Subject,
-					Issuer:  responder.Issuer,
-					Err:     err,
-				}
-			}
-			return responder, nil
-		}
+	// Fail fast
+	if issuer == nil {
+		return nil, ResponderCertificateNotFoundError{Responder: name,
+			Description: _OCSP_N_ISSUER}
 	}
 
-	return nil, ResponderCertificateNotFoundError{Responder: name}
+	// Check if its certificate is in the response, is issued by
+	// the same issuer, and is allowed for OCSP signing.
+	var responder *x509.Certificate
+	var err error
+	opts := x509.VerifyOptions{
+		Roots:     cryptoutil.CertificatePool(issuer),
+		KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageOCSPSigning},
+	}
+
+	// 0001-01-01 00:00:00 +0000 UTC (time.Time default value)
+	var defaultTime time.Time
+	if sigTime != defaultTime {
+		opts.CurrentTime = sigTime
+	}
+
+	// First found
+	for _, der := range resp.Certs {
+		responder, err = x509.ParseCertificate(der.FullBytes)
+		if err != nil {
+			return nil, ParseResponseCertificateError{
+				DER:         der.FullBytes,
+				Err:         err,
+				Description: _OCSP_CERT_PARSE,
+			}
+		}
+
+		responder.Subject.ExtraNames = responder.Subject.Names
+		if !cryptoutil.RDNSequenceEqual(responder.Subject.ToRDNSequence(), name) {
+			continue
+		}
+
+		if _, err = responder.Verify(opts); err != nil {
+			return nil, VerifyResponderCertificateError{
+				Subject:     responder.Subject,
+				Issuer:      responder.Issuer,
+				Err:         err,
+				Description: _OCSP_CERT_VERIFY,
+			}
+		}
+
+		break
+	}
+
+	return responder, nil
 }

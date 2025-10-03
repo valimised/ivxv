@@ -68,7 +68,8 @@ func newCtrl(cfg *conf.Technical, service *conf.Service, election string) (
 	// Parse the storage configuration block as etcd configuration.
 	var etcdCfg etcd.Conf
 	if err = yaml.Apply(cfg.Storage.Conf, &etcdCfg); err != nil {
-		return nil, exit.Config, EtcdConfigurationError{Err: err}
+		return nil, exit.Config, EtcdConfigurationError{Err: err,
+			Description: _STORAGE_CFG}
 	}
 	c.bstrap = bootstrap(service.ID, &etcdCfg)
 	c.cli.DialTimeout = time.Duration(etcdCfg.ConnTimeout) * time.Second
@@ -78,12 +79,14 @@ func newCtrl(cfg *conf.Technical, service *conf.Service, election string) (
 	// Parse the CA certificate and member TLS certificate and private key.
 	c.cli.TLS = &tls.Config{MinVersion: tls.VersionTLS12}
 	if c.cli.TLS.RootCAs, err = cryptoutil.PEMCertificatePool(etcdCfg.CA); err != nil {
-		return nil, exit.Config, EtcdCAParseError{Err: err}
+		return nil, exit.Config, EtcdCAParseError{Err: err,
+			Description: _STORAGE_CA}
 	}
 	tlsPEMPath, tlsKeyPath := conf.TLS(c.wd)
 	c.cli.TLS.Certificates = make([]tls.Certificate, 1)
 	if c.cli.TLS.Certificates[0], err = tls.LoadX509KeyPair(tlsPEMPath, tlsKeyPath); err != nil {
-		return nil, exit.DataErr, LoadTLSCertificateError{Err: err}
+		return nil, exit.DataErr, LoadTLSCertificateError{Err: err,
+			Description: _STORAGE_CERT}
 	}
 
 	// Check that the TLS certificate is issued by the CA and has key usage
@@ -108,8 +111,9 @@ func newCtrl(cfg *conf.Technical, service *conf.Service, election string) (
 	caddr, err := net.ResolveTCPAddr("tcp", service.Address)
 	if err != nil {
 		return nil, exit.Config, ResolveClientAddressError{
-			Address: service.Address,
-			Err:     err,
+			Address:     service.Address,
+			Err:         err,
+			Description: _STORAGE_ADDR,
 		}
 	}
 	cresv := caddr.String()
@@ -117,8 +121,9 @@ func newCtrl(cfg *conf.Technical, service *conf.Service, election string) (
 	paddr, err := net.ResolveTCPAddr("tcp", service.PeerAddress)
 	if err != nil {
 		return nil, exit.Config, ResolvePeerAddressError{
-			Address: service.PeerAddress,
-			Err:     err,
+			Address:     service.PeerAddress,
+			Err:         err,
+			Description: _STORAGE_ADDR_PEER,
 		}
 	}
 	presv := paddr.String()
@@ -197,13 +202,15 @@ func newCtrl(cfg *conf.Technical, service *conf.Service, election string) (
 func checkTLS(roots *x509.CertPool, cert *tls.Certificate) error {
 	var err error
 	if cert.Leaf, err = x509.ParseCertificate(cert.Certificate[0]); err != nil {
-		return ParseTLSCertificateError{Err: err}
+		return ParseTLSCertificateError{Err: err,
+			Description: _STORAGE_ETCD_PARSE}
 	}
 	if _, err = cert.Leaf.Verify(x509.VerifyOptions{
 		Roots:     roots,
 		KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageAny}, // Checked manually.
 	}); err != nil {
-		return VerifyTLSCertificateError{Err: err}
+		return VerifyTLSCertificateError{Err: err,
+			Description: _STORAGE_ETCD_CA_VERIFY}
 	}
 
 	// *x509.Certificate.Verify only checks if any of the specified
@@ -219,7 +226,7 @@ required:
 				continue required
 			}
 		}
-		return TLSCertificateMissingUsageError{Usage: r}
+		return TLSCertificateMissingUsageError{Usage: r, Description: _STORAGE_ETCD_CA_VERIFY_EXT}
 	}
 	return nil
 }
@@ -270,7 +277,7 @@ func (c *ctrl) start(ctx context.Context) error {
 	// newCtrl. Do this when starting and not before to avoid overwriting
 	// the CA file when only checking the configuration.
 	if err := os.WriteFile(c.capath, c.capem, 0600); err != nil {
-		return EtcdCAWriteError{Err: err}
+		return EtcdCAWriteError{Err: err, Description: _STORAGE_ETCD_CA_WRITE}
 	}
 
 	// Create notification socket waiting for etcd to become ready. Do this
@@ -311,10 +318,11 @@ func (c *ctrl) start(ctx context.Context) error {
 	}
 
 	// Start etcd.
-	log.Log(ctx, StartingEtcd{Args: c.cmd.Args, Env: c.cmd.Env})
+	log.Log(ctx, StartingEtcd{Args: c.cmd.Args, Env: c.cmd.Env,
+		Description: _STORAGE_ETCD_START})
 	if err := c.cmd.Start(); err != nil {
 		c.cleanup()
-		return StartEtcdError{Err: err}
+		return StartEtcdError{Err: err, Description: _STORAGE_ETCD_START_FAIL}
 	}
 
 	// Start a goroutine which waits on c.cmd and sends the result on waitc.
@@ -327,15 +335,16 @@ func (c *ctrl) start(ctx context.Context) error {
 	// then manually stop etcd, but only log stopping errors: return the
 	// original error which caused the stop.
 	if !(first && c.bstrap) {
-		log.Log(ctx, WaitingForEtcdReady{})
+		log.Log(ctx, WaitingForEtcdReady{Description: _STORAGE_ETCD_WAIT})
 		select {
 		case err := <-c.waitc:
 			c.cleanup()
-			return EtcdStartupError{Err: err}
+			return EtcdStartupError{Err: err, Description: _STORAGE_ETCD_START_FAIL}
 		case err := <-readyc:
 			if err != nil {
 				if serr := c.stop(ctx); serr != nil {
-					log.Error(ctx, EtcdNotifyStopError{Err: serr})
+					log.Error(ctx, EtcdNotifyStopError{Err: serr,
+						Description: _STORAGE_ETCD_STOP_FAIL})
 				}
 				return err
 			}
@@ -348,12 +357,14 @@ func (c *ctrl) start(ctx context.Context) error {
 					// but do log it as an alert to signal
 					// that the configuration was not
 					// applied as expected.
-					log.Error(ctx, EtcdPruneError{Err: log.Alert(err)})
+					log.Error(ctx, EtcdPruneError{Err: log.Alert(err),
+						Description: _STORAGE_UPDATE_CLUSTER})
 				}
 			}
 		case <-ctx.Done():
 			if err := c.stop(ctx); err != nil {
-				log.Error(ctx, EtcdCanceledStopError{Err: err})
+				log.Error(ctx, EtcdCanceledStopError{Err: err,
+					Description: _STORAGE_ETCD_STOP_FAIL})
 			}
 			return ctx.Err()
 		}
@@ -367,7 +378,8 @@ func listenReady(ctx context.Context, nsock string) (<-chan error, error) {
 	// it for etcd to be ready.
 	conn, err := net.ListenPacket("unixgram", nsock)
 	if err != nil {
-		return nil, ListenNotifyError{Address: nsock, Err: err}
+		return nil, ListenNotifyError{Address: nsock, Err: err,
+			Description: _STORAGE_ETCD_UNIX}
 	}
 
 	// Start a goroutine which listens for the notification and sends the
@@ -378,11 +390,11 @@ func listenReady(ctx context.Context, nsock string) (<-chan error, error) {
 		sockMsg := make([]byte, len(ready)+1) // Allocate extra byte to detect trailing garbage.
 		n, _, err := conn.ReadFrom(sockMsg)
 		if err != nil {
-			sockc <- ReadFromNotifyError{Err: err}
+			sockc <- ReadFromNotifyError{Err: err, Description: _STORAGE_ETCD_UNIX_READ}
 			return
 		}
 		if msg := string(sockMsg[:n]); msg != ready {
-			sockc <- UnexpectedNotifyMessageError{Message: msg}
+			sockc <- UnexpectedNotifyMessageError{Message: msg, Description: _STORAGE_ETCD_UNIX_READY}
 			return
 		}
 		sockc <- nil
@@ -409,7 +421,7 @@ func (c *ctrl) check(_ context.Context) error {
 	select {
 	case err := <-c.waitc:
 		c.cleanup()
-		return EtcdTerminatedError{Err: err}
+		return EtcdTerminatedError{Err: err, Description: _STORAGE_ETCD_STOP}
 	default:
 		return nil
 	}
@@ -417,7 +429,8 @@ func (c *ctrl) check(_ context.Context) error {
 
 func (c *ctrl) stop(_ context.Context) error {
 	if err := c.cmd.Process.Signal(os.Interrupt); err != nil {
-		return InterruptEtcdError{PID: c.cmd.Process.Pid, Err: err}
+		return InterruptEtcdError{PID: c.cmd.Process.Pid, Err: err,
+			Description: _STORAGE_OS_INTERRUPT}
 	}
 
 	err := <-c.waitc
@@ -448,7 +461,8 @@ func storagemain() (code int) {
 	if c.Conf.Technical != nil {
 		prot := c.Conf.Technical.Storage.Protocol
 		if prot != storage.Etcd {
-			return c.Error(exit.Config, StorageProtocolError{Protocol: prot},
+			return c.Error(exit.Config, StorageProtocolError{Protocol: prot,
+				Description: _STORAGE_PROTOCOL},
 				"etcd storage protocol must be used for the",
 				"storage service, but protocol is", prot)
 		}
@@ -457,14 +471,16 @@ func storagemain() (code int) {
 		if cmd, code, err = newCtrl(c.Conf.Technical, c.Service,
 			c.Conf.Election.Identifier); err != nil {
 
-			return c.Error(code, EtcdControllerError{Err: err},
+			return c.Error(code, EtcdControllerError{Err: err,
+				Description: _STORAGE_CTRL_CFG},
 				"failed to configure etcd options:", err)
 		}
 
 		if s, err = server.NewController(&c.Conf.Version,
 			cmd.start, cmd.check, cmd.stop); err != nil {
 
-			return c.Error(exit.Config, ControllerConfError{Err: err},
+			return c.Error(exit.Config, ControllerConfError{Err: err,
+				Description: _STORAGE_CTRL},
 				"failed to configure controller:", err)
 		}
 	}
@@ -472,7 +488,8 @@ func storagemain() (code int) {
 	// Control etcd during the voting period.
 	if c.Until >= command.Execute {
 		if err = s.Control(c.Ctx); err != nil {
-			return c.Error(exit.Unavailable, ControlError{Err: err},
+			return c.Error(exit.Unavailable, ControlError{Err: err,
+				Description: _STORAGE_CTRL_SERVE},
 				"failed to control storage service:", err)
 		}
 	}

@@ -7,10 +7,8 @@ import ee.ivxv.common.service.container.Container;
 import ee.ivxv.common.service.container.ContainerReader;
 import ee.ivxv.common.service.container.InvalidContainerException;
 import ee.ivxv.common.util.Util;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+
+import java.io.*;
 import java.nio.file.Path;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
@@ -28,6 +26,9 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import javax.xml.crypto.dsig.XMLSignature;
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import ee.ivxv.common.zip.Zip;
+import ee.ivxv.common.zip.ZipFileCommentException;
 import org.apache.xml.security.Init;
 import org.apache.xml.security.c14n.Canonicalizer;
 import org.digidoc4j.*;
@@ -44,6 +45,10 @@ public class BdocContainerReader implements ContainerReader {
     public static final String FILE_EXTENSION = "bdoc";
     private static final String SIG_FILE_PREFIX = "META-INF/signatures";
     private static final String SIG_VALUE_EL = "SignatureValue";
+    private static final int MAX_BDOC_SIZE = 10 * 1024 * 1024; // 10 MiB
+    // Although a valid vote has only [mimetype, META-INF/signatures0.xml, META-INF/manifest.xml, *.ballot] files,
+    // we allow overall zip size to be < 500 MiB
+    private static final int MAX_FILES_COUNT = 50;
 
     private final Configuration conf;
 
@@ -86,7 +91,17 @@ public class BdocContainerReader implements ContainerReader {
                 .aContainer()
                 .fromExistingFile(path)
                 .withConfiguration(conf);
-        return read(cb, path);
+        return read(cb, path, true, MAX_BDOC_SIZE);
+    }
+
+    @Override
+    public final Container read(String path, int limitSize) throws InvalidContainerException {
+        log.debug("readContainer({}) called with size limit {}", path, limitSize);
+        ContainerBuilder cb = ContainerBuilder
+                .aContainer()
+                .fromExistingFile(path)
+                .withConfiguration(conf);
+        return read(cb, path, true, limitSize);
     }
 
     @Override
@@ -96,10 +111,10 @@ public class BdocContainerReader implements ContainerReader {
                 .aContainer()
                 .fromStream(input)
                 .withConfiguration(conf);
-        return read(cb, ref);
+        return read(cb, ref, false, 0);
     }
 
-    private Container read(ContainerBuilder containerBuilder, String ref)
+    private Container read(ContainerBuilder containerBuilder, String ref, boolean isFullRefPath, int limitSize)
             throws InvalidContainerException {
         try {
             org.digidoc4j.Container c = containerBuilder.build();
@@ -126,7 +141,24 @@ public class BdocContainerReader implements ContainerReader {
 
             validate(c, ref);
 
+            // NB! c.saveAsStream() sets general purpose flag's bit 3, however ZipInputStream cannot determine the
+            // uncompressed/compressed sizes ahead from [data descriptor n], although bytes are read into memory by
+            // that time
+            if (isFullRefPath) {
+                // digidoc4j doesn't validate appended bytes at the end of BDOC(zip).
+                try (InputStream is = new BufferedInputStream(new FileInputStream(ref))) {
+                    Zip.endOfCentralDirectoryRecord(is, MAX_FILES_COUNT, limitSize, limitSize);
+
+                    // If at least 1 byte can be read, then there are appended bytes at the end of BDOC(zip)
+                    if (is.read(new byte[1]) != -1) {
+                        throw new ZipFileCommentException();
+                    }
+                }
+            }
+
             return DataConverter.convert(c);
+        } catch (ZipFileCommentException | IOException e) { // zip errors
+            throw new InvalidContainerException(e.getMessage());
         } catch (InvalidContainerException e) {
             throw e;
         } catch (Throwable e) {

@@ -14,7 +14,7 @@ import (
 // parse parses the AST of the package.
 func parse(pkg *build.Package) (fset *token.FileSet, parsed *ast.Package, ok bool) {
 	fset = token.NewFileSet()
-	pkgmap, err := parser.ParseDir(fset, pkg.Dir, nil, 0)
+	pkgmap, err := parser.ParseDir(fset, pkg.Dir, nil, parser.ParseComments)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: could not parse %s: %v\n", pkg.ImportPath, err)
 		return
@@ -27,9 +27,10 @@ func parse(pkg *build.Package) (fset *token.FileSet, parsed *ast.Package, ok boo
 }
 
 type literal struct {
-	Pos    token.Position
-	Name   string
-	Fields []string
+	Pos     token.Position
+	Name    string
+	Fields  []string
+	Comment string
 }
 
 func (l literal) String() string {
@@ -38,7 +39,7 @@ func (l literal) String() string {
 
 // walk walks the package AST looking for struct literals with undeclared
 // exported local package types and key:value fields.
-func walk(path string, fset *token.FileSet, pkg *ast.Package) (literals []literal, ok bool) {
+func walk(goTags []build.Directive, path string, fset *token.FileSet, pkg *ast.Package) (literals []literal, ok bool) {
 	scope := pkg.Scope
 	if scope == nil {
 		// Collect all file scopes.
@@ -65,6 +66,7 @@ func walk(path string, fset *token.FileSet, pkg *ast.Package) (literals []litera
 	var blocklvl int
 	var inspector func(ast.Node) bool // Declare for recursion.
 	inspector = func(node ast.Node) (recurse bool) {
+		var descriptionPresent bool
 		recurse = true
 		if node == nil {
 			return
@@ -121,7 +123,42 @@ func walk(path string, fset *token.FileSet, pkg *ast.Package) (literals []litera
 
 		// Check the fields of the literal and add it to the result.
 		l := literal{Pos: pos, Name: name}
-		for _, el := range complit.Elts {
+
+		filename := pos.Filename
+
+		// Simulate do while loop, since log record may have zero amount of fields,
+		// which is only allowed in '//go:development' tagged and '_test.go' files
+		for i := -1; i < len(complit.Elts); i++ {
+			skipping := false
+
+			// Skip literal from test file
+			if isGoTestFile(filename) {
+				skipping = true
+			}
+
+			// Skip literal from development file
+			if isGoDevelopmentFile(goTags, filename) {
+				skipping = true
+			}
+
+			if i == -1 {
+				// Empty literal, e.g. EmptyLiteral{}
+				if len(complit.Elts) == 0 {
+					if !skipping {
+						logRecordWithoutDescription(pos, name)
+						ok = false
+						return
+					}
+					continue
+				}
+
+				i++
+			}
+
+			el := complit.Elts[i]
+
+			filename = relpos(fset.Position(el.Pos())).Filename
+
 			kv, match := el.(*ast.KeyValueExpr)
 			if !match {
 				fmt.Fprintln(os.Stderr, fieldError{
@@ -139,7 +176,50 @@ func walk(path string, fset *token.FileSet, pkg *ast.Package) (literals []litera
 				return
 			}
 			l.Fields = append(l.Fields, key.Name)
+
+			if skipping {
+				continue
+			}
+
+			// Each log record should have a 'Description' field
+			if key.Name == "Description" {
+				var logDescParser LogDescriptionParser
+				descriptionPresent = true
+				switch kv.Value.(type) {
+				case *ast.BasicLit:
+					logDescParser = new(LogDescriptionString)
+				case *ast.Ident:
+					logDescConstExpr := &LogDescriptionConstExpr{
+						LogDescAbsDirPath: pos.Filename,
+					}
+					logDescParser = logDescConstExpr
+				default:
+					fmt.Fprintln(os.Stderr, fieldError{
+						relpos(fset.Position(el.Pos())), ident.Name,
+						"must have 'Description:' field to be of either const expression or a string type"})
+					ok = false
+					return
+				}
+				comment, err := logDescParser.Parse(kv.Value)
+				if err != nil {
+					fmt.Fprintln(os.Stderr, fieldError{
+						relpos(fset.Position(el.Pos())), ident.Name,
+						err.Error()})
+					ok = false
+					return
+				}
+
+				l.Comment = comment
+			}
+
+			// There should be 'Description:' field in a log record
+			if i == len(complit.Elts)-1 && !descriptionPresent {
+				logRecordWithoutDescription(relpos(fset.Position(el.Pos())), name)
+				ok = false
+				return
+			}
 		}
+
 		literals = append(literals, l)
 
 		if *vp {
@@ -169,4 +249,27 @@ type fieldError struct {
 
 func (e fieldError) Error() string {
 	return fmt.Sprintf("error: %s: undeclared struct literal %s %s", e.pos, e.name, e.err)
+}
+
+func isGoDevelopmentFile(goTags []build.Directive, filename string) bool {
+	for _, goTag := range goTags {
+		if strings.Contains(goTag.Text, "development") {
+			if strings.Contains(goTag.Pos.String(), filename) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func isGoTestFile(filename string) bool {
+	return strings.Contains(filename, "_test.go")
+}
+
+func logRecordWithoutDescription(pos token.Position, name string) {
+	fmt.Fprintln(os.Stderr, fieldError{
+		pos,
+		name,
+		"log record should have a 'Description:' field",
+	})
 }

@@ -41,8 +41,6 @@ ajatembeldatakse allkirja element ``SignatureValue`` kanoniseeritud kujul.
 Klassikaline OCSP vastus koos RFC 3161 vormingus ajatempliga kvalifitseerivad
 BDOC-TS allkirja.
 
-
-
 Talletamine
 ====================================================
 

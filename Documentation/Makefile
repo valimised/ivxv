@@ -73,7 +73,8 @@ DOCS2ET := \
 DOCS2EN := \
 	public/arhitektuur \
 	public/liidesed \
-	public/protokollid
+	public/protokollid \
+	en/backendlogs
 
 RELEASE3 = "$(abspath $(DESTDIR))/3. Juhendid"
 DOCS3ET := \

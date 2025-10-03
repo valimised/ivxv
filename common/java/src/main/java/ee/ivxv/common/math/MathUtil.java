@@ -181,4 +181,14 @@ public class MathUtil {
     public static BigInteger safePrimeOrder(BigInteger p) {
         return p.subtract(BigInteger.ONE).divide(BigInteger.valueOf(2));
     }
+
+    /**
+     * Returns exact amount of bytes needed to fit bitsLen
+     * @param bitsLen
+     * @return
+     */
+    public static int toBytesLen(int bitsLen) {
+        // Loose fraction, we only interested in the whole part of a number
+        return (int) Math.ceil((double) bitsLen / 8);
+    }
 }

@@ -63,16 +63,21 @@ func DigestInfo(h crypto.Hash, data []byte) []byte {
 func PEMDecode(encoded, blockType string) (decoded []byte, err error) {
 	block, rest := pem.Decode([]byte(encoded))
 	if block == nil {
-		return nil, NotPEMEncodingError{}
+		return nil, NotPEMEncodingError{
+			Description: _CUTIL_PEM,
+		}
 	}
 	if len(rest) > 0 {
-		return nil, PEMTrailingDataError{Trailing: rest}
+		return nil, PEMTrailingDataError{Trailing: rest,
+			Description: _CUTIL_PEM}
 	}
 	if block.Type != blockType {
-		return nil, PEMBlockTypeError{Type: block.Type, Expected: blockType}
+		return nil, PEMBlockTypeError{Type: block.Type,
+			Expected: blockType, Description: _CUTIL_PEM_H}
 	}
 	if len(block.Headers) > 0 {
-		return nil, PEMHeadersError{Headers: block.Headers}
+		return nil, PEMHeadersError{Headers: block.Headers,
+			Description: _CUTIL_PEM_H_BAD}
 	}
 	return block.Bytes, nil
 }
@@ -84,8 +89,9 @@ func PEMCertificates(pems ...string) (certs []*x509.Certificate, err error) {
 		cert, err := PEMCertificate(pem)
 		if err != nil {
 			return nil, PEMCertificateError{
-				Idx: i,
-				Err: err,
+				Idx:         i,
+				Err:         err,
+				Description: _CUTIL_CERT_PEM,
 			}
 		}
 		certs = append(certs, cert)
@@ -98,11 +104,13 @@ func PEMCertificates(pems ...string) (certs []*x509.Certificate, err error) {
 func PEMCertificate(p string) (cert *x509.Certificate, err error) {
 	der, err := PEMDecode(p, "CERTIFICATE")
 	if err != nil {
-		return nil, PEMCertificateDecodeError{Err: err}
+		return nil, PEMCertificateDecodeError{Err: err,
+			Description: _CUTIL_PEM}
 	}
 	cert, err = x509.ParseCertificate(der)
 	if err != nil {
-		return nil, PEMCertParseX509Error{Err: err}
+		return nil, PEMCertParseX509Error{Err: err,
+			Description: _CUTIL_CERT_PEM}
 	}
 	return
 }
@@ -111,11 +119,13 @@ func PEMCertificate(p string) (cert *x509.Certificate, err error) {
 func Base64Certificate(b string) (cert *x509.Certificate, err error) {
 	certDER, err := base64.StdEncoding.DecodeString(b)
 	if err != nil {
-		return nil, Base64CertificateDecodeError{Err: err}
+		return nil, Base64CertificateDecodeError{Err: err,
+			Description: _CUTIL_CERT_B64}
 	}
 	cert, err = x509.ParseCertificate(certDER)
 	if err != nil {
-		return nil, Base64CertParseX509Error{Err: err}
+		return nil, Base64CertParseX509Error{Err: err,
+			Description: _CUTIL_CERT_PARSE}
 	}
 	return
 }
@@ -127,7 +137,8 @@ func PEMCertificatePool(pems ...string) (pool *x509.CertPool, err error) {
 	for i, pem := range pems {
 		c, err := PEMCertificate(pem)
 		if err != nil {
-			return nil, PEMCertError{Index: i, Err: err}
+			return nil, PEMCertError{Index: i, Err: err,
+				Description: _CUTIL_CERT_PEM}
 		}
 		pool.AddCert(c)
 	}
@@ -151,13 +162,15 @@ func CertificatePool(certs ...*x509.Certificate) (pool *x509.CertPool) {
 func ReEncodeECDSASignature(signature []byte) (recode []byte, err error) {
 	var r, s *big.Int
 	if r, s, err = ParseECDSAXMLSignature(signature); err != nil {
-		return nil, ECDSASignatureParseError{Signature: signature, Err: err}
+		return nil, ECDSASignatureParseError{Signature: signature,
+			Err: err, Description: _CUTIL_ECDSA2XML}
 	}
 	if recode, err = asn1.Marshal(struct {
 		R *big.Int
 		S *big.Int
 	}{r, s}); err != nil {
-		return nil, ECDSASignatureASN1MarshalError{Err: err}
+		return nil, ECDSASignatureASN1MarshalError{Err: err,
+			Description: _CUTIL_ASN1ECDSA}
 	}
 	return
 }
@@ -171,11 +184,13 @@ func IsECDSAASN1EncodedSignature(signature []byte) error {
 
 	unmarshal, err := asn1.Unmarshal(signature, sig)
 	if err != nil {
-		return SignatureIsNotASN1EncodedECDSAError{Err: err}
+		return SignatureIsNotASN1EncodedECDSAError{Err: err,
+			Description: _CUTIL_UASN1ECDSA}
 	}
 	if len(unmarshal) != 0 {
 		return SignatureIsASN1EncodedECDSAButHasRestAmountOfBytesError{
-			Amount: len(unmarshal),
+			Amount:      len(unmarshal),
+			Description: _CUTIL_UASN1ECDSA,
 		}
 	}
 	return nil
@@ -189,7 +204,7 @@ func IsECDSAASN1EncodedSignature(signature []byte) error {
 // here https://tools.ietf.org/html/rfc3279#section-2.2.3.
 func ParseECDSAXMLSignature(signature []byte) (r, s *big.Int, err error) {
 	if len(signature)%2 != 0 {
-		return nil, nil, ECDSASignatureLengthError{}
+		return nil, nil, ECDSASignatureLengthError{Description: _CUTIL_ECDSA_SIZE}
 	}
 	n := len(signature) / 2
 	r = big.NewInt(0).SetBytes(signature[:n])
@@ -209,9 +224,11 @@ func ParseECDSAASN1Signature(der []byte) (r, s *big.Int, err error) {
 		S *big.Int
 	}
 	if rest, err := asn1.Unmarshal(der, &parsed); err != nil {
-		return nil, nil, ECDSASignatureASN1UnmarshalError{Err: err}
+		return nil, nil, ECDSASignatureASN1UnmarshalError{Err: err,
+			Description: _CUTIL_UASN1ECDSA}
 	} else if len(rest) > 0 {
-		return nil, nil, ECDSASignatureTrailingDataError{Err: err}
+		return nil, nil, ECDSASignatureTrailingDataError{Err: err,
+			Description: _CUTIL_UASN1ECDSA}
 	}
 	return parsed.R, parsed.S, nil
 }
@@ -242,7 +259,8 @@ func Nonce44Bytes() (string, error) {
 	nonce := make([]byte, entropy256bit)
 	_, err := rand.Read(nonce)
 	if err != nil {
-		return "", NonceGenerationError{Err: err}
+		return "", NonceGenerationError{Err: err,
+			Description: _CUTIL_44B_RAND}
 	}
 	return base64.StdEncoding.EncodeToString(nonce), nil
 }

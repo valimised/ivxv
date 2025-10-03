@@ -46,7 +46,7 @@ func webeidmain() (code int) {
 
 	// Check that origin is correct HTTPS
 	if !server.VerifyHTTPSOrigin(c.Service.Origin) {
-		return c.Error(exit.Config, BadUrlSchema{},
+		return c.Error(exit.Config, BadUrlSchema{Description: _WEBEID_BAD_URL},
 			"bad service origin URL:", c.Service.Origin)
 	}
 
@@ -61,24 +61,30 @@ func webeidmain() (code int) {
 	var err error
 
 	if elec := c.Conf.Election; elec != nil {
-		// Check election configuration time values.
+		// Check election configuration time values - service start
 		if start, err = c.Conf.Election.ServiceStartTime(); err != nil {
-			return c.Error(exit.Config, StartTimeError{Err: err},
+			return c.Error(exit.Config, StartTimeError{Err: err,
+				Description: _WEBEID_START},
 				"bad service start time:", err)
 		}
 
+		// Check election configuration time values - election stop
 		if rpc.authEnd, err = c.Conf.Election.ElectionStopTime(); err != nil {
-			return c.Error(exit.Config, ElectionStopTimeError{Err: err},
+			return c.Error(exit.Config, ElectionStopTimeError{Err: err,
+				Description: _WEBEID_AUTH_STOP},
 				"bad election stop time:", err)
 		}
 
+		// Check election configuration time values - service stop
 		if stop, err = c.Conf.Election.ServiceStopTime(); err != nil {
-			return c.Error(exit.Config, ServiceStopTimeError{Err: err},
+			return c.Error(exit.Config, ServiceStopTimeError{Err: err,
+				Description: _WEBEID_STOP},
 				"bad service stop time:", err)
 		}
 
 		if rpc.ticket, err = ticket.NewFromSystem(); err != nil {
-			return c.Error(exit.Config, TicketConfError{Err: err},
+			return c.Error(exit.Config, TicketConfError{Err: err,
+				Description: _WEBEID_TICKET},
 				"failed to configure ticket manager:", err)
 		}
 
@@ -86,25 +92,27 @@ func webeidmain() (code int) {
 		// after server.Header.AuthToken is issued
 		ticketConf, ok := c.Conf.Election.Auth[auth.Ticket]
 		if !ok {
-			return c.Error(exit.Config, TicketAuthError{},
+			return c.Error(exit.Config, TicketAuthError{Description: _WEBEID_TICKET_AUTH},
 				"ticket authentication is mandatory for webeid")
 		}
 		if authConf, err = server.NewAuthConf(auth.Conf{auth.Ticket: ticketConf},
 			elec.Identity, &elec.Age); err != nil {
-			return c.Error(exit.Config, ServerTicketAuthConfError{Err: err},
+			return c.Error(exit.Config, ServerTicketAuthConfError{Err: err,
+				Description: _WEBEID_AUTH},
 				"failed to configure client ticket authentication:", err)
 		}
 
 		// Auther for Web eID auth token TLS validation in RPC.Token method
 		tlsConf, ok := c.Conf.Election.Auth[auth.TLS]
 		if !ok {
-			return c.Error(exit.Config, TLSAuthError{},
+			return c.Error(exit.Config, TLSAuthError{Description: _WEBEID_TLS_AUTH},
 				"TLS authentication is mandatory for webeid")
 		}
 		var auther server.AuthConf
 		if auther, err = server.NewAuthConf(auth.Conf{auth.TLS: tlsConf},
 			"", nil); err != nil {
-			return c.Error(exit.Config, ServerTLSAuthConfError{Err: err},
+			return c.Error(exit.Config, ServerTLSAuthConfError{Err: err,
+				Description: _WEBEID_TLS_AUTH_CFG},
 				"failed to configure client TLS authentication:", err)
 		}
 		// This allows to perform TLS validation inside RPC.Token or any other
@@ -125,7 +133,8 @@ func webeidmain() (code int) {
 			Filter:   &c.Conf.Technical.Filter,
 			Version:  &c.Conf.Version,
 		}, rpc); err != nil {
-			return c.Error(exit.Config, ServerConfError{Err: err},
+			return c.Error(exit.Config, ServerConfError{Err: err,
+				Description: _WEBEID_SERVER},
 				"failed to configure server:", err)
 		}
 
@@ -134,7 +143,8 @@ func webeidmain() (code int) {
 		// for Web eID authentication
 		rpc.cookie, err = ticket.NewFromSystemAsCookie()
 		if err != nil {
-			return c.Error(exit.Config, ReadSharedSecretRPCConfError{Err: err},
+			return c.Error(exit.Config, ReadSharedSecretRPCConfError{Err: err,
+				Description: _WEBEID_BEARER_COOKIE},
 				"failed to read RPC shared secret (cookie):", err)
 		}
 	}
@@ -142,7 +152,8 @@ func webeidmain() (code int) {
 	// Start listening for incoming connections during the voting period.
 	if c.Until >= command.Execute {
 		if err = s.WithAuth(authConf).ServeAt(c.Ctx, start); err != nil {
-			return c.Error(exit.Unavailable, ServeError{Err: err},
+			return c.Error(exit.Unavailable, ServeError{Err: err,
+				Description: _WEBEID_SERVER_SERVE},
 				"failed to serve webeid service:", err)
 		}
 	}

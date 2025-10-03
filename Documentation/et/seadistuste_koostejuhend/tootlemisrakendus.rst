@@ -70,7 +70,7 @@ töötlemisele kuluvat aega.
         Kogumisteenusest väljastatud e-valimiskasti üksiku allkirjastatud hääle
         maksimaalne lubatud pikkus baitides.
 
-        Kui määramatata, siis vaikimisi kasutatakse 32768 baiti.
+        Kui määramata, siis vaikimisi kasutatakse 32768 baiti.
 
 :check.districts:
         Digitaalselt allkirjastatud ringkondade nimekiri.
@@ -132,7 +132,7 @@ töötlemisele kuluvat aega.
         #. Valijate nimekirjade töötlemisvigade raport
            :file:`voterlist_errors.txt`;
 
-        #. *Log1* fail ehk vastvõetud hääled
+        #. *Log1* fail ehk vastuvõetud hääled
            :file:`<valimise id>.<küsimuse id>.check.log1`.
 
 :file:`processor.check.yaml`:
@@ -183,7 +183,7 @@ eemaldatakse kõik varasemad hääled.
         #. Tühistamiste ja ennistamiste aruanne :file:`<valimise
            id>-revocation-report.csv`;
 
-        #. Tühistamiste ja ennistamiste aruanne ilma isikuandmedeta
+        #. Tühistamiste ja ennistamiste aruanne ilma isikuandmeteta
            :file:`<valimise
            id>-revocation-report.csv.anonymous`;
 
@@ -230,7 +230,7 @@ rakendab sellele sisendiks antud tühistus- ja ennistusnimekirjad.
         #. Tühistamiste ja ennistamiste aruanne :file:`<valimise
            id>-revocation-report.csv`;
 
-        #. Tühistamiste ja ennistamiste aruanne ilma isikuandmedeta
+        #. Tühistamiste ja ennistamiste aruanne ilma isikuandmeteta
            :file:`<valimise
            id>-revocation-report.csv.anonymous`;
 
@@ -249,10 +249,10 @@ rakendab sellele sisendiks antud tühistus- ja ennistusnimekirjad.
 
 .. _processor-anonymize:
 
-E-valimiskasti töötlemine - anonüümistamine
--------------------------------------------
+E-valimiskasti töötlemine - anonüümimine
+----------------------------------------
 
-E-valimiskasti anonüümistamiseks kasutatakse tööriista *anonymize*.
+E-valimiskasti anonüümimiseks kasutatakse tööriista *anonymize*.
 Tööriist saab sisendiks tööriista *revoke* poolt koostatud e-valimiskasti ning eemaldab
 sellest valijate info.
 
@@ -319,7 +319,7 @@ võimalik eksportida nii kõiki hääli korraga, kui konkreetse valija hääli.
         Kogumisteenusest väljastatud e-valimiskasti üksiku allkirjastatud hääle
         maksimaalne lubatud pikkus baitides.
 
-        Kui määramatata, siis vaikimisi kasutatakse 32768 baiti.
+        Kui määramata, siis vaikimisi kasutatakse 32768 baiti.
 
 :export.voter_id:
         Valija identifikaator (valikuline).
@@ -358,7 +358,7 @@ kontrolli digitaalallkirju, häälte töötlemiseks tuleb kasutada *check*,
         Kogumisteenusest väljastatud e-valimiskasti üksiku allkirjastatud hääle
         maksimaalne lubatud pikkus baitides.
 
-        Kui määramatata, siis vaikimisi kasutatakse 32768 baiti.
+        Kui määramata, siis vaikimisi kasutatakse 32768 baiti.
 
 :stats.election_day:
         Valimispäev. Kõikide e-hääletanute vanused arvutatakse statistika
@@ -434,9 +434,9 @@ kust on lahutatud võrreldava faili väärtused.
 
 :statsdiff.to:
         Võrreldav statistika fail JSON-vormingus. Võrreldav statistika fail on pärit
-        IVXV logmonitorist. Selleks et kasutada *statsdiff* utiliidi tuleb antud failist
+        IVXV logimonitorist. Selleks et kasutada *statsdiff* utiliidi tuleb antud failist
         eemaldada **time:** ja **meta:** JSON kirjed. Need kirjed ei oma tähtsust
-        statistika võrdlemisel ja on lihtsalt statistika faili geneererimise ajatempel,
+        statistika võrdlemisel ja on lihtsalt statistika faili genereerimise ajatempel,
         mis on alati erinev **statsdiff.compare** ja **statsdiff.to** failides.
 
 :statsdiff.diff:
@@ -474,7 +474,7 @@ Rohkem infot teostavate operatsioonide kohta leidub alapeatükkides:
         Kogumisteenusest väljastatud e-valimiskasti üksiku allkirjastatud hääle
         maksimaalne lubatud pikkus baitides.
 
-        Kui määramatata, siis vaikimisi kasutatakse 32768 baiti.
+        Kui määramata, siis vaikimisi kasutatakse 32768 baiti.
 
 :checkAndSquash.districts:
         Digitaalselt allkirjastatud ringkondade nimekiri.
@@ -545,11 +545,11 @@ Rohkem infot teostavate operatsioonide kohta leidub alapeatükkides:
         #. Tühistamiste ja ennistamiste aruanne :file:`<valimise
            id>-revocation-report.csv`;
 
-        #. Tühistamiste ja ennistamiste aruanne ilma isikuandmedeta
+        #. Tühistamiste ja ennistamiste aruanne ilma isikuandmeteta
            :file:`<valimise
            id>-revocation-report.csv.anonymous`;
 
-        #. *Log1* fail ehk vastvõetud hääled
+        #. *Log1* fail ehk vastuvõetud hääled
            :file:`<valimise id>.<küsimuse id>.log1`.
 
         #. *Log2* fail ehk tühistatud hääled :file:`<valimise id>.<küsimuse
@@ -570,10 +570,10 @@ Rohkem infot teostavate operatsioonide kohta leidub alapeatükkides:
 
 .. _processor-revokeAndAnonymize:
 
-E-valimiskasti töötlemine - häälte tühistamine, ennistamine jaoskonnainfo põhjal ja anonüümistamine
+E-valimiskasti töötlemine - häälte tühistamine, ennistamine jaoskonnainfo põhjal ja anonüümimine
 ---------------------------------------------------------------------------------------------------
 
-Häälte tühistamiseks, ennistamiseks jaoskonnainfo põhjal ning anonüümistamiseks
+Häälte tühistamiseks, ennistamiseks jaoskonnainfo põhjal ning anonüümimiseks
 kasutatakse tööriista *revokeAndAnonymize*. Tööriist saab sisendiks tööriista *squash*
 või *checkAndSquash* poolt koostatud e-valimiskasti ning rakendab sellele sisendiks antud
 tühistus- ja ennistusnimekirjad.
@@ -593,16 +593,16 @@ tühistus- ja ennistusnimekirjad.
 :revokeAndAnonymize.out:
         Tööriista väljundkaust. Sellesse kausta tekivad:
 
-        #. Korduvhääletajate häältest puhastatud ning anonüümistamistatud e-valimiskast
+        #. Korduvhääletajate häältest puhastatud ning anonüümitud e-valimiskast
            :file:`<valimise id>-bb-4.json`;
 
-        #. Korduvhääletajate häältest puhastatud ning anonüümistamistatud e-valimiskasti räsi
+        #. Korduvhääletajate häältest puhastatud ning anonüümitud e-valimiskasti räsi
            :file:`<valimise id>-bb-4.json.sha256sum`;
 
         #. Tühistamiste ja ennistamiste aruanne :file:`<valimise
            id>-revocation-report.csv`;
 
-        #. Tühistamiste ja ennistamiste aruanne ilma isikuandmedeta
+        #. Tühistamiste ja ennistamiste aruanne ilma isikuandmeteta
            :file:`<valimise
            id>-revocation-report.csv.anonymous`;
 

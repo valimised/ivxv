@@ -23,7 +23,9 @@ func NewClient(c *command.C) (status.TLSDialer, int) {
 	// Get session status client configuration from technical.yml
 	observable := c.Conf.Technical.Status.Session
 	if observable == nil {
-		return nil, c.Error(exit.Config, SessionObservableNotConfiguredError{},
+		return nil, c.Error(exit.Config, SessionObservableNotConfiguredError{
+			Description: _SESSIONSTATUS_CONF,
+		},
 			"failed to read session observable client from configuration")
 	}
 
@@ -31,14 +33,16 @@ func NewClient(c *command.C) (status.TLSDialer, int) {
 	var storageConf etcd.Conf
 	err := yaml.Apply(c.Conf.Technical.Storage.Conf, &storageConf)
 	if err != nil {
-		return nil, c.Error(exit.Config, ReadStorageCAFromTechicalConfigError{Err: err},
+		return nil, c.Error(exit.Config, ReadStorageCAFromTechicalConfigError{Err: err,
+			Description: _SESSIONSTATUS_STORAGE_CONF},
 			"failed to read CA certificate from storage configuration:", err)
 	}
 
 	// Add CA certificate to in-memory certificate pool
 	certPool, err := cryptoutil.PEMCertificatePool(storageConf.CA)
 	if err != nil {
-		return nil, c.Error(exit.Config, AddStorageCAToCAPoolError{Err: err},
+		return nil, c.Error(exit.Config, AddStorageCAToCAPoolError{Err: err,
+			Description: _SESSIONSTATUS_STORAGE_CA},
 			"failed to add storage CA to certificate pool:", err)
 	}
 
@@ -48,7 +52,8 @@ func NewClient(c *command.C) (status.TLSDialer, int) {
 	// Parse client TLS certificate-key pair
 	tlsCert, err := tls.LoadX509KeyPair(cert, key)
 	if err != nil {
-		return nil, c.Error(exit.Config, ParseTLSKeyPairError{Err: err},
+		return nil, c.Error(exit.Config, ParseTLSKeyPairError{Err: err,
+			Description: _SESSIONSTATUS_KEY_PAIR},
 			"failed to parse TLS client certificate-key pair:", err)
 	}
 

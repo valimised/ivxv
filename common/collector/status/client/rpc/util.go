@@ -13,8 +13,9 @@ func castAnyToStatusReq(req interface{}) (*StatusReq, error) {
 	statusReq, ok := req.(*StatusReq)
 	if !ok {
 		return nil, CastToStatusReqError{
-			Expected: expectedCastForStatusReq,
-			Got:      reflect.TypeOf(req),
+			Expected:    expectedCastForStatusReq,
+			Got:         reflect.TypeOf(req),
+			Description: _RPC_ANY_TO_STATUSREQ,
 		}
 	}
 
@@ -27,8 +28,9 @@ func CastAnyToVerifyReq(req interface{}) (*VerifyReq, error) {
 	verifyReq, ok := req.(*VerifyReq)
 	if !ok {
 		return nil, CastToVerifyReqError{
-			Expected: expectedCastForVerifyReq,
-			Got:      reflect.TypeOf(req),
+			Expected:    expectedCastForVerifyReq,
+			Got:         reflect.TypeOf(req),
+			Description: _RPC_ANY_TO_VERIFYREQ,
 		}
 	}
 

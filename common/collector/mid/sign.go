@@ -10,7 +10,7 @@ func (c *Client) MobileSignHash(ctx context.Context, idCode, phone string, hash 
 
 	sesscode, err = c.startSession(ctx, sessSign, idCode, phone, hash, hashType)
 	if err != nil {
-		err = MobileSignHashError{Err: err}
+		err = MobileSignHashError{Err: err, Description: _MID_SESS}
 		return
 	}
 
@@ -25,7 +25,7 @@ func (c *Client) GetMobileSignHashStatus(ctx context.Context, sesscode string) (
 
 	algorithm, signature, _, err = c.getSessionStatus(ctx, sessSign, sesscode)
 	if err != nil {
-		err = GetMobileSignHashStatusError{Err: err}
+		err = GetMobileSignHashStatusError{Err: err, Description: _MID_SESS_STAT}
 		return
 	}
 	return

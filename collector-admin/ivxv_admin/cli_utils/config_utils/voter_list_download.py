@@ -15,6 +15,7 @@ from ...config import CONFIG, cfg_path
 from ...db import IVXVManagerDb
 from ...event_log import register_service_event
 from ...lib import get_current_voter_list_changeset_no
+from ...lib.lockfile import PidLocker
 from .. import init_cli_util, log
 from .command_load import register_cfg, validate_lists_consistency
 
@@ -42,110 +43,145 @@ def main():
     if not os.path.exists("/etc/ivxv/election.bdoc") and not sys.stdout.isatty():
         return 0
 
-    # detect state of the last changeset
-    with IVXVManagerDb() as db:
-        changeset_no = get_current_voter_list_changeset_no(db)
-        changeset_state = db.get_value(f"list/voters{changeset_no:04d}-state")
+    # check process lock to start voterlist download without interruption, otherwise
+    # skip downloading until next time
+    if PidLocker.pidfile_exists('ivxv-voter-list-download.pid'):
+        log.info('Cannot start voterlist download, pidfile exists')
+        return 0
 
-    # stop on INVALID changeset
-    if changeset_state == "INVALID":
-        log.info(
-            "State of the last registered voter list changeset #%d is %s",
-            changeset_no,
-            changeset_state,
-        )
-        log.info("Skipping download of the next voter list changeset")
-        if output_report_filepath:
-            with open(output_report_filepath, "w") as fd:
-                json.dump(
-                    {"voter-list-changeset": {"status": "Skipped"}}, fd, indent=True
+    # create process lock and start voterlist downloading
+    pidfile_path = cfg_path('ivxv_admin_data_path',
+                            'ivxv-voter-list-download.pid')
+    log.debug("Creating pidfile %r", pidfile_path)
+    try:
+        PidLocker(pidfile_path, timeout=5)
+    except IOError:
+        log.error("Creating pidfile %r failed", pidfile_path)
+        return 1
+
+    retries: int = 0
+
+    try:
+        while True:
+            retries += 1
+
+            # detect state of the last changeset
+            with IVXVManagerDb() as db:
+                changeset_no = get_current_voter_list_changeset_no(db)
+                changeset_state = db.get_value(f"list/voters{changeset_no:04d}-state")
+
+            # stop on INVALID changeset
+            if changeset_state == "INVALID":
+                log.info(
+                    "State of the last registered voter list changeset #%d is %s",
+                    changeset_no,
+                    changeset_state,
                 )
-        return 0
-    changeset_no += 1
+                log.info("Skipping download of the next voter list changeset")
+                if output_report_filepath:
+                    with open(output_report_filepath, "w") as fd:
+                        json.dump(
+                            {"voter-list-changeset": {"status": "Skipped"}}, fd,
+                            indent=True
+                        )
+                return 0
+            changeset_no += 1
 
-    # get params from election config
-    command_file.log.setLevel(args["--log-level"])
-    cfg = command_file.load_collector_cmd_file("election", "/etc/ivxv/election.bdoc")
-    if not cfg:
-        return 1
-    election_id = cfg["identifier"]
-    vis_base_url_template = f"{cfg['vis']['url']}{{endpoint}}"
-    ca_certs_filepath = None
-    if cfg["vis"].get("ca"):
-        ca_certs_filepath = cfg_path("vis_path", "ca.pem")
-        with open(ca_certs_filepath, "w") as fd:
-            fd.write("\n".join(cfg["vis"]["ca"]))
+            # get params from election config
+            command_file.log.setLevel(args["--log-level"])
+            cfg = command_file.load_collector_cmd_file(
+                "election", "/etc/ivxv/election.bdoc")
+            if not cfg:
+                return 1
+            election_id = cfg["identifier"]
+            vis_base_url_template = f"{cfg['vis']['url']}{{endpoint}}"
+            ca_certs_filepath = None
+            if cfg["vis"].get("ca"):
+                ca_certs_filepath = cfg_path("vis_path", "ca.pem")
+                with open(ca_certs_filepath, "w") as fd:
+                    fd.write("\n".join(cfg["vis"]["ca"]))
 
-    # download voter list
-    output_filepath = f"{CONFIG.get('vis_path')}/voters{changeset_no:04d}.zip"
-    url = vis_base_url_template.format(endpoint="ehs-election-voters-changeset")
-    log.info("Query voter list update #%d from %r", changeset_no, url)
-    request_params = {"electionCode": election_id, "changeset": changeset_no}
-    resp = requests.get(
-        url,
-        verify=ca_certs_filepath,
-        cert=(
-            "/etc/ssl/certs/ivxv-admin-client.crt",
-            "/etc/ssl/private/ivxv-admin-client.key",
-        ),
-        params=request_params,
-    )
-    log.info(
-        "VIS responded to voter list update #%d: %r %s",
-        changeset_no,
-        resp.status_code,
-        resp.reason,
-    )
-    timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-    version = f"{url} {timestamp}"
+            # download voter list
+            output_filepath = f"{CONFIG.get('vis_path')}/voters{changeset_no:04d}.zip"
+            url = vis_base_url_template.format(endpoint="ehs-election-voters-changeset")
+            log.info("Query voter list update #%d from %r", changeset_no, url)
+            request_params = {"electionCode": election_id, "changeset": changeset_no}
+            resp = requests.get(
+                url,
+                verify=ca_certs_filepath,
+                cert=(
+                    "/etc/ssl/certs/ivxv-admin-client.crt",
+                    "/etc/ssl/private/ivxv-admin-client.key",
+                ),
+                params=request_params,
+            )
 
-    # write query report
-    if output_report_filepath:
-        report = {
-            "voter-list-changeset": {
-                "operation": f"Download voter list update #{changeset_no} from VIS",
-                "request": {"url": resp.url, "method": "GET", "params": request_params},
-                "response": {
-                    "status": "OK" if resp.ok else "ERROR",
-                    "status_code": resp.status_code,
-                    "reason": resp.reason,
-                    "time_elapsed": str(resp.elapsed),
-                    "headers": dict([key, val] for key, val in resp.headers.items()),
-                    "content": resp.text,
-                },
-            },
-        }
-        with open(output_report_filepath, "w") as fd:
-            json.dump(report, fd, indent=True)
+            log.info(
+                "VIS responded to voter list update #%d: %r %s",
+                changeset_no,
+                resp.status_code,
+                resp.reason,
+            )
+            timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+            version = f"{url} {timestamp}"
 
-    # register download event / handle download errors
-    if resp.status_code == 404:
-        log.info("Voter list changeset #%d it not available in VIS", changeset_no)
-        return 0
-    if resp.status_code != 200:
-        log.error("Server responded with status %d - %r", resp.status_code, resp.reason)
-        register_service_event(
-            "VOTER_LIST_DOWNLOAD_FAILED",
-            level="INFO",
-            service="admin",
-            params={"changeset_no": changeset_no},
-        )
-        return 1
-    register_service_event(
-        "VOTER_LIST_DOWNLOADED",
-        level="INFO",
-        service="admin",
-        params={"changeset_no": changeset_no},
-    )
+            # write query report
+            if output_report_filepath:
+                report = {
+                    "voter-list-changeset": {
+                        "operation": f"Download voter list update #{changeset_no} from "
+                                     + "VIS",
+                        "request": {"url": resp.url, "method": "GET",
+                                    "params": request_params},
+                        "response": {
+                            "status": "OK" if resp.ok else "ERROR",
+                            "status_code": resp.status_code,
+                            "reason": resp.reason,
+                            "time_elapsed": str(resp.elapsed),
+                            "retries": retries,
+                            "headers": dict([key, val] for key, val in
+                                            resp.headers.items()),
+                            "content": resp.text,
+                        },
+                    },
+                }
+                with open(output_report_filepath, "w") as fd:
+                    json.dump(report, fd, indent=True)
 
-    # write downloaded content to file
-    write_voter_list_zip(resp.content, version, output_filepath)
+            # register download event / handle download errors
+            if resp.status_code == 404:
+                log.info("Voter list changeset #%d is not available in VIS",
+                         changeset_no)
+                return 0
+            if resp.status_code != 200:
+                log.error("Server responded with status %d - %r", resp.status_code,
+                          resp.reason)
+                register_service_event(
+                    "VOTER_LIST_DOWNLOAD_FAILED",
+                    level="INFO",
+                    service="admin",
+                    params={"changeset_no": changeset_no},
+                )
+                return 1
+            register_service_event(
+                "VOTER_LIST_DOWNLOADED",
+                level="INFO",
+                service="admin",
+                params={"changeset_no": changeset_no},
+            )
 
-    # register voter list
-    if changeset_no:
-        register_voter_list(output_filepath, timestamp, version)
+            # write downloaded content to file
+            write_voter_list_zip(resp.content, version, output_filepath)
 
-    return 0
+            # register voter list
+            if changeset_no:
+                register_voter_list(output_filepath, timestamp, version)
+    finally:
+        try:
+            log.debug("Releasing pidfile %r", pidfile_path)
+            PidLocker.rm_stale_pidfile('ivxv-voter-list-download.pid')
+        except FileNotFoundError:  # pid file doesn't exist
+            pass
 
 
 def write_voter_list_zip(content, version, output_filepath):

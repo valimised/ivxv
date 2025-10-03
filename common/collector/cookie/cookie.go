@@ -33,16 +33,18 @@ func New(key Key) (c *C, err error) {
 	// Set up authenticated encryption.
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, KeyError{Err: err}
+		return nil, KeyError{Err: err, Description: _COOKIE_AES}
 	}
 	if c.aead, err = cipher.NewGCM(block); err != nil {
-		return nil, CipherError{Err: err}
+		return nil, CipherError{Err: err,
+			Description: _COOKIE_AES}
 	}
 
 	// Initialize the nonce.
 	c.nonce = make([]byte, c.aead.NonceSize())
 	if _, err = rand.Read(c.nonce); err != nil {
-		return nil, InitNonceError{Err: err}
+		return nil, InitNonceError{Err: err,
+			Description: _COOKIE_NONCE}
 	}
 	return
 }
@@ -75,14 +77,15 @@ func (c *C) Create(data []byte) (cookie []byte) {
 func (c *C) Open(cookie []byte) (data []byte, err error) {
 	n := c.aead.NonceSize()
 	if len(cookie) <= n+c.aead.Overhead() {
-		return nil, ShortCookieError{Len: len(cookie), Err: err}
+		return nil, ShortCookieError{Len: len(cookie), Err: err,
+			Description: _COOKIE_SHORT}
 	}
 
 	nonce := cookie[:n]
 	cipher := cookie[n:]
 
 	if data, err = c.aead.Open(data, nonce, cipher, nil); err != nil {
-		return nil, OpenError{Err: err}
+		return nil, OpenError{Err: err, Description: _COOKIE_READ}
 	}
 	return
 }

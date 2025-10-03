@@ -64,7 +64,7 @@ Nimekirjade laadimine kogumisteenusesse
 ---------------------------------------
 
 Nimekirjade laadimiseks kogumisteenusesse on lehe allosas laadimisvorm. Laadida
-on lubatud ainult volitatud kasutajate poolt digitaaltelt signeeritud
+on lubatud ainult volitatud kasutajate poolt digitaalselt signeeritud
 nimekirju.
 
 .. note::

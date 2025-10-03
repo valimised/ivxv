@@ -53,6 +53,7 @@ func unsupportedProfileErrorMessageSupplier(profile Profile) Supplier {
 	return func() interface{} {
 		profileErr := new(UnsupportedProfileError)
 		profileErr.Profile = profile
+		profileErr.Description = _CONTAINER_BDOC_PROFILE
 		return *profileErr
 	}
 }
@@ -64,7 +65,9 @@ func tsProfileOCSPDelayedErrorMessageSupplier(signatureID string) Supplier {
 		timestampErr := new(TimestampAndOCSPTimeMismatchError)
 		timestampErr.OCSPProducedAt = time.Date(2021, 4, 13, 9, 56, 6, 0, time.UTC)
 		timestampErr.TimestampGenTime = time.Date(2021, 4, 8, 8, 20, 41, 0, time.UTC)
+		timestampErr.Description = _CONTAINER_BDOC_TS
 		signatureError.Err = *timestampErr
+		signatureError.Description = _CONTAINER_BDOC_CERT_OCSP
 		return *signatureError
 	}
 }
@@ -76,7 +79,9 @@ func tsProfileOCSPOldErrorMessageSupplier(signatureID string) Supplier {
 		timestampErr := new(TimestampAndOCSPTimeMismatchError)
 		timestampErr.TimestampGenTime = time.Date(2021, 4, 13, 9, 56, 6, 0, time.UTC)
 		timestampErr.OCSPProducedAt = time.Date(2021, 4, 8, 8, 20, 41, 0, time.UTC)
+		timestampErr.Description = _CONTAINER_BDOC_TS
 		signatureError.Err = *timestampErr
+		signatureError.Description = _CONTAINER_BDOC_CERT_OCSP
 		return *signatureError
 	}
 }
@@ -85,7 +90,9 @@ func noDataFilesErrorMessageSupplier() Supplier {
 	return func() interface{} {
 		signatureError := new(OpenBDOCContainerError)
 		manifestError := new(NoDataFilesError)
+		manifestError.Description = _CONTAINER_BDOC_DATA
 		signatureError.Err = *manifestError
+		signatureError.Description = _CONTAINER_BDOC_OPEN
 		return *signatureError
 	}
 }
@@ -94,7 +101,9 @@ func noSignatureErrorMessageSupplier() Supplier {
 	return func() interface{} {
 		signatureError := new(OpenBDOCContainerError)
 		manifestError := new(NoSignaturesError)
+		manifestError.Description = _CONTAINER_BDOC_DATA
 		signatureError.Err = *manifestError
+		signatureError.Description = _CONTAINER_BDOC_OPEN
 		return *signatureError
 	}
 }
@@ -103,7 +112,9 @@ func manifestErrorMessageSupplier() Supplier {
 	return func() interface{} {
 		signatureError := new(OpenBDOCContainerError)
 		manifestError := new(MissingManifestError)
+		manifestError.Description = _CONTAINER_BDOC_MANI
 		signatureError.Err = *manifestError
+		signatureError.Description = _CONTAINER_BDOC_OPEN
 		return *signatureError
 	}
 }
@@ -114,7 +125,9 @@ func tmProfilePolicyErrorMessageSupplier(signatureID string) Supplier {
 		signatureError.Signature = signatureID
 		policyErr := new(UnexpectedSignaturePolicyIdentifierError)
 		policyErr.Identifier = "urn:oid:1.3.6.1.4.1.10015.1000.3.2.1"
+		policyErr.Description = _CONTAINER_BDOC_SIG_POLICY
 		signatureError.Err = *policyErr
+		signatureError.Description = _CONTAINER_BDOC_CERT_OCSP
 		return *signatureError
 	}
 }
@@ -124,7 +137,9 @@ func tmProfileTimestampErrorMessageSupplier(signatureID string) Supplier {
 		signatureError := new(CheckSignatureError)
 		signatureError.Signature = signatureID
 		timestampErr := new(TimestampMissingError)
+		timestampErr.Description = _CONTAINER_BDOC_CERT_N_TSA
 		signatureError.Err = *timestampErr
+		signatureError.Description = _CONTAINER_BDOC_CERT_OCSP
 		return *signatureError
 	}
 }

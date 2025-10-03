@@ -33,34 +33,34 @@ func init() {
 		c := new(client)
 
 		if len(services.Servers) == 0 {
-			return nil, NoStorageServersError{}
+			return nil, NoStorageServersError{Description: _ETCD_URI}
 		}
 		c.endpoints = services.Servers
 
 		var cfg Conf
 		if err = yaml.Apply(n, &cfg); err != nil {
-			return nil, ConfigurationError{Err: err}
+			return nil, ConfigurationError{Err: err, Description: _ETCD_CFG}
 		}
 		ca, err := cryptoutil.PEMCertificatePool(cfg.CA)
 		if err != nil {
-			return nil, ConfigurationCAError{Err: err}
+			return nil, ConfigurationCAError{Err: err, Description: _ETCD_CA}
 		}
 
 		cert, err := tls.LoadX509KeyPair(conf.TLS(services.Sensitive))
 		if err != nil {
-			return nil, TLSKeyPairError{Err: err}
+			return nil, TLSKeyPairError{Err: err, Description: _ETCD_KEY}
 		}
 
 		// Parse the leaf certificate and verify that it is issued by
 		// CA and can be used for client authentication.
 		if cert.Leaf, err = x509.ParseCertificate(cert.Certificate[0]); err != nil {
-			return nil, ParseTLSCertificateError{Err: err}
+			return nil, ParseTLSCertificateError{Err: err, Description: _ETCD_CERT}
 		}
 		if _, err = cert.Leaf.Verify(x509.VerifyOptions{
 			Roots:     ca,
 			KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		}); err != nil {
-			return nil, VerifyTLSCertificateError{Err: err}
+			return nil, VerifyTLSCertificateError{Err: err, Description: _ETCD_CERT_VERIFY}
 		}
 
 		c.tls = &tls.Config{
@@ -150,7 +150,7 @@ func (c *client) kv(ctx context.Context) (kv clientv3.KV, err error) {
 			TLS:         c.tls,
 		})
 		if c.clierr == nil {
-			log.Log(ctx, Connected{Endpoints: c.endpoints})
+			log.Log(ctx, Connected{Endpoints: c.endpoints, Description: _ETCD_CLIENT_CONN})
 		}
 	})
 	if err = c.clierr; err == nil {
@@ -162,18 +162,18 @@ func (c *client) kv(ctx context.Context) (kv clientv3.KV, err error) {
 func (c *client) Put(ctx context.Context, key string, value []byte) (err error) {
 	kv, err := c.kv(ctx)
 	if err != nil {
-		return log.Alert(PutKVError{Err: err})
+		return log.Alert(PutKVError{Err: err, Description: _ETCD_CLIENT_N_CONN})
 	}
 
-	log.Debug(ctx, PutRequest{Key: key, Value: value})
+	log.Debug(ctx, PutRequest{Key: key, Value: value, Description: _ETCD_PUT})
 	resp, err := c.put(ctx, kv, storage.PutAllRequest{Key: key, Value: value})
 	if err != nil {
-		return log.Alert(PutError{Key: key, Err: err})
+		return log.Alert(PutError{Key: key, Err: err, Description: _ETCD_PUT_DB_FAIL})
 	}
-	log.Debug(ctx, PutResponse{Response: resp})
+	log.Debug(ctx, PutResponse{Response: resp, Description: _ETCD_PUT_REQ_OK})
 
 	if !resp.Succeeded {
-		return storage.ExistError{Key: key, Err: PutExistingKeyError{}}
+		return storage.ExistError{Key: key, Err: PutExistingKeyError{Description: _ETCD_PUT_EXISTING}}
 	}
 	return
 }
@@ -181,15 +181,15 @@ func (c *client) Put(ctx context.Context, key string, value []byte) (err error) 
 func (c *client) PutAll(ctx context.Context, reqs ...storage.PutAllRequest) (err error) {
 	kv, err := c.kv(ctx)
 	if err != nil {
-		return log.Alert(PutAllKVError{Err: err})
+		return log.Alert(PutAllKVError{Err: err, Description: _ETCD_CLIENT_N_CONN})
 	}
 
-	log.Debug(ctx, PutAllRequest{Count: len(reqs)})
+	log.Debug(ctx, PutAllRequest{Count: len(reqs), Description: _ETCD_PUT_ALL})
 	resp, err := c.put(ctx, kv, reqs...)
 	if err != nil {
-		return log.Alert(PutAllError{Err: err})
+		return log.Alert(PutAllError{Err: err, Description: _ETCD_PUT_ALL_DB_FAIL})
 	}
-	log.Debug(ctx, PutAllResponse{Response: resp})
+	log.Debug(ctx, PutAllResponse{Response: resp, Description: _ETCD_PUT_ALL_REQ_OK})
 
 	if !resp.Succeeded {
 		var key string
@@ -199,7 +199,7 @@ func (c *client) PutAll(ctx context.Context, reqs ...storage.PutAllRequest) (err
 				break
 			}
 		}
-		return storage.ExistError{Key: key, Err: PutAllExistingKeyError{}}
+		return storage.ExistError{Key: key, Err: PutAllExistingKeyError{Description: _ETCD_PUT_ALL_EXISTING}}
 	}
 	return
 }
@@ -224,20 +224,22 @@ func (c *client) put(ctx context.Context, kv clientv3.KV, reqs ...storage.PutAll
 func (c *client) Get(ctx context.Context, key string) (value []byte, err error) {
 	kv, err := c.kv(ctx)
 	if err != nil {
-		return nil, log.Alert(GetKVError{Err: err})
+		return nil, log.Alert(GetKVError{Err: err, Description: _ETCD_CLIENT_N_CONN})
 	}
 
-	log.Debug(ctx, GetRequest{Key: key})
+	log.Debug(ctx, GetRequest{Key: key, Description: _ETCD_GET})
 	ctx, cancel := context.WithTimeout(ctx, c.optime)
 	defer cancel()
 	resp, err := kv.Get(ctx, key)
 	if err != nil {
-		return nil, log.Alert(GetError{Key: key, Err: err})
+		return nil, log.Alert(GetError{Key: key, Err: err, Description: _ETCD_GET_DB_FAIL})
 	}
-	log.Debug(ctx, GetResponse{Response: resp})
+	log.Debug(ctx, GetResponse{Response: resp, Description: _ETCD_GET_REQ_OK})
 
 	if len(resp.Kvs) == 0 {
-		return nil, storage.NotExistError{Key: key, Err: GetMissingKeyError{}}
+		return nil, storage.NotExistError{Key: key, Err: GetMissingKeyError{
+			Description: _ETCD_GET_NONE,
+		}}
 	}
 	value = resp.Kvs[0].Value
 	return
@@ -246,7 +248,7 @@ func (c *client) Get(ctx context.Context, key string) (value []byte, err error) 
 func (c *client) GetAll(ctx context.Context, keys ...string) (values map[string][]byte, err error) {
 	kv, err := c.kv(ctx)
 	if err != nil {
-		return nil, log.Alert(GetAllKVError{Err: err})
+		return nil, log.Alert(GetAllKVError{Err: err, Description: _ETCD_CLIENT_N_CONN})
 	}
 
 	// Use a transaction to batch all the gets together.
@@ -255,14 +257,14 @@ func (c *client) GetAll(ctx context.Context, keys ...string) (values map[string]
 		ops = append(ops, clientv3.OpGet(key))
 	}
 
-	log.Debug(ctx, GetAllRequest{Count: len(keys)})
+	log.Debug(ctx, GetAllRequest{Count: len(keys), Description: _ETCD_GET_ALL})
 	ctx, cancel := context.WithTimeout(ctx, c.optime)
 	defer cancel()
 	resp, err := kv.Txn(ctx).Then(ops...).Commit()
 	if err != nil {
-		return nil, log.Alert(GetAllError{Err: err})
+		return nil, log.Alert(GetAllError{Err: err, Description: _ETCD_GET_ALL_DB_FAIL})
 	}
-	log.Debug(ctx, GetAllResponse{Response: resp})
+	log.Debug(ctx, GetAllResponse{Response: resp, Description: _ETCD_GET_ALL_REQ_OK})
 
 	values = make(map[string][]byte)
 	for _, rop := range resp.Responses {
@@ -287,22 +289,22 @@ func (c *client) GetWithPrefix(ctx context.Context, prefix string) (
 	kv, err := c.kv(ctx)
 	if err != nil {
 		close(ch)
-		errc <- log.Alert(GetWithPrefixKVError{Err: err})
+		errc <- log.Alert(GetWithPrefixKVError{Err: err, Description: _ETCD_CLIENT_N_CONN})
 		return ch, errc
 	}
 
 	// First get the number of keys with the prefix to know how many jobs
 	// are needed to get them all.
-	log.Debug(ctx, GetWithPrefixCountRequest{Prefix: prefix})
+	log.Debug(ctx, GetWithPrefixCountRequest{Prefix: prefix, Description: _ETCD_GET_PREFIX})
 	mctx, cancel := context.WithTimeout(ctx, c.optime)
 	defer cancel()
 	resp, err := kv.Get(mctx, prefix, clientv3.WithPrefix(), clientv3.WithCountOnly())
 	if err != nil {
 		close(ch)
-		errc <- log.Alert(GetWithPrefixCountError{Err: err})
+		errc <- log.Alert(GetWithPrefixCountError{Err: err, Description: _ETCD_GET_PREFIX_DB_FAIL})
 		return ch, errc
 	}
-	log.Debug(ctx, GetWithPrefixCountResponse{Response: resp})
+	log.Debug(ctx, GetWithPrefixCountResponse{Response: resp, Description: _ETCD_GET_PREFIX_REQ_OK})
 
 	if resp.Count == 0 { // No such keys, stop now.
 		close(ch)
@@ -384,20 +386,22 @@ func (c *client) GetWithSerial(ctx context.Context, key string) (
 	value []byte, serial int64, err error) {
 	kv, err := c.kv(ctx)
 	if err != nil {
-		return nil, 0, log.Alert(GetWithSerialKVError{Err: err})
+		return nil, 0, log.Alert(GetWithSerialKVError{Err: err, Description: _ETCD_CLIENT_N_CONN})
 	}
 
-	log.Debug(ctx, GetWithSerialRequest{Key: key})
+	log.Debug(ctx, GetWithSerialRequest{Key: key, Description: _ETCD_GET_W_SERIAL})
 	ctx, cancel := context.WithTimeout(ctx, c.optime)
 	defer cancel()
 	resp, err := kv.Get(ctx, key)
 	if err != nil {
-		return nil, 0, log.Alert(GetWithSerialError{Key: key, Err: err})
+		return nil, 0, log.Alert(GetWithSerialError{Key: key, Err: err,
+			Description: _ETCD_GET_W_SERIAL_DB_FAIL})
 	}
-	log.Debug(ctx, GetWithSerialResponse{Response: resp})
+	log.Debug(ctx, GetWithSerialResponse{Response: resp, Description: _ETCD_GET_W_SERIAL_REQ_OK})
 
 	if len(resp.Kvs) == 0 {
-		return nil, 0, storage.NotExistError{Key: key, Err: GetWithSerialMissingKeyError{}}
+		return nil, 0, storage.NotExistError{Key: key,
+			Err: GetWithSerialMissingKeyError{Description: _ETCD_GET_NONE}}
 	}
 	value = resp.Kvs[0].Value
 	serial = resp.Kvs[0].Version
@@ -430,12 +434,13 @@ func (c *client) getRange(ctx context.Context, kv clientv3.KV,
 	key := from
 	for {
 		// Get the next block of key-values.
-		log.Debug(ctx, GetRangeRequest{Key: key, Range: to})
+		log.Debug(ctx, GetRangeRequest{Key: key, Range: to, Description: _ETCD_GET_RANGE})
 		opctx, cancel := context.WithTimeout(ctx, c.optime)
 		resp, err := kv.Get(opctx, key, ops...)
 		cancel() // We do not want to defer in a loop.
 		if err != nil {
-			return log.Alert(GetRangeError{Key: key, Range: to, Err: err})
+			return log.Alert(GetRangeError{Key: key, Range: to, Err: err,
+				Description: _ETCD_GET_RANGE_DB_FAIL})
 		}
 		// Only log the three first and three last values as to not
 		// explode the logs.
@@ -445,16 +450,18 @@ func (c *client) getRange(ctx context.Context, kv clientv3.KV,
 			last = string(resp.Kvs[len(resp.Kvs)-1].Key)
 		}
 		log.Debug(ctx, GetRangeResponse{
-			Header: resp.Header,
-			Count:  len(resp.Kvs), // resp.Count was not asked for.
-			First:  first,
-			Last:   last,
-			More:   resp.More,
+			Header:      resp.Header,
+			Count:       len(resp.Kvs), // resp.Count was not asked for.
+			First:       first,
+			Last:        last,
+			More:        resp.More,
+			Description: _ETCD_GET_RANGE_REQ_OK,
 		})
 		n += len(resp.Kvs)
 
 		if len(resp.Kvs) == 0 {
-			log.Debug(ctx, GetRangeCount{From: from, To: to, Count: n})
+			log.Debug(ctx, GetRangeCount{From: from, To: to, Count: n,
+				Description: _ETCD_GET_NONE})
 			return nil // No more keys.
 		}
 
@@ -475,13 +482,14 @@ func nextKey(key []byte) string {
 	return string(append(key, 0))
 }
 
-func (c *client) CAS(ctx context.Context, cas string, old, new []byte) (err error) {
+func (c *client) CAS(ctx context.Context, cas string, old, new []byte) (err error) { //nolint:revive
 	kv, err := c.kv(ctx)
 	if err != nil {
-		return log.Alert(CASKVError{Err: err})
+		return log.Alert(CASKVError{Err: err, Description: _ETCD_CLIENT_N_CONN})
 	}
 
-	log.Debug(ctx, CASRequest{CAS: cas, Old: old, New: new})
+	log.Debug(ctx, CASRequest{CAS: cas, Old: old, New: new,
+		Description: _ETCD_CAS})
 	resp, err := c.doRetry(ctx, func(ctx context.Context) (*clientv3.TxnResponse, error) {
 		return kv.Txn(ctx).
 			If(clientv3.Compare(clientv3.Value(cas), "=", string(old))).
@@ -490,9 +498,11 @@ func (c *client) CAS(ctx context.Context, cas string, old, new []byte) (err erro
 			Commit()
 	})
 	if err != nil {
-		return log.Alert(CASError{CAS: cas, Err: err})
+		return log.Alert(CASError{CAS: cas, Err: err,
+			Description: _ETCD_CAS_DB_FAIL})
 	}
-	log.Debug(ctx, CASResponse{Response: resp})
+	log.Debug(ctx, CASResponse{Response: resp,
+		Description: _ETCD_CAS_REQ_OK})
 
 	if !resp.Succeeded {
 		// Assume resp has the correct amount of Reponses.
@@ -500,14 +510,15 @@ func (c *client) CAS(ctx context.Context, cas string, old, new []byte) (err erro
 			return storage.UnexpectedValueError{
 				Key: cas,
 				Err: CASValueMismatchError{
-					Have: string(kvs[0].Value),
-					Want: string(old),
+					Have:        string(kvs[0].Value),
+					Want:        string(old),
+					Description: _ETCD_CAS_CMP,
 				},
 			}
 		}
 		return storage.NotExistError{
 			Key: cas,
-			Err: CASMissingCASKeyError{},
+			Err: CASMissingCASKeyError{Description: _ETCD_GET_NONE},
 		}
 	}
 	return
@@ -539,7 +550,8 @@ func (c *client) doRetry(ctx context.Context, f func(context.Context) (*clientv3
 				code = serr.Code() // grpc-level error.
 			}
 			if attempt < 3 && code == codes.Unavailable {
-				log.Log(ctx, RetryingTxn{Attempt: attempt, Err: err})
+				log.Log(ctx, RetryingTxn{Attempt: attempt, Err: err,
+					Description: _ETCD_CONN_RETRY})
 
 				// Very naive backoff, allowing time to recover.
 				time.Sleep(time.Duration(attempt) * 500 * time.Millisecond)

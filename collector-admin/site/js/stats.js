@@ -54,10 +54,16 @@ function loadPageData() {
                   '<th colspan="2">Autentimisvahend</th>\n' +
                   '</tr>\n'
                 )
-              } else if (stats_key === 'operating-systems') {
+              } else if (stats_key === 'voting-operating-systems') {
                 $('#auth-os').append(
                   '<tr class="info">\n' +
-                  '<th colspan="2">Operatsioonisüsteem</th>\n' +
+                  '<th colspan="2">Operatsioonisüsteem hääletamisel</th>\n' +
+                  '</tr>\n'
+                )
+              } else if (stats_key === 'verify-operating-systems') {
+                $('#auth-os').append(
+                  '<tr class="info">\n' +
+                  '<th colspan="2">Operatsioonisüsteem kontrollimisel</th>\n' +
                   '</tr>\n'
                 )
               } else if (stats_key === 'top-10-revoters') {
@@ -80,7 +86,15 @@ function loadPageData() {
                     sanitizePrimitive(stats_table_val[1]) +
                     '</td></tr>'
                   )
-                } else if (stats_key === 'operating-systems') {
+                } else if (stats_key === 'voting-operating-systems') {
+                  $('#auth-os').append(
+                    '<tr><td>' +
+                    sanitizePrimitive(stats_table_val[0]) +
+                    '</td><td>' +
+                    sanitizePrimitive(stats_table_val[1]) +
+                    '</td></tr>'
+                  )
+                } else if (stats_key === 'verify-operating-systems') {
                   $('#auth-os').append(
                     '<tr><td>' +
                     sanitizePrimitive(stats_table_val[0]) +

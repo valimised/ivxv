@@ -45,7 +45,8 @@ func generate(c *conf.Technical, network string, service *conf.Service, tmpl str
 		"replace": strings.Replace,
 	}).ParseFiles(tmpl)
 	if err != nil {
-		return nil, exit.DataErr, ParseTemplateError{Path: tmpl, Err: err}
+		return nil, exit.DataErr, ParseTemplateError{Path: tmpl, Err: err,
+			Description: _PROXY_PARSE_TEMPLATE_READ}
 	}
 
 	d := data{
@@ -69,7 +70,7 @@ func generate(c *conf.Technical, network string, service *conf.Service, tmpl str
 
 	var buf bytes.Buffer
 	if err = t.Execute(&buf, d); err != nil {
-		return nil, exit.DataErr, ExecuteTemplateError{Err: err}
+		return nil, exit.DataErr, ExecuteTemplateError{Err: err, Description: _PROXY_PARSE_TEMPLATE_EXEC}
 	}
 
 	return buf.Bytes(), exit.OK, nil
@@ -84,6 +85,7 @@ func check(ctx context.Context, cfg []byte) (code int, err error) {
 			Configuration: string(cfg),
 			Output:        string(out),
 			Err:           err,
+			Description:   _PROXY_PARSE_TEMPLATE_VERIFY,
 		}
 	}
 	return
@@ -93,7 +95,8 @@ func check(ctx context.Context, cfg []byte) (code int, err error) {
 func readPIDFile(pidfile string) (pid int, code int, err error) {
 	pidb, err := os.ReadFile(pidfile)
 	if err != nil {
-		return 0, exit.NoInput, ReadPIDFileError{Path: pidfile, Err: err}
+		return 0, exit.NoInput, ReadPIDFileError{Path: pidfile, Err: err,
+			Description: _PROXY_HAPROXY_PIDFILE}
 	}
 	eol := bytes.IndexByte(pidb, '\n')
 	if eol < 0 {
@@ -101,7 +104,8 @@ func readPIDFile(pidfile string) (pid int, code int, err error) {
 	}
 	pid, err = strconv.Atoi(string(pidb[:eol]))
 	if err != nil {
-		return 0, exit.DataErr, ParsePIDFilePIDError{PIDFile: string(pidb), Err: err}
+		return 0, exit.DataErr, ParsePIDFilePIDError{PIDFile: string(pidb), Err: err,
+			Description: _PROXY_HAPROXY_PIDFILE_INVALID}
 	}
 	return pid, exit.OK, nil
 }
@@ -114,10 +118,10 @@ func readPIDFile(pidfile string) (pid int, code int, err error) {
 func restart(ctx context.Context, proc string, pid int) error {
 	cpids, err := childPIDs(proc, pid)
 	if err != nil {
-		return ChildPIDsError{ParentPID: pid, Err: err}
+		return ChildPIDsError{ParentPID: pid, Err: err, Description: _PROXY_HAPROXY_CHILD}
 	}
 	if len(cpids) == 0 {
-		return NoChildPIDsError{ParentPID: pid}
+		return NoChildPIDsError{ParentPID: pid, Description: _PROXY_HAPROXY_NO_CHILD}
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -133,7 +137,7 @@ func restart(ctx context.Context, proc string, pid int) error {
 	// Read up to as many results as goroutines were started.
 	for range cpids {
 		if err := <-c; err != nil {
-			return StopPIDError{Err: err}
+			return StopPIDError{Err: err, Description: _PROXY_HAPROXY_CHILD_STOP}
 		}
 	}
 	return nil
@@ -141,14 +145,14 @@ func restart(ctx context.Context, proc string, pid int) error {
 
 func stopPID(ctx context.Context, pid int) error {
 	if err := syscall.Kill(pid, syscall.SIGUSR1); err != nil {
-		return SignalPIDError{PID: pid, Err: err}
+		return SignalPIDError{PID: pid, Err: err, Description: _PROXY_HAPROXY_SIGUSR1}
 	}
 
 	// Signal the PID with 0 until it no longer succeeds. There is a chance
 	// that between two signals, the old process stops and a new process
 	// starts under the same user with the same PID, but this is negligible
 	// enough that we ignore it.
-	log.Log(ctx, WaitHAProxyStop{PID: pid})
+	log.Log(ctx, WaitHAProxyStop{PID: pid, Description: _PROXY_HAPROXY_STOP})
 	sleep := time.NewTimer(0)
 	for {
 		select {
@@ -156,7 +160,7 @@ func stopPID(ctx context.Context, pid int) error {
 			return ctx.Err()
 		case <-sleep.C:
 			if err := syscall.Kill(pid, syscall.Signal(0)); err != nil {
-				log.Log(ctx, HAProxyStopped{PID: pid})
+				log.Log(ctx, HAProxyStopped{PID: pid, Description: _PROXY_HAPROXY_STOPPED})
 				return nil
 			}
 			sleep.Reset(200 * time.Millisecond)
@@ -170,13 +174,13 @@ func childPIDs(proc string, pid int) ([]int, error) {
 
 	dir, err := os.Open(proc)
 	if err != nil {
-		return nil, OpenProcError{Proc: proc, Err: err}
+		return nil, OpenProcError{Proc: proc, Err: err, Description: _PROXY_PROC_DIR}
 	}
 	defer dir.Close()
 
 	names, err := dir.Readdirnames(-1)
 	if err != nil {
-		return nil, ReadProcError{Proc: proc, Err: err}
+		return nil, ReadProcError{Proc: proc, Err: err, Description: _PROXY_PROC}
 	}
 	var cpids []int
 	for _, name := range names {
@@ -200,7 +204,7 @@ func childPIDs(proc string, pid int) ([]int, error) {
 // checkPID checks proc if the process PID still exists.
 func checkPID(proc string, pid int) error {
 	if _, err := os.Stat(filepath.Join(proc, strconv.Itoa(pid), "status")); err != nil {
-		return StatProcStatusError{PID: pid, Err: err}
+		return StatProcStatusError{PID: pid, Err: err, Description: _PROXY_NO_PID}
 	}
 	return nil
 }

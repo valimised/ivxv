@@ -189,75 +189,78 @@ def backup_util():
         log.debug('Starting command with ssh-agent wrapper')
         os.execvp('ssh-agent', ['ssh-agent'] + sys.argv)
 
-    services = get_services(include_types=['backup'])
+    services = get_services(include_types=['backup'],
+                            service_state=[SERVICE_STATE_CONFIGURED])
     if not services:
         log.error('Backup service is not defined')
         return 1
+
+    # Only 1 'CONFIGURED' backup service is allowed at the same time
     assert len(services) == 1
 
-    backup_service = Service(*list(services.items())[0])
-    log.debug('Backup service: %s', backup_service.service_id)
-    if backup_service.data['state'] != SERVICE_STATE_CONFIGURED:
-        log.error("Backup service state is %r (expected state is %r)",
-                  backup_service.data['state'], SERVICE_STATE_CONFIGURED)
-        return 1
-
-    if args['management-conf']:
-        return backup_management_cfg(backup_service)
-
-    # copy list of known SSH hosts to backup server
-    backup_service.scp(
-        os.path.expanduser('~/.ssh/known_hosts'), '~/.ssh/',
-        'list of known SSH hosts')
-    backup_timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M')
-
-    if args['ballot-box']:
-        backup_target = datetime.datetime.now().strftime(
-            f'ballot-box-{backup_timestamp}.zip')
-        services = get_services(
-            include_types=['voting'],
-            service_state=[SERVICE_STATE_CONFIGURED],
-        )
-        voting_service_id = (
-            args['<voting_service_id>'] or random.choice(list(services)))
-        if args['<voting_service_id>'] and voting_service_id not in services:
-            log.error('Unknown voting service ID: %s', voting_service_id)
+    with Service(*list(services.items())[0]) as backup_service:
+        log.debug('Backup service: %s', backup_service.service_id)
+        if backup_service.data['state'] != SERVICE_STATE_CONFIGURED:
+            log.error("Backup service state is %r (expected state is %r)",
+                      backup_service.data['state'], SERVICE_STATE_CONFIGURED)
             return 1
 
-        service = Service(voting_service_id, services[voting_service_id])
-        proc = backup_service.ssh(
-            [
-                'ivxv-admin-sudo',
-                'backup-ballot-box',
-                service.hostname,
-                voting_service_id,
-                backup_target,
-            ],
-            fwd_auth_agent=True,
-        )
+        if args['management-conf']:
+            return backup_management_cfg(backup_service)
 
-    else:
-        assert args['log']
-        services = get_services(
-            include_types=['log'], service_state=[SERVICE_STATE_CONFIGURED])
-        for log_collector_id in services:
-            service = Service(log_collector_id, services[log_collector_id])
-            proc = backup_service.ssh(
-                [
-                    'ivxv-admin-sudo',
-                    'backup-log',
-                    service.hostname,
-                    backup_timestamp,
-                ],
-                fwd_auth_agent=True,
+        # copy list of known SSH hosts to backup server
+        backup_service.scp(
+            os.path.expanduser('~/.ssh/known_hosts'), '~/.ssh/',
+            'list of known SSH hosts')
+        backup_timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M')
+
+        if args['ballot-box']:
+            backup_target = datetime.datetime.now().strftime(
+                f'ballot-box-{backup_timestamp}.zip')
+            services = get_services(
+                include_types=['voting'],
+                service_state=[SERVICE_STATE_CONFIGURED],
             )
-            if proc.returncode:
-                break
+            voting_service_id = (
+                args['<voting_service_id>'] or random.choice(list(services)))
+            if args['<voting_service_id>'] and voting_service_id not in services:
+                log.error('Unknown voting service ID: %s', voting_service_id)
+                return 1
 
-    if proc.returncode:
-        log.error('Command execution failed with error code %d',
-                  proc.returncode)
-        return 1
+            with Service(voting_service_id, services[voting_service_id]) as service:
+                proc = backup_service.ssh(
+                    [
+                        'ivxv-admin-sudo',
+                        'backup-ballot-box',
+                        service.hostname,
+                        voting_service_id,
+                        backup_target,
+                    ],
+                    fwd_auth_agent=True,
+                )
+
+        else:
+            assert args['log']
+            services = get_services(
+                include_types=['log'], service_state=[SERVICE_STATE_CONFIGURED])
+            for log_collector_id in services:
+                with Service(log_collector_id, services[log_collector_id]) as service:
+                    proc = backup_service.ssh(
+                        [
+                            'ivxv-admin-sudo',
+                            'backup-log',
+                            service.hostname,
+                            backup_timestamp,
+                        ],
+                        fwd_auth_agent=True,
+                    )
+                    if proc.returncode:
+                        break
+
+        if proc.returncode:
+            log.error('Command execution failed with error code %d',
+                      proc.returncode)
+            return 1
 
     return 0
 

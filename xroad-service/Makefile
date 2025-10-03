@@ -1,9 +1,12 @@
+ROOTDIR   := $(abspath ../)/
+include ../common/go/govar.mk
+
 help:
 	@echo "usage: make all          Build service"
 	@echo "usage: make clean          Clean build"
 
 all:
-	goreleaser release --skip-publish --clean --snapshot
+	goreleaser release --skip publish --clean --snapshot
 
 clean:
-	rm -r dist
+	rm -rf dist

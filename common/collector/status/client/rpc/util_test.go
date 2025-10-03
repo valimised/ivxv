@@ -71,6 +71,7 @@ func TestCastAnyToRPCStatusReq(t *testing.T) {
 		expected := new(CastToStatusReqError)
 		expected.Expected = expectedCastForStatusReq
 		expected.Got = reflect.TypeOf(badRPCStatusReq)
+		expected.Description = _RPC_ANY_TO_STATUSREQ
 
 		if !reflect.DeepEqual(err, *expected) {
 			msg := "Expected %v, got: %v¸\n"

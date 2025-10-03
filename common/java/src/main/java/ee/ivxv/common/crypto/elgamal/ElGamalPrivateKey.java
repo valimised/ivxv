@@ -148,7 +148,7 @@ public class ElGamalPrivateKey {
      * @return Decrypted message
      * @throws MathException When decryption fails.
      */
-    public Plaintext decrypt(ElGamalCiphertext ct) throws MathException {
+    public GroupElement decrypt(ElGamalCiphertext ct) throws MathException {
         return decrypt(ct, false);
     }
 
@@ -168,20 +168,17 @@ public class ElGamalPrivateKey {
      * @return Decrypted message
      * @throws MathException When decryption fails.
      */
-    public Plaintext decrypt(ElGamalCiphertext ct, boolean assumeDecodable) throws MathException {
+    public GroupElement decrypt(ElGamalCiphertext ct, boolean assumeDecodable) throws MathException {
         if (!assumeDecodable
-                && getParameters().getGroup().isDecodable(ct.getBlind()) != Decodable.VALID) {
+                && getParameters().getGroup().isGroupElement(ct.getBlind()) != Decodable.VALID) {
             throw new MathException("Blind is not decodable");
         }
-        GroupElement msg = ct.getBlindedMessage().op(ct.getBlind().scale(key).inverse());
-        Plaintext decoded;
-        if (assumeDecodable || getParameters().getGroup().isDecodable(msg) == Decodable.VALID) {
-            decoded = getParameters().getGroup().decode(msg);
-        } else {
+        GroupElement decrypted = ct.getBlindedMessage().op(ct.getBlind().scale(key).inverse());
+        if (!assumeDecodable && getParameters().getGroup().isDecodable(decrypted) != Decodable.VALID) {
             throw new MathException("Message is not decodable");
         }
 
-        return decoded;
+        return decrypted;
     }
 
     /**
@@ -201,8 +198,8 @@ public class ElGamalPrivateKey {
             throws MathException, IOException {
         // provable decryption must perform all checks - but currently we still
         // assume that the ciphertext is decodable
-        Plaintext plaintext = decrypt(ct, true);
-        ElGamalDecryptionProof proof = new ElGamalDecryptionProof(ct, plaintext, getPublicKey());
+        GroupElement decrypted = decrypt(ct, true);
+        ElGamalDecryptionProof proof = new ElGamalDecryptionProof(ct, decrypted, getPublicKey());
         BigInteger r = IntegerConstructor.construct(rnd, getParameters().getGeneratorOrder());
         GroupElement a = ct.getBlind().scale(r);
         GroupElement b = getParameters().getGenerator().scale(r);

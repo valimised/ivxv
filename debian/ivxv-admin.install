@@ -18,9 +18,21 @@ collector-admin/config/ivxv-admin-ui.conf etc/apache2/sites-available/
 collector-admin/config/rsyslog.conf => etc/rsyslog.d/90-ivxv-admin.conf
 
 # "SB Admin 2" theme
-common/external/startbootstrap-sb-admin-2/dist   var/www/collector-admin/
-common/external/startbootstrap-sb-admin-2/js     var/www/collector-admin/
-common/external/startbootstrap-sb-admin-2/vendor var/www/collector-admin/
+common/external/js/startbootstrap-sb-admin-2/dist   var/www/collector-admin/
+common/external/js/startbootstrap-sb-admin-2/js     var/www/collector-admin/
+common/external/js/startbootstrap-sb-admin-2/vendor var/www/collector-admin/
+
+# Bootstrap
+common/external/js/bootstrap var/www/collector-admin/vendor/
+
+# DataTables
+common/external/js/datatables var/www/collector-admin/vendor/
+
+# Font Awesome
+common/external/js/font-awesome var/www/collector-admin/vendor/
+
+# JQuery
+common/external/js/jquery/dist/jquery.min.js var/www/collector-admin/vendor/jquery/
 
 # BDOC verifier binary
 usr/bin/verifier  => usr/bin/ivxv-verify-container

@@ -10,7 +10,7 @@ func (c *Client) SignHash(ctx context.Context, documentno string, hash []byte,
 
 	sesscode, err = c.startSession(ctx, sessSign, documentno, hash, hashType)
 	if err != nil {
-		err = SignHashError{Err: err}
+		err = SignHashError{Err: err, Description: _SID_RESP_ERR}
 		return
 	}
 
@@ -25,7 +25,7 @@ func (c *Client) GetSignHashStatus(ctx context.Context, sesscode string) (
 
 	_, algorithm, signature, _, err = c.getSessionStatus(ctx, sesscode)
 	if err != nil {
-		err = GetSignHashStatusError{Err: err}
+		err = GetSignHashStatusError{Err: err, Description: _SID_SESS_STAT}
 		return
 	}
 	return

@@ -1,0 +1,30 @@
+id-ivxv-ecc-elgamal OBJECT IDENTIFIER ::= { iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) 99999 1 }
+
+IVXVECCElGamalParameters ::= SEQUENCE {
+    curve       GeneralString,
+    electionId  GeneralString
+}
+
+IVXVECCElGamalPublicKey ::= SEQUENCE {
+    pubY  OCTET STRING
+}
+
+IVXVECCElGamalCiphertext ::= SEQUENCE {
+    uBlind           OCTET STRING,
+    vBlindedMessage  OCTET STRING
+}
+
+IVXVECCElGamalDecryptionProof ::= SEQUENCE {
+    aMsgCommitment  OCTET STRING,
+    bKeyCommitment  OCTET STRING,
+    sResponse       INTEGER
+}
+
+IVXVECCElGamalDecryptionChallenge ::= SEQUENCE {
+    niProofDomain     GeneralString,
+    publicKey         SubjectPublicKeyInfo,
+    ciphertextInfo    IVXVElGamalCiphertextInfo,
+    encodedPlaintext  OCTET STRING,
+    aMsgCommitment    OCTET STRING,
+    bKeyCommitment    OCTET STRING
+}

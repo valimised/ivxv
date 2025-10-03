@@ -4,17 +4,17 @@ IVXV documents
 """
 
 project = 'Elektroonilise hääletamise infosüsteem'
-copyright = '2016-2024, Cybernetica AS'
+copyright = '2016-2025, Cybernetica AS'
 author = 'Cybernetica AS'
 
-release = '1.9.10'
+release = '1.10'
 
 META = {
 
     'audiitor': {
         'et':{
-            'version': '1.8.2',
-            'changed': "23.01.2023",
+            'version': '1.10',
+            'changed': "25.09.2025",
             'document_prefix': 'IVXV-JAJ',
             'document_type': 'Juhend',
             'document_title': 'IVXV audiitori juhend',
@@ -24,18 +24,18 @@ META = {
 
     'arhitektuur': {
         'et':{
-            'version': '1.9.10',
-            'changed': "14.05.2024",
+            'version': '1.10',
+            'changed': "25.09.2025",
             'document_prefix': 'IVXV-AR',
             'document_type': 'Arhitektuuridokument',
             'document_title': 'IVXV arhitektuur',
             'document_target_name': 'IVXV-arhitektuur'
          },
         'en':{
-            'version': '1.9.10',
-            'changed': "14.05.2024",
+            'version': '1.10',
+            'changed': "25.09.2025",
             'document_prefix': 'IVXV-AR-EN',
-            'document_type': 'Specification',
+            'document_type': 'Architecture document',
             'document_title': 'IVXV architecture',
             'document_target_name': 'IVXV-architecture'
          }
@@ -44,16 +44,16 @@ META = {
     'protokollid': {
         'et':{
             'lang': 'et',
-            'version': '1.9.10',
-            'changed': "14.05.2024",
+            'version': '1.10',
+            'changed': "25.09.2025",
             'document_prefix': 'IVXV-PR',
             'document_type': 'Spetsifikatsioon',
             'document_title': 'IVXV protokollide kirjeldus',
             'document_target_name': 'IVXV-protokollid'
          },
         'en':{
-            'version': '1.9.10',
-            'changed': "14.05.2024",
+            'version': '1.10',
+            'changed': "25.09.2025",
             'document_prefix': 'IVXV-PR-EN',
             'document_type': 'Specification',
             'document_title': 'IVXV protocols',
@@ -63,8 +63,8 @@ META = {
 
     'haldusteenus': {
         'et':{
-            'version': '1.9.10',
-            'changed': "14.05.2024",
+            'version': '1.10',
+            'changed': "25.09.2025",
             'document_prefix': 'IVXV-JHT',
             'document_type': 'Juhend',
             'document_title': 'IVXV haldusteenuse kasutusjuhend',
@@ -107,8 +107,8 @@ META = {
 
     'seadistuste_koostejuhend': {
         'et':{
-            'version': '1.9.10',
-            'changed': "14.05.2024",
+            'version': '1.10',
+            'changed': "25.09.2025",
             'document_prefix': 'IVXV-JSK',
             'document_type': 'Juhend',
             'document_title': 'IVXV seadistuste koostamise juhend',
@@ -117,8 +117,8 @@ META = {
     },
     'kogumisteenuse_haldusjuhend': {
         'et':{
-            'version': '1.9.10',
-            'changed': "14.05.2024",
+            'version': '1.10',
+            'changed': "25.09.2025",
             'document_prefix': 'IVXV-JSH',
             'document_type': 'Juhend',
             'document_title': 'IVXV kogumisteenuse haldusjuhend',
@@ -127,48 +127,27 @@ META = {
     },
     'uldsisukord': {
         'et':{
-            'version': '1.9.10',
-            'changed': "14.05.2024",
+            'version': '1.10',
+            'changed': "25.09.2025",
             'document_prefix': 'IVXV-YS',
             'document_type': '',
             'document_title': 'IVXV dokumentatsiooni üldsisukord',
             'document_target_name': 'IVXV-dokumentatsiooni-uldsisukord'
-         }
-    },
-    'uldkirjeldus': {
-        'et':{
-            'version': '1.0',
-            'changed': "29.05.2017",
-            'document_prefix': 'IVXV-YK',
+         },
+        'en':{
+            'version': '1.10',
+            'changed': "25.09.2025",
+            'document_prefix': 'IVXV-YS-EN',
             'document_type': '',
-            'document_title': 'Elektroonilise hääletamise süsteemi IVXV üldkirjeldus',
-            'document_target_name': None
+            'document_title': 'IVXV documentation overview',
+            'document_target_name': 'IVXV-documentation-overview'
          }
-    },
-    'turvapoliitika': {
-        'et':{
-            'version': '1.0',
-            'changed': "13.09.2017",
-            'document_prefix': 'IVXV-TP',
-            'document_type': '',
-            'document_title': 'Elektroonilise hääletamise turvapoliitika',
-            'document_target_name': None
-         }
-    },
-    'käsiraamat': {
-        'et':{
-            'version': '0.4',
-            'changed': "21.01.2019",
-            'document_prefix': 'IVXV-KR',
-            'document_type': '',
-            'document_title': 'Elektroonilise hääletamise käsiraamat',
-            'document_target_name': None
-         }
+
     },
     'valijarakendus': {
         'et':{
-            'version': '1.9.10',
-            'changed': "13.05.2024",
+            'version': '1.10',
+            'changed': "25.09.2025",
             'document_prefix': 'IVXV-JVR',
             'document_type': 'Juhend',
             'document_title': 'IVXV valijarakendus',
@@ -177,8 +156,8 @@ META = {
     },
     'valijarakenduse_pakendamine': {
         'et':{
-            'version': '1.9.10',
-            'changed': "13.05.2024",
+            'version': '1.10',
+            'changed': "25.09.2025",
             'document_prefix': 'IVXV-JVP',
             'document_type': 'Juhend',
             'document_title': 'IVXV valijarakenduse pakendamine',
@@ -227,17 +206,17 @@ META = {
     },
     'liidesed': {
         'et': {
-            'version': '1.9.10',
-            'changed': "14.05.2024",
+            'version': '1.10',
+            'changed': "25.09.2025",
             'document_prefix': 'IVXV-VIS-EHS',
             'document_type': 'Spetsifikatsioon',
             'document_title': 'VIS3-EHS liidesed',
             'document_target_name': 'IVXV-liidesed'
         },
         'en': {
-            'version': '1.9.10',
-            'changed': "14.05.2024",
-            'document_prefix': 'IVXV-VIS-EHS',
+            'version': '1.10',
+            'changed': "25.09.2025",
+            'document_prefix': 'IVXV-VIS-EHS-EN',
             'document_type': 'Specification',
             'document_title': 'VIS3-EHS interfaces',
             'document_target_name': 'IVXV-interfaces'
@@ -245,8 +224,8 @@ META = {
     },
     'xteeteenus': {
         'et':{
-             'version': '1.9.10',
-             'changed': "14.05.2024",
+             'version': '1.10',
+             'changed': "25.09.2025",
              'document_prefix': 'IVXV-XTEE',
              'document_type': 'Spetsifikatsioon',
              'document_title': 'IVXV X-tee teenuse kirjeldus',
@@ -261,6 +240,16 @@ META = {
             'document_type': 'API-dokument',
             'document_title': 'IVXV Python API',
             'document_target_name': 'IVXV-python-api'
+         }
+    },
+    'backendlogs': {
+        'en':{
+            'version': '1.10',
+            'changed': "25.09.2025",
+            'document_prefix': 'IVXV-LOGS-EN',
+            'document_type': 'Technical documentation',
+            'document_title': 'IVXV Backend Log Messages',
+            'document_target_name': 'IVXV-backend-log-messages'
          }
     }
 }
@@ -284,12 +273,12 @@ def print_table_header():
     print("")
 
 
-def print_document(doc):
+def print_document(doc, lang='et'):
 
-    title = get(doc, 'document_title', 'et')
-    prefix = get(doc, 'document_prefix', 'et')
-    version = get(doc, 'version', 'et')
-    changed = get(doc, 'changed', 'et')
+    title = get(doc, 'document_title', lang)
+    prefix = get(doc, 'document_prefix', lang)
+    version = get(doc, 'version', lang)
+    changed = get(doc, 'changed', lang)
 
     print(f"   *  - {title}")
     print(f"      - {prefix}-{version}")
@@ -313,9 +302,6 @@ if __name__ == "__main__":
 
     print_table_header()
     print_document('uldsisukord')
-    print_document('uldkirjeldus')
-    print_document('turvapoliitika')
-    print_document('käsiraamat')
 
     print("Spetsifikatsioonid")
     print("------------------")
@@ -327,6 +313,17 @@ if __name__ == "__main__":
     print_document('protokollid')
     print_document('arhitektuur')
     print_document('votmerakendus')
+
+    print("Ingliskeelsed dokumendid")
+    print("------------------------")
+    print("")
+
+    print_table_header()
+
+    print_document('protokollid', 'en')
+    print_document('arhitektuur', 'en')
+    print_document('liidesed', 'en')
+    print_document('backendlogs', 'en')
 
     print("Juhendid")
     print("--------")

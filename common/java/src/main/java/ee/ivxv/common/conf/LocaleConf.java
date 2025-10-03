@@ -15,7 +15,7 @@ import java.util.function.Consumer;
  */
 public class LocaleConf {
 
-    public static final Locale DEFAULT_LOCALE = new Locale("et");
+    public static final Locale DEFAULT_LOCALE = Locale.of("et");
 
     private List<Locale> allLocales;
     private Locale locale;

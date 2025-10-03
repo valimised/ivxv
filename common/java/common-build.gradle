@@ -9,10 +9,10 @@
 apply plugin: 'java'
 
 group 'ee.ivxv'
-version '1.9.10'
+version '1.10.3'
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_17
+	sourceCompatibility = JavaVersion.VERSION_21
 }
 
 ext.external = "${base}/common/external"

@@ -40,14 +40,14 @@ type VotesNoResponse struct {
 // VotesSeqNo is the remote procedure call performed by votesorder service provider to
 // retrieve current votes sequence number.
 func (r *RPC) VotesSeqNo(args VotesNoArgs, resp *VotesNoResponse) (err error) {
-	log.Log(args.Ctx, VotesNoReq{})
+	log.Log(args.Ctx, VotesNoReq{Description: _VOTESORDER_VOTESSEQREQ})
 
 	if resp.SeqNo, err = r.storage.GetVotesCount(args.Ctx); err != nil {
-		log.Error(args.Ctx, GetVotesNoError{Err: log.Alert(err)})
+		log.Error(args.Ctx, GetVotesNoError{Err: log.Alert(err), Description: _VOTESORDER_VOTESCOUNT})
 		return server.ErrInternal
 	}
 
-	log.Log(args.Ctx, VotesNoResp{SeqNo: resp.SeqNo})
+	log.Log(args.Ctx, VotesNoResp{SeqNo: resp.SeqNo, Description: _VOTESORDER_VOTESSEQRESP})
 	return
 }
 
@@ -74,30 +74,33 @@ type Vote struct {
 
 // Votes is the remote procedure call to send votes to votesorder.
 func (r *RPC) Votes(args VotesArgs, resp *VotesResponse) (err error) {
-	log.Log(args.Ctx, VotesReq{VotesFrom: args.VotesFrom})
+	log.Log(args.Ctx, VotesReq{VotesFrom: args.VotesFrom, Description: _VOTESORDER_VOTESREQ})
 	var votes []Vote
 	var seqNo uint64
 	if seqNo, err = r.storage.GetVotesCount(args.Ctx); err != nil {
-		log.Error(args.Ctx, GetVotesCountErr{Err: log.Alert(err)})
+		log.Error(args.Ctx, GetVotesCountErr{Err: log.Alert(err),
+			Description: _VOTESORDER_VOTESCOUNT})
 		return server.ErrInternal
 	}
-	if seqNo < uint64(args.VotesFrom) {
-		log.Error(args.Ctx, VotesFromErr{SeqNo: seqNo, VotesFrom: args.VotesFrom})
+	if seqNo < uint64(args.VotesFrom) { //nolint:gosec
+		log.Error(args.Ctx, VotesFromErr{SeqNo: seqNo, VotesFrom: args.VotesFrom,
+			Description: _VOTESORDER_NO_SEQ})
 		return server.ErrBadRequest
 	}
 	votesOrder, err := r.storage.GetVotesOrder(args.Ctx, args.VotesFrom, args.BatchMaxSize)
 	if err != nil {
-		log.Error(args.Ctx, GetVotesOrderError{Err: log.Alert(err)})
+		log.Error(args.Ctx, GetVotesOrderError{Err: log.Alert(err), Description: _VOTESORDER_ALL_VOTES})
 		return server.ErrInternal
 	}
 	for _, vote := range votesOrder {
 		no, err := strconv.ParseUint(vote.SeqNo, 0, 64)
 		if err != nil {
-			log.Error(args.Ctx, VotesSeqNoParse{SeqNo: vote.SeqNo})
+			log.Error(args.Ctx, VotesSeqNoParse{SeqNo: vote.SeqNo, Description: _VOTESORDER_SEQ})
 		}
 		d, err := strconv.ParseUint(vote.DistrictNo, 0, 64)
 		if err != nil {
-			log.Error(args.Ctx, VotesDistrictNoParse{DistrictNo: vote.DistrictNo})
+			log.Error(args.Ctx, VotesDistrictNoParse{DistrictNo: vote.DistrictNo,
+				Description: _VOTESORDER_DISTRICT})
 		}
 
 		votes = append(votes, Vote{
@@ -108,7 +111,7 @@ func (r *RPC) Votes(args VotesArgs, resp *VotesResponse) (err error) {
 			ElectoralDistrictNo: d,
 		})
 	}
-	log.Log(args.Ctx, VotesResp{})
+	log.Log(args.Ctx, VotesResp{Description: _VOTESORDER_VOTESRESP})
 	resp.BatchRecords = votes
 	return
 }
@@ -133,7 +136,7 @@ func votesordermain() (code int) {
 	var err error
 	if elec := c.Conf.Election; elec != nil {
 		if stop, err = elec.ElectionStopTime(); err != nil {
-			return c.Error(exit.Config, StopTimeError{Err: err},
+			return c.Error(exit.Config, StopTimeError{Err: err, Description: _VOTESORDER_STOP},
 				"bad election stop time:", err)
 		}
 		clientCA = elec.XRoad.CA
@@ -153,7 +156,7 @@ func votesordermain() (code int) {
 			Version:  &c.Conf.Version,
 			ClientCA: clientCA,
 		}, rpc); err != nil {
-			return c.Error(exit.Config, ServerConfError{Err: err},
+			return c.Error(exit.Config, ServerConfError{Err: err, Description: _VOTESORDER_SERVER},
 				"failed to configure server:", err)
 		}
 	}
@@ -161,7 +164,7 @@ func votesordermain() (code int) {
 	// Start listening for incoming connections during the voting period.
 	if c.Until >= command.Execute {
 		if err = s.Serve(c.Ctx); err != nil {
-			return c.Error(exit.Unavailable, ServeError{Err: err},
+			return c.Error(exit.Unavailable, ServeError{Err: err, Description: _VOTESORDER_SERVER_SERVE},
 				"failed to serve votesorder service:", err)
 		}
 	}

@@ -1,15 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2016-2024, Cybernetica AS
+# Copyright (C) 2016-2025, Cybernetica AS
 # This file is distributed under the same license as the Elektroonilise
 # hääletamise infosüsteem package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.8.0\n"
+"Project-Id-Version: Elektroonilise hääletamise infosüsteem 1.10.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-08 15:13+0300\n"
+"POT-Creation-Date: 2025-09-03 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,7 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.10.3\n"
+"Generated-By: Babel 2.15.0\n"
 
 #: ../../tehnoloogiad.rst:6
 msgid "Kasutatavad tehnoloogiad"
@@ -50,7 +49,7 @@ msgstr "Open source compiler;"
 
 #: ../../tehnoloogiad.rst:20
 msgid "Ribastamine (rööprapse)."
-msgstr "Stripping (rail strapping)."
+msgstr "Parallel processing (co-routines)."
 
 #: ../../tehnoloogiad.rst:22
 msgid "Kogumisteenuse haldusteenus on programmeeritud keeles Python."
@@ -103,23 +102,23 @@ msgstr "All components used in the collection service are open source."
 msgid "IVXV raamistiku tööks kasutatavad kolmandate osapoolte komponendid"
 msgstr "Third party components used for the operation of the IVXV framework"
 
-#: ../../tehnoloogiad.rst:50 ../../tehnoloogiad.rst:213
-#: ../../tehnoloogiad.rst:259
+#: ../../tehnoloogiad.rst:50 ../../tehnoloogiad.rst:222
+#: ../../tehnoloogiad.rst:268
 msgid "Nimi"
 msgstr "Name"
 
-#: ../../tehnoloogiad.rst:51 ../../tehnoloogiad.rst:214
-#: ../../tehnoloogiad.rst:260
+#: ../../tehnoloogiad.rst:51 ../../tehnoloogiad.rst:223
+#: ../../tehnoloogiad.rst:269
 msgid "Versioon"
 msgstr "Version"
 
-#: ../../tehnoloogiad.rst:52 ../../tehnoloogiad.rst:215
-#: ../../tehnoloogiad.rst:261
+#: ../../tehnoloogiad.rst:52 ../../tehnoloogiad.rst:224
+#: ../../tehnoloogiad.rst:270
 msgid "Litsents (SPDX)"
 msgstr "Licence"
 
-#: ../../tehnoloogiad.rst:53 ../../tehnoloogiad.rst:216
-#: ../../tehnoloogiad.rst:262
+#: ../../tehnoloogiad.rst:53 ../../tehnoloogiad.rst:225
+#: ../../tehnoloogiad.rst:271
 msgid "Kasutusvajadus"
 msgstr "Requirement"
 
@@ -128,20 +127,21 @@ msgid "`Bootstrap <http://getbootstrap.com>`_"
 msgstr "`Bootstrap <http://getbootstrap.com>`_"
 
 #: ../../tehnoloogiad.rst:56
-msgid "3.4.1"
-msgstr "3.4.1"
+msgid "3.4.1, JavaScript"
+msgstr ""
 
 #: ../../tehnoloogiad.rst:57 ../../tehnoloogiad.rst:62
 #: ../../tehnoloogiad.rst:67 ../../tehnoloogiad.rst:72
 #: ../../tehnoloogiad.rst:87 ../../tehnoloogiad.rst:97
-#: ../../tehnoloogiad.rst:138 ../../tehnoloogiad.rst:143
-#: ../../tehnoloogiad.rst:159 ../../tehnoloogiad.rst:164
-#: ../../tehnoloogiad.rst:174 ../../tehnoloogiad.rst:204
-#: ../../tehnoloogiad.rst:235 ../../tehnoloogiad.rst:245
+#: ../../tehnoloogiad.rst:132 ../../tehnoloogiad.rst:137
+#: ../../tehnoloogiad.rst:153 ../../tehnoloogiad.rst:158
+#: ../../tehnoloogiad.rst:163 ../../tehnoloogiad.rst:168
+#: ../../tehnoloogiad.rst:178 ../../tehnoloogiad.rst:213
+#: ../../tehnoloogiad.rst:244 ../../tehnoloogiad.rst:254
 msgid "MIT"
 msgstr "MIT"
 
-#: ../../tehnoloogiad.rst:58 ../../tehnoloogiad.rst:205
+#: ../../tehnoloogiad.rst:58 ../../tehnoloogiad.rst:214
 msgid "Kogumisteenuse haldusteenuse kasutajaliidese kujundus"
 msgstr "Collection management service interface design"
 
@@ -150,8 +150,8 @@ msgid "Bouncy Castle"
 msgstr "Bouncy Castle"
 
 #: ../../tehnoloogiad.rst:61
-msgid "1.70"
-msgstr "1.70"
+msgid "1.78.1, Java"
+msgstr ""
 
 #: ../../tehnoloogiad.rst:63
 msgid "ASN1 käsitlemine, andmetüübi BigInteger abifunktsioonid"
@@ -162,8 +162,8 @@ msgid "`Bottle <https://bottlepy.org/>`_"
 msgstr "`Bottle <https://bottlepy.org/>`_"
 
 #: ../../tehnoloogiad.rst:66
-msgid "0.12.25"
-msgstr "0.12.15"
+msgid "0.13.2, Python"
+msgstr ""
 
 #: ../../tehnoloogiad.rst:68
 msgid "Raamistik kogumisteenuse haldusteenuse veebiliidese teostamiseks"
@@ -176,8 +176,8 @@ msgid "CAL10N"
 msgstr "CAL10N"
 
 #: ../../tehnoloogiad.rst:71
-msgid "0.8.1"
-msgstr "0.8.1"
+msgid "0.8.1, Java"
+msgstr ""
 
 #: ../../tehnoloogiad.rst:73
 msgid "Mitmekeelsuse tugi, tõlkefailide valideerimine"
@@ -188,8 +188,8 @@ msgid "Digidoc 4j"
 msgstr "Digidoc 4j"
 
 #: ../../tehnoloogiad.rst:76
-msgid "5.1.0"
-msgstr "5.1.0"
+msgid "5.3.1, Java"
+msgstr ""
 
 #: ../../tehnoloogiad.rst:77
 msgid "LGPL-2.1-only"
@@ -203,11 +203,15 @@ msgstr "BDoc container handling"
 msgid "Apache Commons (collections4 4.4)"
 msgstr "Apache Commons (collections4 4.4)"
 
+#: ../../tehnoloogiad.rst:81
+msgid "Java"
+msgstr ""
+
 #: ../../tehnoloogiad.rst:82 ../../tehnoloogiad.rst:92
 #: ../../tehnoloogiad.rst:102 ../../tehnoloogiad.rst:112
-#: ../../tehnoloogiad.rst:122 ../../tehnoloogiad.rst:128
-#: ../../tehnoloogiad.rst:169 ../../tehnoloogiad.rst:199
-#: ../../tehnoloogiad.rst:230 ../../tehnoloogiad.rst:271
+#: ../../tehnoloogiad.rst:122 ../../tehnoloogiad.rst:173
+#: ../../tehnoloogiad.rst:208 ../../tehnoloogiad.rst:239
+#: ../../tehnoloogiad.rst:280
 msgid "Apache-2.0"
 msgstr "Apache 2.0"
 
@@ -220,22 +224,21 @@ msgid "`Docopt <http://docopt.org/>`_"
 msgstr "`Docopt <http://docopt.org/>`_"
 
 #: ../../tehnoloogiad.rst:86
-msgid "0.6.2"
-msgstr "0.6.2"
+msgid "0.6.2, Python"
+msgstr ""
 
 #: ../../tehnoloogiad.rst:88
 msgid "Kogumisteenuse haldusutiliitide käsurealiidese teostus"
 msgstr ""
-"Execution of a collection service management utility command line "
-"interface"
+"Command line interface for collection service management tool"
 
 #: ../../tehnoloogiad.rst:90
 msgid "`Fasteners <https://github.com/harlowja/fasteners>`_"
 msgstr "`Fasteners <https://github.com/harlowja/fasteners>`_"
 
 #: ../../tehnoloogiad.rst:91
-msgid "0.19"
-msgstr "0.19"
+msgid "0.19, Python"
+msgstr ""
 
 #: ../../tehnoloogiad.rst:93
 msgid "Kogumisteenuse haldusteenuse protsesside lukustus"
@@ -246,8 +249,8 @@ msgid "`gin-gonic <https://github.com/gin-gonic>`_"
 msgstr "`gin-gonic <https://github.com/gin-gonic>`_"
 
 #: ../../tehnoloogiad.rst:96
-msgid "1.9.1"
-msgstr "1.9.1"
+msgid "1.9.1, Go"
+msgstr ""
 
 #: ../../tehnoloogiad.rst:98
 msgid "Veebiraamistik x-tee liidese jaoks"
@@ -258,8 +261,8 @@ msgid "`etcd <https://coreos.com/etcd>`_"
 msgstr "`etcd <https://coreos.com/etcd>`_"
 
 #: ../../tehnoloogiad.rst:101
-msgid "3.5.9"
-msgstr "3.5.9"
+msgid "3.5.9, Go"
+msgstr ""
 
 #: ../../tehnoloogiad.rst:103
 msgid "Talletusteenusena kasutatav hajus võti-väärtus andmebaas"
@@ -270,11 +273,11 @@ msgid "Glassfish JAXB"
 msgstr "Glassfish JAXB"
 
 #: ../../tehnoloogiad.rst:106
-msgid "2.3.8"
-msgstr "2.3.8"
+msgid "4.0.5, Java"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:107 ../../tehnoloogiad.rst:194
-#: ../../tehnoloogiad.rst:220
+#: ../../tehnoloogiad.rst:107 ../../tehnoloogiad.rst:203
+#: ../../tehnoloogiad.rst:229
 msgid "BSD-3-Clause"
 msgstr "BSD 3 Clause"
 
@@ -287,8 +290,8 @@ msgid "Gradle"
 msgstr "Gradle"
 
 #: ../../tehnoloogiad.rst:111
-msgid "8.3"
-msgstr "8.3"
+msgid "8.11, Java"
+msgstr ""
 
 #: ../../tehnoloogiad.rst:113
 msgid "Java rakenduste ehitamise raamistik"
@@ -311,99 +314,84 @@ msgid "Vahendusteenusena kasutatav TCP-proksi"
 msgstr "TCP proxy used as an intermediary service"
 
 #: ../../tehnoloogiad.rst:120
-msgid "IvyPot"
-msgstr "IvyPot"
-
-#: ../../tehnoloogiad.rst:121
-msgid "2.3.0"
-msgstr "2.3.0"
-
-#: ../../tehnoloogiad.rst:123
-msgid ""
-"Gradle ehitusraamistiku laiendus sõltuvuste haldamiseks ja rakenduste "
-"ehitamiseks vallasrežiimis"
-msgstr ""
-"Gradle building framework extension for dependency management and "
-"building applications in standalone mode"
-
-#: ../../tehnoloogiad.rst:126
 msgid "Jackson"
 msgstr "Jackson"
 
-#: ../../tehnoloogiad.rst:127
-msgid "2.15.2"
-msgstr "2.15.2"
+#: ../../tehnoloogiad.rst:121
+msgid "2.18.1, Java"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:129
+#: ../../tehnoloogiad.rst:123
 msgid "JSON vormingus failide lugemine ja kirjutamine"
 msgstr "Read and write JSON format files"
 
-#: ../../tehnoloogiad.rst:131
+#: ../../tehnoloogiad.rst:125
 msgid "Jinja2"
 msgstr "Jinja2"
 
-#: ../../tehnoloogiad.rst:132
-msgid "3.1.2"
-msgstr "3.1.2"
+#: ../../tehnoloogiad.rst:126
+msgid "3.1.4, Python"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:133 ../../tehnoloogiad.rst:179
-#: ../../tehnoloogiad.rst:276
+#: ../../tehnoloogiad.rst:127 ../../tehnoloogiad.rst:188
+#: ../../tehnoloogiad.rst:285
 msgid "BSD"
 msgstr "BSD"
 
-#: ../../tehnoloogiad.rst:134
+#: ../../tehnoloogiad.rst:128
 msgid "Jinja mallide kasutamine haldusteenuses"
 msgstr "Using Jinja templates in collection management service"
 
-#: ../../tehnoloogiad.rst:136
+#: ../../tehnoloogiad.rst:130
 msgid "`jQuery <https://jquery.org/>`_"
 msgstr "`jQuery <https://jquery.org/>`_"
 
-#: ../../tehnoloogiad.rst:137
-msgid "3.3.1"
-msgstr "3.3.1"
+#: ../../tehnoloogiad.rst:131
+msgid "3.7.1, JavaScript"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:139 ../../tehnoloogiad.rst:165
+#: ../../tehnoloogiad.rst:133 ../../tehnoloogiad.rst:159
+#: ../../tehnoloogiad.rst:164 ../../tehnoloogiad.rst:169
 msgid "Kogumisteenuse haldusteenuse kasutajaliides"
 msgstr "Collection management service interface"
 
-#: ../../tehnoloogiad.rst:141
+#: ../../tehnoloogiad.rst:135
 msgid "jsonschema"
 msgstr "jsonschema"
 
-#: ../../tehnoloogiad.rst:142
-msgid "4.19.1"
-msgstr "4.19.1"
+#: ../../tehnoloogiad.rst:136
+msgid "4.23.0, Python"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:144
+#: ../../tehnoloogiad.rst:138
 msgid "JSON valideerimine haldusteenuses"
 msgstr "JSON validation in collection management service"
 
-#: ../../tehnoloogiad.rst:146
+#: ../../tehnoloogiad.rst:140
 msgid "Logback"
 msgstr "Logback"
 
-#: ../../tehnoloogiad.rst:147
-msgid "4.11"
-msgstr "4.11"
+#: ../../tehnoloogiad.rst:141
+msgid "1.5.12, Java"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:148 ../../tehnoloogiad.rst:153
+#: ../../tehnoloogiad.rst:142 ../../tehnoloogiad.rst:147
 msgid "EPL-1.0 or LGPL-v2.1-only"
 msgstr "EPL-1.0 or LGPL-v2.1-only"
 
-#: ../../tehnoloogiad.rst:149
+#: ../../tehnoloogiad.rst:143
 msgid "Logimise API teostus"
 msgstr "Implementation of logging API"
 
-#: ../../tehnoloogiad.rst:151
+#: ../../tehnoloogiad.rst:145
 msgid "Logback JSON"
 msgstr "Logback JSON"
 
-#: ../../tehnoloogiad.rst:152
-msgid "0.1.5"
-msgstr "0.1.5"
+#: ../../tehnoloogiad.rst:146
+msgid "0.1.5, Java"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:154
+#: ../../tehnoloogiad.rst:148
 msgid ""
 "Logback logija laiendus JSON vormingus logikirjete koostamiseks Jackson "
 "teegi abil"
@@ -411,123 +399,155 @@ msgstr ""
 "Logback logger extension for generating JSON format log entries using "
 "Jackson library."
 
-#: ../../tehnoloogiad.rst:157
+#: ../../tehnoloogiad.rst:151
 msgid "`Logrus <https://github.com/sirupsen/logrus>`_"
 msgstr "`Logrus <https://github.com/sirupsen/logrus>`_"
 
-#: ../../tehnoloogiad.rst:158
-msgid "1.9.3"
-msgstr "1.9.3"
+#: ../../tehnoloogiad.rst:152
+msgid "1.9.3, Go"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:160
+#: ../../tehnoloogiad.rst:154
 msgid "Logimisraamistik x-tee liidese jaoks"
 msgstr "Logframework for X-road service interface"
 
-#: ../../tehnoloogiad.rst:162
+#: ../../tehnoloogiad.rst:156
 msgid "`metisMenu <https://github.com/onokumus/metisMenu>`_"
 msgstr "`metisMenu <https://github.com/onokumus/metisMenu>`_"
 
-#: ../../tehnoloogiad.rst:163
-msgid "1.1.3"
-msgstr "1.1.3"
+#: ../../tehnoloogiad.rst:157
+msgid "1.1.3, JavaScript"
+msgstr ""
+
+#: ../../tehnoloogiad.rst:161
+msgid "`FontAwesome <https://github.com/FortAwesome/Font-Awesome>`_"
+msgstr "`FontAwesome <https://github.com/FortAwesome/Font-Awesome>`_"
+
+#: ../../tehnoloogiad.rst:162
+msgid "6.7.2, JavaScript"
+msgstr ""
+
+#: ../../tehnoloogiad.rst:166
+msgid "`DataTables <https://github.com/DataTables/DataTablesSrc>`_"
+msgstr "`DataTables <https://github.com/DataTables/DataTablesSrc>`_"
 
 #: ../../tehnoloogiad.rst:167
+msgid "2.3.2, JavaScript"
+msgstr ""
+
+#: ../../tehnoloogiad.rst:171
 msgid "PDFBox"
 msgstr "PDFBox"
 
-#: ../../tehnoloogiad.rst:168
-msgid "2.0.29"
-msgstr "2.0.29"
+#: ../../tehnoloogiad.rst:172
+msgid "3.0.3, Java"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:170
+#: ../../tehnoloogiad.rst:174
 msgid "PDF vormingus raportite genereerimise tugi Java rakendustele"
 msgstr "Support for generating PDF reports for Java applications"
 
-#: ../../tehnoloogiad.rst:172
+#: ../../tehnoloogiad.rst:176
 msgid "`PyYAML <http://pyyaml.org/>`_"
 msgstr "`PyYAML <http://pyyaml.org/>`_"
 
-#: ../../tehnoloogiad.rst:173
-msgid "6.0.1"
-msgstr "6.0.1"
+#: ../../tehnoloogiad.rst:177
+msgid "6.0.2, Python"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:175
+#: ../../tehnoloogiad.rst:179
 msgid "Kogumisteenuse seadistusfailide töötlemise tugi haldusteenusele"
 msgstr ""
 "Support for processing configuration files for the collection service to "
 "the management service"
 
-#: ../../tehnoloogiad.rst:177
+#: ../../tehnoloogiad.rst:181
+msgid "python-crontab"
+msgstr ""
+
+#: ../../tehnoloogiad.rst:182
+msgid "3.3.0, Python"
+msgstr ""
+
+#: ../../tehnoloogiad.rst:183
+msgid "LGPLv3"
+msgstr "LGPLv3"
+
+#: ../../tehnoloogiad.rst:184
+msgid "Crontab haldusteenuses"
+msgstr "Crontab in collection management service"
+
+#: ../../tehnoloogiad.rst:186
 msgid "python-dateutil"
 msgstr "python-dateutil"
 
-#: ../../tehnoloogiad.rst:178
-msgid "2.8.2"
-msgstr "2.8.2"
+#: ../../tehnoloogiad.rst:187
+msgid "2.9.0, Python"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:180
+#: ../../tehnoloogiad.rst:189
 msgid "Kuupäevad ja kellaajad haldusteenuses"
 msgstr "Dates and times in collection management service"
 
-#: ../../tehnoloogiad.rst:182
+#: ../../tehnoloogiad.rst:191
 msgid "python-debian"
 msgstr "python-debian"
 
-#: ../../tehnoloogiad.rst:183
-msgid "0.1.49"
-msgstr "0.1.49"
+#: ../../tehnoloogiad.rst:192
+msgid "0.1.49, Python"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:184
+#: ../../tehnoloogiad.rst:193
 msgid "GPLv2"
 msgstr "GPLv2"
 
-#: ../../tehnoloogiad.rst:185
+#: ../../tehnoloogiad.rst:194
 msgid "Debian pakkide lugemine haldusteenuses"
 msgstr "Managing DEB files in collection management service"
 
-#: ../../tehnoloogiad.rst:187
+#: ../../tehnoloogiad.rst:196
 msgid "pyopenssl"
 msgstr "pyopenssl"
 
-#: ../../tehnoloogiad.rst:188
-msgid "23.2.0"
-msgstr "23.2.0"
+#: ../../tehnoloogiad.rst:197
+msgid "24.2.1, Python"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:189
+#: ../../tehnoloogiad.rst:198
 msgid "Apache"
 msgstr "Apache"
 
-#: ../../tehnoloogiad.rst:190
+#: ../../tehnoloogiad.rst:199
 msgid "OpenSSL kasutus haldusteenuses"
 msgstr "OpenSSL in collection management service"
 
-#: ../../tehnoloogiad.rst:192
+#: ../../tehnoloogiad.rst:201
 msgid "`Schematics <https://github.com/schematics/schematics>`_"
 msgstr "`Schematics <https://github.com/schematics/schematics>`_"
 
-#: ../../tehnoloogiad.rst:193
-msgid "2.1.1"
-msgstr "2.1.1"
+#: ../../tehnoloogiad.rst:202
+msgid "2.1.1, Python"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:195
+#: ../../tehnoloogiad.rst:204
 msgid "Kogumisteenuse seadistusfailide valideerimise tugi haldusteenusele"
 msgstr ""
 "Support for validation of collection service configuration files for the "
 "management service"
 
-#: ../../tehnoloogiad.rst:197
+#: ../../tehnoloogiad.rst:206
 msgid "SnakeYAML"
 msgstr "SnakeYAML"
 
-#: ../../tehnoloogiad.rst:198 ../../tehnoloogiad.rst:219
-msgid "2.2"
-msgstr "2.2"
+#: ../../tehnoloogiad.rst:207
+msgid "2.3, Java"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:200
+#: ../../tehnoloogiad.rst:209
 msgid "YAML vormingus andmete lugemine"
 msgstr "Reading data in YAML format"
 
-#: ../../tehnoloogiad.rst:202
+#: ../../tehnoloogiad.rst:211
 msgid ""
 "`SB Admin 2 <https://github.com/BlackrockDigital/startbootstrap-sb-"
 "admin-2>`_"
@@ -535,149 +555,152 @@ msgstr ""
 "`SB Admin 2 <https://github.com/BlackrockDigital/startbootstrap-sb-"
 "admin-2>`_"
 
-#: ../../tehnoloogiad.rst:203
-msgid "3.3.7+1"
-msgstr "3.3.7+1"
+#: ../../tehnoloogiad.rst:212
+msgid "3.3.7+1, JavaScript"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:208
+#: ../../tehnoloogiad.rst:217
 msgid "IVXV raamistiku testide kasutatavad kolmandate osapoolte komponendid"
 msgstr "Third-party components to be used for IVXV Framework tests"
 
-#: ../../tehnoloogiad.rst:218
+#: ../../tehnoloogiad.rst:227
 msgid "Hamcrest"
 msgstr "Hamcrest"
 
-#: ../../tehnoloogiad.rst:221
+#: ../../tehnoloogiad.rst:228
+msgid "3.0, Java"
+msgstr ""
+
+#: ../../tehnoloogiad.rst:230
 msgid "Loetavam assert-meetodite kasutamine Java üksuste testides"
 msgstr "More readable use of assert methods in Java unit tests"
 
-#: ../../tehnoloogiad.rst:223
+#: ../../tehnoloogiad.rst:232
 msgid "JUnit"
 msgstr "JUnit"
 
-#: ../../tehnoloogiad.rst:224
-msgid "4.13.2"
-msgstr "4.13.2"
+#: ../../tehnoloogiad.rst:233
+msgid "5.10.0, Java"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:225
+#: ../../tehnoloogiad.rst:234
 msgid "EPL-1.0"
 msgstr "EPL-1.0"
 
-#: ../../tehnoloogiad.rst:226
+#: ../../tehnoloogiad.rst:235
 msgid "Java testimisraamistik"
 msgstr "Java testing framework"
 
-#: ../../tehnoloogiad.rst:228
+#: ../../tehnoloogiad.rst:237
 msgid "JUnitParams"
 msgstr "JUnitParams"
 
-#: ../../tehnoloogiad.rst:229
-msgid "1.1.1"
-msgstr "1.1.1"
+#: ../../tehnoloogiad.rst:238
+msgid "1.1.1, Java"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:231
+#: ../../tehnoloogiad.rst:240
 msgid "Testide parametriseerimise tugi"
 msgstr "Test parameterisation support"
 
-#: ../../tehnoloogiad.rst:233
+#: ../../tehnoloogiad.rst:242
 msgid "Mockito"
 msgstr "Mockito"
 
-#: ../../tehnoloogiad.rst:234
-msgid "5.5.0"
-msgstr "5.5.0"
+#: ../../tehnoloogiad.rst:243
+msgid "5.14.2, Java"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:236
+#: ../../tehnoloogiad.rst:245
 msgid "Testitava koodi sõltuvuste mockimise tugi"
 msgstr "Support for mocking dependencies in code under test"
 
-#: ../../tehnoloogiad.rst:238
+#: ../../tehnoloogiad.rst:247
 msgid "libdigidocpp-tools"
 msgstr "libdigidocpp-tools"
 
-#: ../../tehnoloogiad.rst:239
+#: ../../tehnoloogiad.rst:248
 msgid "3.14.5 .1404"
 msgstr "3.14.5 .1404"
 
-#: ../../tehnoloogiad.rst:240
+#: ../../tehnoloogiad.rst:249
 msgid "LGPL-2.1-or-later"
 msgstr "LGPL-2.1-or-later"
 
-#: ../../tehnoloogiad.rst:241
+#: ../../tehnoloogiad.rst:250
 msgid "Testandmete genereerimine"
 msgstr "Test data generation"
 
-#: ../../tehnoloogiad.rst:243
+#: ../../tehnoloogiad.rst:252
 msgid "PyTest"
 msgstr "PyTest"
 
-#: ../../tehnoloogiad.rst:244
-msgid "7.4.2"
-msgstr "7.4.2"
+#: ../../tehnoloogiad.rst:253
+msgid "7.4.2, Python"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:246
+#: ../../tehnoloogiad.rst:255
 msgid "Üksuste testimise tugi Pythonile"
 msgstr "Unit testing support for Python"
 
-#: ../../tehnoloogiad.rst:248
+#: ../../tehnoloogiad.rst:257
 msgid "Requests"
 msgstr "Requests"
 
-#: ../../tehnoloogiad.rst:249
-msgid "2.31.0"
-msgstr "2.31.0"
+#: ../../tehnoloogiad.rst:258
+msgid "2.32.3, Python"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:250
+#: ../../tehnoloogiad.rst:259
 msgid "Apache 2.0"
 msgstr "Apache 2.0"
 
-#: ../../tehnoloogiad.rst:251
+#: ../../tehnoloogiad.rst:260
 msgid "HTTP päringute moodul Pythoni testidele"
 msgstr "HTTP request module for Python tests"
 
-#: ../../tehnoloogiad.rst:254
+#: ../../tehnoloogiad.rst:263
 msgid ""
 "IVXV raamistiku arendamiseks ja/või testimiseks kasutatavad kolmandate "
 "osapoolte tööriistad"
 msgstr "Third-party tools used to develop and/or test the IVXV framework"
 
-#: ../../tehnoloogiad.rst:264
+#: ../../tehnoloogiad.rst:273
 msgid "`Behave <https://github.com/behave/behave>`_"
 msgstr "`Behave <https://github.com/behave/behave>`_"
 
-#: ../../tehnoloogiad.rst:265
-msgid "1.2.6"
-msgstr "1.2.6"
+#: ../../tehnoloogiad.rst:274
+msgid "1.2.6, Python"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:266
+#: ../../tehnoloogiad.rst:275
 msgid "BSD-2-Clause"
 msgstr "BSD 2 Clause"
 
-#: ../../tehnoloogiad.rst:267
+#: ../../tehnoloogiad.rst:276
 msgid "Regressioonitestide käivitaja (*Behavior-driven development*)"
 msgstr "Regression test trigger (*Behavior-driven development*)"
 
-#: ../../tehnoloogiad.rst:269
+#: ../../tehnoloogiad.rst:278
 msgid "`Docker <http://www.docker.com/>`_"
 msgstr "`Docker <http://www.docker.com/>`_"
 
-#: ../../tehnoloogiad.rst:270
+#: ../../tehnoloogiad.rst:279
 msgid "18.06 (või uuem)"
 msgstr "18.06 (or newer)"
 
-#: ../../tehnoloogiad.rst:272
+#: ../../tehnoloogiad.rst:281
 msgid "Regressioonitestide läbiviimise keskkond - tarkvarakonteinerid"
 msgstr "Regression testing environment - software containers"
 
-#: ../../tehnoloogiad.rst:274
+#: ../../tehnoloogiad.rst:283
 msgid "`Sphinx <http://www.sphinx-doc.org/>`_"
 msgstr "`Sphinx <http://www.sphinx-doc.org/>`_"
 
-#: ../../tehnoloogiad.rst:275
-msgid "7.2.5"
-msgstr "7.2.5"
+#: ../../tehnoloogiad.rst:284
+msgid "7.2.5, Python"
+msgstr ""
 
-#: ../../tehnoloogiad.rst:277
+#: ../../tehnoloogiad.rst:286
 msgid "Dokumentatsiooni genereerimine"
 msgstr "Generating documentation"
-

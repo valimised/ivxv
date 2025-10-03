@@ -1,3 +1,4 @@
+//go:development
 /*
 Package memory implements a storage protocol which stores everything in memory,
 used for testing.
@@ -137,7 +138,7 @@ func (m *M) GetWithSerial(_ context.Context, key string) ([]byte, int64, error) 
 }
 
 // CAS implements the storage.PutGetter interface.
-func (m *M) CAS(_ context.Context, cas string, old, new []byte) error {
+func (m *M) CAS(_ context.Context, cas string, old, new []byte) error { //nolint:revive
 
 	m.lock.Lock()
 	defer m.lock.Unlock()

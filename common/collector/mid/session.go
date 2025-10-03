@@ -64,16 +64,16 @@ func (c *Client) startSession(ctx context.Context, t sessType, idCode, phone str
 	var input InputError
 	switch {
 	case len(idCode) == 0:
-		input.Err = StartSessionNoIDCodeError{}
+		input.Err = StartSessionNoIDCodeError{Description: _MID_N_ID}
 		err = input
 	case len(phone) == 0:
-		input.Err = StartSessionNoPhoneError{}
+		input.Err = StartSessionNoPhoneError{Description: _MID_N_PNO}
 		err = input
 	case len(hash) == 0:
-		input.Err = StartSessionNoHashError{}
+		input.Err = StartSessionNoHashError{Description: _MID_N_HASH}
 		err = input
 	case len(hashType) == 0:
-		input.Err = StartSessionNoHashTypeError{}
+		input.Err = StartSessionNoHashTypeError{Description: _MID_N_HASH_T}
 		err = input
 	}
 	if err != nil {
@@ -97,7 +97,7 @@ func (c *Client) startSession(ctx context.Context, t sessType, idCode, phone str
 		DisplayText:            message,
 		DisplayTextFormat:      c.conf.MessageFormat,
 	}, &resp); err != nil {
-		err = StartSessionError{Err: err}
+		err = StartSessionError{Err: err, Description: _MID_RESP_ERR}
 		return
 	}
 
@@ -129,7 +129,8 @@ func (c *Client) getSessionStatus(ctx context.Context, t sessType, sesscode stri
 	var resp sessionStatusResponse
 	url := fmt.Sprintf("%s%s/session/%s?timeoutMs=%d", c.url, t, sesscode, c.conf.StatusTimeoutMS)
 	if err = httpGet(ctx, url, &resp); err != nil {
-		return "", nil, nil, GetSessionStatusError{Err: err}
+		return "", nil, nil, GetSessionStatusError{
+			Err: err, Description: _MID_SESS_STAT}
 	}
 
 	switch resp.State {
@@ -138,7 +139,8 @@ func (c *Client) getSessionStatus(ctx context.Context, t sessType, sesscode stri
 	case "COMPLETE":
 	default:
 		var status StatusError
-		status.Err = UnexpectedSessionStateError{State: resp.State}
+		status.Err = UnexpectedSessionStateError{State: resp.State,
+			Description: _MID_SESS_STATE}
 		return "", nil, nil, status
 	}
 
@@ -163,7 +165,8 @@ func (c *Client) getSessionStatus(ctx context.Context, t sessType, sesscode stri
 		return "", nil, nil, absent
 	default:
 		var status StatusError
-		status.Err = UnexpectedSessionResultError{Result: resp.Result}
+		status.Err = UnexpectedSessionResultError{Result: resp.Result,
+			Description: _MID_SESS_RES}
 		return "", nil, nil, status
 	}
 }

@@ -73,25 +73,29 @@ func (w *fromRaw) Verify() error {
 	// Regex over Format field
 	release, err := formatRegex(w.Format)
 	if err != nil {
-		return VerifyFormatError{Err: err}
+		return VerifyFormatError{Err: err,
+			Description: _WEBEID_REGEX}
 	}
 
 	// Web eID auth token major release should be supported by backend
 	err = formatMajorRelease(release)
 	if err != nil {
-		return VerifyMajorReleaseError{Err: err}
+		return VerifyMajorReleaseError{Err: err,
+			Description: _WEBEID_VER}
 	}
 
 	// Hash origin with specified algorithm
 	hashOrigin, err := hashIt(w.Origin, w.Algorithm)
 	if err != nil {
-		return OriginHashError{Err: err}
+		return OriginHashError{Err: err,
+			Description: _WEBEID_HASH_ALG}
 	}
 
 	// Hash nonce with specified algorithm
 	hashNonce, err := hashIt(w.Nonce, w.Algorithm)
 	if err != nil {
-		return NonceHashError{Err: err}
+		return NonceHashError{Err: err,
+			Description: _WEBEID_HASH_NONCE}
 	}
 
 	// [1, 2, 3, 4, 5] = append([1, 2, 3], [4, 5])
@@ -121,7 +125,8 @@ func (w *fromRaw) Verify() error {
 	// 2. VerifySignature(data, signature)
 	err = w.Cert.CheckSignature(sha384SigAlgo, hashOrigin, signature)
 	if err != nil {
-		return CheckSignatureError{Err: err}
+		return CheckSignatureError{Err: err,
+			Description: _WEBEID_SIG}
 	}
 
 	return nil
@@ -132,19 +137,22 @@ func (w *fromRaw) Unmarshal() (token.Token, error) {
 	authToken := webEidAuthToken{}
 	err := json.Unmarshal([]byte(w.Token), &authToken)
 	if err != nil {
-		return nil, JSONUnmarshalError{Err: err}
+		return nil, JSONUnmarshalError{Err: err,
+			Description: _WEBEID_JSON}
 	}
 
 	// Base64 decode eID user's certificate
 	cert, err := cryptoutil.Base64Certificate(authToken.UnverifiedCertificate)
 	if err != nil {
-		return nil, Base64DecodeUnverifiedCertificateError{Err: err}
+		return nil, Base64DecodeUnverifiedCertificateError{Err: err,
+			Description: _WEBEID_CERT_B64}
 	}
 
 	// Base64 decode eID user's signature
 	signature, err := base64.StdEncoding.DecodeString(authToken.Signature)
 	if err != nil {
-		return nil, Base64DecodeSignatureError{Err: err}
+		return nil, Base64DecodeSignatureError{Err: err,
+			Description: _WEBEID_SIG_B64}
 	}
 
 	w.Sig = signature

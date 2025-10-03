@@ -12,7 +12,7 @@ Statistika genereerimine
 ------------------------
 
 Statistika vaates kuvatavad andmed genereeritakse ja uuendatakse korrapäraselt
-seireserveris (logimonitor) ning laaditakse automaatselt haldusliidesesse.
+logimonitoris ning laaditakse automaatselt haldusliidesesse.
 
 Haldusliideses kuvatav statistika kajastab kogumisteenuse seisundit mõningase
 viivitusega (harilikult kuni 10 minutit).
@@ -33,15 +33,15 @@ Kuvatavad andmed on järgmised:
 
 #. Hääletajate jaotumine:
 
-   #. Soo kaupa;
+   #. Sugude kaupa;
 
-   #. Vanusegrugi kaupa;
+   #. Vanusegruppide kaupa;
 
-   #. Autentimisvahendi kaupa;
+   #. Autentimisvahendite kaupa;
 
-   #. Operatsioonisüsteemi kaupa;
+   #. Operatsioonisüsteemide kaupa;
 
-   #. Riigi kaupa (vastavalt hääletaja IP-aadressile).
+   #. Riikide kaupa (vastavalt hääletaja IP-aadressile).
 
 #. Korduvhääletamiste statistika.
 

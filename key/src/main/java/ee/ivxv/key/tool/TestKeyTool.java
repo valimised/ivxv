@@ -10,6 +10,8 @@ import ee.ivxv.common.crypto.elgamal.ElGamalDecryptionProof;
 import ee.ivxv.common.crypto.elgamal.ElGamalPublicKey;
 import ee.ivxv.common.crypto.rnd.NativeRnd;
 import ee.ivxv.common.crypto.rnd.Rnd;
+import ee.ivxv.common.math.Group;
+import ee.ivxv.common.math.GroupElement;
 import ee.ivxv.common.service.i18n.MessageException;
 import ee.ivxv.common.service.smartcard.Card;
 import ee.ivxv.common.service.smartcard.CardService;
@@ -72,8 +74,7 @@ public class TestKeyTool implements Tool.Runner<TestKeyArgs> {
 
     private static final Logger log = LoggerFactory.getLogger(TestKeyTool.class);
 
-    static final Plaintext TEST_MESSAGE = new Plaintext(String.format("%s%s%s%s%s", "123.321",
-            Util.UNIT_SEPARATOR, "PARTY", Util.UNIT_SEPARATOR, "NAME SURNAME"));
+    static final Plaintext TEST_MESSAGE = new Plaintext("123.321");
 
     static void allRecoverTests(I18nConsole console, Logger log, List<Set<IndexedBlob>> quorums,
             ElGamalPublicKey pub, ThresholdParameters tparams, Rnd rnd, Plaintext message)
@@ -193,7 +194,10 @@ public class TestKeyTool implements Tool.Runner<TestKeyArgs> {
         ElGamalDecryptionProof decProof = dec.decryptMessage(c.getBytes());
         boolean res = false;
         try {
-            res = decProof.getDecrypted().equals(message);
+            GroupElement decrypted = decProof.getDecrypted();
+            Group group = decrypted.getGroup();
+            Plaintext decoded = group.decode(decrypted);
+            res = group.unpad(decoded).equals(message);
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }

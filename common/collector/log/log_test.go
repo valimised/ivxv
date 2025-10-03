@@ -200,7 +200,7 @@ func TestFormat(t *testing.T) {
 	if err != nil {
 		t.Fatal("failed to parse test certificate:", err)
 	}
-
+	fmt.Println("caused by other:", OtherError{})
 	tests := []struct {
 		name   string
 		cid    string

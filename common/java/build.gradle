@@ -11,7 +11,7 @@ dependencies {
     api 'ch.qos.cal10n:cal10n-api:0.8.1'
     implementation 'ch.qos.logback.contrib:logback-jackson:0.1.5'
     implementation 'ch.qos.logback.contrib:logback-json-classic:0.1.5'
-    api 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    api 'com.fasterxml.jackson.core:jackson-databind:2.18.1'
     api 'org.apache.commons:commons-collections4:4.4'
     /*
     Upgrading to 3.0.0, will produce at
@@ -23,11 +23,11 @@ dependencies {
     WARNING: For the newGlyph: XXX, newValue: [YY] is trying to override the oldValue: ZZZ
     """
     */
-    implementation 'org.apache.pdfbox:pdfbox:2.0.29'
+    implementation 'org.apache.pdfbox:pdfbox:3.0.3'
     // Only >= v1.70 bouncycastle can validate digidocj containers >= v5.1.0
     api 'org.bouncycastle:bcprov-jdk15on:1.70'
     api 'org.bouncycastle:bcpkix-jdk15on:1.70'
-    implementation 'org.digidoc4j:digidoc4j:5.1.0'
+    implementation 'org.digidoc4j:digidoc4j:5.3.1'
     /*
     Previous slf4j api 'org.slf4j:slf4j-api:1.7.25' is a bit out-dated, if you
     upgrade to the current latest api 'org.slf4j:slf4j-api:2.0.9', then you get
@@ -37,16 +37,16 @@ dependencies {
     is the latest current version of slf4j which behaves exactly the same way
     as old one
     */
-    api 'ch.qos.logback:logback-classic:1.4.11'
-    implementation 'org.yaml:snakeyaml:2.2'
+    api 'ch.qos.logback:logback-classic:1.5.12'
+    implementation 'org.yaml:snakeyaml:2.3'
     // Legacy Java module 'javax.xml.bind' that is used by org.digidocj
     // In IVXV code 'javax.xml.bind' is replaced with Java 17 specific java.util.HexFormat
-    api 'org.glassfish.jaxb:jaxb-runtime:2.3.8'
+    api 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
 
     testFixturesApi 'junit:junit:4.13.2'
-    testFixturesApi 'org.hamcrest:hamcrest-library:2.2'
+    testFixturesApi 'org.hamcrest:hamcrest-library:3.0'
     testFixturesApi 'pl.pragmatists:JUnitParams:1.1.1'
-    testFixturesApi 'org.mockito:mockito-core:5.5.0'
+    testFixturesApi 'org.mockito:mockito-core:5.14.2'
 }
 
 sourceSets {

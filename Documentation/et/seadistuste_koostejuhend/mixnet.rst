@@ -22,20 +22,20 @@ Github repositooriumist (https://github.com/vvk-ehk/intcheck):
 
 IVXV tarnefailist:
 
-* :file:`gmpmee.dirsha256sum` - gmpmee kataloogi räsi;
+* :file:`gmpmee.dirsha256sum` - ``gmpmee`` kataloogi räsi;
 
-* :file:`vmgj.dirsha256sum` - vmgj kataloogi räsi;
+* :file:`vmgj.dirsha256sum` - ``vmgj`` kataloogi räsi;
 
-* :file:`vcr.dirsha256sum` - vcr kataloogi räsi;
+* :file:`vcr.dirsha256sum` - ``vcr`` kataloogi räsi;
 
-* :file:`vmn.dirsha256sum` - vmn kataloogi räsi;
+* :file:`vmn.dirsha256sum` - ``vmn`` kataloogi räsi;
 
-* :file:`ivxv-verificatum-1.9.10-runner.zip` - IVXV adapter Verificatumi
+* :file:`ivxv-verificatum-1.10.3-runner.zip` - IVXV adapter Verificatumi
   kasutamiseks.
 
 Valimise korraldaja käest:
 
-* :file:`data/bb-4.json` - anonümiseeritud e-valimiskast;
+* :file:`data/bb-4.json` - anonüümitud e-valimiskast;
 
 * :file:`data/pub.pem` - häälte krüpteerimiseks kasutatud võti.
 
@@ -124,7 +124,7 @@ Verificatumi lähtekoodi täielikkuse kontrollimine::
 IVXV Verificatumi adapteri ja käivitusskripti lahtipakkimine::
 
     cd ..
-    unzip ivxv-verificatum-1.9.10-runner.zip
+    unzip ivxv-verificatum-1.10.3-runner.zip
 
 Verificatumi teekide kopeerimine adapteri väliste teekide kataloogi::
 

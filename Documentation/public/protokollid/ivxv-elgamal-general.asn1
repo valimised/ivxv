@@ -1,0 +1,4 @@
+IVXVElGamalCiphertextInfo ::= SEQUENCE {
+    algorithm   AlgorithmIdentifier,
+    ciphertext  ANY DEFINED BY algorithm
+}

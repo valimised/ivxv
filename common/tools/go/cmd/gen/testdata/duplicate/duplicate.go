@@ -2,6 +2,6 @@
 package duplicate
 
 var (
-	x = Duplicate{Field: 0}
-	y = Duplicate{Field: 0}
+	x = Duplicate{Field: 0, Description: "Duplicate"}
+	y = Duplicate{Field: 0, Description: "Duplicate"}
 )

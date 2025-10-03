@@ -9,7 +9,7 @@ import (
 
 // LimitExceededError is returned when reading from a stream with more data
 // than the specified limit.
-var _ = LimitExceededError{Limit: 0}
+var _ = LimitExceededError{Limit: 0, Description: _SAFEREADER_LIMIT}
 
 type safereader struct {
 	r io.Reader

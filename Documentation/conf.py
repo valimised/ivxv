@@ -67,8 +67,14 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinx.ext.todo',
     'sphinx_rtd_theme',
+    'sphinxcontrib.spelling',
     'myst_parser',
 ]
+
+
+spelling_lang='et_EE'
+
+spelling_word_list_filename = ['../../spelling_wordlist.txt', 'spelling_wordlist.txt']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

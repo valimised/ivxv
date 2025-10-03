@@ -76,7 +76,8 @@ func voteexpmain() (code int) {
 	// Create the output container file.
 	fp, err := os.OpenFile(output, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
-		return c.Error(exit.CantCreate, CreateOutputError{Output: output, Err: err},
+		return c.Error(exit.CantCreate, CreateOutputError{Output: output, Err: err,
+			Description: _VOTEEXP_OPEN},
 			"failed to create output archive:", err)
 	}
 
@@ -91,11 +92,13 @@ func voteexpmain() (code int) {
 		err = nil
 	}
 	if err != nil {
-		return c.Error(exit.Unavailable, ExportVotesError{Err: err},
+		return c.Error(exit.Unavailable, ExportVotesError{Err: err,
+			Description: _VOTEEXP_EXP},
 			"failed to export votes:", err)
 	}
 	if cerr != nil {
-		return c.Error(exit.IOErr, CloseOutputError{Err: err},
+		return c.Error(exit.IOErr, CloseOutputError{Err: err,
+			Description: _VOTEEXP_CLOSE},
 			"failed to close output file:", err)
 	}
 
@@ -111,7 +114,8 @@ func export(ctx context.Context, s *storage.Client, qps []q11n.Protocol,
 	// operation.
 	select {
 	case <-ctx.Done():
-		return ExportCanceled{Err: ctx.Err()}
+		return ExportCanceled{Err: ctx.Err(),
+			Description: _VOTEEXP_EXP_CTX_CANCEL}
 	default:
 	}
 
@@ -119,12 +123,12 @@ func export(ctx context.Context, s *storage.Client, qps []q11n.Protocol,
 	w := zip.NewWriter(fp)
 	defer func() {
 		if cerr := w.Close(); cerr != nil && err == nil {
-			err = CloseZIPArchiveError{Err: err}
+			err = CloseZIPArchiveError{Err: err, Description: _VOTEEXP_ZIP_CLOSE}
 		}
 	}()
 
 	// Start exporting votes from the storage service.
-	log.Log(ctx, ExportingVotes{})
+	log.Log(ctx, ExportingVotes{Description: _VOTEEXP_EXP_INFO})
 	progress.Static("Exporting votes:")
 	addprogress := progress.Count(0, true)
 	progress.Redraw()
@@ -141,12 +145,12 @@ func export(ctx context.Context, s *storage.Client, qps []q11n.Protocol,
 	go func() {
 		var gerr log.ErrorEntry
 		for err := range errc {
-			gerr = GetVotesError{Err: err}
+			gerr = GetVotesError{Err: err, Description: _VOTEEXP_EXP_ERR}
 			if errors.CausedBy(err, new(storage.GetVotesFatalError)) != nil {
 				break
 			}
 
-			gerr = NonFatalError{Err: gerr}
+			gerr = NonFatalError{Err: gerr, Description: _VOTEEXP_EXP_NON_FATAL}
 			log.Error(ctx, gerr)
 			progress.Hide()
 			fmt.Fprintln(os.Stderr, "error: non-fatal error:", gerr)
@@ -169,25 +173,28 @@ func export(ctx context.Context, s *storage.Client, qps []q11n.Protocol,
 	//       └ <timestamp>.<q11n protocol>*
 	//
 	var count uint64
-	countlog := VoteExportProgress{Current: 0}
+	countlog := VoteExportProgress{Current: 0, Description: _VOTEEXP_EXP_PROGRESS}
 	const logstep = 10000 // Log progress after each logstep.
 	for vote := range c {
 		prefix := fmt.Sprintf("votes/%s/%s.", vote.Voter,
 			strings.ReplaceAll(vote.Time.Format("20060102150405.000-0700"), ".", ""))
 
 		if err = addFile(w, vote.Time, prefix+"version", []byte(vote.Version)); err != nil {
-			return AddVersionError{VoteID: vote.VoteID, Prefix: prefix, Err: err}
+			return AddVersionError{VoteID: vote.VoteID, Prefix: prefix, Err: err,
+				Description: _VOTEEXP_ZIP_VERSION}
 		}
 		if err = addFile(w, vote.Time, prefix+string(vote.VoteType), vote.Vote); err != nil {
-			return AddVoteError{VoteID: vote.VoteID, Prefix: prefix, Err: err}
+			return AddVoteError{VoteID: vote.VoteID, Prefix: prefix, Err: err,
+				Description: _VOTEEXP_ZIP_VOTE}
 		}
 		for p, b := range vote.Qualification {
 			if err = addFile(w, vote.Time, prefix+string(p), b); err != nil {
 				return AddQualifyingPropertyError{
-					VoteID:   vote.VoteID,
-					Prefix:   prefix,
-					Protocol: p,
-					Err:      err,
+					VoteID:      vote.VoteID,
+					Prefix:      prefix,
+					Protocol:    p,
+					Err:         err,
+					Description: _VOTEEXP_ZIP_Q,
 				}
 			}
 		}
@@ -197,7 +204,7 @@ func export(ctx context.Context, s *storage.Client, qps []q11n.Protocol,
 			log.Log(ctx, countlog)
 		}
 	}
-	log.Log(ctx, VoteCount{Count: count})
+	log.Log(ctx, VoteCount{Count: count, Description: _VOTING_VOTE_COUNT})
 	return
 }
 
@@ -208,10 +215,10 @@ func addFile(w *zip.Writer, mod time.Time, name string, value []byte) error {
 		Modified: mod,
 	})
 	if err != nil {
-		return AddFileCreateError{Name: name, Err: err}
+		return AddFileCreateError{Name: name, Err: err, Description: _VOTING_ZIP_HEADER}
 	}
 	if _, err := f.Write(value); err != nil {
-		return AddFileWriteError{Name: name, Err: err}
+		return AddFileWriteError{Name: name, Err: err, Description: _VOTING_ZIP_FILE}
 	}
 	return nil
 }

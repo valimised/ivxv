@@ -38,7 +38,7 @@ Kõik kogumisteenuse komponendid programmeeritakse keeles `Go
 
 Kogumisteenuse andmeedastuseks kasutatakse üldjuhul JSON-vormingut, välja
 arvatud olukordades, kus välised asjaolud tingivad mõne muu andmevormingu
-kasutamist (näiteks BDOC-vorming põhineb XML-il).
+kasutamist (näiteks BDOC-vorming põhineb XML'il).
 
 Kogumisteenus toetab Riigikogu valimisi, kohaliku omavalitsuse volikogu
 valimisi, Euroopa parlamendi valimisi ning rahvahääletusi.
@@ -75,7 +75,7 @@ konfiguratsioonides, mis teeb võimalikuks kihilise arhitektuuri. Lähtudes
 funktsioonist on otstarbekas hoida Vahendus- ning Talletamisteenused teistest
 eraldi.
 
-Teenused kasutavad transpordiprotokollina TLS-i, ühendused on
+Teenused kasutavad transpordiprotokollina TLS'i, ühendused on
 vähemalt serveripoolselt autenditud. Rakenduskihi protokoll on JSON-RPC.
 
 Kõik teenused tekitavad tegevuslogi, mida säilitatakse nii lokaalselt kui
@@ -91,11 +91,11 @@ mikroteenustena, ent omada süsteemil ainult ühte sisenemispunkti. Lisaks suuda
 see dubleeritud evituse puhul täita koormusjaoturi ülesannet.
 
 Vahendusteenus ei termineeri TLS-ühendust vaid kasutab sihtpunkti tuvastamiseks
-TLS-i *Server Name Indication* (SNI) laiendust. Kliendid panevad TLS
+TLS'i *Server Name Indication* (SNI) laiendust. Kliendid panevad TLS
 ``ClientHello`` sõnumisse SNI-laiendi, kus avatekstis määravad, millise
 teenusega soovivad suhelda: vahendusteenus näeb seda, võtab ühendust vastavat
 teenust pakkuva isendiga ja hakkab kliendi ning teenuse vahelisi sõnumeid
-vahendama. Vahendusteenus EI termineeri TLS-i ning ei näe sõnumite sisu.
+vahendama. Vahendusteenus EI termineeri TLS'i ning ei näe sõnumite sisu.
 Vahendusteenusel on andmed kõigi teiste teenuste asukohtadest (aadress:port)
 ning teenus vahendab sõnumivahetust kõigi osapoolte vahel.
 
@@ -122,7 +122,7 @@ lähteaadressi või mõne muu nimetaja põhjal. See aga jääb süsteemihalduri
 
 Kuigi HAProxy on võimeline ise teostama koormusjaoturi ülesannet, on seda
 võimalik evitada ka teiste, potentsiaalselt riistvaraliste koormusjaoturite
-taha, kus see jääb täitma ainult SNI põhjal vahendmise ülesannet.
+taha, kus see jääb täitma ainult SNI põhjal vahendamise ülesannet.
 
 HAProxy lähtekood on avalik ja sobiva litsentsiga ning pakendatud
 kogumisteenuse alusplatvormi ametlikus hoidlas (vt. :ref:`tehnoloogiad`).
@@ -574,7 +574,7 @@ Kogumisteenuse seisundid
 ------------------------
 
 Kogumisteenuse seisund kajastab teenuse kõigi alamteenuste seisundit,
-kasutuselolevate väliste teenuste seisundit ja eelneva põhal tuletatud
+kasutuselolevate väliste teenuste seisundit ja eelneva põhjal tuletatud
 üldseisundit. Kogumisteenuse üldseisundi tuvastamisega tegeleb haldusteenus.
 
 Üldseisundi olekud on:

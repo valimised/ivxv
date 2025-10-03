@@ -36,13 +36,13 @@ Ringkondade nimekiri
   valimiste korral tuleb ringkondade nimekiri valimiste infosüsteemist.
 
 Rakenduste usaldusjuur
-  Rakenduste usaldusjuur defineerib sertifitseerimishierarhia(d), mille alusel
+  Rakenduste usaldusjuur defineerib sertifitseerimishierarhiad, mille alusel
   IVXV rakendused verifitseerivad digitaalallkirju. Eesti riiklike valimiste
   korral määrab usaldusjuure koosseisu Riigi Valimisteenistus. Rakenduste
   usaldusjuure vormingut käsitletakse peatükis :numref:`ivxv-rakendused`.
 
 Kogumisteenuse usaldusjuur
-  Kogumisteenuse usaldusjuur defineerib sertifitseerimishierarhia(d), mille
+  Kogumisteenuse usaldusjuur defineerib sertifitseerimishierarhiad, mille
   alusel IVXV kogumisteenuse komponendid verifitseerivad digitaalallkirju. Eesti
   riiklike valimiste korral määrab usaldusjuure koosseisu Riigi
   Valimisteenistus. Kogumisteenuse usaldusjuure vormingut ning seotud protokolle

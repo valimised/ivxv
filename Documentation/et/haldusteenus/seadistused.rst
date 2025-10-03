@@ -39,7 +39,7 @@ Seadistuste laadimine kogumisteenusesse
 
 Tehnilise seadistuse ja valimiste seadistuste laadimiseks kogumisteenusesse on
 lehe allosas laadimisvorm. Laadida on lubatud ainult volitatud kasutajate poolt
-digitaaltelt signeeritud seadistuspakke. Seadistuste laadimise järjekord ei ole
+digitaalselt signeeritud seadistuspakke. Seadistuste laadimise järjekord ei ole
 oluline. Valimiste seadistuse laadimine on eelduseks valimiste nimekirjade
 laadimisele.
 

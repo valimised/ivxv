@@ -28,11 +28,11 @@ func init() {
 	auth.Register(auth.TLS, func(n yaml.Node) (auth.Verifier, error) {
 		c := new(Conf)
 		if err := yaml.Apply(n, c); err != nil {
-			return nil, ConfigurationError{Err: err}
+			return nil, ConfigurationError{Err: err, Description: _TLS_CFG}
 		}
 		v, err := New(c)
 		if err != nil {
-			return nil, CertificateParsingError{Err: err}
+			return nil, CertificateParsingError{Err: err, Description: _TLS_NEW}
 		}
 		return v, nil
 	})
@@ -55,19 +55,22 @@ type V struct {
 // New returns a new TLS authentication verifier with the provided configuration.
 func New(c *Conf) (v *V, err error) {
 	if len(c.Roots) == 0 {
-		return nil, UnconfiguredRootsError{}
+		return nil, UnconfiguredRootsError{Description: _TLS_CA}
 	}
 
 	v = new(V)
 	if v.rpool, err = cryptoutil.PEMCertificatePool(c.Roots...); err != nil {
-		return nil, RootsParsingError{Err: err}
+		return nil, RootsParsingError{Err: err,
+			Description: _TLS_CA_PARSE}
 	}
 	if v.ipool, err = cryptoutil.PEMCertificatePool(c.Intermediates...); err != nil {
-		return nil, IntermediatesParsingError{Err: err}
+		return nil, IntermediatesParsingError{Err: err,
+			Description: _TLS_INTERMEDIATE_CA_PARSE}
 	}
 	if c.OCSP != nil {
 		if v.ocsp, err = ocsp.New(c.OCSP); err != nil {
-			return nil, OCSPClientError{Err: err}
+			return nil, OCSPClientError{Err: err,
+				Description: _TLS_OCSP}
 		}
 	}
 	return
@@ -78,14 +81,17 @@ func New(c *Conf) (v *V, err error) {
 func (v *V) Verify(ctx context.Context, token []byte) (*pkix.Name, error) {
 	if len(token) > 0 {
 		return nil, auth.MalformedTokenError{
-			Err: NonEmptyTokenError{Token: log.Sensitive(token)},
+			Err: NonEmptyTokenError{Token: log.Sensitive(token),
+				Description: _TLS_TICKET},
 		}
 	}
 
 	// Client certificates were added to the context by ivxv.ee/common/collector/server.
 	certs := server.TLSClient(ctx)
 	if len(certs) == 0 {
-		return nil, auth.CertificateError{Err: NoClientCertificateError{}}
+		return nil, auth.CertificateError{Err: NoClientCertificateError{
+			Description: _TLS_CERT,
+		}}
 	}
 	cert := certs[0] // The client certificate must be first.
 
@@ -100,6 +106,7 @@ func (v *V) Verify(ctx context.Context, token []byte) (*pkix.Name, error) {
 			Err: CertificateVerificationError{
 				Certificate: cert.Raw, // Log entire cert for diagnostics.
 				Err:         err,
+				Description: _TLS_CERT_VERIFY,
 			},
 		}
 	}
@@ -114,6 +121,7 @@ func (v *V) Verify(ctx context.Context, token []byte) (*pkix.Name, error) {
 			return nil, CheckCertificateStatusError{
 				Certificate: cert,
 				Err:         err,
+				Description: _TLS_CERT_VERIFY_OCSP,
 			}
 		}
 		if !status.Good {
@@ -122,6 +130,7 @@ func (v *V) Verify(ctx context.Context, token []byte) (*pkix.Name, error) {
 					Certificate:      cert,
 					Unknown:          status.Unknown,
 					RevocationReason: status.RevocationReason,
+					Description:      _TLS_CERT_VERIFY_OCSP_BAD,
 				},
 			}
 		}

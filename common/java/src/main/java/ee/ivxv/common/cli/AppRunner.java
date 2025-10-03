@@ -153,7 +153,7 @@ public class AppRunner<T extends AppContext<?>> {
 
         // Set language, if requested
         if (cargs.lang.isSet()) {
-            ictx.locale.setLocale(new Locale(cargs.lang.value()));
+            ictx.locale.setLocale(Locale.of(cargs.lang.value()));
         }
 
         // Show application help, if requested (tool not selected)

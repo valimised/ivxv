@@ -24,6 +24,7 @@ import os
 import re
 import subprocess
 import time
+import typing
 
 import dateutil.parser
 
@@ -79,6 +80,8 @@ def main_loop():
     log.info('Starting Collector Management Service agent daemon')
     check_management_db()
 
+    jobs: typing.Set[subprocess.Popen] = set()
+
     while True:
         loop_start_time = datetime.datetime.now()
 
@@ -93,10 +96,21 @@ def main_loop():
         except Exception as err:  # pylint: disable=broad-except
             log.error(
                 'Unknown error while generating stats/state data: %s', err)
+        finally:
+            for job in jobs:
+                if job.poll() is not None:  # job is not yet terminated
+                    if job.stdin is not None:
+                        job.stdin.close()
+                    if job.stdout is not None:
+                        job.stdout.close()
+                    if job.stderr is not None:
+                        job.stderr.close()
+                    job.kill()  # send SIGKILL to terminated process, just in case
+                    jobs.remove(job)
 
         # start config applying if required
-        if state:
-            apply_cfg(state)
+        if state and len(jobs) == 0:
+            jobs = apply_cfg(state)
 
         # pause after loop
         duration = datetime.datetime.now() - loop_start_time
@@ -194,18 +208,31 @@ def get_agent_metadata():
                 time_generated=timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
 
 
-def apply_cfg(state):
+def apply_cfg(state) -> typing.Set[subprocess.Popen]:
     """Apply config files."""
-    apply_cfg_for_services("technical", "technical", state)
+    jobs: typing.Set[subprocess.Popen] = set()
+
+    job = apply_cfg_for_services("technical", "technical", state)
+    if job is not None and job is not False:
+        jobs.add(job)
+
     if state['config']['technical']:
         for cfg_key in ["election", "choices", "districts"]:
-            apply_cfg_for_services(cfg_key, cfg_key, state)
+            job = apply_cfg_for_services(cfg_key, cfg_key, state)
+            if job is not None and job is not False:
+                jobs.add(job)
     for changeset_no in range(10_000):
-        if apply_cfg_for_services("voters", f"voters{changeset_no:04}", state) is None:
+        job = apply_cfg_for_services("voters", f"voters{changeset_no:04}", state)
+        if job is None:  # voter list doesn't exist or currently being loaded
             break
+        if job is False:  # voter list has already been loaded
+            continue
+        jobs.add(job)
+
+    return jobs
 
 
-def apply_cfg_for_services(cfg_type, cfg_key, state):
+def apply_cfg_for_services(cfg_type, cfg_key, state) -> subprocess.Popen | bool | None:
     """Apply config for services.
 
     :return: None if config file does not exist,
@@ -223,72 +250,77 @@ def apply_cfg_for_services(cfg_type, cfg_key, state):
         state = json.load(fp)
 
     # check preconditions
-    if (not state['autoapply'] or state['completed']
-            or state['attempts'] >= MAX_AUTO_ATTEMPTS):
+    if (not state['autoapply'] or
+            state['completed'] or
+            state['attempts'] >= MAX_AUTO_ATTEMPTS):
         return False
 
     if PidLocker.pidfile_exists('ivxv-config-apply.pid'):
         log.info('Can\'t start automatic applying of %s, pidfile exists',
                  CMD_DESCR[cfg_type])
-        return False
+        return None
 
     # execute config applying command
     log.info('Automatically apply %s, attempt #%d',
              CMD_DESCR[cfg_type], state['attempts'] + 1)
-    subprocess.Popen(['ivxv-config-apply', f'--type={cfg_type}'])
 
-    return True
+    return subprocess.Popen(
+        args=['ivxv-config-apply', f'--type={cfg_type}'],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 def ping_service(service_id, service_data):
     """Ping service."""
-    service = Service(service_id, service_data)
-    service_ok = service.ping()
+    with Service(service_id, service_data) as service:
+        service_ok = service.ping()
 
-    if not is_db_accessible(service.get_db_key("last-data")):
-        return False
-
-    # register result in database
-    with IVXVManagerDb(for_update=True) as db:
-        db.set_value(
-            service.get_db_key('last-data'),
-            datetime.datetime.now().strftime(RFC3339_DATE_FORMAT))
-
-        ping_errors_key = service.get_db_key('ping-errors')
-        ping_errors_old = db.get_value(ping_errors_key)
-
-        service_state_key = service.get_db_key('state')
-        service_state_old = db.get_value(service_state_key)
-
-        if service_state_old not in SERVICE_MONITORING_STATES:
-            log.warning('Service has removed from monitoring')
+        if not is_db_accessible(service.get_db_key("last-data")):
             return False
 
-        service_state_new = service_state_old
-        if service_ok:
-            log.debug('Service %s is alive', service_id)
-            ping_errors_new = '0'
-            service_state_new = SERVICE_STATE_CONFIGURED
-            if ping_errors_old != '0':
-                db.set_value(ping_errors_key, '0')
-        else:
-            ping_errors_new = str(int(ping_errors_old) + 1)
-            if (int(ping_errors_new) >= 3
-                    and service_state_old != SERVICE_STATE_FAILURE):
-                log.warning('Status check failed three times, '
-                            'setting service state from %s to FAILURE',
-                            service_state_old)
-                service_state_new = SERVICE_STATE_FAILURE
-            else:
-                log.warning('Status check for service %s failed (%s times). '
-                            'Service state is %s',
-                            service_id, ping_errors_new, service_state_old)
+        # register result in database
+        with IVXVManagerDb(for_update=True) as db:
+            db.set_value(
+                service.get_db_key('last-data'),
+                datetime.datetime.now().strftime(RFC3339_DATE_FORMAT))
 
-        if ping_errors_old != ping_errors_new:
-            db.set_value(ping_errors_key, ping_errors_new)
-        if service_state_old != service_state_new:
-            db.set_value(service_state_key, service_state_new)
-            register_collector_state(db)
+            ping_errors_key = service.get_db_key('ping-errors')
+            ping_errors_old = db.get_value(ping_errors_key)
+
+            service_state_key = service.get_db_key('state')
+            service_state_old = db.get_value(service_state_key)
+
+            if service_state_old not in SERVICE_MONITORING_STATES:
+                log.warning('Service has removed from monitoring')
+                return False
+
+            service_state_new = service_state_old
+            if service_ok:
+                log.debug('Service %s is alive', service_id)
+                ping_errors_new = '0'
+                service_state_new = SERVICE_STATE_CONFIGURED
+                if ping_errors_old != '0':
+                    db.set_value(ping_errors_key, '0')
+            else:
+                ping_errors_new = str(int(ping_errors_old) + 1)
+                if (int(ping_errors_new) >= 3 and
+                        service_state_old != SERVICE_STATE_FAILURE):
+                    log.warning('Status check failed three times, '
+                                'setting service state from %s to FAILURE',
+                                service_state_old)
+                    service_state_new = SERVICE_STATE_FAILURE
+                else:
+                    log.warning('Status check for service %s failed (%s times). '
+                                'Service state is %s',
+                                service_id, ping_errors_new, service_state_old)
+
+            if ping_errors_old != ping_errors_new:
+                db.set_value(ping_errors_key, ping_errors_new)
+            if service_state_old != service_state_new:
+                db.set_value(service_state_key, service_state_new)
+                register_collector_state(db)
 
     return service_ok
 
@@ -355,7 +387,9 @@ def normalize_stats(stats_data):
                 stats_data[district_id][stats_key] = sorted(
                     [[item[0], item[1]] for item in stats_val.items()],
                     reverse=True
-                )[:10 if stats_key == 'operating-systems' else 100]
+                )[:10 if stats_key in [
+                    'voting-operating-systems',
+                    'verify-operating-system'] else 100]
 
     # generate empty values for missing districts.
     # Log Monitor does not have district list and cannot generate stats for

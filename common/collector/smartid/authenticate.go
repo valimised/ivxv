@@ -4,30 +4,42 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/x509"
+	"encoding/asn1"
 )
 
-// Authenticate starts a Smart-ID authentication session.
-func (c *Client) Authenticate(ctx context.Context, identifer string) (
-	sesscode string, challengeRnd []byte, challenge []byte, err error) {
+var (
+	// https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12, SK specific OID for
+	// Smart-ID authentication
+	idKpClientAuthSK = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 62306, 5, 7, 0}
+)
 
-	// Generate random authentication challenge to sign. Although we could
-	// use the challenge directly, we pass it through the hash function to
-	// simplify VerifyAuthenticationSignature which requires the pre-image
-	// of the signed data.
-	challengeRnd = make([]byte, c.authHashFunction.Size())
-	if _, err = rand.Read(challengeRnd); err != nil {
-		err = GenerateAuthenticationChallengeError{Err: err}
-		return
+// Challenge generates a Smart-ID authentication session's challenge. Challenge returns a challenge and a
+// verification code.
+func (c *Client) Challenge() ([]byte, []byte, error) {
+	challenge := make([]byte, c.authHashFunction.Size())
+	if _, err := rand.Read(challenge); err != nil {
+		return nil, nil, ChallengeError{Err: err, Description: _SID_RAND}
 	}
+
+	d := c.authHashFunction.New()
+	d.Write(challenge)
+
+	return challenge, d.Sum(nil), nil
+}
+
+// Authenticate starts a Smart-ID authentication session.
+func (c *Client) Authenticate(ctx context.Context, identifer string, challengeRnd []byte) (
+	sesscode string, err error) {
+
 	d := c.authHashFunction.New()
 	d.Write(challengeRnd)
-	challenge = d.Sum(nil)
+	challenge := d.Sum(nil)
 
 	hashType := hashFunctionNames[c.authHashFunction]
 
 	sesscode, err = c.startSession(ctx, sessAuth, convertToETSI(identifer), challenge, hashType)
 	if err != nil {
-		err = AuthenticateError{Err: err}
+		err = AuthenticateError{Err: err, Description: _SID_SESS}
 		return
 	}
 
@@ -40,12 +52,12 @@ func (c *Client) Authenticate(ctx context.Context, identifer string) (
 // authenticated, although callers should use VerifyAuthenticationSignature to
 // double-check.
 func (c *Client) GetAuthenticateStatus(ctx context.Context, sesscode string) (
-	cert *x509.Certificate, algorithm string, signature []byte, err error) {
+	documentno string, cert *x509.Certificate, algorithm string, signature []byte, err error) {
 
 	var certDER []byte
-	_, algorithm, signature, certDER, err = c.getSessionStatus(ctx, sesscode)
+	documentno, algorithm, signature, certDER, err = c.getSessionStatus(ctx, sesscode)
 	if err != nil {
-		err = GetAuthenticateStatusError{Err: err}
+		err = GetAuthenticateStatusError{Err: err, Description: _SID_SESS_STAT}
 		return
 	}
 
@@ -65,8 +77,39 @@ func (c *Client) parseAndVerify(ctx context.Context, certDER []byte) (
 		err = ParseAuthenticationCertificateError{
 			Certificate: certDER,
 			Err:         err,
+			Description: _SID_CERT,
 		}
 		return
+	}
+
+	if cert.UnknownExtKeyUsage != nil {
+		// We only expect one extended key usage, which is either standard id-kp-clientAuth
+		// or id-kp-clientAuthSK, the latter must be marked as unknown to the RFC5280
+		if cert.ExtKeyUsage != nil {
+			err = UnexpectedExtKeyUsageError{
+				Certificate: cert,
+				ExtKeyUsage: cert.ExtKeyUsage[0],
+				Description: _SID_EXTKEY_SK,
+			}
+			return
+		}
+
+		cert.ExtKeyUsage = make([]x509.ExtKeyUsage, len(cert.UnknownExtKeyUsage))
+	}
+
+	for i, ext := range cert.UnknownExtKeyUsage {
+		switch ext.String() {
+		case idKpClientAuthSK.String():
+			cert.UnknownExtKeyUsage[i] = nil
+			cert.ExtKeyUsage[i] = x509.ExtKeyUsageClientAuth
+		default:
+			err = UnknownExtKeyUsageError{
+				Certificate: cert,
+				ExtKeyUsage: ext.String(),
+				Description: _SID_EXTKEY,
+			}
+			return
+		}
 	}
 
 	// Verify the authentication certificate and get the issuer.
@@ -81,6 +124,7 @@ func (c *Client) parseAndVerify(ctx context.Context, certDER []byte) (
 		certerr.Err = AuthenticationCertificateVerificationError{
 			Certificate: cert,
 			Err:         err,
+			Description: _SID_CERT_VERIFY,
 		}
 		err = certerr
 		return
@@ -94,15 +138,17 @@ func (c *Client) parseAndVerify(ctx context.Context, certDER []byte) (
 	status, err := c.ocsp.Check(ctx, cert, issuer, nil)
 	if err != nil {
 		err = CheckAuthenticationCertOCSPResponsError{
-			Response: status,
-			Err:      err,
+			Response:    status,
+			Err:         err,
+			Description: _SID_OCSP,
 		}
 		return
 	}
 	if !status.Good {
 		var certerr CertificateError
 		certerr.Err = AuthenticationCertificateRevokedError{
-			Reason: status.RevocationReason,
+			Reason:      status.RevocationReason,
+			Description: _SID_OCSP_N_GOOD,
 		}
 		err = certerr
 		return
@@ -119,12 +165,14 @@ func VerifyAuthenticationSignature(cert *x509.Certificate, algorithm string,
 	sigalg, ok := signatureAlgs[algorithm]
 	if !ok {
 		return SigAlgorithmNotSupportedError{
-			Algorithm: algorithm,
+			Algorithm:   algorithm,
+			Description: _SID_ALG,
 		}
 	}
 
 	if err = cert.CheckSignature(sigalg, signed, signature); err != nil {
-		return VerifyAuthenticationSignatureError{Err: err}
+		return VerifyAuthenticationSignatureError{Err: err,
+			Description: _SID_SIG}
 	}
 	return nil
 }

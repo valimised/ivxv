@@ -1,0 +1,43 @@
+linters:
+  enable-all: true
+  disable:
+    - depguard # imports are controlled by gofmt
+    - err113 # use fmt.Errorf for formatted errors and errors.New for plain strings
+    - exportloopref # deprecated since Go 1.22
+    - gci # imports are controlled by gofmt
+    - gochecknoinits # init() needed in some cases
+    # 'Accept interface, return implementation' idiom doesn't make always sense, as returning interface
+    # allows API to operate on more abstract level, rather than revealing low-level details
+    - ireturn
+    - lll # there are cases when code lines can be greater than suggested maximum of 120 characters
+    - varnamelen # it is OK to have non-standard variable names in crypto library
+linters-settings:
+  goimports:
+    local-prefixes: tivi.io
+  gocritic:
+    enable-all: true
+    disabled-checks:
+      - captLocal # func arguments can be capitalized in crypto library
+      #- sloppyReassign
+      - whyNoLint # don't explain //nolint: in a code
+  nolintlint:
+    allow-unused: false
+    require-specific: true
+
+issues:
+  exclude-dirs:
+    - cmd
+    - common
+    - crypto/cades
+    - crypto/cms
+    - crypto/ocsp
+    - crypto/padding
+    - crypto/timestamp
+    - crypto/util
+    - voterlist
+  # Escape all *_test.log files from linter
+  exclude-files:
+    - '(.+)_test\.go'
+
+output:
+  show-stats: true
